@@ -163,6 +163,12 @@ test("loads the data files, Mission Mode's view and its art from a production bu
   page,
 }) => {
   const problems = watchForProblems(page);
+  const artTypes: (string | undefined)[] = [];
+  page.on("response", (response) => {
+    if (new URL(response.url()).pathname.startsWith("/art/")) {
+      artTypes.push(response.headers()["content-type"]);
+    }
+  });
   await page.goto(`${productionBaseURL}/?seed=${successSeed}`);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(
@@ -171,6 +177,8 @@ test("loads the data files, Mission Mode's view and its art from a production bu
   // A failed file is only reported once its request ends, which can be after the canvas appears.
   await page.waitForLoadState("networkidle");
   expect(problems).toEqual([]);
+  // For a missing file, vite preview sends the game's page with status 200, and the browser reports no problem.
+  expect(artTypes).toEqual(["image/jpeg", "image/jpeg"]);
 });
 
 test("lists the planned Mission's Mission Events with rough risk bands, which change with what it carries", async ({
