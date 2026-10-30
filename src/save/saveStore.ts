@@ -1,4 +1,5 @@
 import {
+  corruptSave,
   SaveError,
   type Program,
   type Simulation,
@@ -64,10 +65,7 @@ export function createSaveStore(
       } catch (error) {
         return {
           kind: "problem",
-          message:
-            error instanceof SaveError
-              ? error.message
-              : "This save is corrupt, so it can't be loaded.",
+          message: error instanceof SaveError ? error.message : corruptSave,
         };
       }
     },

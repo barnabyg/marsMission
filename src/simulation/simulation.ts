@@ -197,7 +197,7 @@ const savedProgramSchema = z.strictObject({
   ]),
 });
 
-const corruptSave = "This save is corrupt, so it can't be loaded.";
+export const corruptSave = "This save is corrupt, so it can't be loaded.";
 
 export interface Simulation {
   startProgram(seed: number): Program;
@@ -327,10 +327,18 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     return level;
   }
 
-  function riskBandFor(failureChance: number): string {
-    const band = catalogue.riskBands.find(({ upTo }) => failureChance <= upTo);
+  /** The one calculation behind both a Mission Event's roll and the risk band Planning Mode shows. */
+  function failureChance(
+    event: Catalogue["missionEvents"][number],
+    level: Catalogue["reliabilityLevels"][number],
+  ): number {
+    return event.failureProbability * level.failureMultiplier;
+  }
+
+  function riskBandFor(chance: number): string {
+    const band = catalogue.riskBands.find(({ upTo }) => chance <= upTo);
     // The Catalogue guarantees the last band goes up to 1.
-    if (!band) throw new Error(`No risk band covers ${failureChance}`);
+    if (!band) throw new Error(`No risk band covers ${chance}`);
     return band.label;
   }
 
@@ -447,17 +455,13 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           return {
             eventId: event.id,
             name: event.name,
-            riskBand: riskBandFor(
-              event.failureProbability * chosen.failureMultiplier,
-            ),
+            riskBand: riskBandFor(failureChance(event, chosen)),
             reliabilityLevelId: chosen.id,
             reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
               id: level.id,
               name: level.name,
               costMillions: level.costMillions,
-              riskBand: riskBandFor(
-                event.failureProbability * level.failureMultiplier,
-              ),
+              riskBand: riskBandFor(failureChance(event, level)),
             })),
           };
         },
@@ -488,8 +492,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       const failedIndex = plannedEvents.findIndex(
         (event) =>
           missionEventRoll(program.seed, program.turnNumber, event.id) <
-          event.failureProbability *
-            reliabilityLevelFor(plan.mission, event.id).failureMultiplier,
+          failureChance(event, reliabilityLevelFor(plan.mission, event.id)),
       );
       const failedEvent = plannedEvents[failedIndex];
       const assetNames = assets.map((asset) => asset.name);
