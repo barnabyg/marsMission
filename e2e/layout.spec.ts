@@ -8,10 +8,16 @@ const screenSizes = [
   { width: 3840, height: 2160 },
 ];
 
-function pageScrolls(page: Page): Promise<boolean> {
+/** Whether the page, or any panel in Planning Mode, has more to show than fits on screen. */
+function somethingScrolls(page: Page): Promise<boolean> {
   return page.evaluate(() => {
     const { scrollHeight, scrollWidth } = document.documentElement;
-    return scrollHeight > innerHeight || scrollWidth > innerWidth;
+    const panels = [...document.querySelectorAll(".planning-columns .panel")];
+    return (
+      scrollHeight > innerHeight ||
+      scrollWidth > innerWidth ||
+      panels.some((panel) => panel.scrollHeight > panel.clientHeight)
+    );
   });
 }
 
@@ -81,7 +87,7 @@ for (const size of screenSizes) {
     }) => {
       await page.goto(`/?seed=${successSeed}`);
       await expect(page.getByTestId("turn-number")).toHaveText("1");
-      expect(await pageScrolls(page)).toBe(false);
+      expect(await somethingScrolls(page)).toBe(false);
       for (const name of [
         "Launch Mission",
         "End Turn without launching",
@@ -97,7 +103,7 @@ for (const size of screenSizes) {
       page,
     }) => {
       await openBusyProgram(page);
-      expect(await pageScrolls(page)).toBe(false);
+      expect(await somethingScrolls(page)).toBe(false);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
       ).toBeInViewport({ ratio: 1 });
@@ -125,7 +131,7 @@ for (const size of screenSizes) {
           speeds.last(),
         ]),
       ).toBe(true);
-      expect(await pageScrolls(page)).toBe(false);
+      expect(await somethingScrolls(page)).toBe(false);
     });
 
     test("text is the same size whatever the screen", async ({ page }) => {
