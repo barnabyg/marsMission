@@ -83,6 +83,10 @@ _Avoid_: Build mode, design mode
 The graphical second part of a Turn, in which the Turn's Mission and every operating Asset and Crew play out until the next Launch Window.
 _Avoid_: Flight mode, simulation mode, play mode
 
+**Save Slot**:
+One of three places where the player can keep a Program by hand, usable only in Planning Mode. It is separate from the automatic save made at the start of each Planning Mode.
+_Avoid_: Save file, save game
+
 **Decision Point**:
 A moment in Mission Mode when play pauses for the player to make a limited choice, such as aborting or using a Contingency.
 _Avoid_: Prompt, intervention
@@ -96,6 +100,10 @@ _Avoid_: Step, phase
 **Safety Margin**:
 Everything the player buys to reduce risk. It comes in three kinds (Reliability, Contingency and Protection) and costs money and sometimes mass.
 _Avoid_: Safety budget, safety level
+
+**Risk Band**:
+A rough failure figure shown for a Mission Event in Planning Mode, such as "~5%", in place of its exact failure probability.
+_Avoid_: Risk level, risk rating
 
 **Reliability**:
 Safety Margin that lowers a Mission Event's failure probability, such as testing or redundancy.
@@ -136,7 +144,7 @@ Points of public and political backing. Milestones add them, setbacks such as lo
 _Avoid_: Popularity, approval, morale
 
 **Funding Threshold**:
-One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached, for example $1 billion at 300 points. Reaching it again later pays nothing.
+One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached, for example $1 billion at 250 points. Reaching it again later pays nothing.
 _Avoid_: Tier, level, bracket
 
 **Cancellation Level**:

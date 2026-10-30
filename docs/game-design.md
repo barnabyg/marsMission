@@ -98,7 +98,7 @@ Automated balance runs get added once the simulation has enough rules to balance
 ## Public Support and money
 
 - Milestones award Public Support points.
-- When Public Support reaches a Funding Threshold, it pays a fixed sum. For example, 100 points plus 200 for putting an orbiter at Mars crosses the 300-point threshold, which pays $1 billion.
+- When Public Support reaches a Funding Threshold, it pays a fixed sum. For example, 100 points plus 200 for putting an orbiter at Mars crosses the 250-point threshold, which pays $1 billion.
 - Each Funding Threshold pays only the first time it is reached. Falling below and climbing back pays nothing.
 - There is no regular Appropriation. Running out of money through poor management is a way for the player to fail.
 - There is no separate bankruptcy rule. A player with no money lets Turns pass without launching, and Public Support drains until the Program is cancelled, unless what they've built keeps it going. Cancellation is the only way to lose.
@@ -108,7 +108,7 @@ Automated balance runs get added once the simulation has enough rules to balance
 
 ## Starting conditions
 
-- The Program starts at the late-2028 Launch Window with about $2B and 100 Public Support, so the 300-point Funding Threshold is the first payout.
+- The Program starts at the late-2028 Launch Window with $2.3B and 100 Public Support, so the 250-point Funding Threshold is the first payout. That is enough for a first orbiter and a retry if it fails, with a little left for Reliability.
 - Two well-known Landing Sites (for example Jezero and Gale) are available from the start, at high landing risk because they haven't been surveyed. The first Turn is a choice between surveying first and landing straight away.
 - No difficulty levels in the first version.
 

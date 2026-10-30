@@ -153,7 +153,7 @@ export function PlanningMode({
           </select>
         </label>
         <h3>
-          <GameText>Mission Events, failure risk and Reliability</GameText>
+          <GameText>Mission Events, Risk Bands and Reliability</GameText>
         </h3>
         <ol className="mission-events" data-testid="mission-events">
           {plannedEvents.map((event) => (

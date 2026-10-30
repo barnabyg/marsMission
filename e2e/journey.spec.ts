@@ -68,10 +68,10 @@ test("plays from a new Program through a launch to the next Turn", async ({
   ).toBeVisible();
   await expect(page.getByTestId("turn-number")).toHaveText("1");
   await expect(page.getByTestId("launch-window")).toHaveText("December 2028");
-  await expect(page.getByTestId("money")).toHaveText("$2B");
+  await expect(page.getByTestId("money")).toHaveText("$2.3B");
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
   await expect(page.getByTestId("next-funding-threshold")).toHaveText(
-    "$1B at 300 (200 away)",
+    "$1B at 250 (150 away)",
   );
 
   expect(await termsWithoutTooltips(page)).toEqual([]);
@@ -96,12 +96,12 @@ test("plays from a new Program through a launch to the next Turn", async ({
     "Mars transfer burn",
     "Mars orbit insertion",
     "First orbiter at Mars",
-    "Funding Threshold reached: 300 Public Support",
+    "Funding Threshold reached: 250 Public Support",
   ]) {
     await expect(screen.getByRole("heading")).toHaveText(title);
     expect(await termsWithoutTooltips(page)).toEqual([]);
     // Checked here because the rest of the Turn is over in moments at this test's time scale.
-    if (title === "Funding Threshold reached: 300 Public Support") {
+    if (title === "Funding Threshold reached: 250 Public Support") {
       await expect(page.getByTestId("journey-progress")).toHaveText(
         /Pathfinder Orbiter: arrived at Mars/,
       );
@@ -131,7 +131,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
     "First orbiter at Mars",
   );
   await expect(page.getByTestId("launch-window")).toHaveText("January 2031");
-  await expect(page.getByTestId("money")).toHaveText("$2B");
+  await expect(page.getByTestId("money")).toHaveText("$2.3B");
   await expect(page.getByTestId("next-funding-threshold")).toHaveText(
     "None left",
   );
@@ -192,7 +192,7 @@ for (const { missionEvent, before } of [
     await expect(page.getByTestId("turn-number")).toHaveText("2");
     await expect(page.getByTestId("public-support")).toHaveText("68");
     await expect(page.getByTestId("science")).toHaveText("0");
-    await expect(page.getByTestId("money")).toHaveText("$1B");
+    await expect(page.getByTestId("money")).toHaveText("$1.3B");
     await expect(page.getByTestId("operating-assets")).toHaveCount(0);
     expect(problems).toEqual([]);
   });
