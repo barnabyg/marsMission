@@ -1,0 +1,158 @@
+/* The game targets a desktop at about 3840x2160 (ADR 0001), so type is sized for that. */
+:root {
+  font-size: 32px;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+  --background: #0b0d14;
+  --panel: #171b28;
+  --panel-border: #2d3448;
+  --text: #e8eaf0;
+  --muted: #a3aabd;
+  --accent: #e2703a;
+  --problem: #ff8f7a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+button,
+select {
+  font: inherit;
+  color: inherit;
+  background: var(--panel);
+  border: 2px solid var(--panel-border);
+  border-radius: 0.3rem;
+  padding: 0.4rem 0.9rem;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #10121a;
+  font-weight: 600;
+}
+
+.planning {
+  display: grid;
+  gap: 1.5rem;
+  padding: 2rem 3rem;
+  max-width: 70rem;
+  margin: 0 auto;
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
+}
+
+.status-bar dl {
+  display: flex;
+  gap: 3rem;
+  margin: 0;
+}
+
+.status-bar dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.status-bar dd {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.panel {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+  background: var(--panel);
+  border: 2px solid var(--panel-border);
+  border-radius: 0.5rem;
+  padding: 1.5rem 2rem;
+}
+
+.panel label {
+  display: grid;
+  gap: 0.3rem;
+  color: var(--muted);
+}
+
+.panel select {
+  min-width: 26rem;
+  color: var(--text);
+  background: var(--background);
+}
+
+.panel p,
+.panel ul {
+  margin: 0;
+}
+
+.problem {
+  color: var(--problem);
+}
+
+.mission {
+  position: relative;
+  height: 100%;
+  padding: 2rem 3rem;
+}
+
+.text-screen {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  width: 46rem;
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+  background: rgb(23 27 40 / 92%);
+  border: 2px solid var(--panel-border);
+  border-radius: 0.5rem;
+  padding: 1.5rem 2rem;
+}
+
+.text-screen p {
+  margin: 0;
+}
+
+.load-error {
+  padding: 3rem;
+}
+
+.load-error pre {
+  white-space: pre-wrap;
+  color: var(--problem);
+}

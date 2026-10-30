@@ -1,0 +1,105 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import {
+  catalogueFileNames,
+  CatalogueError,
+  parseCatalogue,
+  type CatalogueFiles,
+} from "./catalogue";
+import { testCatalogueFiles } from "../simulation/testCatalogue";
+
+function realFiles(): CatalogueFiles {
+  const read = (fileName: string): unknown =>
+    JSON.parse(readFileSync(`public/data/${fileName}`, "utf8"));
+  const files = Object.fromEntries(
+    Object.entries(catalogueFileNames).map(([key, fileName]) => [
+      key,
+      read(fileName),
+    ]),
+  );
+  return files as unknown as CatalogueFiles;
+}
+
+function errorFrom(files: unknown): string {
+  try {
+    parseCatalogue(files as CatalogueFiles);
+  } catch (error) {
+    if (error instanceof CatalogueError) return error.message;
+    throw error;
+  }
+  throw new Error("Expected the catalogue to be rejected");
+}
+
+describe("the real data files", () => {
+  it("are valid", () => {
+    expect(() => parseCatalogue(realFiles())).not.toThrow();
+  });
+
+  it("start the Program at the late-2028 Launch Window with about $2B", () => {
+    const { program } = parseCatalogue(realFiles());
+    expect(program.firstLaunchWindow).toMatch(/^2028-(1[0-2])/);
+    expect(program.startingMoneyMillions).toBe(2000);
+  });
+
+  it("offer one Launch Vehicle and one orbiter", () => {
+    const catalogue = parseCatalogue(realFiles());
+    expect(catalogue.launchVehicles).toHaveLength(1);
+    expect(catalogue.assets.map((asset) => asset.kind)).toEqual(["orbiter"]);
+  });
+});
+
+describe("invalid data files", () => {
+  it("name the file and field when a number is mistyped", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      assets: [{ ...files.assets[0], costMillions: "400" }],
+    });
+    expect(message).toContain("assets.json");
+    expect(message).toContain("costMillions");
+  });
+
+  it("name the file when a field is missing", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      program: { ...files.program, startingMoneyMillions: undefined },
+    });
+    expect(message).toContain("program.json");
+    expect(message).toContain("startingMoneyMillions");
+  });
+
+  it("reject a Mission Event reference that doesn't exist", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      assets: [{ ...files.assets[0], missionEvents: ["no-such-event"] }],
+    });
+    expect(message).toContain("no-such-event");
+  });
+
+  it("reject duplicate ids", () => {
+    const files = testCatalogueFiles();
+    const asset = files.assets[0];
+    const message = errorFrom({ ...files, assets: [asset, asset] });
+    expect(message).toContain("test-orbiter");
+  });
+
+  it("reject a date that isn't a real date", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      program: { ...files.program, firstLaunchWindow: "2028-13-45" },
+    });
+    expect(message).toContain("firstLaunchWindow");
+  });
+
+  it("reject a transfer that wouldn't finish within the Turn", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      program: { ...files.program, transferDays: 800 },
+    });
+    expect(message).toContain("transferDays");
+  });
+});

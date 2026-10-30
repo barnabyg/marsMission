@@ -1,0 +1,8 @@
+[
+  {
+    "id": "meridian-medium",
+    "name": "Meridian Medium",
+    "costMillions": 300,
+    "missionEvents": ["launch", "mars-transfer-burn"]
+  }
+]

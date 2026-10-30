@@ -1,0 +1,9 @@
+[
+  {
+    "id": "pathfinder-orbiter",
+    "name": "Pathfinder Orbiter",
+    "kind": "orbiter",
+    "costMillions": 700,
+    "missionEvents": ["mars-orbit-insertion"]
+  }
+]
