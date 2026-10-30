@@ -1,4 +1,8 @@
-import type { LoadedSave, SaveStore } from "../save/saveStore";
+import {
+  manualSlots,
+  type LoadedSave,
+  type SaveStore,
+} from "../save/saveStore";
 import type { Program, Simulation, TurnResult } from "../simulation/simulation";
 
 export type Screen =
@@ -33,8 +37,12 @@ export function newProgramScreen(services: GameServices): Screen {
 
 /** What opening the game shows: a choice if anything has been saved, and a new Program if not. */
 export function openingScreen(services: GameServices): Screen {
-  const automaticSave = services.saveStore.load("automatic");
-  return automaticSave.kind === "empty"
+  const { saveStore } = services;
+  const automaticSave = saveStore.load("automatic");
+  const nothingSaved =
+    automaticSave.kind === "empty" &&
+    manualSlots.every((slot) => saveStore.load(slot).kind === "empty");
+  return nothingSaved
     ? newProgramScreen(services)
     : { mode: "opening", automaticSave };
 }

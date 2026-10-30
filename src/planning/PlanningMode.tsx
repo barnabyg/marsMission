@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   formatMoney,
   type Program,
@@ -13,6 +13,7 @@ interface PlanningModeProps {
   program: Program;
   /** Whether the automatic save at the start of this Planning Mode worked. */
   saved: boolean;
+  saveSlots: ReactNode;
   onSubmit: (plan: TurnPlan) => void;
   onRetire: () => void;
 }
@@ -21,6 +22,7 @@ export function PlanningMode({
   simulation,
   program,
   saved,
+  saveSlots,
   onSubmit,
   onRetire,
 }: PlanningModeProps) {
@@ -240,6 +242,7 @@ export function PlanningMode({
           </ul>
         )}
       </section>
+      {saveSlots}
       <section className="panel">
         <h2>Retire</h2>
         {confirmingRetirement ? (

@@ -4,7 +4,10 @@ import {
   type Simulation,
 } from "../simulation/simulation";
 
-type SaveSlot = "automatic";
+/** The slots the player saves to by hand. The automatic save is kept apart from them. */
+export const manualSlots = [1, 2, 3] as const;
+
+type SaveSlot = "automatic" | (typeof manualSlots)[number];
 
 /** The parts of the browser's local storage the Save Store needs. */
 type SaveStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;

@@ -385,6 +385,120 @@ for (const [name, contents, message] of [
   });
 }
 
+test("saves to a slot, moves on a Turn, loads the slot and sees the earlier state", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+
+  const slot = page.getByTestId("save-slot-1");
+  await expect(slot).toContainText("Empty");
+  await expect(page.getByTestId("save-slot-2")).toContainText("Empty");
+  await expect(page.getByTestId("save-slot-3")).toContainText("Empty");
+  await slot.getByRole("button", { name: "Save here" }).click();
+  await expect(slot).toContainText("Turn 1");
+  await expect(slot).toContainText("December 2028");
+  await expect(slot).toContainText(
+    (await page.getByTestId("money").textContent()) ?? "",
+  );
+  await expect(slot).toContainText("100 Public Support");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Mission Mode" }),
+  ).toBeVisible();
+  // Mission Mode offers no saving.
+  await expect(page.getByText("Save here")).toHaveCount(0);
+  await playToNextTurn(page);
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
+
+  await slot.getByRole("button", { name: "Load" }).click();
+  const confirmLoad = page.getByRole("dialog", { name: "Confirm loading" });
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await confirmLoad.getByRole("button", { name: "Yes, load it" }).click();
+  await expect(page.getByTestId("turn-number")).toHaveText("1");
+  await expect(page.getByTestId("public-support")).toHaveText("100");
+  await expect(page.getByTestId("science")).toHaveText("0");
+  await expect(page.getByTestId("operating-assets")).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test("asks before overwriting a used slot", async ({ page }) => {
+  await page.goto(`/?seed=${successSeed}`);
+  const slot = page.getByTestId("save-slot-1");
+  await slot.getByRole("button", { name: "Save here" }).click();
+  await expect(slot).toContainText("Turn 1");
+
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await playToNextTurn(page);
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
+
+  await slot.getByRole("button", { name: "Save here" }).click();
+  const confirm = page.getByRole("dialog", { name: "Confirm overwriting" });
+  await expect(confirm).toBeVisible();
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await expect(slot).toContainText("Turn 1");
+  await confirm.getByRole("button", { name: "Keep it" }).click();
+  await expect(slot).toContainText("Turn 1");
+
+  await slot.getByRole("button", { name: "Save here" }).click();
+  await confirm.getByRole("button", { name: "Yes, overwrite it" }).click();
+  await expect(slot).toContainText("Turn 2");
+});
+
+test("reaches the slots when reopening the game, even with no automatic save", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  await page
+    .getByTestId("save-slot-2")
+    .getByRole("button", { name: "Save here" })
+    .click();
+  await page.getByRole("button", { name: "Retire Program" }).click();
+  await page.getByRole("button", { name: "Yes, retire the Program" }).click();
+  await expect(page.getByTestId("program-summary")).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByTestId("opening-screen")).toBeVisible();
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await expect(
+    page.getByRole("button", { name: "Continue this Program" }),
+  ).toHaveCount(0);
+  await page
+    .getByTestId("save-slot-2")
+    .getByRole("button", { name: "Load" })
+    .click();
+  await expect(page.getByTestId("turn-number")).toHaveText("1");
+});
+
+test("gives a clear message for a corrupt slot, without affecting the others", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  await page
+    .getByTestId("save-slot-1")
+    .getByRole("button", { name: "Save here" })
+    .click();
+  await page.evaluate(
+    ([key]) => {
+      localStorage.setItem(key, "{not json");
+    },
+    [storageKeyFor(2)] as const,
+  );
+  await page.reload();
+
+  const corrupt = page.getByTestId("save-slot-2");
+  await expect(corrupt).toContainText("corrupt");
+  await expect(corrupt.getByRole("button", { name: "Load" })).toHaveCount(0);
+  await expect(page.getByTestId("save-slot-1")).toContainText("Turn 1");
+  await page.getByRole("button", { name: "Continue this Program" }).click();
+  await expect(page.getByTestId("save-slot-2")).toContainText("corrupt");
+  await expect(page.getByTestId("turn-number")).toHaveText("1");
+});
+
 test("explains a game term on hover and on keyboard focus", async ({
   page,
 }) => {

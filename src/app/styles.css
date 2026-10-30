@@ -164,6 +164,31 @@ button.primary {
   color: var(--problem);
 }
 
+.save-slots {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0;
+  list-style: none;
+}
+
+.save-slot-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.save-slot-text {
+  min-width: 34rem;
+}
+
+.save-slots .confirm {
+  margin-top: 0.6rem;
+}
+
+.summary-screen .panel {
+  width: 100%;
+}
+
 .mission {
   position: relative;
   height: 100%;

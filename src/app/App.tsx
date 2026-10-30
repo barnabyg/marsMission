@@ -4,6 +4,7 @@ import { TurnSummaryScreen } from "../mission/TurnSummaryScreen";
 import { PlanningMode } from "../planning/PlanningMode";
 import { ProgramSummaryScreen } from "../planning/ProgramSummaryScreen";
 import { OpeningScreen } from "../save/OpeningScreen";
+import { SaveSlots } from "../save/SaveSlots";
 import type { TurnPlan } from "../simulation/simulation";
 import {
   newProgramScreen,
@@ -32,6 +33,17 @@ export function App({ services, firstScreen }: AppProps) {
         onStartNew={() => {
           setScreen(newProgramScreen(services));
         }}
+        saveSlots={
+          <SaveSlots
+            simulation={simulation}
+            saveStore={saveStore}
+            program={null}
+            confirmLoading={false}
+            onLoad={(program) => {
+              setScreen(planningScreen(services, program));
+            }}
+          />
+        }
       />
     );
   }
@@ -40,9 +52,21 @@ export function App({ services, firstScreen }: AppProps) {
     const { program } = screen;
     return (
       <PlanningMode
+        key={`${program.seed}:${program.turnNumber}`}
         simulation={simulation}
         program={program}
         saved={screen.saved}
+        saveSlots={
+          <SaveSlots
+            simulation={simulation}
+            saveStore={saveStore}
+            program={program}
+            confirmLoading
+            onLoad={(loaded) => {
+              setScreen(planningScreen(services, loaded));
+            }}
+          />
+        }
         onSubmit={(plan: TurnPlan) => {
           setScreen({
             mode: "mission",

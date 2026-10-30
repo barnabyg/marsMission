@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createSimulation } from "../simulation/simulation";
 import { testCatalogue } from "../simulation/testCatalogue";
-import { createSaveStore, storageKeyFor } from "./saveStore";
+import { createSaveStore, manualSlots, storageKeyFor } from "./saveStore";
 
 function fakeStorage() {
   const items = new Map<string, string>();
@@ -73,6 +73,53 @@ describe("the Save Store", () => {
     const loaded = store.load("automatic");
     expect(loaded).toMatchObject({ kind: "problem" });
     expect(JSON.stringify(loaded)).toMatch(/format 99/);
+  });
+
+  describe("manual slots", () => {
+    it("has three, separate from the automatic save", () => {
+      expect(manualSlots).toEqual([1, 2, 3]);
+    });
+
+    it("start empty", () => {
+      const { store } = setup();
+      for (const slot of manualSlots) {
+        expect(store.load(slot)).toEqual({ kind: "empty" });
+      }
+    });
+
+    it("keep different Programs apart", () => {
+      const { simulation, store } = setup();
+      const first = simulation.startProgram(1);
+      const second = simulation.startProgram(2);
+      store.save(1, first);
+      store.save(2, second);
+      expect(store.load(1)).toEqual({ kind: "program", program: first });
+      expect(store.load(2)).toEqual({ kind: "program", program: second });
+      expect(store.load(3)).toEqual({ kind: "empty" });
+    });
+
+    it("are never overwritten by an automatic save, and never overwrite it", () => {
+      const { simulation, store } = setup();
+      const automatic = simulation.startProgram(1);
+      const manual = simulation.startProgram(2);
+      store.save(1, manual);
+      store.save("automatic", automatic);
+      expect(store.load(1)).toEqual({ kind: "program", program: manual });
+      store.save(1, simulation.startProgram(3));
+      expect(store.load("automatic")).toEqual({
+        kind: "program",
+        program: automatic,
+      });
+    });
+
+    it("keep a corrupt slot from affecting the others", () => {
+      const { storage, store, program } = setup();
+      store.save(1, program);
+      storage.setItem(storageKeyFor(2), "{not json");
+      expect(store.load(1)).toEqual({ kind: "program", program });
+      expect(store.load(2)).toMatchObject({ kind: "problem" });
+      expect(store.load(3)).toEqual({ kind: "empty" });
+    });
   });
 
   it("reports a failed write rather than throwing, as when storage is full", () => {
