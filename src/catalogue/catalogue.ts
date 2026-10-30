@@ -3,7 +3,7 @@ import { z } from "zod";
 const id = z.string().min(1);
 const money = z.number().int().nonnegative();
 
-const isoDate = z.string().refine((value) => {
+export const isoDate = z.string().refine((value) => {
   const date = new Date(`${value}T00:00:00Z`);
   return (
     /^\d{4}-\d{2}-\d{2}$/.test(value) &&
@@ -47,10 +47,13 @@ const missionEventsSchema = z.array(
     id,
     name: z.string().min(1),
     description: z.string().min(1),
+    failureDescription: z.string().min(1),
     timing: z.strictObject({
       from: z.enum(["launch", "arrival"]),
       days: z.number().int().nonnegative(),
     }),
+    failureProbability: z.number().min(0).max(1),
+    publicSupportLoss: z.number().int().nonnegative(),
   }),
 );
 
@@ -72,6 +75,27 @@ const fundingThresholdsSchema = z.array(
   }),
 );
 
+const reliabilityLevelsSchema = z
+  .array(
+    z.strictObject({
+      id,
+      name: z.string().min(1),
+      costMillions: money,
+      // What a Mission Event's failure probability is multiplied by at this level.
+      failureMultiplier: z.number().min(0).max(1),
+    }),
+  )
+  .min(1);
+
+const riskBandsSchema = z
+  .array(
+    z.strictObject({
+      upTo: z.number().positive().max(1),
+      label: z.string().min(1),
+    }),
+  )
+  .min(1);
+
 const schemas = {
   program: programSchema,
   launchVehicles: launchVehiclesSchema,
@@ -79,6 +103,8 @@ const schemas = {
   missionEvents: missionEventsSchema,
   milestones: milestonesSchema,
   fundingThresholds: fundingThresholdsSchema,
+  reliabilityLevels: reliabilityLevelsSchema,
+  riskBands: riskBandsSchema,
 };
 
 /** The data file behind each part of the catalogue, relative to the data folder. */
@@ -89,6 +115,8 @@ export const catalogueFileNames = {
   missionEvents: "mission-events.json",
   milestones: "milestones.json",
   fundingThresholds: "funding-thresholds.json",
+  reliabilityLevels: "reliability-levels.json",
+  riskBands: "risk-bands.json",
 } as const satisfies Record<keyof typeof schemas, string>;
 
 export interface Catalogue {
@@ -98,6 +126,9 @@ export interface Catalogue {
   missionEvents: z.output<typeof missionEventsSchema>;
   milestones: z.output<typeof milestonesSchema>;
   fundingThresholds: z.output<typeof fundingThresholdsSchema>;
+  /** In order, cheapest first. */
+  reliabilityLevels: z.output<typeof reliabilityLevelsSchema>;
+  riskBands: z.output<typeof riskBandsSchema>;
 }
 
 export type CatalogueFiles = Catalogue;
@@ -135,6 +166,8 @@ function crossCheck(catalogue: Catalogue): string[] {
     missionEvents,
     milestones,
     fundingThresholds,
+    reliabilityLevels,
+    riskBands,
   } = catalogue;
 
   const parts = [
@@ -142,6 +175,7 @@ function crossCheck(catalogue: Catalogue): string[] {
     [catalogueFileNames.assets, assets],
     [catalogueFileNames.missionEvents, missionEvents],
     [catalogueFileNames.milestones, milestones],
+    [catalogueFileNames.reliabilityLevels, reliabilityLevels],
   ] as const;
   for (const [file, items] of parts) {
     for (const duplicate of findDuplicates(items.map((item) => item.id))) {
@@ -186,6 +220,35 @@ function crossCheck(catalogue: Catalogue): string[] {
       );
     }
   });
+
+  reliabilityLevels.forEach((level, index) => {
+    const lower = reliabilityLevels[index - 1];
+    if (!lower) return;
+    if (level.costMillions < lower.costMillions) {
+      problems.push(
+        `${catalogueFileNames.reliabilityLevels}: "${level.id}" costs less than "${lower.id}", the level below it`,
+      );
+    }
+    if (level.failureMultiplier > lower.failureMultiplier) {
+      problems.push(
+        `${catalogueFileNames.reliabilityLevels}: "${level.id}" has a higher failure chance than "${lower.id}", the level below it`,
+      );
+    }
+  });
+
+  riskBands.forEach(({ upTo }, index) => {
+    const previous = riskBands[index - 1]?.upTo ?? 0;
+    if (upTo <= previous) {
+      problems.push(
+        `${catalogueFileNames.riskBands}: ${upTo} must be higher than ${previous}. Bands go in ascending order`,
+      );
+    }
+  });
+  if (riskBands.at(-1)?.upTo !== 1) {
+    problems.push(
+      `${catalogueFileNames.riskBands}: the last band must go up to 1, so that every failure probability has a band`,
+    );
+  }
 
   if (program.transferDays >= program.launchWindowIntervalDays) {
     problems.push(
@@ -238,13 +301,29 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     problems,
   );
 
+  const reliabilityLevels = parsePart(
+    catalogueFileNames.reliabilityLevels,
+    schemas.reliabilityLevels,
+    files.reliabilityLevels,
+    problems,
+  );
+
+  const riskBands = parsePart(
+    catalogueFileNames.riskBands,
+    schemas.riskBands,
+    files.riskBands,
+    problems,
+  );
+
   if (
     !program ||
     !launchVehicles ||
     !assets ||
     !missionEvents ||
     !milestones ||
-    !fundingThresholds
+    !fundingThresholds ||
+    !reliabilityLevels ||
+    !riskBands
   ) {
     throw new CatalogueError(problems.join("\n"));
   }
@@ -256,6 +335,8 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     missionEvents,
     milestones,
     fundingThresholds,
+    reliabilityLevels,
+    riskBands,
   };
   const crossCheckProblems = crossCheck(catalogue);
   if (crossCheckProblems.length > 0) {

@@ -2,6 +2,9 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { fetchCatalogue } from "./fetchCatalogue";
+import { knownSeed } from "./knownSeed";
+import { openingScreen, type GameServices } from "./screens";
+import { createSaveStore } from "../save/saveStore";
 import { createSimulation } from "../simulation/simulation";
 import { TooltipLayer } from "../ui/TooltipLayer";
 import "./styles.css";
@@ -12,9 +15,26 @@ const root = createRoot(container);
 
 try {
   const simulation = createSimulation(await fetchCatalogue());
+  const services: GameServices = {
+    simulation,
+    saveStore: createSaveStore(
+      {
+        // Reached through calls, because just reading localStorage throws where the browser blocks it.
+        getItem: (key) => localStorage.getItem(key),
+        setItem: (key, value) => {
+          localStorage.setItem(key, value);
+        },
+        removeItem: (key) => {
+          localStorage.removeItem(key);
+        },
+      },
+      simulation,
+    ),
+    newSeed: () => knownSeed(window.location.search) ?? Date.now(),
+  };
   root.render(
     <StrictMode>
-      <App simulation={simulation} />
+      <App services={services} firstScreen={openingScreen(services)} />
       <TooltipLayer />
     </StrictMode>,
   );

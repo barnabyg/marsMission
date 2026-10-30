@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { parseCatalogue, type CatalogueFiles } from "../catalogue/catalogue";
 import {
   createSimulation,
+  SaveError,
   type Program,
   type Simulation,
   type TurnPlan,
@@ -122,7 +123,10 @@ describe("running a Turn with a Mission", () => {
             id: "test-settle",
             name: "Test settle",
             description: "Settles into orbit.",
+            failureDescription: "It tumbled out of orbit.",
             timing: { from: "arrival", days: 5 },
+            failureProbability: 0,
+            publicSupportLoss: 10,
           },
         ],
       } as CatalogueFiles),
@@ -146,6 +150,7 @@ describe("running a Turn with a Mission", () => {
       arrivalDay: 200,
       launchVehicleName: "Test Vehicle",
       assetNames: ["Test Orbiter"],
+      failedOnDay: null,
     });
   });
 
@@ -469,6 +474,652 @@ describe("cancellation", () => {
     expect(() => start.simulation.runTurn(program, skipTurn)).toThrow(
       /has ended/,
     );
+  });
+});
+
+describe("a Mission Event failing", () => {
+  /** A Simulation in which the named Mission Events have the given failure probabilities. */
+  function withFailures(probabilities: Record<string, number>) {
+    const files = testCatalogueFiles();
+    const simulation = createSimulation(
+      parseCatalogue({
+        ...files,
+        missionEvents: files.missionEvents.map((event) => ({
+          ...event,
+          failureProbability: probabilities[event.id] ?? 0,
+        })),
+      }),
+    );
+    return { simulation, program: simulation.startProgram(42) };
+  }
+
+  it("ends the Mission at the first failure, so later Mission Events don't happen", () => {
+    const { simulation, program } = withFailures({ "test-burn": 1 });
+    const { timeline } = simulation.runTurn(program, sendOrbiter);
+    expect(
+      timeline.entries.map((entry) =>
+        entry.kind === "missionEvent" ? [entry.eventId, entry.outcome] : null,
+      ),
+    ).toEqual([
+      ["test-launch", "success"],
+      ["test-burn", "failure"],
+    ]);
+  });
+
+  it("takes the first failure in time, whichever way the catalogue lists the Mission Events", () => {
+    const files = testCatalogueFiles();
+    const simulation = createSimulation(
+      parseCatalogue({
+        ...files,
+        launchVehicles: [
+          {
+            id: "test-vehicle",
+            name: "Test Vehicle",
+            costMillions: 100,
+            missionEvents: ["test-burn", "test-launch"],
+          },
+        ],
+        missionEvents: files.missionEvents.map((event) => ({
+          ...event,
+          failureProbability: 1,
+        })),
+      }),
+    );
+    const { summary } = simulation.runTurn(
+      simulation.startProgram(1),
+      sendOrbiter,
+    );
+    expect(summary.failure?.missionEventName).toBe("Test launch");
+  });
+
+  it("describes the failure on the timeline, with what it cost", () => {
+    const { simulation, program } = withFailures({ "test-burn": 1 });
+    const { timeline } = simulation.runTurn(program, sendOrbiter);
+    const entry = timeline.entries.at(-1);
+    expect(entry?.title).toBe("Test burn failed");
+    expect(entry?.description).toContain("The engine cut out.");
+    expect(entry?.description).toContain("Test Orbiter");
+    expect(entry?.description).toContain("30 Public Support");
+  });
+
+  it("tells Mission Mode the day the journey stopped", () => {
+    const { simulation, program } = withFailures({ "test-burn": 1 });
+    const { timeline } = simulation.runTurn(program, sendOrbiter);
+    expect(timeline.mission?.failedOnDay).toBe(1);
+  });
+
+  it("loses the Mission's Assets", () => {
+    const { simulation, program } = withFailures({ "test-arrival": 1 });
+    const { program: next } = simulation.runTurn(program, sendOrbiter);
+    expect(simulation.readProgram(next).operatingAssets).toEqual([]);
+  });
+
+  it("keeps the money spent and earns no Milestone, Science or Funding Threshold payout", () => {
+    const { simulation, program } = withFailures({ "test-arrival": 1 });
+    const {
+      program: next,
+      summary,
+      timeline,
+    } = simulation.runTurn(program, sendOrbiter);
+    const view = simulation.readProgram(next);
+    expect(view.moneyMillions).toBe(1500);
+    expect(view.science).toBe(0);
+    expect(view.milestones).toEqual([]);
+    expect(summary.milestones).toEqual([]);
+    expect(summary.fundingPayouts).toEqual([]);
+    expect(timeline.entries.map((entry) => entry.kind)).toEqual([
+      "missionEvent",
+      "missionEvent",
+      "missionEvent",
+    ]);
+  });
+
+  it("can still earn the Milestone on a later Mission", () => {
+    const { simulation, program } = withFailures({ "test-arrival": 1 });
+    const failed = simulation.runTurn(program, sendOrbiter).program;
+    const files = testCatalogueFiles();
+    const reliable = createSimulation(parseCatalogue(files));
+    const { summary } = reliable.runTurn(failed, sendOrbiter);
+    expect(summary.milestones.map(({ name }) => name)).toEqual([
+      "First orbiter",
+    ]);
+  });
+
+  it("takes the Public Support loss before the percentage drain", () => {
+    const { simulation, program } = withFailures({ "test-launch": 1 });
+    const { program: next, summary } = simulation.runTurn(program, sendOrbiter);
+    // 100, less 20 for the failure, less 15% of the 80 that leaves.
+    expect(simulation.readProgram(next).publicSupport).toBe(68);
+    expect(summary).toMatchObject({
+      publicSupportStart: 100,
+      publicSupportDrained: 12,
+      publicSupportEnd: 68,
+      failure: {
+        missionEventName: "Test launch",
+        assetsLost: ["Test Orbiter"],
+        publicSupportLost: 20,
+      },
+    });
+  });
+
+  it("never takes Public Support below zero", () => {
+    const files = testCatalogueFiles();
+    const simulation = createSimulation(
+      parseCatalogue({
+        ...files,
+        missionEvents: files.missionEvents.map((event) => ({
+          ...event,
+          failureProbability: 1,
+          publicSupportLoss: 500,
+        })),
+      }),
+    );
+    const { summary } = simulation.runTurn(
+      simulation.startProgram(1),
+      sendOrbiter,
+    );
+    expect(summary.publicSupportEnd).toBe(0);
+    expect(summary.failure?.publicSupportLost).toBe(100);
+  });
+
+  it("can trigger cancellation through the Public Support it loses", () => {
+    const files = testCatalogueFiles();
+    const simulation = createSimulation(
+      parseCatalogue({
+        ...files,
+        missionEvents: files.missionEvents.map((event) => ({
+          ...event,
+          failureProbability: 1,
+          publicSupportLoss: 50,
+        })),
+      }),
+    );
+    const { program, summary } = simulation.runTurn(
+      simulation.startProgram(1),
+      sendOrbiter,
+    );
+    // 100 less 50 is exactly the Cancellation Level, but the drain then takes it below.
+    expect(summary.publicSupportEnd).toBe(42);
+    expect(simulation.readProgram(program).status.kind).toBe("cancelled");
+  });
+
+  it("reports no failure for a Mission that succeeds, or a Turn without one", () => {
+    const { simulation, program } = setup();
+    expect(simulation.runTurn(program, sendOrbiter).summary.failure).toBeNull();
+    expect(simulation.runTurn(program, skipTurn).summary.failure).toBeNull();
+  });
+});
+
+describe("failure rolls", () => {
+  const seeds = Array.from({ length: 500 }, (_, index) => index + 1);
+
+  function catalogueWith(probabilities: Record<string, number>) {
+    const files = testCatalogueFiles();
+    return createSimulation(
+      parseCatalogue({
+        ...files,
+        missionEvents: files.missionEvents.map((event) => ({
+          ...event,
+          failureProbability: probabilities[event.id] ?? 0,
+        })),
+      }),
+    );
+  }
+
+  /** Which Mission Event failed for each seed, or null if the Mission succeeded. */
+  function failuresBySeed(simulation: Simulation) {
+    return seeds.map(
+      (seed) =>
+        simulation.runTurn(simulation.startProgram(seed), sendOrbiter).summary
+          .failure?.missionEventName ?? null,
+    );
+  }
+
+  it("give the same outcome for the same seed and plans", () => {
+    const simulation = catalogueWith({
+      "test-launch": 0.5,
+      "test-arrival": 0.5,
+    });
+    expect(failuresBySeed(simulation)).toEqual(failuresBySeed(simulation));
+  });
+
+  it("happen about as often as the failure probability says", () => {
+    const failures = failuresBySeed(catalogueWith({ "test-burn": 0.2 })).filter(
+      Boolean,
+    );
+    expect(failures.length).toBeGreaterThan(70);
+    expect(failures.length).toBeLessThan(130);
+  });
+
+  it("don't change for one Mission Event when another's probability changes", () => {
+    const failedBurn = (launchProbability: number) => {
+      const simulation = catalogueWith({
+        "test-launch": launchProbability,
+        "test-burn": 0.5,
+      });
+      return failuresBySeed(simulation).map((name) => name === "Test burn");
+    };
+    const withoutLaunchRisk = failedBurn(0);
+    const withLaunchRisk = failedBurn(0.3);
+    // A launch failure hides the burn, so compare only where the launch went well in both.
+    const launchFailed = failuresBySeed(
+      catalogueWith({ "test-launch": 0.3 }),
+    ).map((name) => name === "Test launch");
+    seeds.forEach((_, index) => {
+      if (!launchFailed[index]) {
+        expect(withLaunchRisk[index]).toBe(withoutLaunchRisk[index]);
+      }
+    });
+    expect(launchFailed.filter(Boolean).length).toBeGreaterThan(0);
+  });
+
+  it("differ between Turns, so a retry isn't doomed to repeat a failure", () => {
+    const simulation = catalogueWith({ "test-launch": 0.5 });
+    const differs = seeds.some((seed) => {
+      const first = simulation.runTurn(
+        simulation.startProgram(seed),
+        skipTurn,
+      ).program;
+      const fromTurnOne = simulation.runTurn(
+        simulation.startProgram(seed),
+        sendOrbiter,
+      ).summary.failure;
+      const fromTurnTwo = simulation.runTurn(first, sendOrbiter).summary
+        .failure;
+      return (fromTurnOne === null) !== (fromTurnTwo === null);
+    });
+    expect(differs).toBe(true);
+  });
+});
+
+describe("previewing a Mission's risk", () => {
+  function withEvents(probabilities: Record<string, number>) {
+    const files = testCatalogueFiles();
+    return createSimulation(
+      parseCatalogue({
+        ...files,
+        missionEvents: files.missionEvents.map((event) => ({
+          ...event,
+          failureProbability: probabilities[event.id] ?? 0,
+        })),
+      }),
+    );
+  }
+
+  it("lists every Mission Event the Mission will go through, in order", () => {
+    const { simulation } = setup();
+    expect(
+      simulation
+        .previewMission({
+          launchVehicleId: "test-vehicle",
+          assetIds: ["test-orbiter"],
+        })
+        .map((event) => event.name),
+    ).toEqual(["Test launch", "Test burn", "Test arrival"]);
+  });
+
+  it("changes with what the Mission carries", () => {
+    const { simulation } = setup();
+    expect(
+      simulation
+        .previewMission({ launchVehicleId: "test-vehicle", assetIds: [] })
+        .map((event) => event.name),
+    ).toEqual(["Test launch", "Test burn"]);
+  });
+
+  it("lists a Mission Event once when several things share it", () => {
+    const { simulation } = setup();
+    expect(
+      simulation.previewMission({
+        launchVehicleId: "test-vehicle",
+        assetIds: ["test-orbiter", "test-relay"],
+      }),
+    ).toHaveLength(3);
+  });
+
+  it.each([
+    [0, "~1%"],
+    [0.01, "~1%"],
+    [0.02, "~5%"],
+    [0.05, "~5%"],
+    [0.3, "Over 10%"],
+    [1, "Over 10%"],
+  ])(
+    "shows a failure probability of %s as the band %s",
+    (probability, band) => {
+      const simulation = withEvents({ "test-launch": probability });
+      const [launch] = simulation.previewMission({
+        launchVehicleId: "test-vehicle",
+        assetIds: [],
+      });
+      expect(launch?.riskBand).toBe(band);
+    },
+  );
+
+  it("never exposes the exact probability", () => {
+    const simulation = withEvents({ "test-launch": 0.0437 });
+    const preview = simulation.previewMission({
+      launchVehicleId: "test-vehicle",
+      assetIds: [],
+    });
+    expect(JSON.stringify(preview)).not.toContain("0.0437");
+    expect(preview[0]).not.toHaveProperty("failureProbability");
+  });
+});
+
+describe("Reliability", () => {
+  const allEvents = (levelId: string) => ({
+    "test-launch": levelId,
+    "test-burn": levelId,
+    "test-arrival": levelId,
+  });
+
+  function planWith(reliability: Record<string, string>): TurnPlan {
+    return {
+      mission: {
+        launchVehicleId: "test-vehicle",
+        assetIds: ["test-orbiter"],
+        reliability,
+      },
+    };
+  }
+
+  function riskyCatalogue(probability: number) {
+    const files = testCatalogueFiles();
+    return createSimulation(
+      parseCatalogue({
+        ...files,
+        missionEvents: files.missionEvents.map((event) => ({
+          ...event,
+          failureProbability: probability,
+        })),
+      }),
+    );
+  }
+
+  const seeds = Array.from({ length: 1000 }, (_, index) => index + 1);
+
+  function failedEvent(
+    simulation: Simulation,
+    seed: number,
+    plan: TurnPlan,
+  ): string | null {
+    return (
+      simulation.runTurn(simulation.startProgram(seed), plan).summary.failure
+        ?.missionEventName ?? null
+    );
+  }
+
+  it("offers every level for each Mission Event, defaulting to the cheapest", () => {
+    const { simulation } = setup();
+    const [launch] = simulation.previewMission({
+      launchVehicleId: "test-vehicle",
+      assetIds: ["test-orbiter"],
+    });
+    expect(launch?.reliabilityLevelId).toBe("none");
+    expect(launch?.reliabilityLevels.map((level) => level.name)).toEqual([
+      "None",
+      "Tested",
+      "Redundant",
+    ]);
+  });
+
+  it("moves a Mission Event's risk band when its level changes, and no other's", () => {
+    const simulation = riskyCatalogue(0.08);
+    const preview = simulation.previewMission({
+      launchVehicleId: "test-vehicle",
+      assetIds: ["test-orbiter"],
+      reliability: { "test-launch": "redundant" },
+    });
+    expect(preview.map((event) => event.riskBand)).toEqual([
+      "~1%",
+      "~10%",
+      "~10%",
+    ]);
+  });
+
+  it("adds each level's cost to the Mission's total cost", () => {
+    const { simulation, program } = setup();
+    expect(
+      simulation.validatePlan(
+        program,
+        planWith({ "test-launch": "tested", "test-burn": "redundant" }),
+      ),
+    ).toEqual({ costMillions: 750, problems: [] });
+  });
+
+  it("spends the money", () => {
+    const { simulation, program } = setup();
+    const { program: next, summary } = simulation.runTurn(
+      program,
+      planWith({ "test-arrival": "redundant" }),
+    );
+    expect(summary.missionCostMillions).toBe(700);
+    // Less $700M, plus the $1B Funding Threshold payout.
+    expect(simulation.readProgram(next).moneyMillions).toBe(2300);
+  });
+
+  it("rejects a plan Reliability makes unaffordable", () => {
+    const files = testCatalogueFiles();
+    const simulation = createSimulation(
+      parseCatalogue({
+        ...files,
+        program: { ...files.program, startingMoneyMillions: 600 },
+      }),
+    );
+    const program = simulation.startProgram(1);
+    expect(simulation.validatePlan(program, sendOrbiter).problems).toEqual([]);
+    const { problems } = simulation.validatePlan(
+      program,
+      planWith(allEvents("tested")),
+    );
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toMatch(/\$650M.*\$600M/);
+  });
+
+  it("rejects an unknown level with a clear reason", () => {
+    const { simulation, program } = setup();
+    const plan = planWith({ "test-launch": "gold-plated" });
+    const { problems } = simulation.validatePlan(program, plan);
+    expect(problems.join(" ")).toContain('"gold-plated"');
+    expect(() => simulation.runTurn(program, plan)).toThrow(/gold-plated/);
+  });
+
+  it("rejects a level for a Mission Event the Mission doesn't go through", () => {
+    const { simulation, program } = setup();
+    const { problems } = simulation.validatePlan(
+      program,
+      planWith({ "no-such-event": "tested" }),
+    );
+    expect(problems.join(" ")).toContain('"no-such-event"');
+  });
+
+  it("never turns a success into a failure, for any seed", () => {
+    const simulation = riskyCatalogue(0.3);
+    for (const seed of seeds) {
+      const without = failedEvent(simulation, seed, sendOrbiter);
+      if (without === null) {
+        expect(
+          failedEvent(simulation, seed, planWith(allEvents("redundant"))),
+        ).toBeNull();
+      }
+    }
+  });
+
+  it("doesn't change the roll of any other Mission Event", () => {
+    const simulation = riskyCatalogue(0.3);
+    for (const seed of seeds) {
+      const without = failedEvent(simulation, seed, sendOrbiter);
+      // Protecting only the arrival can't change whether the two before it fail.
+      const withArrivalBought = failedEvent(
+        simulation,
+        seed,
+        planWith({ "test-arrival": "redundant" }),
+      );
+      if (without === "Test launch" || without === "Test burn") {
+        expect(withArrivalBought).toBe(without);
+      } else {
+        expect(["Test arrival", null]).toContain(withArrivalBought);
+      }
+    }
+  });
+
+  it("produces fewer failures at each higher level, over many seeds", () => {
+    const simulation = riskyCatalogue(0.3);
+    const failures = (levelId: string) =>
+      seeds.filter(
+        (seed) =>
+          failedEvent(simulation, seed, planWith(allEvents(levelId))) !== null,
+      ).length;
+    const none = failures("none");
+    const tested = failures("tested");
+    const redundant = failures("redundant");
+    expect(tested).toBeLessThan(none);
+    expect(redundant).toBeLessThan(tested);
+    // 1 - 0.97^3 of 1000 is about 87, so this isn't just "any drop".
+    expect(redundant).toBeLessThan(150);
+  });
+
+  it("doesn't carry over to the next Turn's plan", () => {
+    const { simulation, program } = setup();
+    const { program: next } = simulation.runTurn(
+      program,
+      planWith(allEvents("redundant")),
+    );
+    expect(simulation.validatePlan(next, sendOrbiter).costMillions).toBe(500);
+    expect(
+      simulation
+        .previewMission({
+          launchVehicleId: "test-vehicle",
+          assetIds: ["test-orbiter"],
+        })
+        .map((event) => event.reliabilityLevelId),
+    ).toEqual(["none", "none", "none"]);
+  });
+});
+
+describe("saving and restoring a Program", () => {
+  /** A save as it comes back from storage, which only holds text. */
+  function throughStorage(simulation: Simulation, program: Program): unknown {
+    return JSON.parse(JSON.stringify(simulation.saveProgram(program)));
+  }
+
+  function risky() {
+    const files = testCatalogueFiles();
+    return createSimulation(
+      parseCatalogue({
+        ...files,
+        missionEvents: files.missionEvents.map((event) => ({
+          ...event,
+          failureProbability: 0.4,
+        })),
+      }),
+    );
+  }
+
+  it("carries a format version from the first release", () => {
+    const { simulation, program } = setup();
+    expect(simulation.saveProgram(program).formatVersion).toBe(1);
+  });
+
+  it("restores a save made by the first release, whatever later versions do", () => {
+    const { simulation } = setup();
+    // A literal copy of what format 1 looks like. Don't change this: it's a compatibility contract.
+    const firstRelease = {
+      formatVersion: 1,
+      program: {
+        seed: 42,
+        turnNumber: 3,
+        date: "2033-03-10",
+        moneyMillions: 1250,
+        publicSupport: 180,
+        science: 100,
+        milestoneIds: ["first-orbiter"],
+        fundingThresholdsPaid: [300],
+        operatingAssets: [
+          {
+            assetId: "test-orbiter",
+            name: "Test Orbiter",
+            kind: "orbiter",
+            arrivedOn: "2029-06-19",
+          },
+        ],
+        status: { kind: "active" },
+      },
+    };
+    const view = simulation.readProgram(
+      simulation.restoreProgram(firstRelease),
+    );
+    expect(view).toMatchObject({
+      turnNumber: 3,
+      date: "2033-03-10",
+      moneyMillions: 1250,
+      publicSupport: 180,
+      science: 100,
+    });
+  });
+
+  it("restores exactly the Program that was saved", () => {
+    const { simulation, program } = setup();
+    const { program: flown } = simulation.runTurn(program, sendOrbiter);
+    expect(
+      simulation.restoreProgram(throughStorage(simulation, flown)),
+    ).toEqual(flown);
+  });
+
+  it("plays on exactly as if it was never saved, including its seed", () => {
+    const simulation = risky();
+    for (let seed = 1; seed <= 50; seed++) {
+      const start = simulation.startProgram(seed);
+      const unsaved = simulation.runTurn(start, sendOrbiter);
+      const restored = simulation.restoreProgram(
+        throughStorage(simulation, start),
+      );
+      expect(simulation.runTurn(restored, sendOrbiter)).toEqual(unsaved);
+    }
+  });
+
+  it.each([
+    ["isn't a save at all", "hello"],
+    ["is empty", null],
+    ["has no format version", { program: {} }],
+    ["has a format version that isn't a number", { formatVersion: "one" }],
+  ])("reports a save that %s as corrupt", (_, saved) => {
+    const { simulation } = setup();
+    expect(() => simulation.restoreProgram(saved)).toThrow(SaveError);
+    expect(() => simulation.restoreProgram(saved)).toThrow(/corrupt/);
+  });
+
+  it("reports a save with damaged contents as corrupt", () => {
+    const { simulation, program } = setup();
+    const saved = simulation.saveProgram(program);
+    expect(() =>
+      simulation.restoreProgram({
+        ...saved,
+        program: { ...saved.program, moneyMillions: "lots" },
+      }),
+    ).toThrow(/corrupt/);
+  });
+
+  it("names the unknown format version of a save it can't read", () => {
+    const { simulation, program } = setup();
+    const saved = { ...simulation.saveProgram(program), formatVersion: 99 };
+    expect(() => simulation.restoreProgram(saved)).toThrow(SaveError);
+    expect(() => simulation.restoreProgram(saved)).toThrow(/format 99/);
+  });
+
+  it("names the format version even when a future format has a different shape", () => {
+    const { simulation } = setup();
+    expect(() => simulation.restoreProgram({ formatVersion: 2 })).toThrow(
+      /format 2/,
+    );
+  });
+
+  it("refuses to continue a Program that has ended", () => {
+    const { simulation, program } = setup();
+    const saved = simulation.saveProgram(simulation.retireProgram(program));
+    expect(() => simulation.restoreProgram(saved)).toThrow(SaveError);
+    expect(() => simulation.restoreProgram(saved)).toThrow(/has ended/);
   });
 });
 

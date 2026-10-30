@@ -39,12 +39,16 @@ export const tooltips = {
     "The first part of a Turn, in which the player chooses Missions, Assets, technology and Safety Margin and spends money. No game time passes in Planning Mode.",
   "Mission Mode":
     "The graphical second part of a Turn, in which the Turn's Mission and every operating Asset and Crew play out until the next Launch Window.",
+  "Save Slot":
+    "One of three places where the player can keep a Program by hand, usable only in Planning Mode. It is separate from the automatic save made at the start of each Planning Mode.",
   "Decision Point":
     "A moment in Mission Mode when play pauses for the player to make a limited choice, such as aborting or using a Contingency.",
   "Mission Event":
     "A discrete, riskable step within a Mission, such as launch, Mars transfer burn, aerocapture, entry/descent/landing or rendezvous. Each one has a failure probability.",
   "Safety Margin":
     "Everything the player buys to reduce risk. It comes in three kinds (Reliability, Contingency and Protection) and costs money and sometimes mass.",
+  "Risk Band":
+    'A rough failure figure shown for a Mission Event in Planning Mode, such as "~5%", in place of its exact failure probability.',
   Reliability:
     "Safety Margin that lowers a Mission Event's failure probability, such as testing or redundancy.",
   Contingency:
@@ -64,7 +68,7 @@ export const tooltips = {
   "Public Support":
     "Points of public and political backing. Milestones add them, setbacks remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.",
   "Funding Threshold":
-    "One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached, for example $1 billion at 300 points. Reaching it again later pays nothing.",
+    "One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached, for example $1 billion at 250 points. Reaching it again later pays nothing.",
   "Cancellation Level":
     "The Public Support level below which the Program is cancelled.",
   Duration:

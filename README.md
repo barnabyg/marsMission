@@ -12,11 +12,11 @@ You need [Node.js](https://nodejs.org/) 24 or later. From the repository root, r
 
 You can also double-click `run.bat`. It installs what's needed, builds the game and opens it in your browser. The game is designed for a 3840×2160 desktop.
 
-What to try, and the feedback wanted, is in the [Phase 1 playtest guide](docs/playtest/phase-1.md).
+What to try, and the feedback wanted, is in the [Phase 2 playtest guide](docs/playtest/phase-2.md). The [Phase 1 guide](docs/playtest/phase-1.md) is kept as a record of that phase.
 
 ## Develop
 
-The Simulation (`src/simulation`) holds all the rules and knows nothing about the browser. The Catalogue (`src/catalogue`) loads and validates the data files in `public/data`. Everything else displays what the Simulation produces.
+The Simulation (`src/simulation`) holds all the rules and knows nothing about the browser. The Catalogue (`src/catalogue`) loads and validates the data files in `public/data`. The Save Store (`src/save`) keeps what the Simulation saves in the browser. Everything else displays what the Simulation produces.
 
 | Command                | What it does                                  |
 | ---------------------- | --------------------------------------------- |
@@ -26,6 +26,8 @@ The Simulation (`src/simulation`) holds all the rules and knows nothing about th
 | `npm.cmd run verify`   | Runs every check (the canonical verification) |
 
 The browser tests need Chromium, once per machine: `npx.cmd playwright install chromium`.
+
+The sound effects in `public/sounds` are synthesised by `node scripts/generate-sounds.mjs`, and the files it makes are committed. Rerun it only to change a sound.
 
 ### Verification
 

@@ -127,6 +127,33 @@ button.primary {
   margin: 0;
 }
 
+.panel h3 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.mission-events {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mission-events li {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.mission-event-name {
+  min-width: 18rem;
+}
+
+.risk-band {
+  min-width: 7rem;
+}
+
 .confirm {
   display: flex;
   align-items: center;
@@ -135,6 +162,31 @@ button.primary {
 
 .problem {
   color: var(--problem);
+}
+
+.save-slots {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0;
+  list-style: none;
+}
+
+.save-slot-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.save-slot-text {
+  min-width: 34rem;
+}
+
+.save-slots .confirm {
+  margin-top: 0.6rem;
+}
+
+.summary-screen .panel {
+  width: 100%;
 }
 
 .mission {
@@ -226,6 +278,7 @@ button.primary {
   margin-right: 0.6rem;
 }
 
+.mission-bar > button[aria-pressed="true"],
 .speed-controls button[aria-pressed="true"] {
   background: var(--accent);
   border-color: var(--accent);
@@ -250,6 +303,14 @@ button.primary {
 
 .text-screen p {
   margin: 0;
+}
+
+.text-screen.failed {
+  border-color: var(--problem);
+}
+
+.text-screen.failed h2 {
+  color: var(--problem);
 }
 
 .summary-screen {

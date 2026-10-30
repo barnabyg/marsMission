@@ -4,8 +4,9 @@ import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { speeds } from "./playback";
 import { EntryPresentation } from "./presentation";
-import { journeyProgress } from "./solarSystem/orbits";
+import { journeyHasFailed, journeyProgress } from "./solarSystem/orbits";
 import { usePlayback } from "./usePlayback";
+import { useSounds } from "./useSounds";
 
 const SolarSystemView = lazy(() => import("./solarSystem/SolarSystemView"));
 
@@ -29,6 +30,8 @@ export function MissionMode({
     onSpeedChange,
   );
 
+  const { muted, setMuted } = useSounds(timeline.entries, state.activeEntry);
+
   useEffect(() => {
     if (state.finished) onFinished();
   }, [state.finished, onFinished]);
@@ -41,8 +44,9 @@ export function MissionMode({
 
   const { mission } = timeline;
   const progress = mission ? journeyProgress(mission, state.day) : 0;
+  const failed = mission ? journeyHasFailed(mission, state.day) : false;
   const operatingAssets =
-    mission && progress >= 1
+    mission?.failedOnDay === null && progress >= 1
       ? [...timeline.operatingAssetNames, ...mission.assetNames]
       : timeline.operatingAssetNames;
 
@@ -67,6 +71,15 @@ export function MissionMode({
           max={100}
           value={turnProgress}
         />
+        <button
+          type="button"
+          aria-pressed={muted}
+          onClick={() => {
+            setMuted(!muted);
+          }}
+        >
+          Mute sound
+        </button>
         <div role="group" aria-label="Speed" className="speed-controls">
           <span>
             Speed: <strong data-testid="current-speed">{state.speed}x</strong>
@@ -90,9 +103,11 @@ export function MissionMode({
           <GameText>
             {!mission
               ? "No Mission this Turn"
-              : progress < 1
-                ? `${mission.assetNames.join(", ")}: ${Math.round(progress * 100)}% of the way to Mars`
-                : `${mission.assetNames.join(", ")}: arrived at Mars`}
+              : failed
+                ? `${mission.assetNames.join(", ")}: lost, and will not reach Mars`
+                : progress < 1
+                  ? `${mission.assetNames.join(", ")}: ${Math.round(progress * 100)}% of the way to Mars`
+                  : `${mission.assetNames.join(", ")}: arrived at Mars`}
           </GameText>
         </p>
         <h2>Operating at Mars</h2>

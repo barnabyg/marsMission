@@ -2,8 +2,12 @@ import { GameText } from "../ui/GameText";
 import type { EntryPresentationProps } from "./presentation";
 
 export function TextScreen({ entry, onDismiss }: EntryPresentationProps) {
+  const failed = entry.kind === "missionEvent" && entry.outcome === "failure";
   return (
-    <section className="text-screen" data-testid="text-screen">
+    <section
+      className={failed ? "text-screen failed" : "text-screen"}
+      data-testid="text-screen"
+    >
       <h2>
         <GameText>{entry.title}</GameText>
       </h2>

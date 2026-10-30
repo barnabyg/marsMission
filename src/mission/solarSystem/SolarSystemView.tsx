@@ -13,6 +13,7 @@ import {
 } from "three";
 import { addDays, type Timeline } from "../../simulation/simulation";
 import {
+  journeyHasFailed,
   orbits,
   planetPosition,
   routePosition,
@@ -156,16 +157,18 @@ function Spacecraft({
   mission,
   startDate,
   day,
+  lost,
 }: {
   mission: Journey;
   startDate: string;
   day: number;
+  lost: boolean;
 }) {
   const { x, z } = spacecraftPosition(startDate, mission, day);
   return (
     <mesh position={[x, 0, z]}>
       <sphereGeometry args={[0.022, 24, 24]} />
-      <meshBasicMaterial color="#ffffff" />
+      <meshBasicMaterial color={lost ? "#ff5a44" : "#ffffff"} />
     </mesh>
   );
 }
@@ -268,7 +271,8 @@ export default function SolarSystemView({
   const spacecraft = mission
     ? spacecraftPosition(startDate, mission, day)
     : { x: 0, z: 0 };
-  const inTransit = mission !== null && day < mission.arrivalDay;
+  const failed = mission !== null && journeyHasFailed(mission, day);
+  const inTransit = mission !== null && !failed && day < mission.arrivalDay;
 
   const earthLabel = useRef<HTMLDivElement>(null);
   const marsLabel = useRef<HTMLDivElement>(null);
@@ -312,8 +316,13 @@ export default function SolarSystemView({
           tiltDegrees={25.2}
         />
         {mission && <Route mission={mission} startDate={startDate} />}
-        {mission && inTransit && (
-          <Spacecraft mission={mission} startDate={startDate} day={day} />
+        {mission && (inTransit || failed) && (
+          <Spacecraft
+            mission={mission}
+            startDate={startDate}
+            day={day}
+            lost={failed}
+          />
         )}
         <OperatingAssetMarkers
           date={date}

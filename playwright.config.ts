@@ -1,6 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const port = 5199;
+const productionPort = 5198;
+const productionOutDir = "node_modules/.cache/e2e-build";
+
+export const productionBaseURL = `http://localhost:${productionPort}`;
 
 export default defineConfig({
   testDir: "e2e",
@@ -21,12 +25,22 @@ export default defineConfig({
       args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
     },
   },
-  webServer: {
-    command: `npx vite --port ${port} --strictPort`,
-    url: `http://localhost:${port}`,
-    reuseExistingServer: false,
-    stdout: "ignore",
-    // Development-only: runs Mission Mode fast enough for browser tests.
-    env: { VITE_MISSION_TIME_SCALE: "1000" },
-  },
+  webServer: [
+    {
+      command: `npx vite --port ${port} --strictPort`,
+      url: `http://localhost:${port}`,
+      reuseExistingServer: false,
+      stdout: "ignore",
+      // Development-only: runs Mission Mode fast enough for browser tests.
+      env: { VITE_MISSION_TIME_SCALE: "1000" },
+    },
+    {
+      // The same kind of build the playtest command runs.
+      command: `npx vite build --logLevel warn --outDir ${productionOutDir} --emptyOutDir && npx vite preview --outDir ${productionOutDir} --port ${productionPort} --strictPort`,
+      url: productionBaseURL,
+      reuseExistingServer: false,
+      stdout: "ignore",
+      timeout: 120_000,
+    },
+  ],
 });

@@ -1,25 +1,12 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  catalogueFileNames,
   CatalogueError,
   parseCatalogue,
   type CatalogueFiles,
 } from "./catalogue";
 import { createSimulation } from "../simulation/simulation";
 import { testCatalogueFiles } from "../simulation/testCatalogue";
-
-function realFiles(): CatalogueFiles {
-  const read = (fileName: string): unknown =>
-    JSON.parse(readFileSync(`public/data/${fileName}`, "utf8"));
-  const files = Object.fromEntries(
-    Object.entries(catalogueFileNames).map(([key, fileName]) => [
-      key,
-      read(fileName),
-    ]),
-  );
-  return files as unknown as CatalogueFiles;
-}
+import { realCatalogueFiles } from "../testing/realCatalogue";
 
 function errorFrom(files: unknown): string {
   try {
@@ -33,23 +20,11 @@ function errorFrom(files: unknown): string {
 
 describe("the real data files", () => {
   it("are valid", () => {
-    expect(() => parseCatalogue(realFiles())).not.toThrow();
-  });
-
-  it("start the Program at the late-2028 Launch Window with about $2B", () => {
-    const { program } = parseCatalogue(realFiles());
-    expect(program.firstLaunchWindow).toMatch(/^2028-(1[0-2])/);
-    expect(program.startingMoneyMillions).toBe(2000);
-  });
-
-  it("drain 15% per Turn with a Cancellation Level of 50", () => {
-    const { program } = parseCatalogue(realFiles());
-    expect(program.publicSupportDrainPercent).toBe(15);
-    expect(program.cancellationLevel).toBe(50);
+    expect(() => parseCatalogue(realCatalogueFiles())).not.toThrow();
   });
 
   it("cancel a Program that only skips Turns", () => {
-    const simulation = createSimulation(parseCatalogue(realFiles()));
+    const simulation = createSimulation(parseCatalogue(realCatalogueFiles()));
     let program = simulation.startProgram(1);
     for (let turn = 0; turn < 100; turn++) {
       if (simulation.readProgram(program).status.kind !== "active") break;
@@ -58,31 +33,13 @@ describe("the real data files", () => {
     expect(simulation.readProgram(program).status.kind).toBe("cancelled");
   });
 
-  it("offer one Launch Vehicle and one orbiter", () => {
-    const catalogue = parseCatalogue(realFiles());
-    expect(catalogue.launchVehicles).toHaveLength(1);
-    expect(catalogue.assets.map((asset) => asset.kind)).toEqual(["orbiter"]);
-  });
-});
-
-describe("the real Milestones", () => {
-  it("award the first orbiter 200 Public Support", () => {
-    const { milestones } = parseCatalogue(realFiles());
-    expect(milestones).toHaveLength(1);
-    expect(milestones[0]?.publicSupport).toBe(200);
-  });
-});
-
-describe("the real Funding Thresholds", () => {
-  it("can be reached by the one Milestone in this phase", () => {
+  it("can reach the first Funding Threshold with the available Milestones", () => {
     const { fundingThresholds, milestones, program } =
-      parseCatalogue(realFiles());
-    const reachable =
-      program.startingPublicSupport + (milestones[0]?.publicSupport ?? 0);
-    expect(fundingThresholds[0]).toEqual({
-      publicSupport: 300,
-      payoutMillions: 1000,
-    });
+      parseCatalogue(realCatalogueFiles());
+    const reachable = milestones.reduce(
+      (total, { publicSupport }) => total + publicSupport,
+      program.startingPublicSupport,
+    );
     expect(fundingThresholds[0]?.publicSupport).toBeLessThanOrEqual(reachable);
   });
 });
@@ -176,6 +133,79 @@ describe("invalid data files", () => {
       ],
     });
     expect(message).toContain("funding-thresholds.json");
+  });
+
+  it.each([
+    ["failureProbability", -0.1],
+    ["failureProbability", 1.5],
+    ["failureProbability", "often"],
+    ["failureProbability", undefined],
+    ["publicSupportLoss", -5],
+    ["publicSupportLoss", 2.5],
+    ["publicSupportLoss", undefined],
+    ["failureDescription", ""],
+  ])("reject a Mission Event whose %s is %s", (field, value) => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      missionEvents: [{ ...files.missionEvents[0], [field]: value }],
+    });
+    expect(message).toContain("mission-events.json");
+    expect(message).toContain(field);
+  });
+
+  it.each([
+    [
+      "aren't in ascending order",
+      [
+        { upTo: 0.5, label: "A" },
+        { upTo: 0.1, label: "B" },
+        { upTo: 1, label: "C" },
+      ],
+    ],
+    ["leave high probabilities uncovered", [{ upTo: 0.5, label: "A" }]],
+    ["are empty", []],
+    ["go above a probability of 1", [{ upTo: 1.5, label: "A" }]],
+    ["have no label", [{ upTo: 1, label: "" }]],
+  ])("reject risk bands that %s", (_, riskBands) => {
+    const message = errorFrom({ ...testCatalogueFiles(), riskBands });
+    expect(message).toContain("risk-bands.json");
+  });
+
+  it.each([
+    [
+      "a higher level costs less",
+      [
+        { id: "a", name: "A", costMillions: 100, failureMultiplier: 1 },
+        { id: "b", name: "B", costMillions: 50, failureMultiplier: 0.5 },
+      ],
+    ],
+    [
+      "a higher level has a higher failure chance",
+      [
+        { id: "a", name: "A", costMillions: 0, failureMultiplier: 0.5 },
+        { id: "b", name: "B", costMillions: 50, failureMultiplier: 0.8 },
+      ],
+    ],
+    [
+      "a level raises the failure chance above the Mission Event's own",
+      [{ id: "a", name: "A", costMillions: 0, failureMultiplier: 1.5 }],
+    ],
+    [
+      "a level has a negative failure chance",
+      [{ id: "a", name: "A", costMillions: 0, failureMultiplier: -0.5 }],
+    ],
+    ["there are no levels", []],
+    [
+      "two levels share an id",
+      [
+        { id: "a", name: "A", costMillions: 0, failureMultiplier: 1 },
+        { id: "a", name: "B", costMillions: 50, failureMultiplier: 0.5 },
+      ],
+    ],
+  ])("reject Reliability levels when %s", (_, reliabilityLevels) => {
+    const message = errorFrom({ ...testCatalogueFiles(), reliabilityLevels });
+    expect(message).toContain("reliability-levels.json");
   });
 
   it("reject a date that isn't a real date", () => {

@@ -1,7 +1,7 @@
 {
   "firstLaunchWindow": "2028-12-01",
   "launchWindowIntervalDays": 780,
-  "startingMoneyMillions": 2000,
+  "startingMoneyMillions": 2300,
   "startingPublicSupport": 100,
   "transferDays": 210,
   "publicSupportDrainPercent": 15,

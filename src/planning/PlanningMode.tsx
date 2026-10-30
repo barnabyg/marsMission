@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   formatMoney,
   type Program,
@@ -11,6 +11,9 @@ import { GameText } from "../ui/GameText";
 interface PlanningModeProps {
   simulation: Simulation;
   program: Program;
+  /** Whether the automatic save at the start of this Planning Mode worked. */
+  saved: boolean;
+  saveSlots: ReactNode;
   onSubmit: (plan: TurnPlan) => void;
   onRetire: () => void;
 }
@@ -18,6 +21,8 @@ interface PlanningModeProps {
 export function PlanningMode({
   simulation,
   program,
+  saved,
+  saveSlots,
   onSubmit,
   onRetire,
 }: PlanningModeProps) {
@@ -26,10 +31,23 @@ export function PlanningMode({
     view.launchVehicles[0]?.id ?? "",
   );
   const [assetId, setAssetId] = useState(view.assets[0]?.id ?? "");
+  const [reliability, setReliability] = useState<Record<string, string>>({});
   const [confirmingRetirement, setConfirmingRetirement] = useState(false);
 
+  const plannedEvents = simulation.previewMission({
+    launchVehicleId,
+    assetIds: [assetId],
+    reliability,
+  });
   const plan: TurnPlan = {
-    mission: { launchVehicleId, assetIds: [assetId] },
+    mission: {
+      launchVehicleId,
+      assetIds: [assetId],
+      // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
+      reliability: Object.fromEntries(
+        plannedEvents.map((event) => [event.eventId, event.reliabilityLevelId]),
+      ),
+    },
   };
   const { costMillions, problems } = simulation.validatePlan(program, plan);
 
@@ -87,6 +105,15 @@ export function PlanningMode({
         </dl>
       </header>
 
+      {!saved && (
+        <p className="problem" role="alert">
+          <GameText>
+            The browser wouldn't store the automatic save, so this Program may
+            be lost if you close the game.
+          </GameText>
+        </p>
+      )}
+
       <section className="panel">
         <h2>
           <GameText>Mission</GameText>
@@ -125,6 +152,36 @@ export function PlanningMode({
             ))}
           </select>
         </label>
+        <h3>
+          <GameText>Mission Events, Risk Bands and Reliability</GameText>
+        </h3>
+        <ol className="mission-events" data-testid="mission-events">
+          {plannedEvents.map((event) => (
+            <li key={event.eventId} data-testid="mission-event">
+              <span className="mission-event-name">{event.name}</span>
+              <strong className="risk-band" data-testid="risk-band">
+                {event.riskBand}
+              </strong>
+              <select
+                aria-label={`Reliability for ${event.name}`}
+                value={event.reliabilityLevelId}
+                onChange={(change) => {
+                  setReliability({
+                    ...reliability,
+                    [event.eventId]: change.target.value,
+                  });
+                }}
+              >
+                {event.reliabilityLevels.map((level) => (
+                  <option key={level.id} value={level.id}>
+                    {level.name} ({formatMoney(level.costMillions)},{" "}
+                    {level.riskBand})
+                  </option>
+                ))}
+              </select>
+            </li>
+          ))}
+        </ol>
         <p className="total-cost">
           Total cost:{" "}
           <strong data-testid="mission-cost">
@@ -185,6 +242,7 @@ export function PlanningMode({
           </ul>
         )}
       </section>
+      {saveSlots}
       <section className="panel">
         <h2>Retire</h2>
         {confirmingRetirement ? (
