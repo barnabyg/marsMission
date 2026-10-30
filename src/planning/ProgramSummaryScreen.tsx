@@ -54,7 +54,7 @@ export function ProgramSummaryScreen({
         )}
       </section>
       <button type="button" className="primary" onClick={onStartNew}>
-        <GameText insideControl>Start a new Program</GameText>
+        Start a new Program
       </button>
     </main>
   );

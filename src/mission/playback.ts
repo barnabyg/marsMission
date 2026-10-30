@@ -1,12 +1,9 @@
-/** How long a Turn takes at 1x, not counting the time text screens are up. */
+/** How long a Turn takes at 1x. */
 const realMsPerTurn = 20 * 60_000;
 
-/** How long a text screen stays up unless dismissed. It's real time, so it's the same at every speed. */
-const textScreenMs = 8000;
+export const speeds = [1, 5, 10] as const;
 
-export const speeds = [1, 2, 5, 10] as const;
-
-/** The parts of a Timeline that decide how it plays. */
+/** The parts of a Timeline that decide how it plays. Its entries are in the order they happen. */
 export interface PlaybackTimeline {
   durationDays: number;
   entries: readonly { day: number }[];
@@ -15,30 +12,37 @@ export interface PlaybackTimeline {
 /** How far through a Turn Mission Mode has got. Playback only displays a Timeline and can't change it. */
 export interface PlaybackState {
   day: number;
+  /** The speed last chosen, which play resumes at and the next Turn starts at. */
   speed: number;
-  /** Index of the timeline entry on screen, during which game time holds. */
-  activeEntry: number | null;
-  nextEntry: number;
-  textScreenRemainingMs: number;
+  /** Holds game time until the player chooses a speed. */
+  paused: boolean;
+  /** How many of the timeline's entries have happened so far. */
+  entriesHappened: number;
   finished: boolean;
+}
+
+function atDay(
+  state: PlaybackState,
+  timeline: PlaybackTimeline,
+  day: number,
+): PlaybackState {
+  return {
+    ...state,
+    day,
+    entriesHappened: timeline.entries.filter((entry) => entry.day <= day)
+      .length,
+    finished: day >= timeline.durationDays,
+  };
 }
 
 export function startPlayback(
   timeline: PlaybackTimeline,
   speed = 1,
 ): PlaybackState {
-  return advancePlayback(
-    {
-      day: 0,
-      speed,
-      activeEntry: null,
-      nextEntry: 0,
-      textScreenRemainingMs: 0,
-      finished: false,
-    },
+  return atDay(
+    { day: 0, speed, paused: false, entriesHappened: 0, finished: false },
     timeline,
     0,
-    1,
   );
 }
 
@@ -46,54 +50,26 @@ export function changeSpeed(
   state: PlaybackState,
   speed: number,
 ): PlaybackState {
-  return { ...state, speed };
+  return { ...state, speed, paused: false };
 }
 
-export function dismissEntry(state: PlaybackState): PlaybackState {
-  return { ...state, activeEntry: null, textScreenRemainingMs: 0 };
+export function pausePlayback(state: PlaybackState): PlaybackState {
+  return { ...state, paused: true };
 }
 
-/** Moves playback on by some real time. `timeScale` is the development-only setting and leaves text screens alone. */
+/** Moves playback on by some real time. `timeScale` is the development-only setting. */
 export function advancePlayback(
   state: PlaybackState,
   timeline: PlaybackTimeline,
   realMs: number,
   timeScale: number,
 ): PlaybackState {
+  if (state.paused || state.finished || realMs <= 0) return state;
   const daysPerMs =
     (timeline.durationDays / realMsPerTurn) * state.speed * timeScale;
-  let next = state;
-  let remainingMs = realMs;
-
-  while (!next.finished) {
-    if (next.activeEntry !== null) {
-      if (remainingMs < next.textScreenRemainingMs) {
-        return {
-          ...next,
-          textScreenRemainingMs: next.textScreenRemainingMs - remainingMs,
-        };
-      }
-      remainingMs -= next.textScreenRemainingMs;
-      next = dismissEntry(next);
-      continue;
-    }
-
-    const entry = timeline.entries[next.nextEntry];
-    const targetDay = entry ? entry.day : timeline.durationDays;
-    const msToTarget = (targetDay - next.day) / daysPerMs;
-    if (remainingMs < msToTarget) {
-      return { ...next, day: next.day + remainingMs * daysPerMs };
-    }
-    remainingMs -= msToTarget;
-    next = entry
-      ? {
-          ...next,
-          day: targetDay,
-          activeEntry: next.nextEntry,
-          nextEntry: next.nextEntry + 1,
-          textScreenRemainingMs: textScreenMs,
-        }
-      : { ...next, day: targetDay, finished: true };
-  }
-  return next;
+  return atDay(
+    state,
+    timeline,
+    Math.min(state.day + realMs * daysPerMs, timeline.durationDays),
+  );
 }

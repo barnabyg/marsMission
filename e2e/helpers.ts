@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { termPattern } from "../src/ui/tooltips";
 
 /**
@@ -21,7 +21,7 @@ export function watchForProblems(page: Page): string[] {
   return problems;
 }
 
-/** Returns any game term on screen that has no tooltip. */
+/** Returns any game term on screen that has no tooltip. Button labels are plain text, so they don't count. */
 export function termsWithoutTooltips(page: Page): Promise<string[]> {
   return page.evaluate((pattern) => {
     const walker = document.createTreeWalker(
@@ -32,7 +32,9 @@ export function termsWithoutTooltips(page: Page): Promise<string[]> {
     while (walker.nextNode()) {
       const { parentElement, textContent } = walker.currentNode;
       if (
-        parentElement?.closest("[data-term], [role=tooltip], script, style")
+        parentElement?.closest(
+          "[data-term], [role=tooltip], button, script, style",
+        )
       ) {
         continue;
       }
@@ -40,6 +42,11 @@ export function termsWithoutTooltips(page: Page): Promise<string[]> {
     }
     return missing;
   }, termPattern.source);
+}
+
+/** Returns any game term highlighted inside a button, where it shouldn't be. */
+export function termsInButtons(page: Page): Promise<string[]> {
+  return page.locator("button [data-term]").allTextContents();
 }
 
 /** Program data that gets cancelled at the end of its first Turn, whatever the real data files say. */
@@ -61,14 +68,33 @@ export async function overrideProgramData(
   });
 }
 
-/** Plays out a Turn in Mission Mode, whatever happens in it, and continues past its Turn summary. */
+export async function openSaveDialog(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+}
+
+export async function openLoadDialog(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Load", exact: true }).click();
+}
+
+/** Mission Mode's events column entries, newest first. */
+export function eventEntries(page: Page): Locator {
+  return page.getByTestId("event-entry");
+}
+
+/** Waits for a Mission Event, Milestone or Funding Threshold to happen, then holds the Turn there to look at it. */
+export async function pauseAtEvent(page: Page, title: string): Promise<void> {
+  await expect(
+    eventEntries(page).getByRole("heading", { name: title, exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Pause" }).click();
+}
+
+/** Plays out the rest of a Turn in Mission Mode at top speed, and continues past its Turn summary. */
 export async function playToNextTurn(page: Page): Promise<void> {
-  const screen = page.getByTestId("text-screen");
+  const fastest = page.getByRole("button", { name: "10x" });
   const summary = page.getByTestId("turn-summary");
-  while (!(await summary.isVisible())) {
-    if (await screen.isVisible()) {
-      await screen.getByRole("button", { name: "Continue" }).click();
-    }
-  }
+  await expect(fastest.or(summary)).toBeVisible();
+  // The Turn may end before the click lands, which is fine.
+  await fastest.click({ timeout: 2000 }).catch(() => undefined);
   await summary.getByRole("button", { name: "Continue" }).click();
 }

@@ -2,12 +2,10 @@ import { termFor, termPattern } from "./tooltips";
 
 interface GameTextProps {
   children: string;
-  /** Set this inside a button, which can't contain another keyboard stop. */
-  insideControl?: boolean;
 }
 
-/** Shows text with a tooltip on every game term in it. All text on screen should go through this. */
-export function GameText({ children, insideControl = false }: GameTextProps) {
+/** Shows text with a tooltip on every game term in it. All text on screen should go through this, except button labels, which are plain. */
+export function GameText({ children }: GameTextProps) {
   const parts: React.ReactNode[] = [];
   let position = 0;
   for (const match of children.matchAll(termPattern)) {
@@ -15,12 +13,7 @@ export function GameText({ children, insideControl = false }: GameTextProps) {
     if (!term) continue;
     parts.push(children.slice(position, match.index));
     parts.push(
-      <span
-        key={match.index}
-        className="term"
-        data-term={term}
-        {...(insideControl ? {} : { tabIndex: 0 })}
-      >
+      <span key={match.index} className="term" data-term={term} tabIndex={0}>
         {match[0]}
       </span>,
     );

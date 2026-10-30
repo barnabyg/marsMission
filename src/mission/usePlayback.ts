@@ -3,7 +3,7 @@ import { missionTimeScale } from "./devSettings";
 import {
   advancePlayback,
   changeSpeed,
-  dismissEntry,
+  pausePlayback,
   startPlayback,
   type PlaybackState,
   type PlaybackTimeline,
@@ -17,7 +17,7 @@ const timeScale = missionTimeScale(import.meta.env);
 interface Playback {
   state: PlaybackState;
   setSpeed: (speed: number) => void;
-  dismiss: () => void;
+  pause: () => void;
 }
 
 export function usePlayback(
@@ -50,8 +50,8 @@ export function usePlayback(
       setState((current) => changeSpeed(current, speed));
       onSpeedChange(speed);
     },
-    dismiss: () => {
-      setState(dismissEntry);
+    pause: () => {
+      setState(pausePlayback);
     },
   };
 }

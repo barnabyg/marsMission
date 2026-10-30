@@ -37,10 +37,12 @@ export function App({ services, firstScreen }: AppProps) {
           <SaveSlots
             simulation={simulation}
             saveStore={saveStore}
-            program={null}
-            confirmLoading={screen.automaticSave.kind === "program"}
-            onLoad={(program) => {
-              setScreen(planningScreen(services, program));
+            action={{
+              kind: "load",
+              confirm: screen.automaticSave.kind === "program",
+              onLoad: (program) => {
+                setScreen(planningScreen(services, program));
+              },
             }}
           />
         }
@@ -56,17 +58,10 @@ export function App({ services, firstScreen }: AppProps) {
         simulation={simulation}
         program={program}
         saved={screen.saved}
-        saveSlots={
-          <SaveSlots
-            simulation={simulation}
-            saveStore={saveStore}
-            program={program}
-            confirmLoading
-            onLoad={(loaded) => {
-              setScreen(planningScreen(services, loaded));
-            }}
-          />
-        }
+        saveStore={saveStore}
+        onLoad={(loaded) => {
+          setScreen(planningScreen(services, loaded));
+        }}
         onSubmit={(plan: TurnPlan) => {
           setScreen({
             mode: "mission",

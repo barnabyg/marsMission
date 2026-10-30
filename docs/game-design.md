@@ -8,6 +8,7 @@ Phases are defined in the [Build order](#build-order). Phases 1 and 2 are built:
 
 - **Phase 1:** Turns running from one Launch Window to the next, with at most one Mission each; Assets that stay operating at Mars; Mission Events listed from what a Mission carries; Planning Mode with one Launch Vehicle and one orbiter; Mission Mode with the solar system view, speed controls and text screens; Science, Milestones, Funding Thresholds, the Public Support drain and Cancellation Level; retiring a Program and the Program summary; tooltips.
 - **Phase 2:** Mission Event failure with Risk Bands; Reliability; the fixed random seed; automatic saves and manual save slots; the first sound effects.
+- **Since the Phase 2 playtest:** Save, Load and Retire Program dialogs in Planning Mode; text sized for 150% display scaling; Pause in Mission Mode; the events column in place of Phase 1's text screens.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
@@ -24,7 +25,7 @@ Any rule in this document beyond these is planned, so its absence from the code 
 - Missions can go to Mars orbit or to a Landing Site. Phobos and Deimos are left out of the first version.
 - In Planning Mode the player gives each Asset one Activity for the Turn. Crew at one Landing Site share one Activity.
 - Each Turn begins at a Launch Window (roughly every 26 months) and consists of Planning Mode followed by Mission Mode.
-- No game time passes in Planning Mode. Mission Mode runs from one Launch Window to the next, showing every Mission in flight and every operating Asset together. Time speeds up and slows down automatically for Mission Events and Decision Points.
+- No game time passes in Planning Mode. Mission Mode runs from one Launch Window to the next, showing every Mission in flight and every operating Asset together. Mission Events don't hold game time; Decision Points pause play.
 - Missions can overlap Turns. For example, a Crewed Mission that stays on the surface for a long time lasts about 2.5 years, so the next Turn's Planning Mode happens while Crew are still at Mars.
 - Doing everything in a single Mission ("one jump") is possible but very expensive and risky. Building up Assets over several Turns is the intended cheaper path.
 - Robotic and Crewed Missions are both available. Crewed Missions cost much more and earn more Public Support.
@@ -58,10 +59,10 @@ Any rule in this document beyond these is planned, so its absence from the code 
 
 ## Mission Mode
 
-- A Turn takes about 20 minutes at 1x speed, with controls to speed it up.
+- A Turn takes about 20 minutes at 1x speed, with controls to speed it up to 5x or 10x, or to pause it. Pausing only affects how a Turn is shown and lasts only for that Turn, because choosing a speed is what ends it and the next Turn starts at the speed last chosen.
 - The graphics are a mix of pre-made animations (such as an asteroid strike on a base) and displays (such as orbital tracking of a journey).
 - Pre-made animations are scripted 3D sequences that run live in the game, not pre-rendered video, so they show the Assets the player actually bought at the Landing Site they actually chose.
-- The first animation goal is one success and one failure animation per kind of Mission Event, and one per Hazard. More will follow. Anything without an animation yet shows a simple text message screen, built so an animation can replace it later.
+- The first animation goal is one success and one failure animation per kind of Mission Event, and one per Hazard. More will follow. Each Mission Event, Milestone and Funding Threshold is added to an events column beside the view when it happens, with its date, title and description, newest at the top, and stays until the Turn ends. Nothing needs dismissing and time keeps running, so the player pauses to read. A failure stands out in the failure colour and plays its sound.
 - Decision Points come from three triggers:
   - A Mission Event fails and a Contingency the player bought can be used.
   - A Hazard hits.
@@ -78,7 +79,7 @@ Any rule in this document beyond these is planned, so its absence from the code 
 
 - Mars and the planets use NASA's public imagery and elevation data. Spacecraft use NASA's free 3D models where they fit, plus simple models made for the project. Plumes, dust and explosions are generated in code. Licensing rules are in [ADR 0005](adr/0005-free-open-licensed-media-only.md).
 - The first version has simple sound effects and no music.
-- There is no guided tutorial in the first version. Every term has a tooltip instead.
+- There is no guided tutorial in the first version. Every term has a tooltip instead, except in button labels.
 
 ## Build order
 

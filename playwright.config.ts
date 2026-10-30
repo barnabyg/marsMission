@@ -31,8 +31,8 @@ export default defineConfig({
       url: `http://localhost:${port}`,
       reuseExistingServer: false,
       stdout: "ignore",
-      // Development-only: runs Mission Mode fast enough for browser tests.
-      env: { VITE_MISSION_TIME_SCALE: "1000" },
+      // Development-only: runs a Turn in 12 s at 1x, quick enough for browser tests but slow enough to pause.
+      env: { VITE_MISSION_TIME_SCALE: "100" },
     },
     {
       // The same kind of build the playtest command runs.

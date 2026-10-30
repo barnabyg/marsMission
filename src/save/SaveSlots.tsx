@@ -10,37 +10,42 @@ import { manualSlots, type LoadedSave, type SaveStore } from "./saveStore";
 
 type ManualSlot = (typeof manualSlots)[number];
 
+interface SaveAction {
+  kind: "save";
+  program: Program;
+  onSaved: (slot: ManualSlot) => void;
+}
+
+interface LoadAction {
+  kind: "load";
+  /** Whether loading would replace a Program in play or in the automatic save, and so needs confirming. */
+  confirm: boolean;
+  onLoad: (program: Program) => void;
+}
+
 interface SaveSlotsProps {
   simulation: Simulation;
   saveStore: SaveStore;
-  /** The Program to save, or null where there is none to save yet. */
-  program: Program | null;
-  /** Whether loading would replace a Program in play or in the automatic save, and so needs confirming. */
-  confirmLoading: boolean;
-  onLoad: (program: Program) => void;
+  /** What choosing a slot does. */
+  action: SaveAction | LoadAction;
 }
 
 type Confirming =
   | { action: "overwrite"; slot: ManualSlot }
   | { action: "load"; slot: ManualSlot; program: Program };
 
-export function SaveSlots({
-  simulation,
-  saveStore,
-  program,
-  confirmLoading,
-  onLoad,
-}: SaveSlotsProps) {
-  const [slots, setSlots] = useState(() =>
+/** Lists the Save Slots with what's in them, and saves to or loads from the one chosen. */
+export function SaveSlots({ simulation, saveStore, action }: SaveSlotsProps) {
+  const [slots] = useState(() =>
     manualSlots.map((slot) => saveStore.load(slot)),
   );
   const [confirming, setConfirming] = useState<Confirming | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
 
-  function saveTo(slot: ManualSlot, toSave: Program) {
-    setSaveFailed(!saveStore.save(slot, toSave));
-    setSlots(manualSlots.map((each) => saveStore.load(each)));
+  function saveTo(slot: ManualSlot, { program, onSaved }: SaveAction) {
     setConfirming(null);
+    if (saveStore.save(slot, program)) onSaved(slot);
+    else setSaveFailed(true);
   }
 
   function describe(loaded: LoadedSave): string {
@@ -51,10 +56,7 @@ export function SaveSlots({
   }
 
   return (
-    <section className="panel">
-      <h2>
-        <GameText>Save Slots</GameText>
-      </h2>
+    <>
       {saveFailed && (
         <p className="problem" role="alert">
           The browser wouldn't store that save.
@@ -76,39 +78,39 @@ export function SaveSlots({
                 >
                   <GameText>{describe(loaded)}</GameText>
                 </span>
-                {program && (
+                {action.kind === "save" && (
                   <button
                     type="button"
                     onClick={() => {
-                      if (loaded.kind === "empty") saveTo(slot, program);
+                      if (loaded.kind === "empty") saveTo(slot, action);
                       else setConfirming({ action: "overwrite", slot });
                     }}
                   >
                     Save here
                   </button>
                 )}
-                {loaded.kind === "program" && (
+                {action.kind === "load" && loaded.kind === "program" && (
                   <button
                     type="button"
                     onClick={() => {
-                      if (confirmLoading) {
+                      if (action.confirm) {
                         setConfirming({
                           action: "load",
                           slot,
                           program: loaded.program,
                         });
-                      } else onLoad(loaded.program);
+                      } else action.onLoad(loaded.program);
                     }}
                   >
                     Load
                   </button>
                 )}
               </div>
-              {program &&
+              {action.kind === "save" &&
                 confirming?.action === "overwrite" &&
                 confirming.slot === slot && (
                   <div
-                    role="dialog"
+                    role="group"
                     aria-label="Confirm overwriting"
                     className="confirm"
                   >
@@ -117,7 +119,7 @@ export function SaveSlots({
                       type="button"
                       className="primary"
                       onClick={() => {
-                        saveTo(slot, program);
+                        saveTo(slot, action);
                       }}
                     >
                       Yes, overwrite it
@@ -132,42 +134,44 @@ export function SaveSlots({
                     </button>
                   </div>
                 )}
-              {confirming?.action === "load" && confirming.slot === slot && (
-                <div
-                  role="dialog"
-                  aria-label="Confirm loading"
-                  className="confirm"
-                >
-                  <p>
-                    <GameText>
-                      Load this save? It replaces your current Program, which is
-                      lost unless it's in a slot.
-                    </GameText>
-                  </p>
-                  <button
-                    type="button"
-                    className="primary"
-                    onClick={() => {
-                      setConfirming(null);
-                      onLoad(confirming.program);
-                    }}
+              {action.kind === "load" &&
+                confirming?.action === "load" &&
+                confirming.slot === slot && (
+                  <div
+                    role="group"
+                    aria-label="Confirm loading"
+                    className="confirm"
                   >
-                    Yes, load it
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setConfirming(null);
-                    }}
-                  >
-                    Keep playing
-                  </button>
-                </div>
-              )}
+                    <p>
+                      <GameText>
+                        Load this save? It replaces your current Program, which
+                        is lost unless it's in a slot.
+                      </GameText>
+                    </p>
+                    <button
+                      type="button"
+                      className="primary"
+                      onClick={() => {
+                        setConfirming(null);
+                        action.onLoad(confirming.program);
+                      }}
+                    >
+                      Yes, load it
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirming(null);
+                      }}
+                    >
+                      Keep playing
+                    </button>
+                  </div>
+                )}
             </li>
           );
         })}
       </ul>
-    </section>
+    </>
   );
 }
