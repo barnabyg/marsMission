@@ -3,6 +3,8 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { fetchCatalogue } from "./fetchCatalogue";
 import { knownSeed } from "./knownSeed";
+import { openingScreen, type GameServices } from "./screens";
+import { createSaveStore } from "../save/saveStore";
 import { createSimulation } from "../simulation/simulation";
 import { TooltipLayer } from "../ui/TooltipLayer";
 import "./styles.css";
@@ -13,12 +15,14 @@ const root = createRoot(container);
 
 try {
   const simulation = createSimulation(await fetchCatalogue());
+  const services: GameServices = {
+    simulation,
+    saveStore: createSaveStore(localStorage, simulation),
+    newSeed: () => knownSeed(window.location.search) ?? Date.now(),
+  };
   root.render(
     <StrictMode>
-      <App
-        simulation={simulation}
-        newSeed={() => knownSeed(window.location.search) ?? Date.now()}
-      />
+      <App services={services} firstScreen={openingScreen(services)} />
       <TooltipLayer />
     </StrictMode>,
   );

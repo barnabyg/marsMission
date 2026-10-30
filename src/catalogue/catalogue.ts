@@ -3,7 +3,7 @@ import { z } from "zod";
 const id = z.string().min(1);
 const money = z.number().int().nonnegative();
 
-const isoDate = z.string().refine((value) => {
+export const isoDate = z.string().refine((value) => {
   const date = new Date(`${value}T00:00:00Z`);
   return (
     /^\d{4}-\d{2}-\d{2}$/.test(value) &&

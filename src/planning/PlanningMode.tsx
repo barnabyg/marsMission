@@ -11,6 +11,8 @@ import { GameText } from "../ui/GameText";
 interface PlanningModeProps {
   simulation: Simulation;
   program: Program;
+  /** Whether the automatic save at the start of this Planning Mode worked. */
+  saved: boolean;
   onSubmit: (plan: TurnPlan) => void;
   onRetire: () => void;
 }
@@ -18,6 +20,7 @@ interface PlanningModeProps {
 export function PlanningMode({
   simulation,
   program,
+  saved,
   onSubmit,
   onRetire,
 }: PlanningModeProps) {
@@ -99,6 +102,15 @@ export function PlanningMode({
           </div>
         </dl>
       </header>
+
+      {!saved && (
+        <p className="problem" role="alert">
+          <GameText>
+            The browser wouldn't store the automatic save, so this Program may
+            be lost if you close the game.
+          </GameText>
+        </p>
+      )}
 
       <section className="panel">
         <h2>

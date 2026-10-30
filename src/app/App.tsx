@@ -3,31 +3,38 @@ import { MissionMode } from "../mission/MissionMode";
 import { TurnSummaryScreen } from "../mission/TurnSummaryScreen";
 import { PlanningMode } from "../planning/PlanningMode";
 import { ProgramSummaryScreen } from "../planning/ProgramSummaryScreen";
-import type {
-  Program,
-  Simulation,
-  TurnPlan,
-  TurnResult,
-} from "../simulation/simulation";
-
-type Screen =
-  | { mode: "planning"; program: Program }
-  | { mode: "mission"; result: TurnResult }
-  | { mode: "turnSummary"; result: TurnResult }
-  | { mode: "programSummary"; program: Program };
+import { OpeningScreen } from "../save/OpeningScreen";
+import type { TurnPlan } from "../simulation/simulation";
+import {
+  newProgramScreen,
+  planningScreen,
+  type GameServices,
+  type Screen,
+} from "./screens";
 
 interface AppProps {
-  simulation: Simulation;
-  newSeed: () => number;
+  services: GameServices;
+  firstScreen: Screen;
 }
 
-export function App({ simulation, newSeed }: AppProps) {
-  const newProgram = (): Screen => ({
-    mode: "planning",
-    program: simulation.startProgram(newSeed()),
-  });
-  const [screen, setScreen] = useState<Screen>(newProgram);
+export function App({ services, firstScreen }: AppProps) {
+  const { simulation, saveStore } = services;
+  const [screen, setScreen] = useState(firstScreen);
   const [missionSpeed, setMissionSpeed] = useState(1);
+
+  if (screen.mode === "opening") {
+    return (
+      <OpeningScreen
+        automaticSave={screen.automaticSave}
+        onContinue={(program) => {
+          setScreen(planningScreen(services, program));
+        }}
+        onStartNew={() => {
+          setScreen(newProgramScreen(services));
+        }}
+      />
+    );
+  }
 
   if (screen.mode === "planning") {
     const { program } = screen;
@@ -35,6 +42,7 @@ export function App({ simulation, newSeed }: AppProps) {
       <PlanningMode
         simulation={simulation}
         program={program}
+        saved={screen.saved}
         onSubmit={(plan: TurnPlan) => {
           setScreen({
             mode: "mission",
@@ -42,6 +50,7 @@ export function App({ simulation, newSeed }: AppProps) {
           });
         }}
         onRetire={() => {
+          saveStore.clear("automatic");
           setScreen({
             mode: "programSummary",
             program: simulation.retireProgram(program),
@@ -56,7 +65,7 @@ export function App({ simulation, newSeed }: AppProps) {
       <ProgramSummaryScreen
         view={simulation.readProgram(screen.program)}
         onStartNew={() => {
-          setScreen(newProgram());
+          setScreen(newProgramScreen(services));
         }}
       />
     );
@@ -70,6 +79,10 @@ export function App({ simulation, newSeed }: AppProps) {
         initialSpeed={missionSpeed}
         onSpeedChange={setMissionSpeed}
         onFinished={() => {
+          // The player has now seen how the Turn ended, so a cancelled Program can't be reopened.
+          if (simulation.readProgram(result.program).status.kind !== "active") {
+            saveStore.clear("automatic");
+          }
           setScreen({ mode: "turnSummary", result });
         }}
       />
@@ -82,7 +95,11 @@ export function App({ simulation, newSeed }: AppProps) {
       onContinue={() => {
         const { program } = result;
         const active = simulation.readProgram(program).status.kind === "active";
-        setScreen({ mode: active ? "planning" : "programSummary", program });
+        setScreen(
+          active
+            ? planningScreen(services, program)
+            : { mode: "programSummary", program },
+        );
       }}
     />
   );
