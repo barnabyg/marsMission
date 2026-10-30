@@ -184,6 +184,67 @@ test("loads the data files, Mission Mode's view and its art from a production bu
   expect(artTypes).toEqual(["image/jpeg", "image/jpeg"]);
 });
 
+test("pauses Mission Mode and resumes from exactly where it stopped, without carrying into the next Turn", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+
+  const speed = page.getByRole("group", { name: "Speed" });
+  await expect(speed.getByRole("button")).toHaveText([
+    "Pause",
+    "1x",
+    "5x",
+    "10x",
+  ]);
+  const current = page.getByTestId("current-speed");
+  const date = page.getByTestId("mission-date");
+  const journey = page.getByTestId("journey-progress");
+  const turnProgress = page.getByRole("progressbar");
+
+  await speed.getByRole("button", { name: "5x" }).click();
+  await speed.getByRole("button", { name: "Pause" }).click();
+  await expect(current).toHaveText("Paused");
+  await expect(speed.getByRole("button", { name: "Pause" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(speed.getByRole("button", { name: "5x" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+
+  // Dismissing what's on screen lets game time run, were it not for the pause.
+  await page.getByTestId("text-screen").getByRole("button").click();
+  const held = {
+    date: await date.textContent(),
+    journey: await journey.textContent(),
+    turn: await turnProgress.getAttribute("value"),
+  };
+  await page.waitForTimeout(500);
+  expect(await date.textContent()).toBe(held.date);
+  expect(await journey.textContent()).toBe(held.journey);
+  expect(await turnProgress.getAttribute("value")).toBe(held.turn);
+
+  // Mute still works.
+  const mute = page.getByRole("button", { name: "Mute sound" });
+  await mute.click();
+  await expect(mute).toHaveAttribute("aria-pressed", "true");
+  await expect(current).toHaveText("Paused");
+  await mute.click();
+
+  await speed.getByRole("button", { name: "10x" }).click();
+  await expect(current).toHaveText("10x");
+  await playToNextTurn(page);
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
+
+  // The next Turn starts at the speed last chosen.
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(current).toHaveText("10x");
+  expect(problems).toEqual([]);
+});
+
 test("lists the planned Mission's Mission Events with rough risk bands, which change with what it carries", async ({
   page,
 }) => {

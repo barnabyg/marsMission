@@ -58,7 +58,7 @@ Any rule in this document beyond these is planned, so its absence from the code 
 
 ## Mission Mode
 
-- A Turn takes about 20 minutes at 1x speed, with controls to speed it up.
+- A Turn takes about 20 minutes at 1x speed, with controls to speed it up to 5x or 10x, or to pause it. Pausing only affects how a Turn is shown and lasts only for that Turn, because choosing a speed is what ends it and the next Turn starts at the speed last chosen.
 - The graphics are a mix of pre-made animations (such as an asteroid strike on a base) and displays (such as orbital tracking of a journey).
 - Pre-made animations are scripted 3D sequences that run live in the game, not pre-rendered video, so they show the Assets the player actually bought at the Landing Site they actually chose.
 - The first animation goal is one success and one failure animation per kind of Mission Event, and one per Hazard. More will follow. Anything without an animation yet shows a simple text message screen, built so an animation can replace it later.

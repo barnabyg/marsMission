@@ -4,7 +4,7 @@ const realMsPerTurn = 20 * 60_000;
 /** How long a text screen stays up unless dismissed. It's real time, so it's the same at every speed. */
 const textScreenMs = 8000;
 
-export const speeds = [1, 2, 5, 10] as const;
+export const speeds = [1, 5, 10] as const;
 
 /** The parts of a Timeline that decide how it plays. */
 export interface PlaybackTimeline {
@@ -15,7 +15,10 @@ export interface PlaybackTimeline {
 /** How far through a Turn Mission Mode has got. Playback only displays a Timeline and can't change it. */
 export interface PlaybackState {
   day: number;
+  /** The speed last chosen, which play resumes at and the next Turn starts at. */
   speed: number;
+  /** Holds game time and anything timed on screen until the player chooses a speed. */
+  paused: boolean;
   /** Index of the timeline entry on screen, during which game time holds. */
   activeEntry: number | null;
   nextEntry: number;
@@ -31,6 +34,7 @@ export function startPlayback(
     {
       day: 0,
       speed,
+      paused: false,
       activeEntry: null,
       nextEntry: 0,
       textScreenRemainingMs: 0,
@@ -46,7 +50,11 @@ export function changeSpeed(
   state: PlaybackState,
   speed: number,
 ): PlaybackState {
-  return { ...state, speed };
+  return { ...state, speed, paused: false };
+}
+
+export function pausePlayback(state: PlaybackState): PlaybackState {
+  return { ...state, paused: true };
 }
 
 export function dismissEntry(state: PlaybackState): PlaybackState {
@@ -60,6 +68,7 @@ export function advancePlayback(
   realMs: number,
   timeScale: number,
 ): PlaybackState {
+  if (state.paused) return state;
   const daysPerMs =
     (timeline.durationDays / realMsPerTurn) * state.speed * timeScale;
   let next = state;

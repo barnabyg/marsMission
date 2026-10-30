@@ -3,6 +3,8 @@ import {
   advancePlayback,
   changeSpeed,
   dismissEntry,
+  pausePlayback,
+  speeds,
   startPlayback,
   type PlaybackState,
   type PlaybackTimeline,
@@ -47,7 +49,7 @@ describe("playing a Turn", () => {
   });
 
   it("shows the same entries in the same order at every speed", () => {
-    for (const speed of [1, 2, 5, 10]) {
+    for (const speed of speeds) {
       const { shown, state } = playToEnd(speed);
       expect(shown).toEqual([0, 1, 2]);
       expect(state.day).toBe(780);
@@ -115,6 +117,73 @@ describe("playing a Turn", () => {
   it("can start at the speed the player was last using", () => {
     expect(startPlayback(timeline).speed).toBe(1);
     expect(startPlayback(timeline, 10).speed).toBe(10);
+  });
+
+  it("offers 1x, 5x and 10x", () => {
+    expect(speeds).toEqual([1, 5, 10]);
+  });
+
+  describe("pausing", () => {
+    const running = dismissEntry(
+      advancePlayback(startPlayback(timeline), timeline, 100, 1),
+    );
+
+    it("holds game time for as long as it lasts", () => {
+      const moved = advancePlayback(running, timeline, 1000, 1);
+      const paused = pausePlayback(moved);
+      expect(advancePlayback(paused, timeline, 60 * minuteMs, 1).day).toBe(
+        moved.day,
+      );
+    });
+
+    it("holds a text screen's time too", () => {
+      const shown = advancePlayback(startPlayback(timeline), timeline, 100, 1);
+      const held = advancePlayback(
+        pausePlayback(shown),
+        timeline,
+        60 * minuteMs,
+        1,
+      );
+      expect(held.activeEntry).toBe(0);
+      expect(held.textScreenRemainingMs).toBe(shown.textScreenRemainingMs);
+    });
+
+    it("resumes from exactly where play stopped when a speed is chosen", () => {
+      const paused = pausePlayback(running);
+      const resumed = changeSpeed(paused, 5);
+      expect(resumed.paused).toBe(false);
+      expect(resumed.day).toBe(running.day);
+      expect(advancePlayback(resumed, timeline, 100, 1).day).toBeGreaterThan(
+        running.day,
+      );
+    });
+
+    it("keeps the speed last chosen, so that play can return to it", () => {
+      const paused = pausePlayback(changeSpeed(running, 10));
+      expect(paused.speed).toBe(10);
+    });
+
+    it("shows the same entries on the same days as playing straight through", () => {
+      const entriesWithDays = (pauseEveryFrames: number | null) => {
+        let state = startPlayback(timeline);
+        const seen: [number, number][] = [];
+        for (let frame = 0; !state.finished; frame++) {
+          if (pauseEveryFrames && frame % pauseEveryFrames === 0) {
+            state = advancePlayback(pausePlayback(state), timeline, frameMs, 1);
+            state = changeSpeed(state, state.speed);
+          }
+          state = advancePlayback(state, timeline, 8000, 1);
+          if (state.activeEntry !== null) {
+            const { activeEntry, day } = state;
+            if (!seen.some(([entry]) => entry === activeEntry)) {
+              seen.push([activeEntry, day]);
+            }
+          }
+        }
+        return { seen, day: state.day };
+      };
+      expect(entriesWithDays(3)).toEqual(entriesWithDays(null));
+    });
   });
 
   it("finishes a Turn with nothing on its timeline", () => {

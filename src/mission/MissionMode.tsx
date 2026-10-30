@@ -24,7 +24,7 @@ export function MissionMode({
   onSpeedChange,
   onFinished,
 }: MissionModeProps) {
-  const { state, setSpeed, dismiss } = usePlayback(
+  const { state, setSpeed, pause, dismiss } = usePlayback(
     timeline,
     initialSpeed,
     onSpeedChange,
@@ -82,13 +82,19 @@ export function MissionMode({
         </button>
         <div role="group" aria-label="Speed" className="speed-controls">
           <span>
-            Speed: <strong data-testid="current-speed">{state.speed}x</strong>
+            Speed:{" "}
+            <strong data-testid="current-speed">
+              {state.paused ? "Paused" : `${state.speed}x`}
+            </strong>
           </span>
+          <button type="button" aria-pressed={state.paused} onClick={pause}>
+            Pause
+          </button>
           {speeds.map((speed) => (
             <button
               key={speed}
               type="button"
-              aria-pressed={state.speed === speed}
+              aria-pressed={!state.paused && state.speed === speed}
               onClick={() => {
                 setSpeed(speed);
               }}
