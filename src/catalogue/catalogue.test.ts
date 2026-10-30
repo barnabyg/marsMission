@@ -178,6 +178,25 @@ describe("invalid data files", () => {
     expect(message).toContain("funding-thresholds.json");
   });
 
+  it.each([
+    ["failureProbability", -0.1],
+    ["failureProbability", 1.5],
+    ["failureProbability", "often"],
+    ["failureProbability", undefined],
+    ["publicSupportLoss", -5],
+    ["publicSupportLoss", 2.5],
+    ["publicSupportLoss", undefined],
+    ["failureDescription", ""],
+  ])("reject a Mission Event whose %s is %s", (field, value) => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      missionEvents: [{ ...files.missionEvents[0], [field]: value }],
+    });
+    expect(message).toContain("mission-events.json");
+    expect(message).toContain(field);
+  });
+
   it("reject a date that isn't a real date", () => {
     const files = testCatalogueFiles();
     const message = errorFrom({

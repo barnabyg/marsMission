@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   angleBetweenDegrees,
+  journeyHasFailed,
   journeyProgress,
   planetPosition,
   spacecraftPosition,
 } from "./orbits";
 
 const startDate = "2028-12-01";
-const mission = { launchDay: 0, arrivalDay: 210 };
+const mission = { launchDay: 0, arrivalDay: 210, failedOnDay: null };
 
 function separationDegrees(date: string): number {
   return angleBetweenDegrees(
@@ -66,5 +67,19 @@ describe("the spacecraft", () => {
     expect(journeyProgress(mission, 105)).toBe(0.5);
     expect(journeyProgress(mission, 210)).toBe(1);
     expect(journeyProgress(mission, 500)).toBe(1);
+  });
+
+  it("stops where a Mission Event failed", () => {
+    const failed = { ...mission, failedOnDay: 105 };
+    expect(journeyProgress(failed, 50)).toBeCloseTo(50 / 210);
+    expect(journeyProgress(failed, 105)).toBe(0.5);
+    expect(journeyProgress(failed, 700)).toBe(0.5);
+  });
+
+  it("only counts as failed from the day of the failure", () => {
+    const failed = { ...mission, failedOnDay: 105 };
+    expect(journeyHasFailed(failed, 104)).toBe(false);
+    expect(journeyHasFailed(failed, 105)).toBe(true);
+    expect(journeyHasFailed(mission, 700)).toBe(false);
   });
 });

@@ -16,10 +16,15 @@ type Screen =
   | { mode: "turnSummary"; result: TurnResult }
   | { mode: "programSummary"; program: Program };
 
-export function App({ simulation }: { simulation: Simulation }) {
+interface AppProps {
+  simulation: Simulation;
+  newSeed: () => number;
+}
+
+export function App({ simulation, newSeed }: AppProps) {
   const newProgram = (): Screen => ({
     mode: "planning",
-    program: simulation.startProgram(Date.now()),
+    program: simulation.startProgram(newSeed()),
   });
   const [screen, setScreen] = useState<Screen>(newProgram);
   const [missionSpeed, setMissionSpeed] = useState(1);

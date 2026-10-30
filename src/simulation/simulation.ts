@@ -62,7 +62,7 @@ interface MissionEventEntry {
   eventId: string;
   title: string;
   description: string;
-  outcome: "success";
+  outcome: "success" | "failure";
 }
 
 interface MilestoneEntry {
@@ -101,6 +101,12 @@ export interface TurnSummary {
   publicSupportEnd: number;
   milestones: AwardedMilestone[];
   fundingPayouts: { publicSupport: number; payoutMillions: number }[];
+  /** The Mission Event that ended this Turn's Mission and what that cost, if one failed. */
+  failure: {
+    missionEventName: string;
+    assetsLost: string[];
+    publicSupportLost: number;
+  } | null;
   /** Why the Program was cancelled at the end of this Turn, if it was. */
   cancellationReason: string | null;
 }
@@ -115,6 +121,8 @@ export interface Timeline {
     arrivalDay: number;
     launchVehicleName: string;
     assetNames: string[];
+    /** The day a Mission Event failed and the journey stopped, if one did. */
+    failedOnDay: number | null;
   } | null;
   /** The Assets already operating at Mars when the Turn began. */
   operatingAssetNames: string[];
@@ -151,6 +159,29 @@ export function formatMoney(millions: number): string {
 
 function sum(values: number[]): number {
   return values.reduce((total, value) => total + value, 0);
+}
+
+/**
+ * A number from 0 up to 1 for one Mission Event's failure roll. It depends only on these three
+ * values, so changing anything about another Mission Event can't change this roll. The hash is
+ * FNV-1a followed by MurmurHash3's finaliser, which spreads out similar inputs such as adjacent seeds.
+ */
+function missionEventRoll(
+  seed: number,
+  turnNumber: number,
+  eventId: string,
+): number {
+  let hash = 0x811c9dc5;
+  for (const character of `${seed}:${turnNumber}:${eventId}`) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  hash ^= hash >>> 16;
+  hash = Math.imul(hash, 0x85ebca6b);
+  hash ^= hash >>> 13;
+  hash = Math.imul(hash, 0xc2b2ae35);
+  hash ^= hash >>> 16;
+  return (hash >>> 0) / 2 ** 32;
 }
 
 export function createSimulation(catalogue: Catalogue): Simulation {
@@ -190,20 +221,32 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     return { costMillions, problems };
   }
 
-  function dayOfEvent(eventId: string): MissionEventEntry {
-    const event = catalogue.missionEvents.find(
-      (candidate) => candidate.id === eventId,
+  function dayOf({ timing }: Catalogue["missionEvents"][number]): number {
+    return timing.from === "launch"
+      ? timing.days
+      : catalogue.program.transferDays + timing.days;
+  }
+
+  /** The Mission Events a Mission goes through, in the order they happen. */
+  function missionEventsFor(
+    launchVehicleId: string,
+    assetIds: string[],
+  ): Catalogue["missionEvents"] {
+    const vehicle = catalogue.launchVehicles.find(
+      (candidate) => candidate.id === launchVehicleId,
     );
-    if (!event) throw new Error(`Unknown Mission Event "${eventId}"`);
-    const { from, days } = event.timing;
-    return {
-      kind: "missionEvent",
-      day: from === "launch" ? days : catalogue.program.transferDays + days,
-      eventId,
-      title: event.name,
-      description: event.description,
-      outcome: "success",
-    };
+    const assets = catalogue.assets.filter((asset) =>
+      assetIds.includes(asset.id),
+    );
+    const eventIds = new Set([
+      ...(vehicle?.missionEvents ?? []),
+      ...assets.flatMap((asset) => asset.missionEvents),
+    ]);
+    return [...eventIds]
+      .flatMap((eventId) =>
+        catalogue.missionEvents.filter((event) => event.id === eventId),
+      )
+      .sort((first, second) => dayOf(first) - dayOf(second));
   }
 
   return {
@@ -282,13 +325,44 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         catalogue.assets.filter((candidate) => candidate.id === assetId),
       );
 
-      const eventIds = [
-        ...(vehicle?.missionEvents ?? []),
-        ...new Set(assets.flatMap((asset) => asset.missionEvents)),
-      ];
-      const missionEvents = eventIds.map(dayOfEvent);
+      const plannedEvents = plan.mission
+        ? missionEventsFor(plan.mission.launchVehicleId, plan.mission.assetIds)
+        : [];
+      const failedIndex = plannedEvents.findIndex(
+        (event) =>
+          missionEventRoll(program.seed, program.turnNumber, event.id) <
+          event.failureProbability,
+      );
+      const failedEvent = plannedEvents[failedIndex];
+      const assetNames = assets.map((asset) => asset.name);
+      const publicSupportLost = failedEvent
+        ? Math.min(failedEvent.publicSupportLoss, program.publicSupport)
+        : 0;
 
-      const arrivingKinds = assets.map((asset) => asset.kind);
+      const missionEvents = plannedEvents
+        .slice(0, failedEvent ? failedIndex + 1 : undefined)
+        .map((event): MissionEventEntry =>
+          event === failedEvent
+            ? {
+                kind: "missionEvent",
+                day: dayOf(event),
+                eventId: event.id,
+                title: `${event.name} failed`,
+                description: `${event.failureDescription} Lost with the Mission: ${assetNames.join(", ")}. It costs ${publicSupportLost} Public Support.`,
+                outcome: "failure",
+              }
+            : {
+                kind: "missionEvent",
+                day: dayOf(event),
+                eventId: event.id,
+                title: event.name,
+                description: event.description,
+                outcome: "success",
+              },
+        );
+
+      const deliveredAssets = failedEvent ? [] : assets;
+      const arrivingKinds = deliveredAssets.map((asset) => asset.kind);
       const awarded = catalogue.milestones.filter(
         ({ id, trigger }) =>
           !program.milestoneIds.includes(id) &&
@@ -307,7 +381,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       }));
 
       const publicSupportBeforeDrain =
-        program.publicSupport + publicSupportGained;
+        program.publicSupport - publicSupportLost + publicSupportGained;
 
       const fundingPayouts = catalogue.fundingThresholds.filter(
         ({ publicSupport }) =>
@@ -356,7 +430,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           ],
           operatingAssets: [
             ...program.operatingAssets,
-            ...assets.map((asset) => ({
+            ...deliveredAssets.map((asset) => ({
               assetId: asset.id,
               name: asset.name,
               kind: asset.kind,
@@ -376,7 +450,8 @@ export function createSimulation(catalogue: Catalogue): Simulation {
                 launchDay: 0,
                 arrivalDay: transferDays,
                 launchVehicleName: vehicle.name,
-                assetNames: assets.map((asset) => asset.name),
+                assetNames,
+                failedOnDay: failedEvent ? dayOf(failedEvent) : null,
               }
             : null,
           operatingAssetNames: program.operatingAssets.map(
@@ -404,6 +479,13 @@ export function createSimulation(catalogue: Catalogue): Simulation {
             publicSupport,
           })),
           fundingPayouts,
+          failure: failedEvent
+            ? {
+                missionEventName: failedEvent.name,
+                assetsLost: assetNames,
+                publicSupportLost,
+              }
+            : null,
           cancellationReason,
         },
       };

@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { fetchCatalogue } from "./fetchCatalogue";
+import { knownSeed } from "./knownSeed";
 import { createSimulation } from "../simulation/simulation";
 import { TooltipLayer } from "../ui/TooltipLayer";
 import "./styles.css";
@@ -14,7 +15,10 @@ try {
   const simulation = createSimulation(await fetchCatalogue());
   root.render(
     <StrictMode>
-      <App simulation={simulation} />
+      <App
+        simulation={simulation}
+        newSeed={() => knownSeed(window.location.search) ?? Date.now()}
+      />
       <TooltipLayer />
     </StrictMode>,
   );

@@ -3,18 +3,27 @@
     "id": "launch",
     "name": "Launch",
     "description": "The Launch Vehicle lifts off from Earth and carries the Mission into orbit.",
-    "timing": { "from": "launch", "days": 0 }
+    "failureDescription": "The Launch Vehicle broke up on the way to orbit.",
+    "timing": { "from": "launch", "days": 0 },
+    "failureProbability": 0.06,
+    "publicSupportLoss": 20
   },
   {
     "id": "mars-transfer-burn",
     "name": "Mars transfer burn",
     "description": "The upper stage fires and sends the Mission out of Earth orbit towards Mars.",
-    "timing": { "from": "launch", "days": 1 }
+    "failureDescription": "The upper stage shut down early, leaving the spacecraft on a path that will never reach Mars.",
+    "timing": { "from": "launch", "days": 1 },
+    "failureProbability": 0.04,
+    "publicSupportLoss": 20
   },
   {
     "id": "mars-orbit-insertion",
     "name": "Mars orbit insertion",
     "description": "The orbiter fires its engine, slows down and is captured into orbit around Mars.",
-    "timing": { "from": "arrival", "days": 0 }
+    "failureDescription": "The engine didn't fire for long enough, and the spacecraft flew past Mars and off into space.",
+    "timing": { "from": "arrival", "days": 0 },
+    "failureProbability": 0.1,
+    "publicSupportLoss": 20
   }
 ]

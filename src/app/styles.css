@@ -252,6 +252,14 @@ button.primary {
   margin: 0;
 }
 
+.text-screen.failed {
+  border-color: var(--problem);
+}
+
+.text-screen.failed h2 {
+  color: var(--problem);
+}
+
 .summary-screen {
   display: grid;
   gap: 1.5rem;

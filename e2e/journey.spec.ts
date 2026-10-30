@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { termPattern, tooltips } from "../src/ui/tooltips";
+import { productionBaseURL } from "../playwright.config";
+import { seedFailingAt, successSeed } from "./seeds";
 
 /**
  * @react-three/fiber 9.8.2 still creates a THREE.Clock, which three 0.187 warns about on load. It's
@@ -46,7 +48,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   page,
 }) => {
   const problems = watchForProblems(page);
-  await page.goto("/");
+  await page.goto(`/?seed=${successSeed}`);
 
   await expect(
     page.getByRole("heading", { name: "Planning Mode" }),
@@ -127,6 +129,69 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(page.getByTestId("current-speed")).toHaveText("10x");
   expect(problems).toEqual([]);
+});
+
+for (const { missionEvent, before } of [
+  { missionEvent: "Launch", before: [] },
+  { missionEvent: "Mars transfer burn", before: ["Launch"] },
+  {
+    missionEvent: "Mars orbit insertion",
+    before: ["Launch", "Mars transfer burn"],
+  },
+]) {
+  test(`plays a Mission that fails at ${missionEvent} through to the next Turn`, async ({
+    page,
+  }) => {
+    const problems = watchForProblems(page);
+    await page.goto(`/?seed=${seedFailingAt(missionEvent)}`);
+    await page.getByRole("button", { name: "Launch Mission" }).click();
+
+    const screen = page.getByTestId("text-screen");
+    for (const title of before) {
+      await expect(screen.getByRole("heading")).toHaveText(title);
+      await screen.getByRole("button", { name: "Continue" }).click();
+    }
+
+    await expect(screen.getByRole("heading")).toHaveText(
+      `${missionEvent} failed`,
+    );
+    await expect(screen).toContainText("Pathfinder Orbiter");
+    expect(await termsWithoutTooltips(page)).toEqual([]);
+    await expect(page.getByTestId("journey-progress")).toHaveText(
+      /lost, and will not reach Mars/,
+    );
+    await expect(page.getByTestId("operating-at-mars")).toHaveText(
+      "Nothing yet",
+    );
+    await screen.getByRole("button", { name: "Continue" }).click();
+
+    // No later Mission Event appears: the next thing on screen is the Turn summary.
+    const summary = page.getByTestId("turn-summary");
+    await expect(summary).toBeVisible();
+    const failure = summary.getByTestId("summary-failure");
+    await expect(failure).toContainText(missionEvent);
+    await expect(failure).toContainText("Pathfinder Orbiter");
+    await expect(failure).toContainText("Public Support lost: 20");
+    expect(await termsWithoutTooltips(page)).toEqual([]);
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await expect(page.getByTestId("turn-number")).toHaveText("2");
+    await expect(page.getByTestId("public-support")).toHaveText("68");
+    await expect(page.getByTestId("science")).toHaveText("0");
+    await expect(page.getByTestId("money")).toHaveText("$1B");
+    await expect(page.getByTestId("operating-assets")).toHaveCount(0);
+    expect(problems).toEqual([]);
+  });
+}
+
+test("uses a known seed in a production build, as the playtest command runs it", async ({
+  page,
+}) => {
+  await page.goto(`${productionBaseURL}/?seed=${seedFailingAt("Launch")}`);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(page.getByTestId("text-screen").getByRole("heading")).toHaveText(
+    "Launch failed",
+  );
 });
 
 test("explains a game term on hover and on keyboard focus", async ({

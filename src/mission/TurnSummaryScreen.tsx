@@ -22,6 +22,30 @@ export function TurnSummaryScreen({
           </GameText>
         </p>
       )}
+      {summary.failure && (
+        <section data-testid="summary-failure">
+          <h2 className="problem">
+            <GameText>Mission failed</GameText>
+          </h2>
+          <ul>
+            <li>
+              <GameText>
+                {`Mission Event that failed: ${summary.failure.missionEventName}`}
+              </GameText>
+            </li>
+            <li>
+              <GameText>
+                {`Assets lost: ${summary.failure.assetsLost.join(", ")}`}
+              </GameText>
+            </li>
+            <li>
+              <GameText>
+                {`Public Support lost: ${summary.failure.publicSupportLost}`}
+              </GameText>
+            </li>
+          </ul>
+        </section>
+      )}
       {summary.milestones.length > 0 && (
         <section>
           <h2>

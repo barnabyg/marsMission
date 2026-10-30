@@ -11,6 +11,7 @@ export type Planet = "earth" | "mars";
 interface JourneyDays {
   launchDay: number;
   arrivalDay: number;
+  failedOnDay: number | null;
 }
 
 const millisecondsPerDay = 86_400_000;
@@ -51,10 +52,19 @@ export function angleBetweenDegrees(
   return (Math.acos(dot / lengths) * 180) / Math.PI;
 }
 
-/** How far along its route a Mission is, from 0 at launch to 1 on arrival. */
+/** How far along its route a Mission is, from 0 at launch to 1 on arrival. A failed Mission stays where it failed. */
 export function journeyProgress(journey: JourneyDays, day: number): number {
-  const { launchDay, arrivalDay } = journey;
-  return Math.min(1, Math.max(0, (day - launchDay) / (arrivalDay - launchDay)));
+  const { launchDay, arrivalDay, failedOnDay } = journey;
+  const lastDay = Math.min(day, failedOnDay ?? day);
+  return Math.min(
+    1,
+    Math.max(0, (lastDay - launchDay) / (arrivalDay - launchDay)),
+  );
+}
+
+/** Whether the day has reached the Mission Event that ended the Mission. */
+export function journeyHasFailed(journey: JourneyDays, day: number): boolean {
+  return journey.failedOnDay !== null && day >= journey.failedOnDay;
 }
 
 /** A point along the route: outwards from Earth at launch to where Mars will be on arrival. */

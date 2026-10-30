@@ -47,10 +47,13 @@ const missionEventsSchema = z.array(
     id,
     name: z.string().min(1),
     description: z.string().min(1),
+    failureDescription: z.string().min(1),
     timing: z.strictObject({
       from: z.enum(["launch", "arrival"]),
       days: z.number().int().nonnegative(),
     }),
+    failureProbability: z.number().min(0).max(1),
+    publicSupportLoss: z.number().int().nonnegative(),
   }),
 );
 
