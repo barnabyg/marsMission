@@ -1,18 +1,8 @@
-import { readFileSync } from "node:fs";
-import {
-  catalogueFileNames,
-  parseCatalogue,
-  type CatalogueFiles,
-} from "../src/catalogue/catalogue";
+import { parseCatalogue } from "../src/catalogue/catalogue";
 import { createSimulation } from "../src/simulation/simulation";
+import { realCatalogueFiles } from "../src/testing/realCatalogue";
 
-const files = Object.fromEntries(
-  Object.entries(catalogueFileNames).map(([key, fileName]) => [
-    key,
-    JSON.parse(readFileSync(`public/data/${fileName}`, "utf8")) as unknown,
-  ]),
-) as unknown as CatalogueFiles;
-const catalogue = parseCatalogue(files);
+const catalogue = parseCatalogue(realCatalogueFiles());
 const simulation = createSimulation(catalogue);
 
 /** What Planning Mode offers first, which is what the tests launch. */

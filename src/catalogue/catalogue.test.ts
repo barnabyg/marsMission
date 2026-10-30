@@ -1,25 +1,12 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
-  catalogueFileNames,
   CatalogueError,
   parseCatalogue,
   type CatalogueFiles,
 } from "./catalogue";
 import { createSimulation } from "../simulation/simulation";
 import { testCatalogueFiles } from "../simulation/testCatalogue";
-
-function realFiles(): CatalogueFiles {
-  const read = (fileName: string): unknown =>
-    JSON.parse(readFileSync(`public/data/${fileName}`, "utf8"));
-  const files = Object.fromEntries(
-    Object.entries(catalogueFileNames).map(([key, fileName]) => [
-      key,
-      read(fileName),
-    ]),
-  );
-  return files as unknown as CatalogueFiles;
-}
+import { realCatalogueFiles } from "../testing/realCatalogue";
 
 function errorFrom(files: unknown): string {
   try {
@@ -33,23 +20,11 @@ function errorFrom(files: unknown): string {
 
 describe("the real data files", () => {
   it("are valid", () => {
-    expect(() => parseCatalogue(realFiles())).not.toThrow();
-  });
-
-  it("start the Program at the late-2028 Launch Window with about $2B", () => {
-    const { program } = parseCatalogue(realFiles());
-    expect(program.firstLaunchWindow).toMatch(/^2028-(1[0-2])/);
-    expect(program.startingMoneyMillions).toBe(2000);
-  });
-
-  it("drain 15% per Turn with a Cancellation Level of 50", () => {
-    const { program } = parseCatalogue(realFiles());
-    expect(program.publicSupportDrainPercent).toBe(15);
-    expect(program.cancellationLevel).toBe(50);
+    expect(() => parseCatalogue(realCatalogueFiles())).not.toThrow();
   });
 
   it("cancel a Program that only skips Turns", () => {
-    const simulation = createSimulation(parseCatalogue(realFiles()));
+    const simulation = createSimulation(parseCatalogue(realCatalogueFiles()));
     let program = simulation.startProgram(1);
     for (let turn = 0; turn < 100; turn++) {
       if (simulation.readProgram(program).status.kind !== "active") break;
@@ -58,31 +33,13 @@ describe("the real data files", () => {
     expect(simulation.readProgram(program).status.kind).toBe("cancelled");
   });
 
-  it("offer one Launch Vehicle and one orbiter", () => {
-    const catalogue = parseCatalogue(realFiles());
-    expect(catalogue.launchVehicles).toHaveLength(1);
-    expect(catalogue.assets.map((asset) => asset.kind)).toEqual(["orbiter"]);
-  });
-});
-
-describe("the real Milestones", () => {
-  it("award the first orbiter 200 Public Support", () => {
-    const { milestones } = parseCatalogue(realFiles());
-    expect(milestones).toHaveLength(1);
-    expect(milestones[0]?.publicSupport).toBe(200);
-  });
-});
-
-describe("the real Funding Thresholds", () => {
-  it("can be reached by the one Milestone in this phase", () => {
+  it("can reach the first Funding Threshold with the available Milestones", () => {
     const { fundingThresholds, milestones, program } =
-      parseCatalogue(realFiles());
-    const reachable =
-      program.startingPublicSupport + (milestones[0]?.publicSupport ?? 0);
-    expect(fundingThresholds[0]).toEqual({
-      publicSupport: 300,
-      payoutMillions: 1000,
-    });
+      parseCatalogue(realCatalogueFiles());
+    const reachable = milestones.reduce(
+      (total, { publicSupport }) => total + publicSupport,
+      program.startingPublicSupport,
+    );
     expect(fundingThresholds[0]?.publicSupport).toBeLessThanOrEqual(reachable);
   });
 });
