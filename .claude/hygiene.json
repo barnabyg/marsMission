@@ -1,0 +1,4 @@
+{
+  "testCommand": "npm ci && npx vitest run --reporter=verbose && npx playwright install chromium && npx playwright test",
+  "slowTestMs": 5000
+}
