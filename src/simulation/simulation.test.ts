@@ -114,6 +114,7 @@ describe("running a Turn with a Mission", () => {
             ...files.assets[0],
             missionEvents: ["test-arrival", "test-settle"],
           },
+          ...files.assets.slice(1),
         ],
         missionEvents: [
           ...files.missionEvents,
