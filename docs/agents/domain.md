@@ -44,6 +44,8 @@ When your output names a domain concept (in an issue title, a refactor proposal,
 
 If the concept you need isn't in the glossary yet, that's a signal: either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
 
+`GLOSSARY.md` holds player-facing terms only, because a test requires each one to have a tooltip. Module names such as the Simulation, Catalogue and Save Store are defined in the Develop section of `README.md`.
+
 ## Flag ADR conflicts
 
 If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:

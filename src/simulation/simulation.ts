@@ -328,17 +328,17 @@ export function createSimulation(catalogue: Catalogue): Simulation {
   }
 
   /** The one calculation behind both a Mission Event's roll and the risk band Planning Mode shows. */
-  function failureChance(
+  function failureProbability(
     event: Catalogue["missionEvents"][number],
     level: Catalogue["reliabilityLevels"][number],
   ): number {
     return event.failureProbability * level.failureMultiplier;
   }
 
-  function riskBandFor(chance: number): string {
-    const band = catalogue.riskBands.find(({ upTo }) => chance <= upTo);
+  function riskBandFor(probability: number): string {
+    const band = catalogue.riskBands.find(({ upTo }) => probability <= upTo);
     // The Catalogue guarantees the last band goes up to 1.
-    if (!band) throw new Error(`No risk band covers ${chance}`);
+    if (!band) throw new Error(`No risk band covers ${probability}`);
     return band.label;
   }
 
@@ -455,13 +455,13 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           return {
             eventId: event.id,
             name: event.name,
-            riskBand: riskBandFor(failureChance(event, chosen)),
+            riskBand: riskBandFor(failureProbability(event, chosen)),
             reliabilityLevelId: chosen.id,
             reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
               id: level.id,
               name: level.name,
               costMillions: level.costMillions,
-              riskBand: riskBandFor(failureChance(event, level)),
+              riskBand: riskBandFor(failureProbability(event, level)),
             })),
           };
         },
@@ -492,7 +492,10 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       const failedIndex = plannedEvents.findIndex(
         (event) =>
           missionEventRoll(program.seed, program.turnNumber, event.id) <
-          failureChance(event, reliabilityLevelFor(plan.mission, event.id)),
+          failureProbability(
+            event,
+            reliabilityLevelFor(plan.mission, event.id),
+          ),
       );
       const failedEvent = plannedEvents[failedIndex];
       const assetNames = assets.map((asset) => asset.name);

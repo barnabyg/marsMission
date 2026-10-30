@@ -231,7 +231,7 @@ function crossCheck(catalogue: Catalogue): string[] {
     }
     if (level.failureMultiplier > lower.failureMultiplier) {
       problems.push(
-        `${catalogueFileNames.reliabilityLevels}: "${level.id}" has a higher failure chance than "${lower.id}", the level below it`,
+        `${catalogueFileNames.reliabilityLevels}: "${level.id}" has a higher failure probability than "${lower.id}", the level below it`,
       );
     }
   });
