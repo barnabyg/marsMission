@@ -1,0 +1,20 @@
+[
+  {
+    "id": "launch",
+    "name": "Launch",
+    "description": "The Launch Vehicle lifts off from Earth and carries the Mission into orbit.",
+    "timing": { "from": "launch", "days": 0 }
+  },
+  {
+    "id": "mars-transfer-burn",
+    "name": "Mars transfer burn",
+    "description": "The upper stage fires and sends the Mission out of Earth orbit towards Mars.",
+    "timing": { "from": "launch", "days": 1 }
+  },
+  {
+    "id": "mars-orbit-insertion",
+    "name": "Mars orbit insertion",
+    "description": "The orbiter fires its engine, slows down and is captured into orbit around Mars.",
+    "timing": { "from": "arrival", "days": 0 }
+  }
+]

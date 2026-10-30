@@ -1,0 +1,314 @@
+/* The game targets a desktop at about 3840x2160 (ADR 0001), so type is sized for that. */
+:root {
+  font-size: 32px;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+  --background: #0b0d14;
+  --panel: #171b28;
+  --panel-border: #2d3448;
+  --text: #e8eaf0;
+  --muted: #a3aabd;
+  --accent: #e2703a;
+  --problem: #ff8f7a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+button,
+select {
+  font: inherit;
+  color: inherit;
+  background: var(--panel);
+  border: 2px solid var(--panel-border);
+  border-radius: 0.3rem;
+  padding: 0.4rem 0.9rem;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #10121a;
+  font-weight: 600;
+}
+
+.planning {
+  display: grid;
+  gap: 1.5rem;
+  padding: 2rem 3rem;
+  max-width: 100rem;
+  margin: 0 auto;
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
+}
+
+.status-bar h1 {
+  white-space: nowrap;
+}
+
+.status-bar dd {
+  white-space: nowrap;
+}
+
+.status-bar dl {
+  display: flex;
+  gap: 3rem;
+  margin: 0;
+}
+
+.status-bar dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.status-bar dd {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.panel {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+  background: var(--panel);
+  border: 2px solid var(--panel-border);
+  border-radius: 0.5rem;
+  padding: 1.5rem 2rem;
+}
+
+.panel label {
+  display: grid;
+  gap: 0.3rem;
+  color: var(--muted);
+}
+
+.panel select {
+  min-width: 26rem;
+  color: var(--text);
+  background: var(--background);
+}
+
+.panel p,
+.panel ul {
+  margin: 0;
+}
+
+.confirm {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.problem {
+  color: var(--problem);
+}
+
+.mission {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  padding: 2rem 3rem;
+}
+
+.solar-system {
+  position: absolute;
+  inset: 0;
+}
+
+.view-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.view-label span {
+  display: block;
+  transform: translate(-50%, -100%);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  text-shadow: 0 0 0.3rem #000;
+}
+
+.spacecraft-label span {
+  color: #ffd9bd;
+}
+
+.mission-side {
+  position: absolute;
+  z-index: 1;
+  top: 7rem;
+  left: 3rem;
+  width: 24rem;
+  display: grid;
+  gap: 0.6rem;
+  background: rgb(23 27 40 / 80%);
+  border: 2px solid var(--panel-border);
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+}
+
+.mission-side h2 {
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+.mission-side p,
+.mission-side ul {
+  margin: 0;
+}
+
+.mission-side ul {
+  padding-left: 1.2rem;
+}
+
+.mission-bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+.mission-bar p {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.mission-bar progress {
+  flex: 1;
+  height: 0.6rem;
+  accent-color: var(--accent);
+}
+
+.speed-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.speed-controls span {
+  margin-right: 0.6rem;
+}
+
+.speed-controls button[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #10121a;
+}
+
+.text-screen {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  width: 46rem;
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+  background: rgb(23 27 40 / 92%);
+  border: 2px solid var(--panel-border);
+  border-radius: 0.5rem;
+  padding: 1.5rem 2rem;
+}
+
+.text-screen p {
+  margin: 0;
+}
+
+.summary-screen {
+  display: grid;
+  gap: 1.5rem;
+  justify-items: start;
+  max-width: 50rem;
+  margin: 0 auto;
+  padding: 4rem 3rem;
+}
+
+.summary-screen table {
+  border-collapse: collapse;
+}
+
+.summary-screen th {
+  text-align: left;
+  font-weight: 400;
+  color: var(--muted);
+  padding: 0.3rem 3rem 0.3rem 0;
+}
+
+.summary-screen td {
+  font-weight: 600;
+}
+
+.summary-screen ul,
+.summary-screen p {
+  margin: 0;
+}
+
+.term {
+  border-bottom: 2px dotted var(--muted);
+  cursor: help;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 10;
+  width: 30rem;
+  background: #0f1320;
+  border: 2px solid var(--accent);
+  border-radius: 0.4rem;
+  padding: 0.8rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text);
+  pointer-events: none;
+}
+
+.tooltip p {
+  margin: 0.3rem 0 0;
+}
+
+.load-error {
+  padding: 3rem;
+}
+
+.load-error pre {
+  white-space: pre-wrap;
+  color: var(--problem);
+}

@@ -1,0 +1,10 @@
+{
+  "//": "Compiles the Simulation and Catalogue without browser or Node types, so any dependence on them is a type error (ADR 0004).",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": []
+  },
+  "include": ["src/simulation", "src/catalogue"],
+  "exclude": ["src/**/*.test.ts"]
+}
