@@ -1,4 +1,4 @@
-/* Ordinary pixels, so that text follows the player's display scaling. Everything else is in rem and shrinks with it (ADR 0001). */
+/* Ordinary pixels, so that text follows the player's display scaling. Spacing and widths are in rem and shrink with it (ADR 0001). */
 :root {
   font-size: 18px;
   font-family: "Segoe UI", system-ui, sans-serif;

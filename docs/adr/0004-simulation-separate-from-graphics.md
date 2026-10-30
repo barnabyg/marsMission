@@ -4,4 +4,4 @@ The game rules run as a self-contained, deterministic simulation with no depende
 
 ## Consequences
 
-- Each simulation result needs something to show it. A new kind of Mission Event or Hazard can start with a text message screen, which an animation can replace later without changing the rules.
+- Each simulation result needs something to show it. A new kind of Mission Event or Hazard can start with just an entry in Mission Mode's events column, and an animation can be added later without changing the rules.

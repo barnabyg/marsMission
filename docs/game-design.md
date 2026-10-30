@@ -79,7 +79,7 @@ Any rule in this document beyond these is planned, so its absence from the code 
 
 - Mars and the planets use NASA's public imagery and elevation data. Spacecraft use NASA's free 3D models where they fit, plus simple models made for the project. Plumes, dust and explosions are generated in code. Licensing rules are in [ADR 0005](adr/0005-free-open-licensed-media-only.md).
 - The first version has simple sound effects and no music.
-- There is no guided tutorial in the first version. Every term has a tooltip instead.
+- There is no guided tutorial in the first version. Every term has a tooltip instead, except in button labels.
 
 ## Build order
 
