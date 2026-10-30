@@ -242,7 +242,7 @@ function placeLabel(element: HTMLDivElement | null, left: number, top: number) {
   if (element) element.style.transform = `translate(${left}px, ${top}px)`;
 }
 
-/** Keeps the HTML labels over their objects, which stops them being blurred or thin at 4K. */
+/** Keeps the HTML labels above their objects, which stops them being blurred or thin at 4K. */
 function LabelTracker({ targets }: { targets: LabelTarget[] }) {
   const projected = useMemo(() => new Vector3(), []);
   useFrame(({ camera, size }) => {
@@ -277,15 +277,15 @@ export default function SolarSystemView({
   const labelTargets: LabelTarget[] = [
     {
       element: earthLabel,
-      position: new Vector3(earth.x, planetRadii.earth + 0.05, earth.z),
+      position: new Vector3(earth.x, 0, earth.z - planetRadii.earth - 0.02),
     },
     {
       element: marsLabel,
-      position: new Vector3(mars.x, planetRadii.mars + 0.05, mars.z),
+      position: new Vector3(mars.x, 0, mars.z - planetRadii.mars - 0.02),
     },
     {
       element: spacecraftLabel,
-      position: new Vector3(spacecraft.x, 0.05, spacecraft.z),
+      position: new Vector3(spacecraft.x, 0, spacecraft.z - 0.04),
     },
   ];
 
