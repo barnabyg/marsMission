@@ -37,8 +37,9 @@ export function PlanningMode({
   );
   const [assetId, setAssetId] = useState(view.assets[0]?.id ?? "");
   const [reliability, setReliability] = useState<Record<string, string>>({});
-  const [confirmingRetirement, setConfirmingRetirement] = useState(false);
-  const [openDialog, setOpenDialog] = useState<"save" | "load" | null>(null);
+  const [openDialog, setOpenDialog] = useState<
+    "save" | "load" | "retire" | null
+  >(null);
   const [savedToSlot, setSavedToSlot] = useState<number | null>(null);
 
   const plannedEvents = simulation.previewMission({
@@ -130,6 +131,15 @@ export function PlanningMode({
           }}
         >
           Load
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setSavedToSlot(null);
+            setOpenDialog("retire");
+          }}
+        >
+          Retire Program
         </button>
         {savedToSlot !== null && (
           <p role="status">
@@ -275,41 +285,25 @@ export function PlanningMode({
           </ul>
         )}
       </section>
-      <section className="panel">
-        <h2>Retire</h2>
-        {confirmingRetirement ? (
-          <div
-            role="dialog"
-            aria-label="Confirm retirement"
-            className="confirm"
-          >
-            <p>
-              <GameText>Retire this Program? This ends it for good.</GameText>
-            </p>
+
+      {openDialog === "retire" && (
+        <Dialog
+          title="Retire Program"
+          cancelLabel="Keep going"
+          onClose={() => {
+            setOpenDialog(null);
+          }}
+          actions={
             <button type="button" className="primary" onClick={onRetire}>
               Yes, retire the Program
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setConfirmingRetirement(false);
-              }}
-            >
-              Keep going
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              setConfirmingRetirement(true);
-            }}
-          >
-            Retire Program
-          </button>
-        )}
-      </section>
-
+          }
+        >
+          <p>
+            <GameText>Retire this Program? This ends it for good.</GameText>
+          </p>
+        </Dialog>
+      )}
       {openDialog === "save" && (
         <Dialog
           title="Save to a Save Slot"

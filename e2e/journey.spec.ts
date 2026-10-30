@@ -344,15 +344,32 @@ test("retires a Program and starts a new one from the Program summary", async ({
   const problems = watchForProblems(page);
   await page.goto("/");
 
-  await page.getByRole("button", { name: "Retire Program" }).click();
+  // Beside Save and Load, with no section of its own.
+  await expect(page.getByRole("heading", { name: "Retire" })).toHaveCount(0);
+  const actions = page.locator(".program-actions");
+  await expect(actions.getByRole("button")).toHaveText([
+    "Save",
+    "Load",
+    "Retire Program",
+  ]);
+
+  const retire = page.getByRole("button", { name: "Retire Program" });
+  const dialog = page.getByRole("dialog", { name: "Retire Program" });
+  await retire.click();
+  await expect(dialog).toContainText("This ends it for good");
   expect(await termsWithoutTooltips(page)).toEqual([]);
-  await page.getByRole("button", { name: "Keep going" }).click();
+  await dialog.getByRole("button", { name: "Keep going" }).click();
+  await expect(dialog).toHaveCount(0);
+
+  await retire.click();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Planning Mode" }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "Retire Program" }).click();
-  await page.getByRole("button", { name: "Yes, retire the Program" }).click();
+  await retire.click();
+  await dialog.getByRole("button", { name: "Yes, retire the Program" }).click();
 
   const summary = page.getByTestId("program-summary");
   await expect(summary).toContainText("You retired this Program");
