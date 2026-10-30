@@ -1,0 +1,15 @@
+[
+  { "id": "none", "name": "None", "costMillions": 0, "failureMultiplier": 1 },
+  {
+    "id": "tested",
+    "name": "Tested",
+    "costMillions": 50,
+    "failureMultiplier": 0.5
+  },
+  {
+    "id": "redundant",
+    "name": "Redundant",
+    "costMillions": 150,
+    "failureMultiplier": 0.2
+  }
+]

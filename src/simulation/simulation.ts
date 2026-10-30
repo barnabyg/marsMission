@@ -1,8 +1,15 @@
 import type { Catalogue } from "../catalogue/catalogue";
 
+interface PlannedMission {
+  launchVehicleId: string;
+  assetIds: string[];
+  /** The Reliability level bought for each Mission Event, by id. Any left out get the cheapest level. */
+  reliability?: Record<string, string>;
+}
+
 export interface TurnPlan {
   /** The Turn's one Mission, or null to let the Turn pass without launching. */
-  mission: { launchVehicleId: string; assetIds: string[] } | null;
+  mission: PlannedMission | null;
 }
 
 interface PlanCheck {
@@ -140,6 +147,13 @@ interface PlannedMissionEvent {
   eventId: string;
   name: string;
   riskBand: string;
+  reliabilityLevelId: string;
+  reliabilityLevels: {
+    id: string;
+    name: string;
+    costMillions: number;
+    riskBand: string;
+  }[];
 }
 
 export interface Simulation {
@@ -147,10 +161,7 @@ export interface Simulation {
   readProgram(program: Program): ProgramView;
   validatePlan(program: Program, plan: TurnPlan): PlanCheck;
   /** The Mission Events a Mission would go through, in order. Ids that aren't in the catalogue are skipped. */
-  previewMission(mission: {
-    launchVehicleId: string;
-    assetIds: string[];
-  }): PlannedMissionEvent[];
+  previewMission(mission: PlannedMission): PlannedMissionEvent[];
   runTurn(program: Program, plan: TurnPlan): TurnResult;
   retireProgram(program: Program): Program;
 }
@@ -203,7 +214,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     }
     if (!plan.mission) return { costMillions: 0, problems: [] };
 
-    const { launchVehicleId, assetIds } = plan.mission;
+    const { launchVehicleId, assetIds, reliability = {} } = plan.mission;
     const problems: string[] = [];
     let costMillions = 0;
 
@@ -225,6 +236,21 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       else problems.push(`There is no Asset called "${assetId}".`);
     }
 
+    const plannedEvents = missionEventsFor(launchVehicleId, assetIds);
+    for (const [eventId, levelId] of Object.entries(reliability)) {
+      if (!plannedEvents.some((event) => event.id === eventId)) {
+        problems.push(`This Mission has no Mission Event called "${eventId}".`);
+      }
+      if (!catalogue.reliabilityLevels.some((level) => level.id === levelId)) {
+        problems.push(`There is no Reliability level called "${levelId}".`);
+      }
+    }
+    costMillions += sum(
+      plannedEvents.map(
+        (event) => reliabilityLevelFor(plan.mission, event.id).costMillions,
+      ),
+    );
+
     if (costMillions > program.moneyMillions) {
       problems.push(
         `This Mission costs ${formatMoney(costMillions)}, but the Program only has ${formatMoney(program.moneyMillions)}.`,
@@ -237,6 +263,21 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     return timing.from === "launch"
       ? timing.days
       : catalogue.program.transferDays + timing.days;
+  }
+
+  /** The level a Mission has bought for a Mission Event, which is the cheapest unless it chose another. */
+  function reliabilityLevelFor(
+    mission: PlannedMission | null,
+    eventId: string,
+  ): Catalogue["reliabilityLevels"][number] {
+    const { reliabilityLevels } = catalogue;
+    const chosenId = mission?.reliability?.[eventId];
+    const level =
+      reliabilityLevels.find(({ id }) => id === chosenId) ??
+      reliabilityLevels[0];
+    // The Catalogue guarantees at least one level.
+    if (!level) throw new Error("The catalogue has no Reliability levels");
+    return level;
   }
 
   function riskBandFor(failureChance: number): string {
@@ -326,12 +367,28 @@ export function createSimulation(catalogue: Catalogue): Simulation {
 
     validatePlan: checkPlan,
 
-    previewMission({ launchVehicleId, assetIds }) {
-      return missionEventsFor(launchVehicleId, assetIds).map((event) => ({
-        eventId: event.id,
-        name: event.name,
-        riskBand: riskBandFor(event.failureProbability),
-      }));
+    previewMission(mission) {
+      return missionEventsFor(mission.launchVehicleId, mission.assetIds).map(
+        (event) => {
+          const chosen = reliabilityLevelFor(mission, event.id);
+          return {
+            eventId: event.id,
+            name: event.name,
+            riskBand: riskBandFor(
+              event.failureProbability * chosen.failureMultiplier,
+            ),
+            reliabilityLevelId: chosen.id,
+            reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
+              id: level.id,
+              name: level.name,
+              costMillions: level.costMillions,
+              riskBand: riskBandFor(
+                event.failureProbability * level.failureMultiplier,
+              ),
+            })),
+          };
+        },
+      );
     },
 
     runTurn(program, plan) {
@@ -358,7 +415,8 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       const failedIndex = plannedEvents.findIndex(
         (event) =>
           missionEventRoll(program.seed, program.turnNumber, event.id) <
-          event.failureProbability,
+          event.failureProbability *
+            reliabilityLevelFor(plan.mission, event.id).failureMultiplier,
       );
       const failedEvent = plannedEvents[failedIndex];
       const assetNames = assets.map((asset) => asset.name);

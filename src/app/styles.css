@@ -150,6 +150,10 @@ button.primary {
   min-width: 18rem;
 }
 
+.risk-band {
+  min-width: 7rem;
+}
+
 .confirm {
   display: flex;
   align-items: center;

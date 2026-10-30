@@ -215,6 +215,42 @@ describe("invalid data files", () => {
     expect(message).toContain("risk-bands.json");
   });
 
+  it.each([
+    [
+      "a higher level costs less",
+      [
+        { id: "a", name: "A", costMillions: 100, failureMultiplier: 1 },
+        { id: "b", name: "B", costMillions: 50, failureMultiplier: 0.5 },
+      ],
+    ],
+    [
+      "a higher level has a higher failure chance",
+      [
+        { id: "a", name: "A", costMillions: 0, failureMultiplier: 0.5 },
+        { id: "b", name: "B", costMillions: 50, failureMultiplier: 0.8 },
+      ],
+    ],
+    [
+      "a level raises the failure chance above the Mission Event's own",
+      [{ id: "a", name: "A", costMillions: 0, failureMultiplier: 1.5 }],
+    ],
+    [
+      "a level has a negative failure chance",
+      [{ id: "a", name: "A", costMillions: 0, failureMultiplier: -0.5 }],
+    ],
+    ["there are no levels", []],
+    [
+      "two levels share an id",
+      [
+        { id: "a", name: "A", costMillions: 0, failureMultiplier: 1 },
+        { id: "a", name: "B", costMillions: 50, failureMultiplier: 0.5 },
+      ],
+    ],
+  ])("reject Reliability levels when %s", (_, reliabilityLevels) => {
+    const message = errorFrom({ ...testCatalogueFiles(), reliabilityLevels });
+    expect(message).toContain("reliability-levels.json");
+  });
+
   it("reject a date that isn't a real date", () => {
     const files = testCatalogueFiles();
     const message = errorFrom({

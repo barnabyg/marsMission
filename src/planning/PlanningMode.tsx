@@ -26,16 +26,25 @@ export function PlanningMode({
     view.launchVehicles[0]?.id ?? "",
   );
   const [assetId, setAssetId] = useState(view.assets[0]?.id ?? "");
+  const [reliability, setReliability] = useState<Record<string, string>>({});
   const [confirmingRetirement, setConfirmingRetirement] = useState(false);
 
-  const plan: TurnPlan = {
-    mission: { launchVehicleId, assetIds: [assetId] },
-  };
-  const { costMillions, problems } = simulation.validatePlan(program, plan);
   const plannedEvents = simulation.previewMission({
     launchVehicleId,
     assetIds: [assetId],
+    reliability,
   });
+  const plan: TurnPlan = {
+    mission: {
+      launchVehicleId,
+      assetIds: [assetId],
+      // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
+      reliability: Object.fromEntries(
+        plannedEvents.map((event) => [event.eventId, event.reliabilityLevelId]),
+      ),
+    },
+  };
+  const { costMillions, problems } = simulation.validatePlan(program, plan);
 
   return (
     <main className="planning">
@@ -130,13 +139,32 @@ export function PlanningMode({
           </select>
         </label>
         <h3>
-          <GameText>Mission Events and their failure risk</GameText>
+          <GameText>Mission Events, failure risk and Reliability</GameText>
         </h3>
         <ol className="mission-events" data-testid="mission-events">
           {plannedEvents.map((event) => (
             <li key={event.eventId} data-testid="mission-event">
               <span className="mission-event-name">{event.name}</span>
-              <strong data-testid="risk-band">{event.riskBand}</strong>
+              <strong className="risk-band" data-testid="risk-band">
+                {event.riskBand}
+              </strong>
+              <select
+                aria-label={`Reliability for ${event.name}`}
+                value={event.reliabilityLevelId}
+                onChange={(change) => {
+                  setReliability({
+                    ...reliability,
+                    [event.eventId]: change.target.value,
+                  });
+                }}
+              >
+                {event.reliabilityLevels.map((level) => (
+                  <option key={level.id} value={level.id}>
+                    {level.name} ({formatMoney(level.costMillions)},{" "}
+                    {level.riskBand})
+                  </option>
+                ))}
+              </select>
             </li>
           ))}
         </ol>

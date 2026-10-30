@@ -75,6 +75,18 @@ const fundingThresholdsSchema = z.array(
   }),
 );
 
+const reliabilityLevelsSchema = z
+  .array(
+    z.strictObject({
+      id,
+      name: z.string().min(1),
+      costMillions: money,
+      // What a Mission Event's failure probability is multiplied by at this level.
+      failureMultiplier: z.number().min(0).max(1),
+    }),
+  )
+  .min(1);
+
 const riskBandsSchema = z
   .array(
     z.strictObject({
@@ -91,6 +103,7 @@ const schemas = {
   missionEvents: missionEventsSchema,
   milestones: milestonesSchema,
   fundingThresholds: fundingThresholdsSchema,
+  reliabilityLevels: reliabilityLevelsSchema,
   riskBands: riskBandsSchema,
 };
 
@@ -102,6 +115,7 @@ export const catalogueFileNames = {
   missionEvents: "mission-events.json",
   milestones: "milestones.json",
   fundingThresholds: "funding-thresholds.json",
+  reliabilityLevels: "reliability-levels.json",
   riskBands: "risk-bands.json",
 } as const satisfies Record<keyof typeof schemas, string>;
 
@@ -112,6 +126,8 @@ export interface Catalogue {
   missionEvents: z.output<typeof missionEventsSchema>;
   milestones: z.output<typeof milestonesSchema>;
   fundingThresholds: z.output<typeof fundingThresholdsSchema>;
+  /** In order, cheapest first. */
+  reliabilityLevels: z.output<typeof reliabilityLevelsSchema>;
   riskBands: z.output<typeof riskBandsSchema>;
 }
 
@@ -150,6 +166,7 @@ function crossCheck(catalogue: Catalogue): string[] {
     missionEvents,
     milestones,
     fundingThresholds,
+    reliabilityLevels,
     riskBands,
   } = catalogue;
 
@@ -158,6 +175,7 @@ function crossCheck(catalogue: Catalogue): string[] {
     [catalogueFileNames.assets, assets],
     [catalogueFileNames.missionEvents, missionEvents],
     [catalogueFileNames.milestones, milestones],
+    [catalogueFileNames.reliabilityLevels, reliabilityLevels],
   ] as const;
   for (const [file, items] of parts) {
     for (const duplicate of findDuplicates(items.map((item) => item.id))) {
@@ -199,6 +217,21 @@ function crossCheck(catalogue: Catalogue): string[] {
     if (publicSupport <= previous) {
       problems.push(
         `${catalogueFileNames.fundingThresholds}: ${publicSupport} must be higher than ${previous}. Thresholds go in ascending order, above the starting Public Support`,
+      );
+    }
+  });
+
+  reliabilityLevels.forEach((level, index) => {
+    const lower = reliabilityLevels[index - 1];
+    if (!lower) return;
+    if (level.costMillions < lower.costMillions) {
+      problems.push(
+        `${catalogueFileNames.reliabilityLevels}: "${level.id}" costs less than "${lower.id}", the level below it`,
+      );
+    }
+    if (level.failureMultiplier > lower.failureMultiplier) {
+      problems.push(
+        `${catalogueFileNames.reliabilityLevels}: "${level.id}" has a higher failure chance than "${lower.id}", the level below it`,
       );
     }
   });
@@ -268,6 +301,13 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     problems,
   );
 
+  const reliabilityLevels = parsePart(
+    catalogueFileNames.reliabilityLevels,
+    schemas.reliabilityLevels,
+    files.reliabilityLevels,
+    problems,
+  );
+
   const riskBands = parsePart(
     catalogueFileNames.riskBands,
     schemas.riskBands,
@@ -282,6 +322,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     !missionEvents ||
     !milestones ||
     !fundingThresholds ||
+    !reliabilityLevels ||
     !riskBands
   ) {
     throw new CatalogueError(problems.join("\n"));
@@ -294,6 +335,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     missionEvents,
     milestones,
     fundingThresholds,
+    reliabilityLevels,
     riskBands,
   };
   const crossCheckProblems = crossCheck(catalogue);

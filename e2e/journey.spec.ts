@@ -44,6 +44,18 @@ function termsWithoutTooltips(page: Page): Promise<string[]> {
   }, termPattern.source);
 }
 
+/** Plays out a Turn in Mission Mode, whatever happens in it, and continues past its Turn summary. */
+async function playToNextTurn(page: Page): Promise<void> {
+  const screen = page.getByTestId("text-screen");
+  const summary = page.getByTestId("turn-summary");
+  while (!(await summary.isVisible())) {
+    if (await screen.isVisible()) {
+      await screen.getByRole("button", { name: "Continue" }).click();
+    }
+  }
+  await summary.getByRole("button", { name: "Continue" }).click();
+}
+
 test("plays from a new Program through a launch to the next Turn", async ({
   page,
 }) => {
@@ -234,6 +246,40 @@ test("lists the planned Mission's Mission Events with rough risk bands, which ch
   // Everything on the Mission panel stays on screen at 3840×2160.
   const launch = page.getByRole("button", { name: "Launch Mission" });
   await expect(launch).toBeInViewport();
+});
+
+test("buys Reliability, sees the risk band and cost change, and launches", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+
+  const insertion = page
+    .getByTestId("mission-event")
+    .filter({ hasText: "Mars orbit insertion" });
+  const band = insertion.getByTestId("risk-band");
+  const bandBefore = await band.textContent();
+  const costBefore = await page.getByTestId("mission-cost").textContent();
+  await expect(insertion.getByRole("combobox")).toHaveValue("none");
+
+  await insertion.getByRole("combobox").selectOption("redundant");
+  await expect(band).not.toHaveText(bandBefore ?? "");
+  await expect(page.getByTestId("mission-cost")).not.toHaveText(
+    costBefore ?? "",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Mission Mode" }),
+  ).toBeVisible();
+  await playToNextTurn(page);
+
+  // Reliability applied to that Mission only.
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
+  await expect(page.getByTestId("mission-cost")).toHaveText(costBefore ?? "");
+  await expect(insertion.getByRole("combobox")).toHaveValue("none");
+  expect(problems).toEqual([]);
 });
 
 test("explains a game term on hover and on keyboard focus", async ({

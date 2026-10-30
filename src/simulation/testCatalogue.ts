@@ -69,6 +69,21 @@ export function testCatalogueFiles(): CatalogueFiles {
         publicSupport: 100,
       },
     ],
+    reliabilityLevels: [
+      { id: "none", name: "None", costMillions: 0, failureMultiplier: 1 },
+      {
+        id: "tested",
+        name: "Tested",
+        costMillions: 50,
+        failureMultiplier: 0.5,
+      },
+      {
+        id: "redundant",
+        name: "Redundant",
+        costMillions: 200,
+        failureMultiplier: 0.1,
+      },
+    ],
     riskBands: [
       { upTo: 0.01, label: "~1%" },
       { upTo: 0.05, label: "~5%" },
