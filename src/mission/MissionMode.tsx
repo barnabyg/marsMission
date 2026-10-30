@@ -6,6 +6,7 @@ import { speeds } from "./playback";
 import { EntryPresentation } from "./presentation";
 import { journeyHasFailed, journeyProgress } from "./solarSystem/orbits";
 import { usePlayback } from "./usePlayback";
+import { useSounds } from "./useSounds";
 
 const SolarSystemView = lazy(() => import("./solarSystem/SolarSystemView"));
 
@@ -28,6 +29,8 @@ export function MissionMode({
     initialSpeed,
     onSpeedChange,
   );
+
+  const { muted, setMuted } = useSounds(timeline.entries, state.activeEntry);
 
   useEffect(() => {
     if (state.finished) onFinished();
@@ -68,6 +71,15 @@ export function MissionMode({
           max={100}
           value={turnProgress}
         />
+        <button
+          type="button"
+          aria-pressed={muted}
+          onClick={() => {
+            setMuted(!muted);
+          }}
+        >
+          Mute sound
+        </button>
         <div role="group" aria-label="Speed" className="speed-controls">
           <span>
             Speed: <strong data-testid="current-speed">{state.speed}x</strong>

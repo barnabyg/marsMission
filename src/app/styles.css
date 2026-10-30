@@ -278,6 +278,7 @@ button.primary {
   margin-right: 0.6rem;
 }
 
+.mission-bar > button[aria-pressed="true"],
 .speed-controls button[aria-pressed="true"] {
   background: var(--accent);
   border-color: var(--accent);

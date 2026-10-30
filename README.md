@@ -27,6 +27,8 @@ The Simulation (`src/simulation`) holds all the rules and knows nothing about th
 
 The browser tests need Chromium, once per machine: `npx.cmd playwright install chromium`.
 
+The sound effects in `public/sounds` are synthesised by `node scripts/generate-sounds.mjs`, and the files it makes are committed. Rerun it only to change a sound.
+
 ### Verification
 
 `npm.cmd run verify` is the canonical check, and it runs in CI. It changes no tracked files, stops at the first failure and treats warning output as a failure. In order, it runs:
