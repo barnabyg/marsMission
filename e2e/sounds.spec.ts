@@ -62,6 +62,21 @@ test("plays the failure sound when a Mission Event fails", async ({ page }) => {
   expect(await soundsHeard(page)).toEqual([["failure.wav", "Launch failed"]]);
 });
 
+test("stays silent for the rest of a Turn after muting partway through", async ({
+  page,
+}) => {
+  await listenForSounds(page);
+  await page.goto(`/?seed=${successSeed}`);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(page.getByTestId("text-screen")).toBeVisible();
+  await page.getByRole("button", { name: "Mute sound" }).click();
+  await playToNextTurn(page);
+  // Only the launch, which played before muting.
+  expect((await soundsHeard(page)).map(([file]) => file)).toEqual([
+    "launch.wav",
+  ]);
+});
+
 test("remembers the mute setting after the browser closes", async ({
   page,
 }) => {
@@ -81,7 +96,7 @@ test("remembers the mute setting after the browser closes", async ({
   await expect(
     page.getByRole("button", { name: "Mute sound" }),
   ).toHaveAttribute("aria-pressed", "true");
-  // The launch sound would have played by the time its text screen shows.
+  // The launch sound would start as its text screen shows.
   await expect(page.getByTestId("text-screen")).toBeVisible();
   expect(await soundsHeard(page)).toEqual([]);
 });
