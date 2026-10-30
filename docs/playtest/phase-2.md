@@ -1,4 +1,4 @@
-# Phase 2 playtest: Risk and Reliability
+# Phase 2 playtest: Things Go Wrong
 
 Missions can now fail. See the risk before launching, buy Reliability, recover from a failure, and keep your Program between sessions. This takes about 15 minutes at 10x speed.
 

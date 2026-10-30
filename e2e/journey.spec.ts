@@ -1,61 +1,14 @@
-import { expect, test, type Page } from "@playwright/test";
-import { termPattern, tooltips } from "../src/ui/tooltips";
-import { storageKeyFor } from "../src/save/saveStore";
+import { expect, test } from "@playwright/test";
+import { tooltips } from "../src/ui/tooltips";
 import { productionBaseURL } from "../playwright.config";
+import {
+  cancelledAfterOneTurn,
+  overrideProgramData,
+  playToNextTurn,
+  termsWithoutTooltips,
+  watchForProblems,
+} from "./helpers";
 import { seedFailingAt, successSeed } from "./seeds";
-
-/**
- * @react-three/fiber 9.8.2 still creates a THREE.Clock, which three 0.187 warns about on load. It's
- * harmless and not ours to fix. Remove this exception once a @react-three/fiber upgrade stops it.
- */
-const knownThirdPartyWarning =
-  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.";
-
-/** Fails the test on anything the browser reports as a problem. */
-function watchForProblems(page: Page): string[] {
-  const problems: string[] = [];
-  page.on("pageerror", (error) => problems.push(error.message));
-  page.on("console", (message) => {
-    if (message.text() === knownThirdPartyWarning) return;
-    if (message.type() === "error" || message.type() === "warning") {
-      problems.push(message.text());
-    }
-  });
-  return problems;
-}
-
-/** Returns any game term on screen that has no tooltip. */
-function termsWithoutTooltips(page: Page): Promise<string[]> {
-  return page.evaluate((pattern) => {
-    const walker = document.createTreeWalker(
-      document.body,
-      NodeFilter.SHOW_TEXT,
-    );
-    const missing: string[] = [];
-    while (walker.nextNode()) {
-      const { parentElement, textContent } = walker.currentNode;
-      if (
-        parentElement?.closest("[data-term], [role=tooltip], script, style")
-      ) {
-        continue;
-      }
-      missing.push(...(textContent?.match(new RegExp(pattern, "g")) ?? []));
-    }
-    return missing;
-  }, termPattern.source);
-}
-
-/** Plays out a Turn in Mission Mode, whatever happens in it, and continues past its Turn summary. */
-async function playToNextTurn(page: Page): Promise<void> {
-  const screen = page.getByTestId("text-screen");
-  const summary = page.getByTestId("turn-summary");
-  while (!(await summary.isVisible())) {
-    if (await screen.isVisible()) {
-      await screen.getByRole("button", { name: "Continue" }).click();
-    }
-  }
-  await summary.getByRole("button", { name: "Continue" }).click();
-}
 
 test("plays from a new Program through a launch to the next Turn", async ({
   page,
@@ -208,6 +161,28 @@ test("uses a known seed in a production build, as the playtest command runs it",
   );
 });
 
+test("loads the data files, Mission Mode's view and its art from a production build", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  const artTypes: (string | undefined)[] = [];
+  page.on("response", (response) => {
+    if (new URL(response.url()).pathname.startsWith("/art/")) {
+      artTypes.push(response.headers()["content-type"]);
+    }
+  });
+  await page.goto(`${productionBaseURL}/?seed=${successSeed}`);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(
+    page.getByTestId("solar-system-view").locator("canvas"),
+  ).toBeVisible();
+  // A failed file is only reported once its request ends, which can be after the canvas appears.
+  await page.waitForLoadState("networkidle");
+  expect(problems).toEqual([]);
+  // For a missing file, vite preview sends the game's page with status 200, and the browser reports no problem.
+  expect(artTypes).toEqual(["image/jpeg", "image/jpeg"]);
+});
+
 test("lists the planned Mission's Mission Events with rough risk bands, which change with what it carries", async ({
   page,
 }) => {
@@ -284,377 +259,6 @@ test("buys Reliability, sees the risk band and cost change, and launches", async
   expect(problems).toEqual([]);
 });
 
-test("keeps a Program between sessions: launches, reaches the next Turn, reloads and continues", async ({
-  page,
-}) => {
-  const problems = watchForProblems(page);
-  await page.goto(`/?seed=${successSeed}`);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await playToNextTurn(page);
-  await expect(page.getByTestId("turn-number")).toHaveText("2");
-  const state = {
-    money: await page.getByTestId("money").textContent(),
-    publicSupport: await page.getByTestId("public-support").textContent(),
-    science: await page.getByTestId("science").textContent(),
-    launchWindow: await page.getByTestId("launch-window").textContent(),
-  };
-
-  await page.reload();
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-  await page.getByRole("button", { name: "Continue this Program" }).click();
-
-  await expect(page.getByTestId("turn-number")).toHaveText("2");
-  await expect(page.getByTestId("money")).toHaveText(state.money ?? "");
-  await expect(page.getByTestId("public-support")).toHaveText(
-    state.publicSupport ?? "",
-  );
-  await expect(page.getByTestId("science")).toHaveText(state.science ?? "");
-  await expect(page.getByTestId("launch-window")).toHaveText(
-    state.launchWindow ?? "",
-  );
-  await expect(page.getByTestId("operating-assets")).toContainText(
-    "Pathfinder Orbiter",
-  );
-  expect(problems).toEqual([]);
-});
-
-test("returns to the start of the Turn after a reload in Mission Mode, and the same plan gives the same outcome", async ({
-  page,
-}) => {
-  await page.goto(`/?seed=${seedFailingAt("Launch")}`);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  const heading = page.getByTestId("text-screen").getByRole("heading");
-  await expect(heading).toHaveText("Launch failed");
-
-  await page.reload();
-  await page.getByRole("button", { name: "Continue this Program" }).click();
-  await expect(page.getByTestId("turn-number")).toHaveText("1");
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(heading).toHaveText("Launch failed");
-});
-
-test("starts a new Program instead of continuing, when asked", async ({
-  page,
-}) => {
-  await page.goto(`/?seed=${successSeed}`);
-  await page
-    .getByRole("button", { name: "End Turn without launching" })
-    .click();
-  await playToNextTurn(page);
-  await expect(page.getByTestId("turn-number")).toHaveText("2");
-
-  await page.reload();
-  await page.getByRole("button", { name: "Start a new Program" }).click();
-  await expect(page.getByTestId("turn-number")).toHaveText("1");
-});
-
-test("can't continue a Program that has ended", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: "Retire Program" }).click();
-  await page.getByRole("button", { name: "Yes, retire the Program" }).click();
-  await expect(page.getByTestId("program-summary")).toBeVisible();
-
-  await page.reload();
-  await expect(page.getByTestId("turn-number")).toHaveText("1");
-  await expect(
-    page.getByRole("button", { name: "Continue this Program" }),
-  ).toHaveCount(0);
-});
-
-for (const [name, contents, message] of [
-  ["corrupt", "{not json", "corrupt"],
-  ["from an unknown format version", '{"formatVersion":99}', "format 99"],
-] as const) {
-  test(`gives a clear message for an automatic save that is ${name}`, async ({
-    page,
-  }) => {
-    await page.goto("/");
-    await page.evaluate(
-      ([key, value]) => {
-        localStorage.setItem(key, value);
-      },
-      [storageKeyFor("automatic"), contents] as const,
-    );
-    await page.reload();
-
-    await expect(page.getByRole("alert")).toContainText(message);
-    await expect(
-      page.getByRole("button", { name: "Continue this Program" }),
-    ).toHaveCount(0);
-    await page.getByRole("button", { name: "Start a new Program" }).click();
-    await expect(page.getByTestId("turn-number")).toHaveText("1");
-  });
-}
-
-test("saves to a slot, moves on a Turn, loads the slot and sees the earlier state", async ({
-  page,
-}) => {
-  const problems = watchForProblems(page);
-  await page.goto(`/?seed=${successSeed}`);
-
-  const slot = page.getByTestId("save-slot-1");
-  await expect(slot).toContainText("Empty");
-  await expect(page.getByTestId("save-slot-2")).toContainText("Empty");
-  await expect(page.getByTestId("save-slot-3")).toContainText("Empty");
-  await slot.getByRole("button", { name: "Save here" }).click();
-  await expect(slot).toContainText("Turn 1");
-  await expect(slot).toContainText("December 2028");
-  await expect(slot).toContainText(
-    (await page.getByTestId("money").textContent()) ?? "",
-  );
-  await expect(slot).toContainText("100 Public Support");
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Mission Mode" }),
-  ).toBeVisible();
-  // Mission Mode offers no saving.
-  await expect(page.getByText("Save here")).toHaveCount(0);
-  await playToNextTurn(page);
-  await expect(page.getByTestId("turn-number")).toHaveText("2");
-
-  await slot.getByRole("button", { name: "Load" }).click();
-  const confirmLoad = page.getByRole("dialog", { name: "Confirm loading" });
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-  await confirmLoad.getByRole("button", { name: "Yes, load it" }).click();
-  await expect(page.getByTestId("turn-number")).toHaveText("1");
-  await expect(page.getByTestId("public-support")).toHaveText("100");
-  await expect(page.getByTestId("science")).toHaveText("0");
-  await expect(page.getByTestId("operating-assets")).toHaveCount(0);
-  expect(problems).toEqual([]);
-});
-
-test("resets the plan when loading a slot of the same Program and Turn", async ({
-  page,
-}) => {
-  await page.goto(`/?seed=${successSeed}`);
-  const slot = page.getByTestId("save-slot-1");
-  await slot.getByRole("button", { name: "Save here" }).click();
-
-  const launchReliability = page
-    .getByTestId("mission-event")
-    .filter({ hasText: "Launch" })
-    .getByRole("combobox");
-  await launchReliability.selectOption("redundant");
-
-  await slot.getByRole("button", { name: "Load" }).click();
-  await page.getByRole("button", { name: "Yes, load it" }).click();
-  await expect(launchReliability).toHaveValue("none");
-});
-
-test("asks before a slot loaded when reopening the game replaces the automatic save", async ({
-  page,
-}) => {
-  await page.goto(`/?seed=${successSeed}`);
-  await page
-    .getByTestId("save-slot-1")
-    .getByRole("button", { name: "Save here" })
-    .click();
-  await page.reload();
-
-  await page
-    .getByTestId("save-slot-1")
-    .getByRole("button", { name: "Load" })
-    .click();
-  await expect(page.getByTestId("opening-screen")).toBeVisible();
-  await page.getByRole("button", { name: "Keep playing" }).click();
-  await expect(
-    page.getByRole("button", { name: "Continue this Program" }),
-  ).toBeVisible();
-});
-
-test("can't continue a cancelled Program after seeing how it ended", async ({
-  page,
-}) => {
-  await page.goto("/?seed=2");
-  for (let turn = 0; turn < 2; turn++) {
-    await page.getByRole("button", { name: "Launch Mission" }).click();
-    await playToNextTurn(page);
-  }
-  await expect(page.getByTestId("program-summary")).toContainText("cancelled");
-
-  await page.reload();
-  await expect(page.getByTestId("turn-number")).toHaveText("1");
-  await expect(
-    page.getByRole("button", { name: "Continue this Program" }),
-  ).toHaveCount(0);
-});
-
-test("asks before overwriting a used slot", async ({ page }) => {
-  await page.goto(`/?seed=${successSeed}`);
-  const slot = page.getByTestId("save-slot-1");
-  await slot.getByRole("button", { name: "Save here" }).click();
-  await expect(slot).toContainText("Turn 1");
-
-  await page
-    .getByRole("button", { name: "End Turn without launching" })
-    .click();
-  await playToNextTurn(page);
-  await expect(page.getByTestId("turn-number")).toHaveText("2");
-
-  await slot.getByRole("button", { name: "Save here" }).click();
-  const confirm = page.getByRole("dialog", { name: "Confirm overwriting" });
-  await expect(confirm).toBeVisible();
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-  await expect(slot).toContainText("Turn 1");
-  await confirm.getByRole("button", { name: "Keep it" }).click();
-  await expect(slot).toContainText("Turn 1");
-
-  await slot.getByRole("button", { name: "Save here" }).click();
-  await confirm.getByRole("button", { name: "Yes, overwrite it" }).click();
-  await expect(slot).toContainText("Turn 2");
-});
-
-test("reaches the slots when reopening the game, even with no automatic save", async ({
-  page,
-}) => {
-  await page.goto(`/?seed=${successSeed}`);
-  await page
-    .getByTestId("save-slot-2")
-    .getByRole("button", { name: "Save here" })
-    .click();
-  await page.getByRole("button", { name: "Retire Program" }).click();
-  await page.getByRole("button", { name: "Yes, retire the Program" }).click();
-  await expect(page.getByTestId("program-summary")).toBeVisible();
-
-  await page.reload();
-  await expect(page.getByTestId("opening-screen")).toBeVisible();
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-  await expect(
-    page.getByRole("button", { name: "Continue this Program" }),
-  ).toHaveCount(0);
-  await page
-    .getByTestId("save-slot-2")
-    .getByRole("button", { name: "Load" })
-    .click();
-  await expect(page.getByTestId("turn-number")).toHaveText("1");
-});
-
-test("gives a clear message for a corrupt slot, without affecting the others", async ({
-  page,
-}) => {
-  await page.goto(`/?seed=${successSeed}`);
-  await page
-    .getByTestId("save-slot-1")
-    .getByRole("button", { name: "Save here" })
-    .click();
-  await page.evaluate(
-    ([key]) => {
-      localStorage.setItem(key, "{not json");
-    },
-    [storageKeyFor(2)] as const,
-  );
-  await page.reload();
-
-  const corrupt = page.getByTestId("save-slot-2");
-  await expect(corrupt).toContainText("corrupt");
-  await expect(corrupt.getByRole("button", { name: "Load" })).toHaveCount(0);
-  await expect(page.getByTestId("save-slot-1")).toContainText("Turn 1");
-  await page.getByRole("button", { name: "Continue this Program" }).click();
-  await expect(page.getByTestId("save-slot-2")).toContainText("corrupt");
-  await expect(page.getByTestId("turn-number")).toHaveText("1");
-});
-
-/** Records each sound as it starts, with the text screen on show at that moment. */
-async function listenForSounds(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    const log: string[][] = [];
-    (window as unknown as { soundLog: string[][] }).soundLog = log;
-    const play: () => Promise<void> = Reflect.get(
-      HTMLMediaElement.prototype,
-      "play",
-    );
-    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
-      log.push([
-        this.src.split("/").at(-1) ?? "",
-        document.querySelector("[data-testid=text-screen] h2")?.textContent ??
-          "",
-      ]);
-      return play.call(this);
-    };
-  });
-}
-
-function soundsHeard(page: Page): Promise<string[][]> {
-  return page.evaluate(
-    () => (window as unknown as { soundLog: string[][] }).soundLog,
-  );
-}
-
-for (const speed of ["1x", "10x"]) {
-  test(`plays each sound with what is on screen at ${speed}`, async ({
-    page,
-  }) => {
-    await listenForSounds(page);
-    const problems = watchForProblems(page);
-    await page.goto(`/?seed=${successSeed}`);
-    await page.getByRole("button", { name: "Launch Mission" }).click();
-    await page.getByRole("button", { name: speed }).click();
-    await playToNextTurn(page);
-
-    const heard = await soundsHeard(page);
-    expect(heard.map(([file]) => file)).toEqual([
-      "launch.wav",
-      "milestone.wav",
-      "funding-threshold.wav",
-    ]);
-    expect(heard[0]?.[1]).toBe("Launch");
-    expect(heard[1]?.[1]).toBe("First orbiter at Mars");
-    expect(heard[2]?.[1]).toMatch(/^Funding Threshold reached/);
-    expect(problems).toEqual([]);
-  });
-}
-
-test("plays the failure sound when a Mission Event fails", async ({ page }) => {
-  await listenForSounds(page);
-  await page.goto(`/?seed=${seedFailingAt("Launch")}`);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(page.getByTestId("text-screen").getByRole("heading")).toHaveText(
-    "Launch failed",
-  );
-  expect(await soundsHeard(page)).toEqual([["failure.wav", "Launch failed"]]);
-});
-
-test("remembers the mute setting after the browser closes", async ({
-  page,
-}) => {
-  await listenForSounds(page);
-  await page.goto(`/?seed=${successSeed}`);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(page.getByTestId("text-screen")).toBeVisible();
-
-  const mute = page.getByRole("button", { name: "Mute sound" });
-  await expect(mute).toHaveAttribute("aria-pressed", "false");
-  await mute.click();
-  await expect(mute).toHaveAttribute("aria-pressed", "true");
-  await playToNextTurn(page);
-  // Only the launch, which played before muting.
-  expect((await soundsHeard(page)).map(([file]) => file)).toEqual([
-    "launch.wav",
-  ]);
-
-  await page.reload();
-  await page.getByRole("button", { name: "Continue this Program" }).click();
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(
-    page.getByRole("button", { name: "Mute sound" }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await playToNextTurn(page);
-  expect(await soundsHeard(page)).toEqual([]);
-});
-
-test("keeps playing when the sound files can't be loaded", async ({ page }) => {
-  await page.route("**/sounds/*", (route) => route.abort());
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto(`/?seed=${successSeed}`);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await playToNextTurn(page);
-  await expect(page.getByTestId("turn-number")).toHaveText("2");
-  expect(errors).toEqual([]);
-});
-
 test("explains a game term on hover and on keyboard focus", async ({
   page,
 }) => {
@@ -706,11 +310,7 @@ test("retires a Program and starts a new one from the Program summary", async ({
 test("lets a Turn pass without launching, and cancels the Program when Public Support falls too far", async ({
   page,
 }) => {
-  await page.route("**/data/program.json", async (route) => {
-    const response = await route.fetch();
-    const program = (await response.json()) as Record<string, unknown>;
-    await route.fulfill({ json: { ...program, cancellationLevel: 90 } });
-  });
+  await overrideProgramData(page, cancelledAfterOneTurn);
   await page.goto("/");
 
   await page
@@ -738,13 +338,7 @@ test("lets a Turn pass without launching, and cancels the Program when Public Su
 test("shows why a plan the player can't afford is rejected", async ({
   page,
 }) => {
-  await page.route("**/data/program.json", async (route) => {
-    const response = await route.fetch();
-    const program = (await response.json()) as Record<string, unknown>;
-    await route.fulfill({
-      json: { ...program, startingMoneyMillions: 500 },
-    });
-  });
+  await overrideProgramData(page, { startingMoneyMillions: 500 });
   await page.goto("/");
 
   await expect(page.getByRole("alert")).toContainText("costs $1B");

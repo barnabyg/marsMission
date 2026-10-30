@@ -181,18 +181,18 @@ describe("invalid data files", () => {
       ],
     ],
     [
-      "a higher level has a higher failure chance",
+      "a higher level has a higher failure probability",
       [
         { id: "a", name: "A", costMillions: 0, failureMultiplier: 0.5 },
         { id: "b", name: "B", costMillions: 50, failureMultiplier: 0.8 },
       ],
     ],
     [
-      "a level raises the failure chance above the Mission Event's own",
+      "a level raises the failure probability above the Mission Event's own",
       [{ id: "a", name: "A", costMillions: 0, failureMultiplier: 1.5 }],
     ],
     [
-      "a level has a negative failure chance",
+      "a level has a negative failure probability",
       [{ id: "a", name: "A", costMillions: 0, failureMultiplier: -0.5 }],
     ],
     ["there are no levels", []],

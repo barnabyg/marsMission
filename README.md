@@ -18,6 +18,14 @@ What to try, and the feedback wanted, is in the [Phase 2 playtest guide](docs/pl
 
 The Simulation (`src/simulation`) holds all the rules and knows nothing about the browser. The Catalogue (`src/catalogue`) loads and validates the data files in `public/data`. The Save Store (`src/save`) keeps what the Simulation saves in the browser. Everything else displays what the Simulation produces.
 
+A typical feature touches these folders, in order:
+
+1. `public/data`: the new content
+2. `src/catalogue`: validating it
+3. `src/simulation`: the rules, with most of the tests
+4. `src/planning` or `src/mission`: displaying it, with styles and wiring in `src/app`, plus `src/ui/tooltips.ts` and `GLOSSARY.md` for a new game term
+5. `e2e`: a browser test of the journey
+
 | Command                | What it does                                  |
 | ---------------------- | --------------------------------------------- |
 | `npm.cmd run dev`      | Starts the development server                 |
@@ -45,7 +53,7 @@ Package validation doesn't apply, because the game is private and isn't publishe
 
 ### Documented exceptions
 
-- `e2e/journey.spec.ts` and `scripts/verify.mjs` allow one browser warning, `THREE.Clock` deprecated, because it comes from inside `@react-three/fiber`. Remove it once an upgrade stops the warning.
+- `e2e/helpers.ts` and `scripts/verify.mjs` allow one browser warning, `THREE.Clock` deprecated, because it comes from inside `@react-three/fiber`. Remove it once an upgrade stops the warning.
 - `vite.config.ts` raises the chunk size warning limit to 1200 kB for the Three.js chunk, because the game runs locally (ADR 0001). Review it if the game is ever hosted.
 - `knip.json` ignores `@secretlint/secretlint-rule-preset-recommend`, because only `.secretlintrc.json` uses it, by name. Review it if Secretlint's configuration moves into code.
 - `eslint.config.mjs` allows numbers in template strings, which the strict preset forbids, because Science, Public Support and day counts are shown that way and converting each one adds noise and catches nothing. Review it if numbers ever need locale formatting.

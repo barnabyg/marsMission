@@ -144,7 +144,7 @@ Points of public and political backing. Milestones add them, setbacks such as lo
 _Avoid_: Popularity, approval, morale
 
 **Funding Threshold**:
-One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached, for example $1 billion at 250 points. Reaching it again later pays nothing.
+One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached. Reaching it again later pays nothing.
 _Avoid_: Tier, level, bracket
 
 **Cancellation Level**:
@@ -159,6 +159,7 @@ _Avoid_: Mission length, time budget
 
 **Technology Readiness**:
 How mature a technology is, from flight-proven to not yet built. Less mature technology costs more, needs development time before it can fly and fails more often until it has flown successfully.
+_Avoid_: TRL (in player-facing text), tech level
 
 **Development**:
 Paying up front, in Planning Mode, to bring an immature technology to the point where it can fly. It takes a set number of Turns.
@@ -167,4 +168,3 @@ _Avoid_: Research (that word is reserved for Science), R&D
 **Flight-proven**:
 Describes a technology that has been used successfully at least once. It is cheaper and more reliable from then on.
 _Avoid_: Mature, qualified
-_Avoid_: TRL (in player-facing text), tech level

@@ -1,6 +1,15 @@
 # Game design decisions
 
-The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md](../GLOSSARY.md); platform and fidelity decisions are in [docs/adr/](adr/). Items marked _open_ are still being decided.
+The game rules settled so far, grouped by area. Most describe the finished game, so check Status below for what exists today. Current balance values, such as money, Public Support, Science and risk, live only in the data files in [public/data](../public/data), so any such figure here is an example, not the game's value. Vocabulary follows [GLOSSARY.md](../GLOSSARY.md); platform and fidelity decisions are in [docs/adr/](adr/). Items marked _open_ are still being decided.
+
+## Status
+
+Phases are defined in the [Build order](#build-order). Phases 1 and 2 are built:
+
+- **Phase 1:** Turns running from one Launch Window to the next, with at most one Mission each; Assets that stay operating at Mars; Mission Events listed from what a Mission carries; Planning Mode with one Launch Vehicle and one orbiter; Mission Mode with the solar system view, speed controls and text screens; Science, Milestones, Funding Thresholds, the Public Support drain and Cancellation Level; retiring a Program and the Program summary; tooltips.
+- **Phase 2:** Mission Event failure with Risk Bands; Reliability; the fixed random seed; automatic saves and manual save slots; the first sound effects.
+
+Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
 ## Program and Turns
 
@@ -44,7 +53,7 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
   - Protection (radiation shielding) reduces harm to Crew that builds up over the Mission's Duration.
 - All Safety Margin is worth having but expensive.
 - Failure probabilities are shown to the player as rough bands (for example "~5%"), not exact figures.
-- The random seed is fixed when the Program starts, so reloading a save can't re-roll an outcome.
+- The random seed is fixed when the Program starts, so the same plan gives the same outcome after a reload. A changed plan can avoid a failure already seen, for example by buying more Reliability or by not launching. _Open: whether to keep this gap is to be settled by playtest feedback._
 - Mission Mode also has Hazards: random environmental dangers such as dust storms (less solar power, risk to Assets) and solar particle events (radiation, reduced by Protection). They are separate from planned Mission Events and can create Decision Points.
 
 ## Mission Mode
@@ -75,16 +84,21 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 
 The aim is to get something playable as early as possible, so the player can give feedback. The simulation starts thin and grows alongside the game instead of being finished first.
 
-1. A playable slice with Robotic Missions only: Planning Mode, an orbiter and a lander, Mission Mode with the solar system and Mars orbit views, and a thin simulation behind them.
-2. The surface view, Ongoing Research and Research Grants.
-3. Crewed Missions, Health, Supplies and bases.
+The work is split into phases, each ending in a game the player can play and comment on. Phases after the current one can change with playtest feedback.
 
-Automated balance runs get added once the simulation has enough rules to balance.
+1. **First Orbiter:** the Turn loop with one orbiter, the solar system view, money, Science and Public Support.
+2. **Things Go Wrong:** Mission Event failure, Reliability, the fixed random seed, saving and the first sound effects.
+3. **Landing on Mars:** a lander, Landing Sites and Surveys, mass limits, the Mars orbit view and Service Life.
+4. **Doing Science:** a rover, the surface view, Activities, Ongoing Research, Research Grants and automated balance runs.
+5. **Tough Choices:** Decision Points, Contingency, Hazards, go/no-go checks, Trajectories and the spacecraft view.
+6. **Better Technology:** Technology Readiness, Development, Flight-proven status, more Launch Vehicles and benefits between Assets.
+7. **First Crew:** Crewed Missions, Crew and Health, Supplies and Protection.
+8. **Coming Home:** return journeys, returning samples, a fuel plant, a habitat and a Mars lab.
 
 ## Saving
 
 - The game saves automatically at the start of each Planning Mode.
-- A few manual save slots are available, usable only in Planning Mode. Saving partway through Mission Mode isn't possible. Together with the fixed random seed, this stops reloading to undo a bad outcome.
+- A few manual save slots are available, usable only in Planning Mode. Saving partway through Mission Mode isn't possible, so a reload always returns to the start of a Turn. What that can and can't undo is under [Risk and Safety Margin](#risk-and-safety-margin).
 
 ## Science
 
@@ -98,17 +112,17 @@ Automated balance runs get added once the simulation has enough rules to balance
 ## Public Support and money
 
 - Milestones award Public Support points.
-- When Public Support reaches a Funding Threshold, it pays a fixed sum. For example, 100 points plus 200 for putting an orbiter at Mars crosses the 250-point threshold, which pays $1 billion.
+- When Public Support reaches a Funding Threshold, it pays a fixed sum. For example, 100 points plus 200 for putting an orbiter at Mars would cross a 250-point threshold, which might pay $1 billion.
 - Each Funding Threshold pays only the first time it is reached. Falling below and climbing back pays nothing.
 - There is no regular Appropriation. Running out of money through poor management is a way for the player to fail.
 - There is no separate bankruptcy rule. A player with no money lets Turns pass without launching, and Public Support drains until the Program is cancelled, unless what they've built keeps it going. Cancellation is the only way to lose.
 - Funding Thresholds are a fixed, limited list, mainly an early and mid-game boost.
 - Public Support falls by a percentage each Turn (for example 15%), so spikes fade fast and then level off. The Program is cancelled if it drops below the Cancellation Level (for example 50). Ongoing Research adds a small, steady amount, enough for a productive Program to stay above the Cancellation Level but not enough to keep reaching new Funding Thresholds. _To be checked in playtesting._
-- Costs are in millions of dollars, at roughly real-world scale. Starting figures, to be tuned: orbiter $0.5–1B, lander $1–2.5B, Crewed Mission $50B and up.
+- Costs are in millions of dollars, at roughly real-world scale. For example: orbiter $0.5–1B, lander $1–2.5B, Crewed Mission $50B and up.
 
 ## Starting conditions
 
-- The Program starts at the late-2028 Launch Window with $2.3B and 100 Public Support, so the 250-point Funding Threshold is the first payout. That is enough for a first orbiter and a retry if it fails, with a little left for Reliability.
+- The Program starts at the late-2028 Launch Window. Its starting money and Public Support, in [public/data/program.json](../public/data/program.json), are set so that a first orbiter reaches the first Funding Threshold, and so that the player can afford that orbiter and a retry if it fails, with a little left for Reliability.
 - Two well-known Landing Sites (for example Jezero and Gale) are available from the start, at high landing risk because they haven't been surveyed. The first Turn is a choice between surveying first and landing straight away.
 - No difficulty levels in the first version.
 
