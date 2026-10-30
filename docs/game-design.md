@@ -51,6 +51,8 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 
 - A Turn takes about 20 minutes at 1x speed, with controls to speed it up.
 - The graphics are a mix of pre-made animations (such as an asteroid strike on a base) and displays (such as orbital tracking of a journey).
+- Pre-made animations are scripted 3D sequences that run live in the game, not pre-rendered video, so they show the Assets the player actually bought at the Landing Site they actually chose.
+- The first animation goal is one success and one failure animation per kind of Mission Event, and one per Hazard. More will follow. Anything without an animation yet shows a simple text message screen, built so an animation can replace it later.
 - Decision Points come from three triggers:
   - A Mission Event fails and a Contingency the player bought can be used.
   - A Hazard hits.
@@ -62,6 +64,22 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
   - Surface: a Landing Site, with landings, rovers and bases.
   - Spacecraft: a close-up of the Mission in transit, used when something happens on the way, such as a solar particle event or a mechanical failure.
 - The view switches automatically for Mission Events and Hazards, and the player can switch views at any time.
+
+## Art, sound and onboarding
+
+- Mars and the planets use NASA's public imagery and elevation data. Spacecraft use NASA's free 3D models where they fit, plus simple models made for the project. Plumes, dust and explosions are generated in code. Licensing rules are in [ADR 0005](adr/0005-free-open-licensed-media-only.md).
+- The first version has simple sound effects and no music.
+- There is no guided tutorial in the first version. Every term has a tooltip instead.
+
+## Build order
+
+The aim is to get something playable as early as possible, so the player can give feedback. The simulation starts thin and grows alongside the game instead of being finished first.
+
+1. A playable slice with Robotic Missions only: Planning Mode, an orbiter and a lander, Mission Mode with the solar system and Mars orbit views, and a thin simulation behind them.
+2. The surface view, Ongoing Research and Research Grants.
+3. Crewed Missions, Health, Supplies and bases.
+
+Automated balance runs get added once the simulation has enough rules to balance.
 
 ## Saving
 
