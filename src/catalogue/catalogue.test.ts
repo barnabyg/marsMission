@@ -73,6 +73,20 @@ describe("the real Milestones", () => {
   });
 });
 
+describe("the real Funding Thresholds", () => {
+  it("can be reached by the one Milestone in this phase", () => {
+    const { fundingThresholds, milestones, program } =
+      parseCatalogue(realFiles());
+    const reachable =
+      program.startingPublicSupport + (milestones[0]?.publicSupport ?? 0);
+    expect(fundingThresholds[0]).toEqual({
+      publicSupport: 300,
+      payoutMillions: 1000,
+    });
+    expect(fundingThresholds[0]?.publicSupport).toBeLessThanOrEqual(reachable);
+  });
+});
+
 describe("invalid data files", () => {
   it("name the file and field when a number is mistyped", () => {
     const files = testCatalogueFiles();
@@ -141,6 +155,27 @@ describe("invalid data files", () => {
       program: { ...files.program, publicSupportDrainPercent: 0 },
     });
     expect(message).toContain("publicSupportDrainPercent");
+  });
+
+  it("reject a Funding Threshold the Program starts at or above", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      fundingThresholds: [{ publicSupport: 100, payoutMillions: 1000 }],
+    });
+    expect(message).toContain("funding-thresholds.json");
+  });
+
+  it("reject Funding Thresholds that aren't in ascending order", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      fundingThresholds: [
+        { publicSupport: 500, payoutMillions: 1000 },
+        { publicSupport: 300, payoutMillions: 1000 },
+      ],
+    });
+    expect(message).toContain("funding-thresholds.json");
   });
 
   it("reject a date that isn't a real date", () => {

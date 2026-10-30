@@ -31,6 +31,8 @@ export interface Program {
   publicSupport: number;
   science: number;
   milestoneIds: string[];
+  /** The Public Support levels of the Funding Thresholds already paid. */
+  fundingThresholdsPaid: number[];
   operatingAssets: OperatingAsset[];
   status: ProgramStatus;
 }
@@ -44,6 +46,11 @@ interface ProgramView {
   publicSupport: number;
   science: number;
   milestones: { id: string; name: string }[];
+  nextFundingThreshold: {
+    publicSupport: number;
+    payoutMillions: number;
+    pointsAway: number;
+  } | null;
   operatingAssets: OperatingAsset[];
   launchVehicles: { id: string; name: string; costMillions: number }[];
   assets: { id: string; name: string; kind: string; costMillions: number }[];
@@ -66,7 +73,15 @@ interface MilestoneEntry {
   description: string;
 }
 
-export type TimelineEntry = MissionEventEntry | MilestoneEntry;
+interface FundingThresholdEntry {
+  kind: "fundingThreshold";
+  day: number;
+  title: string;
+  description: string;
+}
+
+export type TimelineEntry =
+  MissionEventEntry | MilestoneEntry | FundingThresholdEntry;
 
 interface AwardedMilestone {
   name: string;
@@ -85,6 +100,7 @@ export interface TurnSummary {
   publicSupportDrained: number;
   publicSupportEnd: number;
   milestones: AwardedMilestone[];
+  fundingPayouts: { publicSupport: number; payoutMillions: number }[];
   /** Why the Program was cancelled at the end of this Turn, if it was. */
   cancellationReason: string | null;
 }
@@ -202,14 +218,22 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         publicSupport: startingPublicSupport,
         science: 0,
         milestoneIds: [],
+        fundingThresholdsPaid: [],
         operatingAssets: [],
         status: { kind: "active" },
       };
     },
 
     readProgram(program) {
+      const next = catalogue.fundingThresholds.find(
+        ({ publicSupport }) =>
+          !program.fundingThresholdsPaid.includes(publicSupport),
+      );
       return {
         status: program.status,
+        nextFundingThreshold: next
+          ? { ...next, pointsAway: next.publicSupport - program.publicSupport }
+          : null,
         cancellationLevel: catalogue.program.cancellationLevel,
         turnNumber: program.turnNumber,
         date: program.date,
@@ -281,11 +305,29 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         description: `${milestone.description} It awards ${milestone.science} Science and ${milestone.publicSupport} Public Support.`,
       }));
 
-      const moneyEndMillions = program.moneyMillions - costMillions;
-
-      // Rounding down keeps Public Support whole and means it always falls, so it can't stick above the Cancellation Level.
       const publicSupportBeforeDrain =
         program.publicSupport + publicSupportGained;
+
+      const fundingPayouts = catalogue.fundingThresholds.filter(
+        ({ publicSupport }) =>
+          publicSupport <= publicSupportBeforeDrain &&
+          !program.fundingThresholdsPaid.includes(publicSupport),
+      );
+      const fundingEntries = fundingPayouts.map(
+        ({ publicSupport, payoutMillions }): FundingThresholdEntry => ({
+          kind: "fundingThreshold",
+          day: transferDays,
+          title: `Funding Threshold reached: ${publicSupport} Public Support`,
+          description: `The Program's backers pay out ${formatMoney(payoutMillions)}.`,
+        }),
+      );
+
+      const moneyEndMillions =
+        program.moneyMillions -
+        costMillions +
+        sum(fundingPayouts.map(({ payoutMillions }) => payoutMillions));
+
+      // Rounding down keeps Public Support whole and means it always falls, so it can't stick above the Cancellation Level.
       const publicSupportEnd = Math.floor(
         (publicSupportBeforeDrain * (100 - publicSupportDrainPercent)) / 100,
       );
@@ -306,6 +348,10 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           milestoneIds: [
             ...program.milestoneIds,
             ...awarded.map(({ id }) => id),
+          ],
+          fundingThresholdsPaid: [
+            ...program.fundingThresholdsPaid,
+            ...fundingPayouts.map(({ publicSupport }) => publicSupport),
           ],
           operatingAssets: [
             ...program.operatingAssets,
@@ -335,7 +381,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           operatingAssetNames: program.operatingAssets.map(
             (asset) => asset.name,
           ),
-          entries: [...missionEvents, ...milestoneEntries],
+          entries: [...missionEvents, ...milestoneEntries, ...fundingEntries],
         },
         summary: {
           missionCostMillions: costMillions,
@@ -351,6 +397,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
             science,
             publicSupport,
           })),
+          fundingPayouts,
           cancellationReason,
         },
       };

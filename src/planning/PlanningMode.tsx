@@ -54,6 +54,14 @@ export function PlanningMode({
             <dd data-testid="public-support">{view.publicSupport}</dd>
           </div>
           <div>
+            <dt>Next Funding Threshold</dt>
+            <dd data-testid="next-funding-threshold">
+              {view.nextFundingThreshold
+                ? `${formatMoney(view.nextFundingThreshold.payoutMillions)} at ${view.nextFundingThreshold.publicSupport} (${view.nextFundingThreshold.pointsAway} away)`
+                : "None left"}
+            </dd>
+          </div>
+          <div>
             <dt>Cancellation Level</dt>
             <dd>{view.cancellationLevel}</dd>
           </div>

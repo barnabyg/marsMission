@@ -30,6 +30,18 @@ export function TurnSummaryScreen({
           </ul>
         </section>
       )}
+      {summary.fundingPayouts.length > 0 && (
+        <section data-testid="summary-funding-payouts">
+          <h2>Funding Thresholds reached</h2>
+          <ul>
+            {summary.fundingPayouts.map(({ publicSupport, payoutMillions }) => (
+              <li key={publicSupport}>
+                {publicSupport} Public Support: {formatMoney(payoutMillions)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <table>
         <tbody>
           <tr>

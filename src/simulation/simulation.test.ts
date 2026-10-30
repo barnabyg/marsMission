@@ -84,8 +84,10 @@ describe("validating a plan", () => {
 describe("running a Turn with a Mission", () => {
   it("deducts the Mission's cost", () => {
     const { simulation, program } = setup();
-    const { program: next } = simulation.runTurn(program, sendOrbiter);
-    expect(simulation.readProgram(next).moneyMillions).toBe(1500);
+    const { program: next } = simulation.runTurn(program, {
+      mission: { launchVehicleId: "test-vehicle", assetIds: ["test-relay"] },
+    });
+    expect(simulation.readProgram(next).moneyMillions).toBe(1800);
   });
 
   it("produces every Mission Event in order, all succeeding", () => {
@@ -192,6 +194,7 @@ describe("Milestones", () => {
       ["Test burn", 1],
       ["Test arrival", 200],
       ["First orbiter", 200],
+      ["Funding Threshold reached: 300 Public Support", 200],
     ]);
   });
 
@@ -201,7 +204,8 @@ describe("Milestones", () => {
     expect(summary).toMatchObject({
       missionCostMillions: 500,
       moneyStartMillions: 2000,
-      moneyEndMillions: 1500,
+      // Less the Mission's $500M, plus the $1B Funding Threshold payout.
+      moneyEndMillions: 2500,
       scienceGained: 100,
       publicSupportStart: 100,
       publicSupportEnd: 255,
@@ -222,6 +226,97 @@ describe("Milestones", () => {
 });
 
 const skipTurn: TurnPlan = { mission: null };
+
+describe("Funding Thresholds", () => {
+  const sendRelay: TurnPlan = {
+    mission: { launchVehicleId: "test-vehicle", assetIds: ["test-relay"] },
+  };
+
+  function withThresholds(
+    fundingThresholds: { publicSupport: number; payoutMillions: number }[],
+  ) {
+    const simulation = createSimulation(
+      parseCatalogue({ ...testCatalogueFiles(), fundingThresholds }),
+    );
+    return { simulation, program: simulation.startProgram(1) };
+  }
+
+  it("pays out when a Milestone takes Public Support to the threshold", () => {
+    const { simulation, program } = setup();
+    const { program: next, summary } = simulation.runTurn(program, sendOrbiter);
+    // $2B, less $500M for the Mission, plus $1B from reaching 300.
+    expect(simulation.readProgram(next).moneyMillions).toBe(2500);
+    expect(summary.moneyEndMillions).toBe(2500);
+    expect(summary.fundingPayouts).toEqual([
+      { publicSupport: 300, payoutMillions: 1000 },
+    ]);
+  });
+
+  it("appears on the timeline after the Milestone that caused it", () => {
+    const { simulation, program } = setup();
+    const { timeline } = simulation.runTurn(program, sendOrbiter);
+    expect(timeline.entries.at(-1)).toMatchObject({
+      kind: "fundingThreshold",
+      day: 200,
+    });
+    expect(timeline.entries.at(-1)?.description).toContain("$1B");
+  });
+
+  it("doesn't pay when Public Support stays short of the threshold", () => {
+    const { simulation, program } = setup();
+    const { summary } = simulation.runTurn(program, sendRelay);
+    expect(summary.fundingPayouts).toEqual([]);
+  });
+
+  it("pays nothing when Public Support falls below a threshold and reaches it again", () => {
+    const { simulation, program } = setup();
+    // 100 + 200 reaches 300, which pays, and then drains to 255.
+    const first = simulation.runTurn(program, sendOrbiter);
+    expect(simulation.readProgram(first.program).publicSupport).toBe(255);
+    // 255 + 100 is back above 300.
+    const second = simulation.runTurn(first.program, sendRelay);
+    expect(second.summary.publicSupportGained).toBe(100);
+    expect(second.summary.fundingPayouts).toEqual([]);
+    expect(simulation.readProgram(second.program).moneyMillions).toBe(2300);
+  });
+
+  it("pays each threshold once when one award crosses several", () => {
+    const { simulation, program } = withThresholds([
+      { publicSupport: 150, payoutMillions: 10 },
+      { publicSupport: 250, payoutMillions: 20 },
+      { publicSupport: 500, payoutMillions: 40 },
+    ]);
+    const { summary } = simulation.runTurn(program, sendOrbiter);
+    expect(summary.fundingPayouts).toEqual([
+      { publicSupport: 150, payoutMillions: 10 },
+      { publicSupport: 250, payoutMillions: 20 },
+    ]);
+    expect(summary.moneyEndMillions).toBe(2000 - 500 + 30);
+  });
+
+  it("tells Planning Mode about the next threshold and how far away it is", () => {
+    const { simulation, program } = setup();
+    expect(simulation.readProgram(program).nextFundingThreshold).toEqual({
+      publicSupport: 300,
+      payoutMillions: 1000,
+      pointsAway: 200,
+    });
+    const { program: next } = simulation.runTurn(program, sendOrbiter);
+    expect(simulation.readProgram(next).nextFundingThreshold).toEqual({
+      publicSupport: 1000,
+      payoutMillions: 7000,
+      pointsAway: 745,
+    });
+  });
+
+  it("reports no next threshold when they have all been paid", () => {
+    const { simulation, program } = withThresholds([
+      { publicSupport: 300, payoutMillions: 1000 },
+    ]);
+    const { program: next } = simulation.runTurn(program, sendOrbiter);
+    expect(simulation.readProgram(next).nextFundingThreshold).toBeNull();
+  });
+});
 
 describe("a Turn without a Mission", () => {
   it("still moves on to the next Launch Window, spending nothing", () => {

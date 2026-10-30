@@ -33,6 +33,9 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await expect(page.getByTestId("launch-window")).toHaveText("December 2028");
   await expect(page.getByTestId("money")).toHaveText("$2B");
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
+  await expect(page.getByTestId("next-funding-threshold")).toHaveText(
+    "$1B at 300 (200 away)",
+  );
 
   await page.getByRole("button", { name: "Launch Mission" }).click();
 
@@ -54,6 +57,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
     "Mars transfer burn",
     "Mars orbit insertion",
     "First orbiter at Mars",
+    "Funding Threshold reached: 300 Public Support",
   ]) {
     await expect(screen.getByRole("heading")).toHaveText(title);
     await screen.getByRole("button", { name: "Continue" }).click();
@@ -68,6 +72,9 @@ test("plays from a new Program through a launch to the next Turn", async ({
   const summary = page.getByTestId("turn-summary");
   await expect(summary).toContainText("First orbiter at Mars");
   await expect(summary).toContainText("100 Science");
+  await expect(summary.getByTestId("summary-funding-payouts")).toContainText(
+    "$1B",
+  );
   await page.getByRole("button", { name: "Continue" }).click();
 
   await expect(
@@ -80,7 +87,10 @@ test("plays from a new Program through a launch to the next Turn", async ({
     "First orbiter at Mars",
   );
   await expect(page.getByTestId("launch-window")).toHaveText("January 2031");
-  await expect(page.getByTestId("money")).toHaveText("$1B");
+  await expect(page.getByTestId("money")).toHaveText("$2B");
+  await expect(page.getByTestId("next-funding-threshold")).toHaveText(
+    "None left",
+  );
   await expect(page.getByTestId("operating-assets")).toContainText(
     "Pathfinder Orbiter",
   );

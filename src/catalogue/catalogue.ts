@@ -65,12 +65,20 @@ const milestonesSchema = z.array(
   }),
 );
 
+const fundingThresholdsSchema = z.array(
+  z.strictObject({
+    publicSupport: z.number().int().positive(),
+    payoutMillions: z.number().int().positive(),
+  }),
+);
+
 const schemas = {
   program: programSchema,
   launchVehicles: launchVehiclesSchema,
   assets: assetsSchema,
   missionEvents: missionEventsSchema,
   milestones: milestonesSchema,
+  fundingThresholds: fundingThresholdsSchema,
 };
 
 /** The data file behind each part of the catalogue, relative to the data folder. */
@@ -80,6 +88,7 @@ export const catalogueFileNames = {
   assets: "assets.json",
   missionEvents: "mission-events.json",
   milestones: "milestones.json",
+  fundingThresholds: "funding-thresholds.json",
 } as const satisfies Record<keyof typeof schemas, string>;
 
 export interface Catalogue {
@@ -88,6 +97,7 @@ export interface Catalogue {
   assets: z.output<typeof assetsSchema>;
   missionEvents: z.output<typeof missionEventsSchema>;
   milestones: z.output<typeof milestonesSchema>;
+  fundingThresholds: z.output<typeof fundingThresholdsSchema>;
 }
 
 export type CatalogueFiles = Catalogue;
@@ -118,8 +128,14 @@ function findDuplicates(ids: string[]): string[] {
 
 function crossCheck(catalogue: Catalogue): string[] {
   const problems: string[] = [];
-  const { program, launchVehicles, assets, missionEvents, milestones } =
-    catalogue;
+  const {
+    program,
+    launchVehicles,
+    assets,
+    missionEvents,
+    milestones,
+    fundingThresholds,
+  } = catalogue;
 
   const parts = [
     [catalogueFileNames.launchVehicles, launchVehicles],
@@ -159,6 +175,17 @@ function crossCheck(catalogue: Catalogue): string[] {
       );
     }
   }
+
+  fundingThresholds.forEach(({ publicSupport }, index) => {
+    const previous =
+      fundingThresholds[index - 1]?.publicSupport ??
+      program.startingPublicSupport;
+    if (publicSupport <= previous) {
+      problems.push(
+        `${catalogueFileNames.fundingThresholds}: ${publicSupport} must be higher than ${previous}. Thresholds go in ascending order, above the starting Public Support`,
+      );
+    }
+  });
 
   if (program.transferDays >= program.launchWindowIntervalDays) {
     problems.push(
@@ -204,7 +231,21 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     problems,
   );
 
-  if (!program || !launchVehicles || !assets || !missionEvents || !milestones) {
+  const fundingThresholds = parsePart(
+    catalogueFileNames.fundingThresholds,
+    schemas.fundingThresholds,
+    files.fundingThresholds,
+    problems,
+  );
+
+  if (
+    !program ||
+    !launchVehicles ||
+    !assets ||
+    !missionEvents ||
+    !milestones ||
+    !fundingThresholds
+  ) {
     throw new CatalogueError(problems.join("\n"));
   }
 
@@ -214,6 +255,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     assets,
     missionEvents,
     milestones,
+    fundingThresholds,
   };
   const crossCheckProblems = crossCheck(catalogue);
   if (crossCheckProblems.length > 0) {

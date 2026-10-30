@@ -47,6 +47,10 @@ export function testCatalogueFiles(): CatalogueFiles {
         missionEvents: ["test-arrival"],
       },
     ],
+    fundingThresholds: [
+      { publicSupport: 300, payoutMillions: 1000 },
+      { publicSupport: 1000, payoutMillions: 7000 },
+    ],
     milestones: [
       {
         id: "first-orbiter",
