@@ -11,7 +11,9 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 - A Mission ends when it has delivered its Assets and Crew, or has failed. After that they operate at Mars on their own, so Mission Mode shows the Turn's Mission plus everything already operating.
 - If assembling or refuelling in Earth orbit needs several launches, those launches and rendezvous are Mission Events within the one Mission.
 - The Launch Vehicle is chosen from the catalogue and sets how much mass the Mission can carry.
-- In Planning Mode the player gives each Asset and Crew one Activity for the Turn.
+- Each Mission picks one of 2–3 fixed Trajectories, such as Slow (least fuel, longest Duration), Fast (more fuel and mass, less radiation for Crew) or Free-return (swings back to Earth if the arrival burn fails, at the cost of flexibility).
+- Missions can go to Mars orbit or to a Landing Site. Phobos and Deimos are left out of the first version.
+- In Planning Mode the player gives each Asset one Activity for the Turn. Crew at one Landing Site share one Activity.
 - Each Turn begins at a Launch Window (roughly every 26 months) and consists of Planning Mode followed by Mission Mode.
 - No game time passes in Planning Mode. Mission Mode runs from one Launch Window to the next, showing every Mission in flight and every operating Asset together. Time speeds up and slows down automatically for Mission Events and Decision Points.
 - Missions can overlap Turns. For example, a Crewed Mission that stays on the surface for a long time lasts about 2.5 years, so the next Turn's Planning Mode happens while Crew are still at Mars.
@@ -24,6 +26,7 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 - Assets stay at Mars and keep working into later Turns, within reason: each has a limited Service Life, and longer Service Life costs more.
 - An Asset may fail before its Service Life ends. This is a probability that Reliability lowers.
 - No repairs or Service Life extensions in the first version.
+- Assets give each other a limited set of specific benefits, defined in the catalogue. For example, a relay orbiter raises the Ongoing Research rate of everything on the surface, a fuel plant makes a return journey possible and a habitat lets Crew stay longer.
 - A spacecraft that can make the round trip costs more than a one-way one.
 
 ## Landing Sites
@@ -34,6 +37,7 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 ## Risk and Safety Margin
 
 - Each Mission is a sequence of Mission Events, and each Event has a failure probability.
+- The game builds the list of Mission Events automatically from what the Mission carries. A lander adds entry/descent/landing, and orbital refuelling adds a rendezvous. The player then buys Safety Margin against that list.
 - Safety Margin comes in three kinds:
   - Reliability (testing, redundancy) lowers an Event's failure probability.
   - Contingency (escape module, abort fuel) changes the outcome when an Event fails. Decision Points are often where a Contingency is used.
@@ -45,6 +49,8 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 
 ## Mission Mode
 
+- A Turn takes about 20 minutes at 1x speed, with controls to speed it up.
+- The graphics are a mix of pre-made animations (such as an asteroid strike on a base) and displays (such as orbital tracking of a journey).
 - Decision Points come from three triggers:
   - A Mission Event fails and a Contingency the player bought can be used.
   - A Hazard hits.
@@ -90,7 +96,8 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 
 ## Crew
 
-- Crew are named, with no other individual traits.
+- Crew are named, with no individual traits apart from Health.
+- The player chooses the Crew size for each Mission, trading more mass and Supplies against more research.
 - Losing Crew causes a large drop in Public Support. The only Science cost is that the Ongoing Research they were doing stops.
 - Crew don't have to come home. Staying at Mars harms them through radiation and other effects.
 - Bringing Crew home safely earns a large amount of Public Support. Every safe return earns it, and the first return is also a Milestone worth more.

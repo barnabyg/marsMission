@@ -24,6 +24,10 @@ _Avoid_: Expedition, flight
 The rocket chosen from the catalogue to launch a Mission. It sets how much mass the Mission can carry.
 _Avoid_: Rocket, booster
 
+**Trajectory**:
+One of a few fixed routes to Mars chosen for a Mission, such as Slow, Fast or Free-return. It trades fuel and mass against Duration and safety.
+_Avoid_: Route, flight path, transfer
+
 **Robotic Mission**:
 A Mission with no crew aboard. It is cheaper than a Crewed Mission and risks only hardware and money.
 _Avoid_: Unmanned mission, probe mission
@@ -58,7 +62,7 @@ How long an Asset keeps operating once in place. Longer Service Life costs more.
 _Avoid_: Lifespan, durability
 
 **Activity**:
-The one task given to an Asset or Crew for a Turn, such as soil analysis, driving to a new site or nothing.
+The one task given to an Asset, or to all the Crew at one Landing Site, for a Turn, such as soil analysis, driving to a new site or nothing.
 _Avoid_: Task, job, assignment
 
 **Landing Site**:
@@ -106,7 +110,7 @@ Safety Margin that reduces harm to Crew that builds up over a Mission's Duration
 _Avoid_: Shielding (as the general term)
 
 **Hazard**:
-A random environmental danger that happens during Mission Mode, separate from planned Mission Events, such as a dust storm or a solar particle event.
+A random environmental danger that happens during Mission Mode, separate from planned Mission Events, such as a dust storm, a solar particle event or an asteroid strike on a base.
 _Avoid_: Random event, disaster
 
 ## Balance elements
