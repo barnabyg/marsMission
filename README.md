@@ -7,10 +7,10 @@ A planning and simulation game in which you run a Mars exploration Program on a 
 You need [Node.js](https://nodejs.org/) 24 or later. From the repository root, run:
 
 ```powershell
-npm.cmd start
+.\run.bat
 ```
 
-This installs what's needed, builds the game and opens it in your browser. The game is designed for a 3840×2160 desktop.
+You can also double-click `run.bat`. It installs what's needed, builds the game and opens it in your browser. The game is designed for a 3840×2160 desktop.
 
 What to try, and the feedback wanted, is in the [Phase 1 playtest guide](docs/playtest/phase-1.md).
 

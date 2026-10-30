@@ -7,7 +7,7 @@ Send an orbiter to Mars, earn a Milestone and a payout, and carry on until you r
 You need [Node.js](https://nodejs.org/) 24 or later. In PowerShell, from the repository root (the folder containing this repository's `README.md`), run:
 
 ```powershell
-npm.cmd start
+.\run.bat
 ```
 
 The first run installs what it needs. The game then opens in your browser. Press Ctrl+C in the terminal to stop it. Play at 3840×2160 if you can.
