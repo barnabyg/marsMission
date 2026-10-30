@@ -32,11 +32,11 @@ export function OpeningScreen({
             onContinue(automaticSave.program);
           }}
         >
-          <GameText insideControl>Continue this Program</GameText>
+          Continue this Program
         </button>
       )}
       <button type="button" onClick={onStartNew}>
-        <GameText insideControl>Start a new Program</GameText>
+        Start a new Program
       </button>
       {saveSlots}
     </main>

@@ -201,7 +201,7 @@ export function PlanningMode({
             onSubmit(plan);
           }}
         >
-          <GameText insideControl>Launch Mission</GameText>
+          Launch Mission
         </button>
         <button
           type="button"
@@ -209,7 +209,7 @@ export function PlanningMode({
             onSubmit({ mission: null });
           }}
         >
-          <GameText insideControl>End Turn without launching</GameText>
+          End Turn without launching
         </button>
       </section>
 
@@ -255,7 +255,7 @@ export function PlanningMode({
               <GameText>Retire this Program? This ends it for good.</GameText>
             </p>
             <button type="button" className="primary" onClick={onRetire}>
-              <GameText insideControl>Yes, retire the Program</GameText>
+              Yes, retire the Program
             </button>
             <button
               type="button"
@@ -273,7 +273,7 @@ export function PlanningMode({
               setConfirmingRetirement(true);
             }}
           >
-            <GameText insideControl>Retire Program</GameText>
+            Retire Program
           </button>
         )}
       </section>

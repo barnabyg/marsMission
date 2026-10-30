@@ -21,7 +21,7 @@ export function watchForProblems(page: Page): string[] {
   return problems;
 }
 
-/** Returns any game term on screen that has no tooltip. */
+/** Returns any game term on screen that has no tooltip. Button labels are plain text, so they don't count. */
 export function termsWithoutTooltips(page: Page): Promise<string[]> {
   return page.evaluate((pattern) => {
     const walker = document.createTreeWalker(
@@ -32,7 +32,9 @@ export function termsWithoutTooltips(page: Page): Promise<string[]> {
     while (walker.nextNode()) {
       const { parentElement, textContent } = walker.currentNode;
       if (
-        parentElement?.closest("[data-term], [role=tooltip], script, style")
+        parentElement?.closest(
+          "[data-term], [role=tooltip], button, script, style",
+        )
       ) {
         continue;
       }
@@ -40,6 +42,11 @@ export function termsWithoutTooltips(page: Page): Promise<string[]> {
     }
     return missing;
   }, termPattern.source);
+}
+
+/** Returns any game term highlighted inside a button, where it shouldn't be. */
+export function termsInButtons(page: Page): Promise<string[]> {
+  return page.locator("button [data-term]").allTextContents();
 }
 
 /** Program data that gets cancelled at the end of its first Turn, whatever the real data files say. */
