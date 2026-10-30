@@ -7,7 +7,7 @@ import type { Program, Simulation, TurnResult } from "../simulation/simulation";
 
 export type Screen =
   | { mode: "opening"; automaticSave: LoadedSave }
-  | { mode: "planning"; program: Program; saved: boolean }
+  | { mode: "planning"; program: Program; saved: boolean; visit: number }
   | { mode: "mission"; result: TurnResult }
   | { mode: "turnSummary"; result: TurnResult }
   | { mode: "programSummary"; program: Program };
@@ -18,6 +18,8 @@ export interface GameServices {
   newSeed: () => number;
 }
 
+let planningVisits = 0;
+
 /** Entering Planning Mode is what saves the game, so a save always holds the start of a Turn. */
 export function planningScreen(
   { saveStore }: GameServices,
@@ -27,6 +29,8 @@ export function planningScreen(
     mode: "planning",
     program,
     saved: saveStore.save("automatic", program),
+    // Each visit starts a fresh plan, even when a load returns to the same Program and Turn.
+    visit: ++planningVisits,
   };
 }
 

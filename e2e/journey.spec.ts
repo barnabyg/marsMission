@@ -425,6 +425,62 @@ test("saves to a slot, moves on a Turn, loads the slot and sees the earlier stat
   expect(problems).toEqual([]);
 });
 
+test("resets the plan when loading a slot of the same Program and Turn", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  const slot = page.getByTestId("save-slot-1");
+  await slot.getByRole("button", { name: "Save here" }).click();
+
+  const launchReliability = page
+    .getByTestId("mission-event")
+    .filter({ hasText: "Launch" })
+    .getByRole("combobox");
+  await launchReliability.selectOption("redundant");
+
+  await slot.getByRole("button", { name: "Load" }).click();
+  await page.getByRole("button", { name: "Yes, load it" }).click();
+  await expect(launchReliability).toHaveValue("none");
+});
+
+test("asks before a slot loaded when reopening the game replaces the automatic save", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  await page
+    .getByTestId("save-slot-1")
+    .getByRole("button", { name: "Save here" })
+    .click();
+  await page.reload();
+
+  await page
+    .getByTestId("save-slot-1")
+    .getByRole("button", { name: "Load" })
+    .click();
+  await expect(page.getByTestId("opening-screen")).toBeVisible();
+  await page.getByRole("button", { name: "Keep playing" }).click();
+  await expect(
+    page.getByRole("button", { name: "Continue this Program" }),
+  ).toBeVisible();
+});
+
+test("can't continue a cancelled Program after seeing how it ended", async ({
+  page,
+}) => {
+  await page.goto("/?seed=2");
+  for (let turn = 0; turn < 2; turn++) {
+    await page.getByRole("button", { name: "Launch Mission" }).click();
+    await playToNextTurn(page);
+  }
+  await expect(page.getByTestId("program-summary")).toContainText("cancelled");
+
+  await page.reload();
+  await expect(page.getByTestId("turn-number")).toHaveText("1");
+  await expect(
+    page.getByRole("button", { name: "Continue this Program" }),
+  ).toHaveCount(0);
+});
+
 test("asks before overwriting a used slot", async ({ page }) => {
   await page.goto(`/?seed=${successSeed}`);
   const slot = page.getByTestId("save-slot-1");

@@ -52,7 +52,7 @@ export function App({ services, firstScreen }: AppProps) {
     const { program } = screen;
     return (
       <PlanningMode
-        key={`${program.seed}:${program.turnNumber}`}
+        key={screen.visit}
         simulation={simulation}
         program={program}
         saved={screen.saved}
