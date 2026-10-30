@@ -29,7 +29,7 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 ## Landing Sites
 
 - Mars has named Landing Sites. Each has a landing risk, a Science value and resources such as water ice.
-- Sites become available only through a Survey from orbit. Surveying also lowers a site's landing risk.
+- Apart from the two starting sites, Landing Sites become available only through a Survey from orbit. Surveying also lowers a site's landing risk.
 
 ## Risk and Safety Margin
 
@@ -43,6 +43,25 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 - The random seed is fixed when the Program starts, so reloading a save can't re-roll an outcome.
 - Mission Mode also has Hazards: random environmental dangers such as dust storms (less solar power, risk to Assets) and solar particle events (radiation, reduced by Protection). They are separate from planned Mission Events and can create Decision Points.
 
+## Mission Mode
+
+- Decision Points come from three triggers:
+  - A Mission Event fails and a Contingency the player bought can be used.
+  - A Hazard hits.
+  - A go/no-go check before a high-risk Mission Event, where the player can hold off (for example, delay a landing until a dust storm passes, at a cost in Supplies or Service Life).
+- Play pauses at each Decision Point with no time limit.
+- Mission Mode has four views, with smooth camera transitions between them:
+  - Solar system: Earth, Mars and the transfer route.
+  - Mars orbit: orbiting Assets, arrival, aerocapture.
+  - Surface: a Landing Site, with landings, rovers and bases.
+  - Spacecraft: a close-up of the Mission in transit, used when something happens on the way, such as a solar particle event or a mechanical failure.
+- The view switches automatically for Mission Events and Hazards, and the player can switch views at any time.
+
+## Saving
+
+- The game saves automatically at the start of each Planning Mode.
+- A few manual save slots are available, usable only in Planning Mode. Saving partway through Mission Mode isn't possible. Together with the fixed random seed, this stops reloading to undo a bad outcome.
+
 ## Science
 
 - Science is the score. It is weighted heavily towards activity at Mars itself, for example 100 for an orbiter surveying landing sites and 1000 for returning samples to Earth.
@@ -50,7 +69,7 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
   - Milestones: one-off achievements, such as returning a sample.
   - Ongoing Research: a steady rate earned only while an Asset or Crew is actively doing the work, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time.
 - Science already earned is never taken away.
-- Earning Science pays money. Late in a Program this is the main income, and Public Support matters less. Like a rover mission, public excitement peaks early and fades while the Science carries on. _Open: how the payment works._
+- Some Science pays a Research Grant at the start of the next Turn. Only certain research qualifies, at a rate set for each kind, and early-game research pays little or nothing. Late in a Program, Research Grants are the main income and Public Support matters less. Like a rover mission, public excitement peaks early and fades while the Science carries on.
 
 ## Public Support and money
 
@@ -59,8 +78,15 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 - Each Funding Threshold pays only the first time it is reached. Falling below and climbing back pays nothing.
 - There is no regular Appropriation. Running out of money through poor management is a way for the player to fail.
 - There is no separate bankruptcy rule. A player with no money lets Turns pass without launching, and Public Support drains until the Program is cancelled, unless what they've built keeps it going. Cancellation is the only way to lose.
-- Public Support drains slowly over time.
-- Costs are in millions of dollars, at roughly real-world scale.
+- Funding Thresholds are a fixed, limited list, mainly an early and mid-game boost.
+- Public Support falls by a percentage each Turn (for example 15%), so spikes fade fast and then level off. The Program is cancelled if it drops below the Cancellation Level (for example 50). Ongoing Research adds a small, steady amount, enough for a productive Program to stay above the Cancellation Level but not enough to keep reaching new Funding Thresholds. _To be checked in playtesting._
+- Costs are in millions of dollars, at roughly real-world scale. Starting figures, to be tuned: orbiter $0.5–1B, lander $1–2.5B, Crewed Mission $50B and up.
+
+## Starting conditions
+
+- The Program starts at the late-2028 Launch Window with about $2B and 100 Public Support, so the 300-point Funding Threshold is the first payout.
+- Two well-known Landing Sites (for example Jezero and Gale) are available from the start, at high landing risk because they haven't been surveyed. The first Turn is a choice between surveying first and landing straight away.
+- No difficulty levels in the first version.
 
 ## Crew
 
