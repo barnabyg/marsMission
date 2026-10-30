@@ -17,8 +17,12 @@ The recurring opportunity, roughly every 26 months, when an Earth–Mars transfe
 _Avoid_: Launch opportunity
 
 **Mission**:
-The single journey launched in a Turn's Launch Window, carrying one or more Assets and possibly Crew. There is at most one Mission per Turn.
+The single journey launched in a Turn's Launch Window, carrying one or more Assets and possibly Crew. There is at most one Mission per Turn. It ends when it has delivered what it carries, or has failed.
 _Avoid_: Expedition, flight
+
+**Launch Vehicle**:
+The rocket chosen from the catalogue to launch a Mission. It sets how much mass the Mission can carry.
+_Avoid_: Rocket, booster
 
 **Robotic Mission**:
 A Mission with no crew aboard. It is cheaper than a Crewed Mission and risks only hardware and money.
@@ -32,8 +36,16 @@ _Avoid_: Manned mission, human mission
 A Robotic Mission whose main value is lowering the risk or cost of later Missions, for example by surveying landing sites.
 
 **Crew**:
-The named astronauts on a Crewed Mission. They are identified by name only and have no individual skills.
+The named astronauts on a Crewed Mission. Apart from their names and Health, they have no individual traits.
 _Avoid_: Astronauts (as a game term), personnel
+
+**Health**:
+A single value for each Crew member. Radiation, time at Mars and failed Mission Events lower it, Protection slows the decline, and at zero the Crew member dies.
+_Avoid_: Condition, hit points
+
+**Supplies**:
+The food, water and other consumables Crew need to stay alive. When they run out, Health falls quickly.
+_Avoid_: Consumables, life support (as the general term)
 
 ## Assets
 
@@ -45,6 +57,18 @@ _Avoid_: Part, module, component, unit
 How long an Asset keeps operating once in place. Longer Service Life costs more.
 _Avoid_: Lifespan, durability
 
+**Activity**:
+The one task given to an Asset or Crew for a Turn, such as soil analysis, driving to a new site or nothing.
+_Avoid_: Task, job, assignment
+
+**Landing Site**:
+A named location on Mars where a Mission can land, with its own landing risk, Science value and resources such as water ice. Sites become available only through a Survey.
+_Avoid_: Location, zone, region
+
+**Survey**:
+Observing Mars from orbit to reveal Landing Sites and lower their landing risk.
+_Avoid_: Scan, reconnaissance
+
 ## Modes
 
 **Planning Mode**:
@@ -52,7 +76,7 @@ The first part of a Turn, in which the player chooses Missions, Assets, technolo
 _Avoid_: Build mode, design mode
 
 **Mission Mode**:
-The graphical second part of a Turn, in which every Mission in flight and every operating Asset plays out until the next Launch Window.
+The graphical second part of a Turn, in which the Turn's Mission and every operating Asset and Crew play out until the next Launch Window.
 _Avoid_: Flight mode, simulation mode, play mode
 
 **Decision Point**:
@@ -81,10 +105,14 @@ _Avoid_: Backup, fallback
 Safety Margin that reduces harm to Crew that builds up over a Mission's Duration, such as radiation shielding.
 _Avoid_: Shielding (as the general term)
 
+**Hazard**:
+A random environmental danger that happens during Mission Mode, separate from planned Mission Events, such as a dust storm or a solar particle event.
+_Avoid_: Random event, disaster
+
 ## Balance elements
 
 **Science**:
-The Program's score. It comes from Milestones and Ongoing Research, and is weighted heavily towards activity at Mars itself.
+The Program's score. It comes from Milestones and Ongoing Research, and is weighted heavily towards activity at Mars itself. Earning Science also pays money, which is the main income late in a Program.
 _Avoid_: Points, research
 
 **Milestone**:
@@ -111,4 +139,12 @@ _Avoid_: Mission length, time budget
 
 **Technology Readiness**:
 How mature a technology is, from flight-proven to not yet built. Less mature technology costs more, needs development time before it can fly and fails more often until it has flown successfully.
+
+**Development**:
+Paying up front, in Planning Mode, to bring an immature technology to the point where it can fly. It takes a set number of Turns.
+_Avoid_: Research (that word is reserved for Science), R&D
+
+**Flight-proven**:
+Describes a technology that has been used successfully at least once. It is cheaper and more reliable from then on.
+_Avoid_: Mature, qualified
 _Avoid_: TRL (in player-facing text), tech level
