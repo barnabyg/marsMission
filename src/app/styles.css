@@ -126,7 +126,60 @@ button.primary {
 .mission {
   position: relative;
   height: 100%;
+  overflow: hidden;
   padding: 2rem 3rem;
+}
+
+.solar-system {
+  position: absolute;
+  inset: 0;
+}
+
+.view-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.view-label span {
+  display: block;
+  transform: translate(-50%, -100%);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  text-shadow: 0 0 0.3rem #000;
+}
+
+.spacecraft-label span {
+  color: #ffd9bd;
+}
+
+.mission-side {
+  position: absolute;
+  z-index: 1;
+  top: 7rem;
+  left: 3rem;
+  width: 24rem;
+  display: grid;
+  gap: 0.6rem;
+  background: rgb(23 27 40 / 80%);
+  border: 2px solid var(--panel-border);
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+}
+
+.mission-side h2 {
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+.mission-side p,
+.mission-side ul {
+  margin: 0;
+}
+
+.mission-side ul {
+  padding-left: 1.2rem;
 }
 
 .mission-bar {
@@ -167,6 +220,7 @@ button.primary {
 
 .text-screen {
   position: absolute;
+  z-index: 2;
   left: 50%;
   bottom: 12%;
   transform: translateX(-50%);

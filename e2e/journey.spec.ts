@@ -1,10 +1,18 @@
 import { expect, test, type Page } from "@playwright/test";
 
+/**
+ * @react-three/fiber 9.8.2 still creates a THREE.Clock, which three 0.187 warns about on load. It's
+ * harmless and not ours to fix. Remove this exception once a @react-three/fiber upgrade stops it.
+ */
+const knownThirdPartyWarning =
+  "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.";
+
 /** Fails the test on anything the browser reports as a problem. */
 function watchForProblems(page: Page): string[] {
   const problems: string[] = [];
   page.on("pageerror", (error) => problems.push(error.message));
   page.on("console", (message) => {
+    if (message.text() === knownThirdPartyWarning) return;
     if (message.type() === "error" || message.type() === "warning") {
       problems.push(message.text());
     }
@@ -35,6 +43,11 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await page.getByRole("button", { name: "10x" }).click();
   await expect(page.getByTestId("current-speed")).toHaveText("10x");
 
+  await expect(
+    page.getByTestId("solar-system-view").locator("canvas"),
+  ).toBeVisible();
+  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing yet");
+
   const screen = page.getByTestId("text-screen");
   for (const title of [
     "Launch",
@@ -44,6 +57,12 @@ test("plays from a new Program through a launch to the next Turn", async ({
     await expect(screen.getByRole("heading")).toHaveText(title);
     await screen.getByRole("button", { name: "Continue" }).click();
   }
+  await expect(page.getByTestId("journey-progress")).toHaveText(
+    /Pathfinder Orbiter: arrived at Mars/,
+  );
+  await expect(page.getByTestId("operating-at-mars")).toHaveText(
+    "Pathfinder Orbiter",
+  );
 
   await expect(
     page.getByRole("heading", { name: "Planning Mode" }),

@@ -58,6 +58,8 @@ export interface Timeline {
     launchVehicleName: string;
     assetNames: string[];
   };
+  /** The Assets already operating at Mars when the Turn began. */
+  operatingAssetNames: string[];
   entries: TimelineEntry[];
 }
 
@@ -220,6 +222,9 @@ export function createSimulation(catalogue: Catalogue): Simulation {
             launchVehicleName: vehicle.name,
             assetNames: assets.map((asset) => asset.name),
           },
+          operatingAssetNames: program.operatingAssets.map(
+            (asset) => asset.name,
+          ),
           entries,
         },
       };

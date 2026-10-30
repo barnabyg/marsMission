@@ -106,6 +106,14 @@ describe("running a Turn with a Mission", () => {
     });
   });
 
+  it("tells Mission Mode which Assets were already operating when the Turn began", () => {
+    const { simulation, program } = setup();
+    const first = simulation.runTurn(program, sendOrbiter);
+    expect(first.timeline.operatingAssetNames).toEqual([]);
+    const second = simulation.runTurn(first.program, sendOrbiter);
+    expect(second.timeline.operatingAssetNames).toEqual(["Test Orbiter"]);
+  });
+
   it("leaves the orbiter operating at Mars in later Turns", () => {
     const { simulation, program } = setup();
     const first = simulation.runTurn(program, sendOrbiter).program;

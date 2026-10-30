@@ -14,6 +14,10 @@ export default defineConfig({
     baseURL: `http://localhost:${port}`,
     viewport: { width: 3840, height: 2160 },
     deviceScaleFactor: 1,
+    launchOptions: {
+      // Lets the 3D view render on machines without a GPU, such as CI.
+      args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
+    },
   },
   webServer: {
     command: `npx vite --port ${port} --strictPort`,

@@ -38,3 +38,9 @@ The browser tests need Chromium, once per machine: `npx.cmd playwright install c
 7. Build: `vite build`
 
 Package validation doesn't apply, because the game is private and isn't published as a package.
+
+### Documented exceptions
+
+- `e2e/journey.spec.ts` and `scripts/verify.mjs` allow one exact browser warning, `THREE.Clock` deprecated, because it comes from inside `@react-three/fiber`. Remove it once an upgrade stops the warning.
+- `vite.config.ts` raises the chunk size warning limit to 1200 kB for the Three.js chunk, because the game runs locally (ADR 0001). Review it if the game is ever hosted.
+- `knip.json` ignores `@secretlint/secretlint-rule-preset-recommend`, because only `.secretlintrc.json` uses it, by name.

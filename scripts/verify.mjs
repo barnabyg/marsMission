@@ -23,6 +23,11 @@ const gates = [
 
 const warningPattern = /\bwarn(ing)?s?\b/i;
 
+// The development server echoes the browser's console. This is the one warning e2e/journey.spec.ts
+// also allows, for the same reason: it comes from inside @react-three/fiber 9.8.2. Remove it with
+// that exception.
+const allowedWarning = "THREE.Clock: This module has been deprecated";
+
 function runGate(command) {
   return new Promise((resolve) => {
     // shell: true resolves npm and npx on Windows, where they are .cmd shims.
@@ -34,7 +39,9 @@ function runGate(command) {
     const onData = (stream) => (chunk) => {
       stream.write(chunk);
       for (const line of chunk.toString().split("\n")) {
-        if (warningPattern.test(line)) warnings.push(line.trim());
+        if (warningPattern.test(line) && !line.includes(allowedWarning)) {
+          warnings.push(line.trim());
+        }
       }
     };
     child.stdout.on("data", onData(process.stdout));
