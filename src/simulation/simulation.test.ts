@@ -731,6 +731,81 @@ describe("failure rolls", () => {
   });
 });
 
+describe("previewing a Mission's risk", () => {
+  function withEvents(probabilities: Record<string, number>) {
+    const files = testCatalogueFiles();
+    return createSimulation(
+      parseCatalogue({
+        ...files,
+        missionEvents: files.missionEvents.map((event) => ({
+          ...event,
+          failureProbability: probabilities[event.id] ?? 0,
+        })),
+      }),
+    );
+  }
+
+  it("lists every Mission Event the Mission will go through, in order", () => {
+    const { simulation } = setup();
+    expect(
+      simulation
+        .previewMission({
+          launchVehicleId: "test-vehicle",
+          assetIds: ["test-orbiter"],
+        })
+        .map((event) => event.name),
+    ).toEqual(["Test launch", "Test burn", "Test arrival"]);
+  });
+
+  it("changes with what the Mission carries", () => {
+    const { simulation } = setup();
+    expect(
+      simulation
+        .previewMission({ launchVehicleId: "test-vehicle", assetIds: [] })
+        .map((event) => event.name),
+    ).toEqual(["Test launch", "Test burn"]);
+  });
+
+  it("lists a Mission Event once when several things share it", () => {
+    const { simulation } = setup();
+    expect(
+      simulation.previewMission({
+        launchVehicleId: "test-vehicle",
+        assetIds: ["test-orbiter", "test-relay"],
+      }),
+    ).toHaveLength(3);
+  });
+
+  it.each([
+    [0, "~1%"],
+    [0.01, "~1%"],
+    [0.02, "~5%"],
+    [0.05, "~5%"],
+    [0.3, "Over 10%"],
+    [1, "Over 10%"],
+  ])(
+    "shows a failure probability of %s as the band %s",
+    (probability, band) => {
+      const simulation = withEvents({ "test-launch": probability });
+      const [launch] = simulation.previewMission({
+        launchVehicleId: "test-vehicle",
+        assetIds: [],
+      });
+      expect(launch?.riskBand).toBe(band);
+    },
+  );
+
+  it("never exposes the exact probability", () => {
+    const simulation = withEvents({ "test-launch": 0.0437 });
+    const preview = simulation.previewMission({
+      launchVehicleId: "test-vehicle",
+      assetIds: [],
+    });
+    expect(JSON.stringify(preview)).not.toContain("0.0437");
+    expect(preview[0]).not.toHaveProperty("failureProbability");
+  });
+});
+
 describe("retirement", () => {
   it("ends the Program and keeps its Science and Milestones", () => {
     const { simulation, program } = setup();

@@ -197,6 +197,24 @@ describe("invalid data files", () => {
     expect(message).toContain(field);
   });
 
+  it.each([
+    [
+      "aren't in ascending order",
+      [
+        { upTo: 0.5, label: "A" },
+        { upTo: 0.1, label: "B" },
+        { upTo: 1, label: "C" },
+      ],
+    ],
+    ["leave high probabilities uncovered", [{ upTo: 0.5, label: "A" }]],
+    ["are empty", []],
+    ["go above a probability of 1", [{ upTo: 1.5, label: "A" }]],
+    ["have no label", [{ upTo: 1, label: "" }]],
+  ])("reject risk bands that %s", (_, riskBands) => {
+    const message = errorFrom({ ...testCatalogueFiles(), riskBands });
+    expect(message).toContain("risk-bands.json");
+  });
+
   it("reject a date that isn't a real date", () => {
     const files = testCatalogueFiles();
     const message = errorFrom({

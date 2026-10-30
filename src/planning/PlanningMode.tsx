@@ -32,6 +32,10 @@ export function PlanningMode({
     mission: { launchVehicleId, assetIds: [assetId] },
   };
   const { costMillions, problems } = simulation.validatePlan(program, plan);
+  const plannedEvents = simulation.previewMission({
+    launchVehicleId,
+    assetIds: [assetId],
+  });
 
   return (
     <main className="planning">
@@ -125,6 +129,17 @@ export function PlanningMode({
             ))}
           </select>
         </label>
+        <h3>
+          <GameText>Mission Events and their failure risk</GameText>
+        </h3>
+        <ol className="mission-events" data-testid="mission-events">
+          {plannedEvents.map((event) => (
+            <li key={event.eventId} data-testid="mission-event">
+              <span className="mission-event-name">{event.name}</span>
+              <strong data-testid="risk-band">{event.riskBand}</strong>
+            </li>
+          ))}
+        </ol>
         <p className="total-cost">
           Total cost:{" "}
           <strong data-testid="mission-cost">

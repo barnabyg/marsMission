@@ -194,6 +194,48 @@ test("uses a known seed in a production build, as the playtest command runs it",
   );
 });
 
+test("lists the planned Mission's Mission Events with rough risk bands, which change with what it carries", async ({
+  page,
+}) => {
+  await page.route("**/data/assets.json", async (route) => {
+    const response = await route.fetch();
+    const assets = (await response.json()) as Record<string, unknown>[];
+    await route.fulfill({
+      json: [
+        ...assets,
+        {
+          id: "test-probe",
+          name: "Flyby Probe",
+          kind: "orbiter",
+          costMillions: 100,
+          missionEvents: [],
+        },
+      ],
+    });
+  });
+  await page.goto("/");
+
+  const events = page.getByTestId("mission-event");
+  await expect(events).toHaveCount(3);
+  await expect(events.nth(0)).toContainText("Launch");
+  await expect(events.nth(1)).toContainText("Mars transfer burn");
+  await expect(events.nth(2)).toContainText("Mars orbit insertion");
+  for (const band of await page.getByTestId("risk-band").allTextContents()) {
+    expect(band).toMatch(/^(~\d+%|Over \d+%)$/);
+  }
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.getByLabel("Asset").selectOption("test-probe");
+  await expect(events).toHaveCount(2);
+  await expect(page.getByTestId("mission-events")).not.toContainText(
+    "Mars orbit insertion",
+  );
+
+  // Everything on the Mission panel stays on screen at 3840×2160.
+  const launch = page.getByRole("button", { name: "Launch Mission" });
+  await expect(launch).toBeInViewport();
+});
+
 test("explains a game term on hover and on keyboard focus", async ({
   page,
 }) => {

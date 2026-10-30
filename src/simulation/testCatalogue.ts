@@ -69,6 +69,12 @@ export function testCatalogueFiles(): CatalogueFiles {
         publicSupport: 100,
       },
     ],
+    riskBands: [
+      { upTo: 0.01, label: "~1%" },
+      { upTo: 0.05, label: "~5%" },
+      { upTo: 0.1, label: "~10%" },
+      { upTo: 1, label: "Over 10%" },
+    ],
     missionEvents: [
       {
         id: "test-launch",

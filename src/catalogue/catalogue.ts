@@ -75,6 +75,15 @@ const fundingThresholdsSchema = z.array(
   }),
 );
 
+const riskBandsSchema = z
+  .array(
+    z.strictObject({
+      upTo: z.number().positive().max(1),
+      label: z.string().min(1),
+    }),
+  )
+  .min(1);
+
 const schemas = {
   program: programSchema,
   launchVehicles: launchVehiclesSchema,
@@ -82,6 +91,7 @@ const schemas = {
   missionEvents: missionEventsSchema,
   milestones: milestonesSchema,
   fundingThresholds: fundingThresholdsSchema,
+  riskBands: riskBandsSchema,
 };
 
 /** The data file behind each part of the catalogue, relative to the data folder. */
@@ -92,6 +102,7 @@ export const catalogueFileNames = {
   missionEvents: "mission-events.json",
   milestones: "milestones.json",
   fundingThresholds: "funding-thresholds.json",
+  riskBands: "risk-bands.json",
 } as const satisfies Record<keyof typeof schemas, string>;
 
 export interface Catalogue {
@@ -101,6 +112,7 @@ export interface Catalogue {
   missionEvents: z.output<typeof missionEventsSchema>;
   milestones: z.output<typeof milestonesSchema>;
   fundingThresholds: z.output<typeof fundingThresholdsSchema>;
+  riskBands: z.output<typeof riskBandsSchema>;
 }
 
 export type CatalogueFiles = Catalogue;
@@ -138,6 +150,7 @@ function crossCheck(catalogue: Catalogue): string[] {
     missionEvents,
     milestones,
     fundingThresholds,
+    riskBands,
   } = catalogue;
 
   const parts = [
@@ -190,6 +203,20 @@ function crossCheck(catalogue: Catalogue): string[] {
     }
   });
 
+  riskBands.forEach(({ upTo }, index) => {
+    const previous = riskBands[index - 1]?.upTo ?? 0;
+    if (upTo <= previous) {
+      problems.push(
+        `${catalogueFileNames.riskBands}: ${upTo} must be higher than ${previous}. Bands go in ascending order`,
+      );
+    }
+  });
+  if (riskBands.at(-1)?.upTo !== 1) {
+    problems.push(
+      `${catalogueFileNames.riskBands}: the last band must go up to 1, so that every failure probability has a band`,
+    );
+  }
+
   if (program.transferDays >= program.launchWindowIntervalDays) {
     problems.push(
       `${catalogueFileNames.program}: transferDays must be shorter than launchWindowIntervalDays, so that a Mission arrives within its Turn`,
@@ -241,13 +268,21 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     problems,
   );
 
+  const riskBands = parsePart(
+    catalogueFileNames.riskBands,
+    schemas.riskBands,
+    files.riskBands,
+    problems,
+  );
+
   if (
     !program ||
     !launchVehicles ||
     !assets ||
     !missionEvents ||
     !milestones ||
-    !fundingThresholds
+    !fundingThresholds ||
+    !riskBands
   ) {
     throw new CatalogueError(problems.join("\n"));
   }
@@ -259,6 +294,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     missionEvents,
     milestones,
     fundingThresholds,
+    riskBands,
   };
   const crossCheckProblems = crossCheck(catalogue);
   if (crossCheckProblems.length > 0) {

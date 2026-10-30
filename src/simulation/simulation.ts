@@ -135,10 +135,22 @@ export interface TurnResult {
   summary: TurnSummary;
 }
 
+/** A Mission Event as Planning Mode shows it: a rough risk band, never the exact probability. */
+interface PlannedMissionEvent {
+  eventId: string;
+  name: string;
+  riskBand: string;
+}
+
 export interface Simulation {
   startProgram(seed: number): Program;
   readProgram(program: Program): ProgramView;
   validatePlan(program: Program, plan: TurnPlan): PlanCheck;
+  /** The Mission Events a Mission would go through, in order. Ids that aren't in the catalogue are skipped. */
+  previewMission(mission: {
+    launchVehicleId: string;
+    assetIds: string[];
+  }): PlannedMissionEvent[];
   runTurn(program: Program, plan: TurnPlan): TurnResult;
   retireProgram(program: Program): Program;
 }
@@ -227,6 +239,13 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       : catalogue.program.transferDays + timing.days;
   }
 
+  function riskBandFor(failureChance: number): string {
+    const band = catalogue.riskBands.find(({ upTo }) => failureChance <= upTo);
+    // The Catalogue guarantees the last band goes up to 1.
+    if (!band) throw new Error(`No risk band covers ${failureChance}`);
+    return band.label;
+  }
+
   /** The Mission Events a Mission goes through, in the order they happen. */
   function missionEventsFor(
     launchVehicleId: string,
@@ -306,6 +325,14 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     },
 
     validatePlan: checkPlan,
+
+    previewMission({ launchVehicleId, assetIds }) {
+      return missionEventsFor(launchVehicleId, assetIds).map((event) => ({
+        eventId: event.id,
+        name: event.name,
+        riskBand: riskBandFor(event.failureProbability),
+      }));
+    },
 
     runTurn(program, plan) {
       const { costMillions, problems } = checkPlan(program, plan);
