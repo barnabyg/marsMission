@@ -53,7 +53,7 @@ Every other rule in this document is planned, so its absence from the code isn't
   - Protection (radiation shielding) reduces harm to Crew that builds up over the Mission's Duration.
 - All Safety Margin is worth having but expensive.
 - Failure probabilities are shown to the player as rough bands (for example "~5%"), not exact figures.
-- The random seed is fixed when the Program starts, so reloading a save can't re-roll an outcome.
+- The random seed is fixed when the Program starts, so the same plan gives the same outcome after a reload. A changed plan can avoid a failure already seen, for example by buying more Reliability or by not launching. _Open: whether to keep this gap is to be settled by playtest feedback._
 - Mission Mode also has Hazards: random environmental dangers such as dust storms (less solar power, risk to Assets) and solar particle events (radiation, reduced by Protection). They are separate from planned Mission Events and can create Decision Points.
 
 ## Mission Mode
@@ -98,7 +98,7 @@ The work is split into phases, each ending in a game the player can play and com
 ## Saving
 
 - The game saves automatically at the start of each Planning Mode.
-- A few manual save slots are available, usable only in Planning Mode. Saving partway through Mission Mode isn't possible. Together with the fixed random seed, this stops reloading to undo a bad outcome.
+- A few manual save slots are available, usable only in Planning Mode. Saving partway through Mission Mode isn't possible, so a reload always returns to the start of a Turn. What that can and can't undo is under [Risk and Safety Margin](#risk-and-safety-margin).
 
 ## Science
 
