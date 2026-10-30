@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import { createElement, type ComponentType } from "react";
 import type { TimelineEntry } from "../simulation/simulation";
 import { TextScreen } from "./TextScreen";
 
@@ -15,9 +15,9 @@ const presentations: Partial<
   Record<string, ComponentType<EntryPresentationProps>>
 > = {};
 
-export function presentationFor(
-  entry: TimelineEntry,
-): ComponentType<EntryPresentationProps> {
+/** Shows one timeline entry in whichever way the lookup says. */
+export function EntryPresentation(props: EntryPresentationProps) {
+  const { entry } = props;
   const key = `${entry.kind}:${entry.eventId}:${entry.outcome}`;
-  return presentations[key] ?? TextScreen;
+  return createElement(presentations[key] ?? TextScreen, props);
 }

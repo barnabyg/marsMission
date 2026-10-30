@@ -20,5 +20,7 @@ export default defineConfig({
     url: `http://localhost:${port}`,
     reuseExistingServer: false,
     stdout: "ignore",
+    // Development-only: runs Mission Mode fast enough for browser tests.
+    env: { VITE_MISSION_TIME_SCALE: "300" },
   },
 });

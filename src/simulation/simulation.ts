@@ -75,7 +75,7 @@ export interface Simulation {
 
 const millisecondsPerDay = 86_400_000;
 
-function addDays(isoDate: string, days: number): string {
+export function addDays(isoDate: string, days: number): string {
   const time = Date.parse(`${isoDate}T00:00:00Z`) + days * millisecondsPerDay;
   return new Date(time).toISOString().slice(0, 10);
 }

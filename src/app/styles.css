@@ -129,6 +129,42 @@ button.primary {
   padding: 2rem 3rem;
 }
 
+.mission-bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+.mission-bar p {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.mission-bar progress {
+  flex: 1;
+  height: 0.6rem;
+  accent-color: var(--accent);
+}
+
+.speed-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.speed-controls span {
+  margin-right: 0.6rem;
+}
+
+.speed-controls button[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #10121a;
+}
+
 .text-screen {
   position: absolute;
   left: 50%;

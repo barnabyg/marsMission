@@ -1,6 +1,9 @@
-import { useState } from "react";
-import type { Timeline } from "../simulation/simulation";
-import { presentationFor } from "./presentation";
+import { useEffect } from "react";
+import { addDays, type Timeline } from "../simulation/simulation";
+import { formatDate } from "../ui/format";
+import { speeds } from "./playback";
+import { EntryPresentation } from "./presentation";
+import { usePlayback } from "./usePlayback";
 
 interface MissionModeProps {
   timeline: Timeline;
@@ -8,26 +11,55 @@ interface MissionModeProps {
 }
 
 export function MissionMode({ timeline, onFinished }: MissionModeProps) {
-  const [index, setIndex] = useState(0);
-  const entry = timeline.entries[index];
+  const { state, setSpeed, dismiss } = usePlayback(timeline);
+
+  useEffect(() => {
+    if (state.finished) onFinished();
+  }, [state.finished, onFinished]);
+
+  const entry =
+    state.activeEntry === null
+      ? undefined
+      : timeline.entries[state.activeEntry];
+  const turnProgress = (state.day / timeline.durationDays) * 100;
 
   return (
     <main className="mission">
-      <h1>Mission Mode</h1>
-      {entry &&
-        (() => {
-          const Presentation = presentationFor(entry);
-          return (
-            <Presentation
-              key={index}
-              entry={entry}
-              onDismiss={() => {
-                if (index + 1 < timeline.entries.length) setIndex(index + 1);
-                else onFinished();
+      <header className="mission-bar">
+        <h1>Mission Mode</h1>
+        <p data-testid="mission-date">
+          {formatDate(addDays(timeline.startDate, Math.floor(state.day)))}
+        </p>
+        <progress
+          aria-label="Progress through the Turn"
+          max={100}
+          value={turnProgress}
+        />
+        <div role="group" aria-label="Speed" className="speed-controls">
+          <span>
+            Speed: <strong data-testid="current-speed">{state.speed}x</strong>
+          </span>
+          {speeds.map((speed) => (
+            <button
+              key={speed}
+              type="button"
+              aria-pressed={state.speed === speed}
+              onClick={() => {
+                setSpeed(speed);
               }}
-            />
-          );
-        })()}
+            >
+              {speed}x
+            </button>
+          ))}
+        </div>
+      </header>
+      {entry && (
+        <EntryPresentation
+          key={state.activeEntry}
+          entry={entry}
+          onDismiss={dismiss}
+        />
+      )}
     </main>
   );
 }

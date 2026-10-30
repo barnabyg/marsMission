@@ -31,6 +31,10 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await expect(
     page.getByRole("heading", { name: "Mission Mode" }),
   ).toBeVisible();
+  await expect(page.getByTestId("current-speed")).toHaveText("1x");
+  await page.getByRole("button", { name: "10x" }).click();
+  await expect(page.getByTestId("current-speed")).toHaveText("10x");
+
   const screen = page.getByTestId("text-screen");
   for (const title of [
     "Launch",
