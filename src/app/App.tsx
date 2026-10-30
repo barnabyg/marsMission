@@ -22,6 +22,7 @@ export function App({ simulation }: { simulation: Simulation }) {
     program: simulation.startProgram(Date.now()),
   });
   const [screen, setScreen] = useState<Screen>(newProgram);
+  const [missionSpeed, setMissionSpeed] = useState(1);
 
   if (screen.mode === "planning") {
     const { program } = screen;
@@ -61,6 +62,8 @@ export function App({ simulation }: { simulation: Simulation }) {
     return (
       <MissionMode
         timeline={result.timeline}
+        initialSpeed={missionSpeed}
+        onSpeedChange={setMissionSpeed}
         onFinished={() => {
           setScreen({ mode: "turnSummary", result });
         }}

@@ -20,8 +20,14 @@ interface Playback {
   dismiss: () => void;
 }
 
-export function usePlayback(timeline: PlaybackTimeline): Playback {
-  const [state, setState] = useState(() => startPlayback(timeline));
+export function usePlayback(
+  timeline: PlaybackTimeline,
+  initialSpeed: number,
+  onSpeedChange: (speed: number) => void,
+): Playback {
+  const [state, setState] = useState(() =>
+    startPlayback(timeline, initialSpeed),
+  );
 
   useEffect(() => {
     let previous = performance.now();
@@ -42,6 +48,7 @@ export function usePlayback(timeline: PlaybackTimeline): Playback {
     state,
     setSpeed: (speed) => {
       setState((current) => changeSpeed(current, speed));
+      onSpeedChange(speed);
     },
     dismiss: () => {
       setState(dismissEntry);

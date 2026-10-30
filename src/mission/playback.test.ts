@@ -112,6 +112,11 @@ describe("playing a Turn", () => {
     expect(quick.shownForMs.get(0)).toBe(playToEnd(1).shownForMs.get(0));
   });
 
+  it("can start at the speed the player was last using", () => {
+    expect(startPlayback(timeline).speed).toBe(1);
+    expect(startPlayback(timeline, 10).speed).toBe(10);
+  });
+
   it("finishes a Turn with nothing on its timeline", () => {
     let state = startPlayback({ durationDays: 780, entries: [] });
     expect(state.activeEntry).toBeNull();

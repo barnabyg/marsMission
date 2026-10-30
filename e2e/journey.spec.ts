@@ -123,6 +123,9 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await expect(page.getByTestId("operating-assets")).toContainText(
     "Pathfinder Orbiter",
   );
+
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(page.getByTestId("current-speed")).toHaveText("10x");
   expect(problems).toEqual([]);
 });
 

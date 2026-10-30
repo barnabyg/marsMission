@@ -11,11 +11,23 @@ const SolarSystemView = lazy(() => import("./solarSystem/SolarSystemView"));
 
 interface MissionModeProps {
   timeline: Timeline;
+  /** The speed to start at, so a player's choice carries over between Turns. */
+  initialSpeed: number;
+  onSpeedChange: (speed: number) => void;
   onFinished: () => void;
 }
 
-export function MissionMode({ timeline, onFinished }: MissionModeProps) {
-  const { state, setSpeed, dismiss } = usePlayback(timeline);
+export function MissionMode({
+  timeline,
+  initialSpeed,
+  onSpeedChange,
+  onFinished,
+}: MissionModeProps) {
+  const { state, setSpeed, dismiss } = usePlayback(
+    timeline,
+    initialSpeed,
+    onSpeedChange,
+  );
 
   useEffect(() => {
     if (state.finished) onFinished();

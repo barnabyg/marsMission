@@ -23,11 +23,14 @@ export interface PlaybackState {
   finished: boolean;
 }
 
-export function startPlayback(timeline: PlaybackTimeline): PlaybackState {
+export function startPlayback(
+  timeline: PlaybackTimeline,
+  speed = 1,
+): PlaybackState {
   return advancePlayback(
     {
       day: 0,
-      speed: 1,
+      speed,
       activeEntry: null,
       nextEntry: 0,
       textScreenRemainingMs: 0,
