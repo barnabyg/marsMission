@@ -38,7 +38,7 @@ export function App({ services, firstScreen }: AppProps) {
             simulation={simulation}
             saveStore={saveStore}
             program={null}
-            confirmLoading={false}
+            confirmLoading={screen.automaticSave.kind === "program"}
             onLoad={(program) => {
               setScreen(planningScreen(services, program));
             }}

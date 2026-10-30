@@ -15,7 +15,7 @@ interface SaveSlotsProps {
   saveStore: SaveStore;
   /** The Program to save, or null where there is none to save yet. */
   program: Program | null;
-  /** Whether loading would replace a Program in play, and so needs confirming. */
+  /** Whether loading would replace a Program in play or in the automatic save, and so needs confirming. */
   confirmLoading: boolean;
   onLoad: (program: Program) => void;
 }
@@ -140,7 +140,7 @@ export function SaveSlots({
                 >
                   <p>
                     <GameText>
-                      Load this save? It replaces the Program in play, which is
+                      Load this save? It replaces your current Program, which is
                       lost unless it's in a slot.
                     </GameText>
                   </p>
