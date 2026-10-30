@@ -283,9 +283,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         ...(vehicle?.missionEvents ?? []),
         ...new Set(assets.flatMap((asset) => asset.missionEvents)),
       ];
-      const missionEvents = eventIds
-        .map(dayOfEvent)
-        .sort((first, second) => first.day - second.day);
+      const missionEvents = eventIds.map(dayOfEvent);
 
       const arrivingKinds = assets.map((asset) => asset.kind);
       const awarded = catalogue.milestones.filter(
@@ -381,7 +379,12 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           operatingAssetNames: program.operatingAssets.map(
             (asset) => asset.name,
           ),
-          entries: [...missionEvents, ...milestoneEntries, ...fundingEntries],
+          // The sort is stable, so an award stays after the arrival that earned it.
+          entries: [
+            ...missionEvents,
+            ...milestoneEntries,
+            ...fundingEntries,
+          ].sort((first, second) => first.day - second.day),
         },
         summary: {
           missionCostMillions: costMillions,

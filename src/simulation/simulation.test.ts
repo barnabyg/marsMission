@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCatalogue } from "../catalogue/catalogue";
+import { parseCatalogue, type CatalogueFiles } from "../catalogue/catalogue";
 import {
   createSimulation,
   type Program,
@@ -102,6 +102,37 @@ describe("running a Turn with a Mission", () => {
       ["Test burn", 1, "success"],
       ["Test arrival", 200, "success"],
     ]);
+  });
+
+  it("keeps the whole timeline in date order", () => {
+    const files = testCatalogueFiles();
+    const simulation = createSimulation(
+      parseCatalogue({
+        ...files,
+        assets: [
+          {
+            ...files.assets[0],
+            missionEvents: ["test-arrival", "test-settle"],
+          },
+        ],
+        missionEvents: [
+          ...files.missionEvents,
+          {
+            id: "test-settle",
+            name: "Test settle",
+            description: "Settles into orbit.",
+            timing: { from: "arrival", days: 5 },
+          },
+        ],
+      } as CatalogueFiles),
+    );
+    const { timeline } = simulation.runTurn(
+      simulation.startProgram(1),
+      sendOrbiter,
+    );
+    const days = timeline.entries.map((entry) => entry.day);
+    expect(days).toEqual(days.toSorted((first, second) => first - second));
+    expect(days.at(-1)).toBe(205);
   });
 
   it("describes the journey for Mission Mode to show", () => {
