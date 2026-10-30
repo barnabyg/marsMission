@@ -1,4 +1,5 @@
 import { formatMoney, type TurnSummary } from "../simulation/simulation";
+import { GameText } from "../ui/GameText";
 
 interface TurnSummaryScreenProps {
   summary: TurnSummary;
@@ -11,20 +12,27 @@ export function TurnSummaryScreen({
 }: TurnSummaryScreenProps) {
   return (
     <main className="summary-screen" data-testid="turn-summary">
-      <h1>Turn summary</h1>
+      <h1>
+        <GameText>Turn summary</GameText>
+      </h1>
       {summary.cancellationReason && (
         <p className="problem" role="alert">
-          The Program has been cancelled. {summary.cancellationReason}
+          <GameText>
+            {`The Program has been cancelled. ${summary.cancellationReason}`}
+          </GameText>
         </p>
       )}
       {summary.milestones.length > 0 && (
         <section>
-          <h2>Milestones</h2>
+          <h2>
+            <GameText>Milestones</GameText>
+          </h2>
           <ul>
             {summary.milestones.map((milestone) => (
               <li key={milestone.name}>
-                {milestone.name}: {milestone.science} Science and{" "}
-                {milestone.publicSupport} Public Support
+                <GameText>
+                  {`${milestone.name}: ${milestone.science} Science and ${milestone.publicSupport} Public Support`}
+                </GameText>
               </li>
             ))}
           </ul>
@@ -32,11 +40,15 @@ export function TurnSummaryScreen({
       )}
       {summary.fundingPayouts.length > 0 && (
         <section data-testid="summary-funding-payouts">
-          <h2>Funding Thresholds reached</h2>
+          <h2>
+            <GameText>Funding Thresholds reached</GameText>
+          </h2>
           <ul>
             {summary.fundingPayouts.map(({ publicSupport, payoutMillions }) => (
               <li key={publicSupport}>
-                {publicSupport} Public Support: {formatMoney(payoutMillions)}
+                <GameText>
+                  {`${publicSupport} Public Support: ${formatMoney(payoutMillions)}`}
+                </GameText>
               </li>
             ))}
           </ul>
@@ -45,7 +57,9 @@ export function TurnSummaryScreen({
       <table>
         <tbody>
           <tr>
-            <th scope="row">Mission cost</th>
+            <th scope="row">
+              <GameText>Mission cost</GameText>
+            </th>
             <td>{formatMoney(summary.missionCostMillions)}</td>
           </tr>
           <tr>
@@ -56,21 +70,29 @@ export function TurnSummaryScreen({
             </td>
           </tr>
           <tr>
-            <th scope="row">Science gained</th>
+            <th scope="row">
+              <GameText>Science gained</GameText>
+            </th>
             <td>{summary.scienceGained}</td>
           </tr>
           <tr>
-            <th scope="row">Public Support</th>
+            <th scope="row">
+              <GameText>Public Support</GameText>
+            </th>
             <td data-testid="summary-public-support">
               {summary.publicSupportStart} to {summary.publicSupportEnd}
             </td>
           </tr>
           <tr>
-            <th scope="row">Gained from Milestones</th>
+            <th scope="row">
+              <GameText>Gained from Milestones</GameText>
+            </th>
             <td>{summary.publicSupportGained}</td>
           </tr>
           <tr>
-            <th scope="row">Faded over the Turn</th>
+            <th scope="row">
+              <GameText>Faded over the Turn</GameText>
+            </th>
             <td>{summary.publicSupportDrained}</td>
           </tr>
         </tbody>

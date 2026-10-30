@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { addDays, type Timeline } from "../simulation/simulation";
 import { formatDate } from "../ui/format";
+import { GameText } from "../ui/GameText";
 import { speeds } from "./playback";
 import { EntryPresentation } from "./presentation";
 import { journeyProgress } from "./solarSystem/orbits";
@@ -43,7 +44,9 @@ export function MissionMode({ timeline, onFinished }: MissionModeProps) {
         />
       </Suspense>
       <header className="mission-bar">
-        <h1>Mission Mode</h1>
+        <h1>
+          <GameText>Mission Mode</GameText>
+        </h1>
         <p data-testid="mission-date">
           {formatDate(addDays(timeline.startDate, Math.floor(state.day)))}
         </p>
@@ -72,11 +75,13 @@ export function MissionMode({ timeline, onFinished }: MissionModeProps) {
       </header>
       <aside className="mission-side">
         <p data-testid="journey-progress">
-          {!mission && "No Mission this Turn"}
-          {mission &&
-            (progress < 1
-              ? `${mission.assetNames.join(", ")}: ${Math.round(progress * 100)}% of the way to Mars`
-              : `${mission.assetNames.join(", ")}: arrived at Mars`)}
+          <GameText>
+            {!mission
+              ? "No Mission this Turn"
+              : progress < 1
+                ? `${mission.assetNames.join(", ")}: ${Math.round(progress * 100)}% of the way to Mars`
+                : `${mission.assetNames.join(", ")}: arrived at Mars`}
+          </GameText>
         </p>
         <h2>Operating at Mars</h2>
         <ul data-testid="operating-at-mars">

@@ -12,6 +12,8 @@ npm.cmd start
 
 This installs what's needed, builds the game and opens it in your browser. The game is designed for a 3840×2160 desktop.
 
+What to try, and the feedback wanted, is in the [Phase 1 playtest guide](docs/playtest/phase-1.md).
+
 ## Develop
 
 The Simulation (`src/simulation`) holds all the rules and knows nothing about the browser. The Catalogue (`src/catalogue`) loads and validates the data files in `public/data`. Everything else displays what the Simulation produces.

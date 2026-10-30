@@ -6,6 +6,7 @@ import {
   type TurnPlan,
 } from "../simulation/simulation";
 import { formatLaunchWindow } from "../ui/format";
+import { GameText } from "../ui/GameText";
 
 interface PlanningModeProps {
   simulation: Simulation;
@@ -35,14 +36,20 @@ export function PlanningMode({
   return (
     <main className="planning">
       <header className="status-bar">
-        <h1>Planning Mode</h1>
+        <h1>
+          <GameText>Planning Mode</GameText>
+        </h1>
         <dl>
           <div>
-            <dt>Turn</dt>
+            <dt>
+              <GameText>Turn</GameText>
+            </dt>
             <dd data-testid="turn-number">{view.turnNumber}</dd>
           </div>
           <div>
-            <dt>Launch Window</dt>
+            <dt>
+              <GameText>Launch Window</GameText>
+            </dt>
             <dd data-testid="launch-window">{formatLaunchWindow(view.date)}</dd>
           </div>
           <div>
@@ -50,11 +57,15 @@ export function PlanningMode({
             <dd data-testid="money">{formatMoney(view.moneyMillions)}</dd>
           </div>
           <div>
-            <dt>Public Support</dt>
+            <dt>
+              <GameText>Public Support</GameText>
+            </dt>
             <dd data-testid="public-support">{view.publicSupport}</dd>
           </div>
           <div>
-            <dt>Next Funding Threshold</dt>
+            <dt>
+              <GameText>Next Funding Threshold</GameText>
+            </dt>
             <dd data-testid="next-funding-threshold">
               {view.nextFundingThreshold
                 ? `${formatMoney(view.nextFundingThreshold.payoutMillions)} at ${view.nextFundingThreshold.publicSupport} (${view.nextFundingThreshold.pointsAway} away)`
@@ -62,20 +73,28 @@ export function PlanningMode({
             </dd>
           </div>
           <div>
-            <dt>Cancellation Level</dt>
+            <dt>
+              <GameText>Cancellation Level</GameText>
+            </dt>
             <dd>{view.cancellationLevel}</dd>
           </div>
           <div>
-            <dt>Science</dt>
+            <dt>
+              <GameText>Science</GameText>
+            </dt>
             <dd data-testid="science">{view.science}</dd>
           </div>
         </dl>
       </header>
 
       <section className="panel">
-        <h2>Mission</h2>
+        <h2>
+          <GameText>Mission</GameText>
+        </h2>
         <label>
-          Launch Vehicle
+          <span>
+            <GameText>Launch Vehicle</GameText>
+          </span>
           <select
             value={launchVehicleId}
             onChange={(event) => {
@@ -90,7 +109,9 @@ export function PlanningMode({
           </select>
         </label>
         <label>
-          Asset
+          <span>
+            <GameText>Asset</GameText>
+          </span>
           <select
             value={assetId}
             onChange={(event) => {
@@ -112,7 +133,7 @@ export function PlanningMode({
         </p>
         {problems.map((problem) => (
           <p key={problem} className="problem" role="alert">
-            {problem}
+            <GameText>{problem}</GameText>
           </p>
         ))}
         <button
@@ -123,7 +144,7 @@ export function PlanningMode({
             onSubmit(plan);
           }}
         >
-          Launch Mission
+          <GameText insideControl>Launch Mission</GameText>
         </button>
         <button
           type="button"
@@ -131,18 +152,22 @@ export function PlanningMode({
             onSubmit({ mission: null });
           }}
         >
-          End Turn without launching
+          <GameText insideControl>End Turn without launching</GameText>
         </button>
       </section>
 
       <section className="panel">
-        <h2>Milestones</h2>
+        <h2>
+          <GameText>Milestones</GameText>
+        </h2>
         {view.milestones.length === 0 ? (
           <p>None yet.</p>
         ) : (
           <ul data-testid="milestones">
             {view.milestones.map((milestone) => (
-              <li key={milestone.id}>{milestone.name}</li>
+              <li key={milestone.id}>
+                <GameText>{milestone.name}</GameText>
+              </li>
             ))}
           </ul>
         )}
@@ -168,9 +193,11 @@ export function PlanningMode({
             aria-label="Confirm retirement"
             className="confirm"
           >
-            <p>Retire this Program? This ends it for good.</p>
+            <p>
+              <GameText>Retire this Program? This ends it for good.</GameText>
+            </p>
             <button type="button" className="primary" onClick={onRetire}>
-              Yes, retire the Program
+              <GameText insideControl>Yes, retire the Program</GameText>
             </button>
             <button
               type="button"
@@ -188,7 +215,7 @@ export function PlanningMode({
               setConfirmingRetirement(true);
             }}
           >
-            Retire Program
+            <GameText insideControl>Retire Program</GameText>
           </button>
         )}
       </section>

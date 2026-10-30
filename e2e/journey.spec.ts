@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { termPattern, tooltips } from "../src/ui/tooltips";
 
 /**
  * @react-three/fiber 9.8.2 still creates a THREE.Clock, which three 0.187 warns about on load. It's
@@ -20,6 +21,27 @@ function watchForProblems(page: Page): string[] {
   return problems;
 }
 
+/** Returns any game term on screen that has no tooltip. */
+function termsWithoutTooltips(page: Page): Promise<string[]> {
+  return page.evaluate((pattern) => {
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+    );
+    const missing: string[] = [];
+    while (walker.nextNode()) {
+      const { parentElement, textContent } = walker.currentNode;
+      if (
+        parentElement?.closest("[data-term], [role=tooltip], script, style")
+      ) {
+        continue;
+      }
+      missing.push(...(textContent?.match(new RegExp(pattern, "g")) ?? []));
+    }
+    return missing;
+  }, termPattern.source);
+}
+
 test("plays from a new Program through a launch to the next Turn", async ({
   page,
 }) => {
@@ -36,6 +58,8 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await expect(page.getByTestId("next-funding-threshold")).toHaveText(
     "$1B at 300 (200 away)",
   );
+
+  expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await page.getByRole("button", { name: "Launch Mission" }).click();
 
@@ -60,6 +84,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
     "Funding Threshold reached: 300 Public Support",
   ]) {
     await expect(screen.getByRole("heading")).toHaveText(title);
+    expect(await termsWithoutTooltips(page)).toEqual([]);
     await screen.getByRole("button", { name: "Continue" }).click();
   }
   await expect(page.getByTestId("journey-progress")).toHaveText(
@@ -72,6 +97,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   const summary = page.getByTestId("turn-summary");
   await expect(summary).toContainText("First orbiter at Mars");
   await expect(summary).toContainText("100 Science");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   await expect(summary.getByTestId("summary-funding-payouts")).toContainText(
     "$1B",
   );
@@ -97,6 +123,28 @@ test("plays from a new Program through a launch to the next Turn", async ({
   expect(problems).toEqual([]);
 });
 
+test("explains a game term on hover and on keyboard focus", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const term = page.locator("dt [data-term='Public Support']");
+  const tooltip = page.getByRole("tooltip");
+  await expect(tooltip).toHaveCount(0);
+
+  await term.hover();
+  await expect(tooltip).toContainText(tooltips["Public Support"]);
+
+  await page.getByRole("heading", { name: "Mission", exact: true }).hover();
+  await page.mouse.move(0, 0);
+  await expect(tooltip).toHaveCount(0);
+
+  await term.focus();
+  await expect(tooltip).toContainText(tooltips["Public Support"]);
+  await term.blur();
+  await expect(tooltip).toHaveCount(0);
+});
+
 test("retires a Program and starts a new one from the Program summary", async ({
   page,
 }) => {
@@ -114,6 +162,7 @@ test("retires a Program and starts a new one from the Program summary", async ({
 
   const summary = page.getByTestId("program-summary");
   await expect(summary).toContainText("You retired this Program");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   await expect(summary.getByTestId("total-science")).toHaveText("0");
 
   await page.getByRole("button", { name: "Start a new Program" }).click();

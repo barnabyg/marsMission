@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { fetchCatalogue } from "./fetchCatalogue";
 import { createSimulation } from "../simulation/simulation";
+import { TooltipLayer } from "../ui/TooltipLayer";
 import "./styles.css";
 
 const container = document.getElementById("root");
@@ -14,6 +15,7 @@ try {
   root.render(
     <StrictMode>
       <App simulation={simulation} />
+      <TooltipLayer />
     </StrictMode>,
   );
 } catch (error) {

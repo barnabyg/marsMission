@@ -273,6 +273,29 @@ button.primary {
   margin: 0;
 }
 
+.term {
+  border-bottom: 2px dotted var(--muted);
+  cursor: help;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 10;
+  width: 30rem;
+  background: #0f1320;
+  border: 2px solid var(--accent);
+  border-radius: 0.4rem;
+  padding: 0.8rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text);
+  pointer-events: none;
+}
+
+.tooltip p {
+  margin: 0.3rem 0 0;
+}
+
 .load-error {
   padding: 3rem;
 }
