@@ -18,6 +18,14 @@ What to try, and the feedback wanted, is in the [Phase 2 playtest guide](docs/pl
 
 The Simulation (`src/simulation`) holds all the rules and knows nothing about the browser. The Catalogue (`src/catalogue`) loads and validates the data files in `public/data`. The Save Store (`src/save`) keeps what the Simulation saves in the browser. Everything else displays what the Simulation produces.
 
+A typical feature touches these folders, in order:
+
+1. `public/data`: the new content
+2. `src/catalogue`: validating it
+3. `src/simulation`: the rules, with most of the tests
+4. `src/planning` or `src/mission`: displaying it, plus `src/ui/tooltips.ts` and `GLOSSARY.md` for a new game term
+5. `e2e`: a browser test of the journey
+
 | Command                | What it does                                  |
 | ---------------------- | --------------------------------------------- |
 | `npm.cmd run dev`      | Starts the development server                 |
