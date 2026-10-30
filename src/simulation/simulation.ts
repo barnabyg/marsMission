@@ -1,203 +1,28 @@
-import { z } from "zod";
-import { isoDate, type Catalogue } from "../catalogue/catalogue";
+import type { Catalogue } from "../catalogue/catalogue";
+import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
+import type {
+  FundingThresholdEntry,
+  MilestoneEntry,
+  MissionEventEntry,
+  PlanCheck,
+  PlannedMission,
+  PlannedMissionEvent,
+  Program,
+  ProgramView,
+  TurnPlan,
+  TurnResult,
+} from "./types";
 
-interface PlannedMission {
-  launchVehicleId: string;
-  assetIds: string[];
-  /** The Reliability level bought for each Mission Event, by id. Any left out get the cheapest level. */
-  reliability?: Record<string, string>;
-}
-
-export interface TurnPlan {
-  /** The Turn's one Mission, or null to let the Turn pass without launching. */
-  mission: PlannedMission | null;
-}
-
-interface PlanCheck {
-  costMillions: number;
-  problems: string[];
-}
-
-interface OperatingAsset {
-  assetId: string;
-  name: string;
-  kind: string;
-  arrivedOn: string;
-}
-
-type ProgramStatus =
-  | { kind: "active" }
-  | { kind: "retired" }
-  | { kind: "cancelled"; reason: string };
-
-/** Everything about a Program in progress, as plain data. Treat it as opaque and read it through the Simulation. */
-export interface Program {
-  seed: number;
-  turnNumber: number;
-  date: string;
-  moneyMillions: number;
-  publicSupport: number;
-  science: number;
-  milestoneIds: string[];
-  /** The Public Support levels of the Funding Thresholds already paid. */
-  fundingThresholdsPaid: number[];
-  operatingAssets: OperatingAsset[];
-  status: ProgramStatus;
-}
-
-export interface ProgramView {
-  status: ProgramStatus;
-  cancellationLevel: number;
-  turnNumber: number;
-  date: string;
-  moneyMillions: number;
-  publicSupport: number;
-  science: number;
-  milestones: { id: string; name: string }[];
-  nextFundingThreshold: {
-    publicSupport: number;
-    payoutMillions: number;
-    pointsAway: number;
-  } | null;
-  operatingAssets: OperatingAsset[];
-  launchVehicles: { id: string; name: string; costMillions: number }[];
-  assets: { id: string; name: string; kind: string; costMillions: number }[];
-}
-
-interface MissionEventEntry {
-  kind: "missionEvent";
-  day: number;
-  eventId: string;
-  title: string;
-  description: string;
-  outcome: "success" | "failure";
-}
-
-interface MilestoneEntry {
-  kind: "milestone";
-  day: number;
-  milestoneId: string;
-  title: string;
-  description: string;
-}
-
-interface FundingThresholdEntry {
-  kind: "fundingThreshold";
-  day: number;
-  title: string;
-  description: string;
-}
-
-export type TimelineEntry =
-  MissionEventEntry | MilestoneEntry | FundingThresholdEntry;
-
-interface AwardedMilestone {
-  name: string;
-  science: number;
-  publicSupport: number;
-}
-
-/** What changed over a Turn. */
-export interface TurnSummary {
-  missionCostMillions: number;
-  moneyStartMillions: number;
-  moneyEndMillions: number;
-  scienceGained: number;
-  publicSupportStart: number;
-  publicSupportGained: number;
-  publicSupportDrained: number;
-  publicSupportEnd: number;
-  milestones: AwardedMilestone[];
-  fundingPayouts: { publicSupport: number; payoutMillions: number }[];
-  /** The Mission Event that ended this Turn's Mission and what that cost, if one failed. */
-  failure: {
-    missionEventName: string;
-    assetsLost: string[];
-    publicSupportLost: number;
-  } | null;
-  /** Why the Program was cancelled at the end of this Turn, if it was. */
-  cancellationReason: string | null;
-}
-
-/** What happened in a Turn, for Mission Mode to display. */
-export interface Timeline {
-  startDate: string;
-  durationDays: number;
-  /** The Mission launched this Turn, if any. */
-  mission: {
-    launchDay: number;
-    arrivalDay: number;
-    launchVehicleName: string;
-    assetNames: string[];
-    /** The day a Mission Event failed and the journey stopped, if one did. */
-    failedOnDay: number | null;
-  } | null;
-  /** The Assets already operating at Mars when the Turn began. */
-  operatingAssetNames: string[];
-  entries: TimelineEntry[];
-}
-
-export interface TurnResult {
-  program: Program;
-  timeline: Timeline;
-  summary: TurnSummary;
-}
-
-/** A Mission Event as Planning Mode shows it: a rough risk band, never the exact probability. */
-interface PlannedMissionEvent {
-  eventId: string;
-  name: string;
-  riskBand: string;
-  reliabilityLevelId: string;
-  reliabilityLevels: {
-    id: string;
-    name: string;
-    costMillions: number;
-    riskBand: string;
-  }[];
-}
-
-/** A Program as data, for keeping between sessions. */
-interface SavedProgram {
-  formatVersion: number;
-  program: Program;
-}
-
-/** Thrown when a save can't be restored. The message is written for the player. */
-export class SaveError extends Error {
-  override name = "SaveError";
-}
-
-/** Released saves are a compatibility contract: to change this shape, add a new version and keep reading this one. */
-const saveFormatVersion = 1;
-
-const count = z.number().int().nonnegative();
-
-const savedProgramSchema = z.strictObject({
-  seed: z.number().int(),
-  turnNumber: z.number().int().positive(),
-  date: isoDate,
-  moneyMillions: count,
-  publicSupport: count,
-  science: count,
-  milestoneIds: z.array(z.string()),
-  fundingThresholdsPaid: z.array(count),
-  operatingAssets: z.array(
-    z.strictObject({
-      assetId: z.string(),
-      name: z.string(),
-      kind: z.string(),
-      arrivedOn: isoDate,
-    }),
-  ),
-  status: z.discriminatedUnion("kind", [
-    z.strictObject({ kind: z.literal("active") }),
-    z.strictObject({ kind: z.literal("retired") }),
-    z.strictObject({ kind: z.literal("cancelled"), reason: z.string() }),
-  ]),
-});
-
-export const corruptSave = "This save is corrupt, so it can't be loaded.";
+export { corruptSave, SaveError } from "./saveFormat";
+export type {
+  Program,
+  ProgramView,
+  Timeline,
+  TimelineEntry,
+  TurnPlan,
+  TurnResult,
+  TurnSummary,
+} from "./types";
 
 export interface Simulation {
   startProgram(seed: number): Program;
@@ -385,31 +210,9 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       };
     },
 
-    saveProgram(program) {
-      return { formatVersion: saveFormatVersion, program };
-    },
+    saveProgram,
 
-    restoreProgram(saved) {
-      // Only the version is checked first, because another format may have any other shape.
-      const version = z
-        .looseObject({ formatVersion: z.number() })
-        .safeParse(saved);
-      if (!version.success) throw new SaveError(corruptSave);
-      const { formatVersion } = version.data;
-      if (formatVersion !== saveFormatVersion) {
-        throw new SaveError(
-          `This save is in format ${formatVersion}, which this version of the game can't read.`,
-        );
-      }
-      const restored = savedProgramSchema.safeParse(version.data.program);
-      if (!restored.success) throw new SaveError(corruptSave);
-      if (restored.data.status.kind !== "active") {
-        throw new SaveError(
-          "This Program has ended, so it can't be continued.",
-        );
-      }
-      return restored.data;
-    },
+    restoreProgram,
 
     readProgram(program) {
       const nextThreshold = catalogue.fundingThresholds.find(

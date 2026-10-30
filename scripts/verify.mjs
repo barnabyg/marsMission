@@ -23,7 +23,7 @@ const gates = [
 
 const warningPattern = /\bwarn(ing)?s?\b/i;
 
-// The development server echoes the browser's console. This is the one warning e2e/journey.spec.ts
+// The development server echoes the browser's console. This is the one warning e2e/helpers.ts
 // also allows, for the same reason: it comes from inside @react-three/fiber 9.8.2. Remove it with
 // that exception.
 const allowedWarning = "THREE.Clock: This module has been deprecated";
