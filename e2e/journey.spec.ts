@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 import { tooltips } from "../src/ui/tooltips";
 import { productionBaseURL } from "../playwright.config";
 import {
+  cancelledAfterOneTurn,
+  overrideProgramData,
   playToNextTurn,
   termsWithoutTooltips,
   watchForProblems,
@@ -308,11 +310,7 @@ test("retires a Program and starts a new one from the Program summary", async ({
 test("lets a Turn pass without launching, and cancels the Program when Public Support falls too far", async ({
   page,
 }) => {
-  await page.route("**/data/program.json", async (route) => {
-    const response = await route.fetch();
-    const program = (await response.json()) as Record<string, unknown>;
-    await route.fulfill({ json: { ...program, cancellationLevel: 90 } });
-  });
+  await overrideProgramData(page, cancelledAfterOneTurn);
   await page.goto("/");
 
   await page
@@ -340,13 +338,7 @@ test("lets a Turn pass without launching, and cancels the Program when Public Su
 test("shows why a plan the player can't afford is rejected", async ({
   page,
 }) => {
-  await page.route("**/data/program.json", async (route) => {
-    const response = await route.fetch();
-    const program = (await response.json()) as Record<string, unknown>;
-    await route.fulfill({
-      json: { ...program, startingMoneyMillions: 500 },
-    });
-  });
+  await overrideProgramData(page, { startingMoneyMillions: 500 });
   await page.goto("/");
 
   await expect(page.getByRole("alert")).toContainText("costs $1B");

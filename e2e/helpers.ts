@@ -42,6 +42,25 @@ export function termsWithoutTooltips(page: Page): Promise<string[]> {
   }, termPattern.source);
 }
 
+/** Program data that gets cancelled at the end of its first Turn, whatever the real data files say. */
+export const cancelledAfterOneTurn = {
+  startingPublicSupport: 100,
+  publicSupportDrainPercent: 15,
+  cancellationLevel: 90,
+};
+
+/** Replaces values in the Program data file, for what the real data can't reach quickly. */
+export async function overrideProgramData(
+  page: Page,
+  overrides: Record<string, number>,
+): Promise<void> {
+  await page.route("**/data/program.json", async (route) => {
+    const response = await route.fetch();
+    const program = (await response.json()) as Record<string, unknown>;
+    await route.fulfill({ json: { ...program, ...overrides } });
+  });
+}
+
 /** Plays out a Turn in Mission Mode, whatever happens in it, and continues past its Turn summary. */
 export async function playToNextTurn(page: Page): Promise<void> {
   const screen = page.getByTestId("text-screen");

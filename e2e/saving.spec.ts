@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
 import {
+  cancelledAfterOneTurn,
+  overrideProgramData,
   playToNextTurn,
   termsWithoutTooltips,
   watchForProblems,
@@ -190,11 +192,7 @@ test("asks before a slot loaded when reopening the game replaces the automatic s
 test("can't continue a cancelled Program after seeing how it ended", async ({
   page,
 }) => {
-  await page.route("**/data/program.json", async (route) => {
-    const response = await route.fetch();
-    const program = (await response.json()) as Record<string, unknown>;
-    await route.fulfill({ json: { ...program, cancellationLevel: 90 } });
-  });
+  await overrideProgramData(page, cancelledAfterOneTurn);
   await page.goto("/");
   await page
     .getByRole("button", { name: "End Turn without launching" })
