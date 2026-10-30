@@ -51,11 +51,23 @@ const missionEventsSchema = z.array(
   }),
 );
 
+const milestonesSchema = z.array(
+  z.strictObject({
+    id,
+    name: z.string().min(1),
+    description: z.string().min(1),
+    trigger: z.strictObject({ assetKindArrives: id }),
+    science: z.number().int().nonnegative(),
+    publicSupport: z.number().int().nonnegative(),
+  }),
+);
+
 const schemas = {
   program: programSchema,
   launchVehicles: launchVehiclesSchema,
   assets: assetsSchema,
   missionEvents: missionEventsSchema,
+  milestones: milestonesSchema,
 };
 
 /** The data file behind each part of the catalogue, relative to the data folder. */
@@ -64,6 +76,7 @@ export const catalogueFileNames = {
   launchVehicles: "launch-vehicles.json",
   assets: "assets.json",
   missionEvents: "mission-events.json",
+  milestones: "milestones.json",
 } as const satisfies Record<keyof typeof schemas, string>;
 
 export interface Catalogue {
@@ -71,6 +84,7 @@ export interface Catalogue {
   launchVehicles: z.output<typeof launchVehiclesSchema>;
   assets: z.output<typeof assetsSchema>;
   missionEvents: z.output<typeof missionEventsSchema>;
+  milestones: z.output<typeof milestonesSchema>;
 }
 
 export type CatalogueFiles = Catalogue;
@@ -101,12 +115,14 @@ function findDuplicates(ids: string[]): string[] {
 
 function crossCheck(catalogue: Catalogue): string[] {
   const problems: string[] = [];
-  const { program, launchVehicles, assets, missionEvents } = catalogue;
+  const { program, launchVehicles, assets, missionEvents, milestones } =
+    catalogue;
 
   const parts = [
     [catalogueFileNames.launchVehicles, launchVehicles],
     [catalogueFileNames.assets, assets],
     [catalogueFileNames.missionEvents, missionEvents],
+    [catalogueFileNames.milestones, milestones],
   ] as const;
   for (const [file, items] of parts) {
     for (const duplicate of findDuplicates(items.map((item) => item.id))) {
@@ -128,6 +144,16 @@ function crossCheck(catalogue: Catalogue): string[] {
           );
         }
       }
+    }
+  }
+
+  const assetKinds = new Set(assets.map((asset) => asset.kind));
+  for (const milestone of milestones) {
+    const kind = milestone.trigger.assetKindArrives;
+    if (!assetKinds.has(kind)) {
+      problems.push(
+        `${catalogueFileNames.milestones}: "${milestone.id}" needs an Asset of kind "${kind}", but ${catalogueFileNames.assets} has none`,
+      );
     }
   }
 
@@ -168,11 +194,24 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     problems,
   );
 
-  if (!program || !launchVehicles || !assets || !missionEvents) {
+  const milestones = parsePart(
+    catalogueFileNames.milestones,
+    schemas.milestones,
+    files.milestones,
+    problems,
+  );
+
+  if (!program || !launchVehicles || !assets || !missionEvents || !milestones) {
     throw new CatalogueError(problems.join("\n"));
   }
 
-  const catalogue = { program, launchVehicles, assets, missionEvents };
+  const catalogue = {
+    program,
+    launchVehicles,
+    assets,
+    missionEvents,
+    milestones,
+  };
   const crossCheckProblems = crossCheck(catalogue);
   if (crossCheckProblems.length > 0) {
     throw new CatalogueError(crossCheckProblems.join("\n"));

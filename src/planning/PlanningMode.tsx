@@ -50,6 +50,10 @@ export function PlanningMode({
             <dt>Public Support</dt>
             <dd data-testid="public-support">{view.publicSupport}</dd>
           </div>
+          <div>
+            <dt>Science</dt>
+            <dd data-testid="science">{view.science}</dd>
+          </div>
         </dl>
       </header>
 
@@ -106,6 +110,19 @@ export function PlanningMode({
         >
           Launch Mission
         </button>
+      </section>
+
+      <section className="panel">
+        <h2>Milestones</h2>
+        {view.milestones.length === 0 ? (
+          <p>None yet.</p>
+        ) : (
+          <ul data-testid="milestones">
+            {view.milestones.map((milestone) => (
+              <li key={milestone.id}>{milestone.name}</li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="panel">

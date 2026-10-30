@@ -48,6 +48,14 @@ describe("the real data files", () => {
   });
 });
 
+describe("the real Milestones", () => {
+  it("award the first orbiter 200 Public Support", () => {
+    const { milestones } = parseCatalogue(realFiles());
+    expect(milestones).toHaveLength(1);
+    expect(milestones[0]?.publicSupport).toBe(200);
+  });
+});
+
 describe("invalid data files", () => {
   it("name the file and field when a number is mistyped", () => {
     const files = testCatalogueFiles();
@@ -83,6 +91,21 @@ describe("invalid data files", () => {
     const asset = files.assets[0];
     const message = errorFrom({ ...files, assets: [asset, asset] });
     expect(message).toContain("test-orbiter");
+  });
+
+  it("reject a Milestone for a kind of Asset that doesn't exist", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      milestones: [
+        {
+          ...files.milestones[0],
+          trigger: { assetKindArrives: "submarine" },
+        },
+      ],
+    });
+    expect(message).toContain("milestones.json");
+    expect(message).toContain("submarine");
   });
 
   it("reject a date that isn't a real date", () => {

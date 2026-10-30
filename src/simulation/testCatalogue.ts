@@ -37,6 +37,31 @@ export function testCatalogueFiles(): CatalogueFiles {
         costMillions: 5000,
         missionEvents: ["test-arrival"],
       },
+      {
+        id: "test-relay",
+        name: "Test Relay",
+        kind: "relay",
+        costMillions: 100,
+        missionEvents: ["test-arrival"],
+      },
+    ],
+    milestones: [
+      {
+        id: "first-orbiter",
+        name: "First orbiter",
+        description: "An orbiter reached Mars.",
+        trigger: { assetKindArrives: "orbiter" },
+        science: 100,
+        publicSupport: 200,
+      },
+      {
+        id: "first-relay",
+        name: "First relay",
+        description: "A relay reached Mars.",
+        trigger: { assetKindArrives: "relay" },
+        science: 10,
+        publicSupport: 100,
+      },
     ],
     missionEvents: [
       {

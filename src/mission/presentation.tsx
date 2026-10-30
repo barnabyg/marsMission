@@ -15,9 +15,13 @@ const presentations: Partial<
   Record<string, ComponentType<EntryPresentationProps>>
 > = {};
 
+function keyFor(entry: TimelineEntry): string {
+  return entry.kind === "missionEvent"
+    ? `missionEvent:${entry.eventId}:${entry.outcome}`
+    : entry.kind;
+}
+
 /** Shows one timeline entry in whichever way the lookup says. */
 export function EntryPresentation(props: EntryPresentationProps) {
-  const { entry } = props;
-  const key = `${entry.kind}:${entry.eventId}:${entry.outcome}`;
-  return createElement(presentations[key] ?? TextScreen, props);
+  return createElement(presentations[keyFor(props.entry)] ?? TextScreen, props);
 }

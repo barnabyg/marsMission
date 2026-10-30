@@ -24,6 +24,8 @@ export interface Program {
   date: string;
   moneyMillions: number;
   publicSupport: number;
+  science: number;
+  milestoneIds: string[];
   operatingAssets: OperatingAsset[];
 }
 
@@ -32,6 +34,8 @@ interface ProgramView {
   date: string;
   moneyMillions: number;
   publicSupport: number;
+  science: number;
+  milestones: { id: string; name: string }[];
   operatingAssets: OperatingAsset[];
   launchVehicles: { id: string; name: string; costMillions: number }[];
   assets: { id: string; name: string; kind: string; costMillions: number }[];
@@ -46,7 +50,32 @@ interface MissionEventEntry {
   outcome: "success";
 }
 
-export type TimelineEntry = MissionEventEntry;
+interface MilestoneEntry {
+  kind: "milestone";
+  day: number;
+  milestoneId: string;
+  title: string;
+  description: string;
+}
+
+export type TimelineEntry = MissionEventEntry | MilestoneEntry;
+
+interface AwardedMilestone {
+  name: string;
+  science: number;
+  publicSupport: number;
+}
+
+/** What changed over a Turn. */
+export interface TurnSummary {
+  missionCostMillions: number;
+  moneyStartMillions: number;
+  moneyEndMillions: number;
+  scienceGained: number;
+  publicSupportStart: number;
+  publicSupportEnd: number;
+  milestones: AwardedMilestone[];
+}
 
 /** What happened in a Turn, for Mission Mode to display. */
 export interface Timeline {
@@ -66,6 +95,7 @@ export interface Timeline {
 export interface TurnResult {
   program: Program;
   timeline: Timeline;
+  summary: TurnSummary;
 }
 
 export interface Simulation {
@@ -87,6 +117,10 @@ export function formatMoney(millions: number): string {
   const size = Math.abs(millions);
   if (size >= 1000) return `${sign}$${String(size / 1000)}B`;
   return `${sign}$${String(size)}M`;
+}
+
+function sum(values: number[]): number {
+  return values.reduce((total, value) => total + value, 0);
 }
 
 export function createSimulation(catalogue: Catalogue): Simulation {
@@ -150,6 +184,8 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         date: firstLaunchWindow,
         moneyMillions: startingMoneyMillions,
         publicSupport: startingPublicSupport,
+        science: 0,
+        milestoneIds: [],
         operatingAssets: [],
       };
     },
@@ -160,6 +196,10 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         date: program.date,
         moneyMillions: program.moneyMillions,
         publicSupport: program.publicSupport,
+        science: program.science,
+        milestones: catalogue.milestones
+          .filter(({ id }) => program.milestoneIds.includes(id))
+          .map(({ id, name }) => ({ id, name })),
         operatingAssets: program.operatingAssets,
         launchVehicles: catalogue.launchVehicles.map(
           ({ id, name, costMillions }) => ({ id, name, costMillions }),
@@ -183,26 +223,52 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       const vehicle = catalogue.launchVehicles.find(
         (candidate) => candidate.id === plan.mission.launchVehicleId,
       );
-      const assets = catalogue.assets.filter((candidate) =>
-        plan.mission.assetIds.includes(candidate.id),
-      );
       if (!vehicle) throw new Error("The plan has no Launch Vehicle");
+      const assets = plan.mission.assetIds.flatMap((assetId) =>
+        catalogue.assets.filter((candidate) => candidate.id === assetId),
+      );
 
       const eventIds = [
         ...vehicle.missionEvents,
         ...new Set(assets.flatMap((asset) => asset.missionEvents)),
       ];
-      const entries = eventIds
+      const missionEvents = eventIds
         .map(dayOfEvent)
         .sort((first, second) => first.day - second.day);
 
+      const arrivingKinds = assets.map((asset) => asset.kind);
+      const awarded = catalogue.milestones.filter(
+        ({ id, trigger }) =>
+          !program.milestoneIds.includes(id) &&
+          arrivingKinds.includes(trigger.assetKindArrives),
+      );
+      const scienceGained = sum(awarded.map(({ science }) => science));
+      const publicSupportGained = sum(
+        awarded.map(({ publicSupport }) => publicSupport),
+      );
+      const milestoneEntries = awarded.map((milestone): MilestoneEntry => ({
+        kind: "milestone",
+        day: transferDays,
+        milestoneId: milestone.id,
+        title: milestone.name,
+        description: `${milestone.description} It awards ${milestone.science} Science and ${milestone.publicSupport} Public Support.`,
+      }));
+
+      const moneyEndMillions = program.moneyMillions - costMillions;
+      const publicSupportEnd = program.publicSupport + publicSupportGained;
       const arrivedOn = addDays(program.date, transferDays);
       return {
         program: {
           ...program,
           turnNumber: program.turnNumber + 1,
           date: addDays(program.date, launchWindowIntervalDays),
-          moneyMillions: program.moneyMillions - costMillions,
+          moneyMillions: moneyEndMillions,
+          publicSupport: publicSupportEnd,
+          science: program.science + scienceGained,
+          milestoneIds: [
+            ...program.milestoneIds,
+            ...awarded.map(({ id }) => id),
+          ],
           operatingAssets: [
             ...program.operatingAssets,
             ...assets.map((asset) => ({
@@ -225,7 +291,20 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           operatingAssetNames: program.operatingAssets.map(
             (asset) => asset.name,
           ),
-          entries,
+          entries: [...missionEvents, ...milestoneEntries],
+        },
+        summary: {
+          missionCostMillions: costMillions,
+          moneyStartMillions: program.moneyMillions,
+          moneyEndMillions,
+          scienceGained,
+          publicSupportStart: program.publicSupport,
+          publicSupportEnd,
+          milestones: awarded.map(({ name, science, publicSupport }) => ({
+            name,
+            science,
+            publicSupport,
+          })),
         },
       };
     },

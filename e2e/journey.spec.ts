@@ -53,6 +53,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
     "Launch",
     "Mars transfer burn",
     "Mars orbit insertion",
+    "First orbiter at Mars",
   ]) {
     await expect(screen.getByRole("heading")).toHaveText(title);
     await screen.getByRole("button", { name: "Continue" }).click();
@@ -64,10 +65,20 @@ test("plays from a new Program through a launch to the next Turn", async ({
     "Pathfinder Orbiter",
   );
 
+  const summary = page.getByTestId("turn-summary");
+  await expect(summary).toContainText("First orbiter at Mars");
+  await expect(summary).toContainText("100 Science");
+  await page.getByRole("button", { name: "Continue" }).click();
+
   await expect(
     page.getByRole("heading", { name: "Planning Mode" }),
   ).toBeVisible();
   await expect(page.getByTestId("turn-number")).toHaveText("2");
+  await expect(page.getByTestId("science")).toHaveText("100");
+  await expect(page.getByTestId("public-support")).toHaveText("300");
+  await expect(page.getByTestId("milestones")).toContainText(
+    "First orbiter at Mars",
+  );
   await expect(page.getByTestId("launch-window")).toHaveText("January 2031");
   await expect(page.getByTestId("money")).toHaveText("$1B");
   await expect(page.getByTestId("operating-assets")).toContainText(

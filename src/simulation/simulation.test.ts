@@ -31,6 +31,7 @@ describe("starting a Program", () => {
     expect(view.assets.map((asset) => asset.id)).toEqual([
       "test-orbiter",
       "gold-orbiter",
+      "test-relay",
     ]);
   });
 });
@@ -85,7 +86,9 @@ describe("running a Turn with a Mission", () => {
     const { simulation, program } = setup();
     const { timeline } = simulation.runTurn(program, sendOrbiter);
     expect(
-      timeline.entries.map((entry) => [entry.title, entry.day, entry.outcome]),
+      timeline.entries
+        .filter((entry) => entry.kind === "missionEvent")
+        .map((entry) => [entry.title, entry.day, entry.outcome]),
     ).toEqual([
       ["Test launch", 0, "success"],
       ["Test burn", 1, "success"],
@@ -140,6 +143,75 @@ describe("running a Turn with a Mission", () => {
     const view = simulation.readProgram(next);
     expect(view.turnNumber).toBe(2);
     expect(view.date).toBe("2031-01-20");
+  });
+});
+
+describe("Milestones", () => {
+  it("awards the Milestone's Science and Public Support when the first orbiter arrives", () => {
+    const { simulation, program } = setup();
+    const { program: next } = simulation.runTurn(program, sendOrbiter);
+    const view = simulation.readProgram(next);
+    expect(view.science).toBe(100);
+    expect(view.publicSupport).toBe(300);
+    expect(view.milestones.map((milestone) => milestone.name)).toEqual([
+      "First orbiter",
+    ]);
+  });
+
+  it("starts a Program with no Science and no Milestones", () => {
+    const { simulation, program } = setup();
+    const view = simulation.readProgram(program);
+    expect(view.science).toBe(0);
+    expect(view.milestones).toEqual([]);
+  });
+
+  it("doesn't award the same Milestone for a second orbiter", () => {
+    const { simulation, program } = setup();
+    const first = simulation.runTurn(program, sendOrbiter);
+    const second = simulation.runTurn(first.program, sendOrbiter);
+    const view = simulation.readProgram(second.program);
+    expect(view.science).toBe(100);
+    expect(view.milestones).toHaveLength(1);
+    expect(second.summary.milestones).toEqual([]);
+    expect(
+      second.timeline.entries.filter((entry) => entry.kind === "milestone"),
+    ).toEqual([]);
+  });
+
+  it("appears on the timeline after the arrival that earned it", () => {
+    const { simulation, program } = setup();
+    const { timeline } = simulation.runTurn(program, sendOrbiter);
+    expect(timeline.entries.map((entry) => [entry.title, entry.day])).toEqual([
+      ["Test launch", 0],
+      ["Test burn", 1],
+      ["Test arrival", 200],
+      ["First orbiter", 200],
+    ]);
+  });
+
+  it("is reported in the Turn summary with the Turn's other changes", () => {
+    const { simulation, program } = setup();
+    const { summary } = simulation.runTurn(program, sendOrbiter);
+    expect(summary).toMatchObject({
+      missionCostMillions: 500,
+      moneyStartMillions: 2000,
+      moneyEndMillions: 1500,
+      scienceGained: 100,
+      publicSupportStart: 100,
+      publicSupportEnd: 300,
+      milestones: [{ name: "First orbiter", science: 100, publicSupport: 200 }],
+    });
+  });
+
+  it("awards a Milestone for each kind of Asset that arrives", () => {
+    const { simulation, program } = setup();
+    const { program: next } = simulation.runTurn(program, {
+      mission: {
+        launchVehicleId: "test-vehicle",
+        assetIds: ["test-orbiter", "test-relay"],
+      },
+    });
+    expect(simulation.readProgram(next).science).toBe(110);
   });
 });
 

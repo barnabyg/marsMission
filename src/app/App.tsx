@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MissionMode } from "../mission/MissionMode";
+import { TurnSummaryScreen } from "../mission/TurnSummaryScreen";
 import { PlanningMode } from "../planning/PlanningMode";
 import type {
   Program,
@@ -10,7 +11,8 @@ import type {
 
 type Screen =
   | { mode: "planning"; program: Program }
-  | { mode: "mission"; result: TurnResult };
+  | { mode: "mission"; result: TurnResult }
+  | { mode: "turnSummary"; result: TurnResult };
 
 export function App({ simulation }: { simulation: Simulation }) {
   const [screen, setScreen] = useState<Screen>(() => ({
@@ -35,10 +37,21 @@ export function App({ simulation }: { simulation: Simulation }) {
   }
 
   const { result } = screen;
+  if (screen.mode === "mission") {
+    return (
+      <MissionMode
+        timeline={result.timeline}
+        onFinished={() => {
+          setScreen({ mode: "turnSummary", result });
+        }}
+      />
+    );
+  }
+
   return (
-    <MissionMode
-      timeline={result.timeline}
-      onFinished={() => {
+    <TurnSummaryScreen
+      summary={result.summary}
+      onContinue={() => {
         setScreen({ mode: "planning", program: result.program });
       }}
     />

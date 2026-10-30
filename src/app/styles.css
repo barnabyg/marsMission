@@ -238,6 +238,35 @@ button.primary {
   margin: 0;
 }
 
+.summary-screen {
+  display: grid;
+  gap: 1.5rem;
+  justify-items: start;
+  max-width: 50rem;
+  margin: 0 auto;
+  padding: 4rem 3rem;
+}
+
+.summary-screen table {
+  border-collapse: collapse;
+}
+
+.summary-screen th {
+  text-align: left;
+  font-weight: 400;
+  color: var(--muted);
+  padding: 0.3rem 3rem 0.3rem 0;
+}
+
+.summary-screen td {
+  font-weight: 600;
+}
+
+.summary-screen ul,
+.summary-screen p {
+  margin: 0;
+}
+
 .load-error {
   padding: 3rem;
 }
