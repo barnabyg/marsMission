@@ -1,0 +1,3 @@
+# Plausible abstraction instead of real orbital mechanics
+
+The simulation is deliberately simplified. Launch Window dates and transfer times are realistic, mass is checked against launch-vehicle capacity and delta-v is simplified, but players pick from fixed trajectory types instead of designing trajectories. Mission Event outcomes are resolved from probabilities, not physics. We rejected full orbital mechanics (rocket equation, free trajectory design) because the game is about Program-level trade-offs between safety, duration, science and Public Support, not piloting. Don't add physics fidelity that doesn't change a player decision.
