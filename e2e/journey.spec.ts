@@ -85,14 +85,17 @@ test("plays from a new Program through a launch to the next Turn", async ({
   ]) {
     await expect(screen.getByRole("heading")).toHaveText(title);
     expect(await termsWithoutTooltips(page)).toEqual([]);
+    // Checked here because the rest of the Turn is over in moments at this test's time scale.
+    if (title === "Funding Threshold reached: 300 Public Support") {
+      await expect(page.getByTestId("journey-progress")).toHaveText(
+        /Pathfinder Orbiter: arrived at Mars/,
+      );
+      await expect(page.getByTestId("operating-at-mars")).toHaveText(
+        "Pathfinder Orbiter",
+      );
+    }
     await screen.getByRole("button", { name: "Continue" }).click();
   }
-  await expect(page.getByTestId("journey-progress")).toHaveText(
-    /Pathfinder Orbiter: arrived at Mars/,
-  );
-  await expect(page.getByTestId("operating-at-mars")).toHaveText(
-    "Pathfinder Orbiter",
-  );
 
   const summary = page.getByTestId("turn-summary");
   await expect(summary).toContainText("First orbiter at Mars");
