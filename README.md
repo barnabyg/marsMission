@@ -16,7 +16,7 @@ What to try, and the feedback wanted, is in the [Phase 2 playtest guide](docs/pl
 
 ## Develop
 
-The Simulation (`src/simulation`) holds all the rules and knows nothing about the browser. The Catalogue (`src/catalogue`) loads and validates the data files in `public/data`. Everything else displays what the Simulation produces.
+The Simulation (`src/simulation`) holds all the rules and knows nothing about the browser. The Catalogue (`src/catalogue`) loads and validates the data files in `public/data`. The Save Store (`src/save`) keeps what the Simulation saves in the browser. Everything else displays what the Simulation produces.
 
 | Command                | What it does                                  |
 | ---------------------- | --------------------------------------------- |
