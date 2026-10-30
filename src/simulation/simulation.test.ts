@@ -483,6 +483,14 @@ describe("retirement", () => {
     ]);
   });
 
+  it("reports any plan for an ended Program as a problem", () => {
+    const { simulation, program } = setup();
+    const retired = simulation.retireProgram(program);
+    expect(simulation.validatePlan(retired, skipTurn).problems).toEqual([
+      "This Program has ended.",
+    ]);
+  });
+
   it("doesn't let a retired Program run another Turn", () => {
     const { simulation, program } = setup();
     const retired = simulation.retireProgram(program);

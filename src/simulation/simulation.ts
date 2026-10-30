@@ -155,6 +155,9 @@ function sum(values: number[]): number {
 
 export function createSimulation(catalogue: Catalogue): Simulation {
   function checkPlan(program: Program, plan: TurnPlan): PlanCheck {
+    if (program.status.kind !== "active") {
+      return { costMillions: 0, problems: ["This Program has ended."] };
+    }
     if (!plan.mission) return { costMillions: 0, problems: [] };
 
     const { launchVehicleId, assetIds } = plan.mission;
@@ -259,9 +262,6 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     validatePlan: checkPlan,
 
     runTurn(program, plan) {
-      if (program.status.kind !== "active") {
-        throw new Error("This Program has ended.");
-      }
       const { costMillions, problems } = checkPlan(program, plan);
       if (problems.length > 0) throw new Error(problems.join(" "));
 
