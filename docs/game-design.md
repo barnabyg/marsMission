@@ -1,6 +1,6 @@
 # Game design decisions
 
-The game rules settled so far, grouped by area. Most describe the finished game, so check Status below for what exists today. Vocabulary follows [GLOSSARY.md](../GLOSSARY.md); platform and fidelity decisions are in [docs/adr/](adr/). Items marked _open_ are still being decided.
+The game rules settled so far, grouped by area. Most describe the finished game, so check Status below for what exists today. Current balance values live only in the data files in [public/data](../public/data), so any figure here is an example, not the game's value. Vocabulary follows [GLOSSARY.md](../GLOSSARY.md); platform and fidelity decisions are in [docs/adr/](adr/). Items marked _open_ are still being decided.
 
 ## Status
 
@@ -112,17 +112,17 @@ The work is split into phases, each ending in a game the player can play and com
 ## Public Support and money
 
 - Milestones award Public Support points.
-- When Public Support reaches a Funding Threshold, it pays a fixed sum. For example, 100 points plus 200 for putting an orbiter at Mars crosses the 250-point threshold, which pays $1 billion.
+- When Public Support reaches a Funding Threshold, it pays a fixed sum. For example, 100 points plus 200 for putting an orbiter at Mars would cross a 250-point threshold, which might pay $1 billion.
 - Each Funding Threshold pays only the first time it is reached. Falling below and climbing back pays nothing.
 - There is no regular Appropriation. Running out of money through poor management is a way for the player to fail.
 - There is no separate bankruptcy rule. A player with no money lets Turns pass without launching, and Public Support drains until the Program is cancelled, unless what they've built keeps it going. Cancellation is the only way to lose.
 - Funding Thresholds are a fixed, limited list, mainly an early and mid-game boost.
 - Public Support falls by a percentage each Turn (for example 15%), so spikes fade fast and then level off. The Program is cancelled if it drops below the Cancellation Level (for example 50). Ongoing Research adds a small, steady amount, enough for a productive Program to stay above the Cancellation Level but not enough to keep reaching new Funding Thresholds. _To be checked in playtesting._
-- Costs are in millions of dollars, at roughly real-world scale. Starting figures, to be tuned: orbiter $0.5–1B, lander $1–2.5B, Crewed Mission $50B and up.
+- Costs are in millions of dollars, at roughly real-world scale. For example: orbiter $0.5–1B, lander $1–2.5B, Crewed Mission $50B and up.
 
 ## Starting conditions
 
-- The Program starts at the late-2028 Launch Window with $2.3B and 100 Public Support, so the 250-point Funding Threshold is the first payout. That is enough for a first orbiter and a retry if it fails, with a little left for Reliability.
+- The Program starts at the late-2028 Launch Window. Its starting money and Public Support, in [public/data/program.json](../public/data/program.json), are set so that a first orbiter reaches the first Funding Threshold, and so that the player can afford that orbiter and a retry if it fails, with a little left for Reliability.
 - Two well-known Landing Sites (for example Jezero and Gale) are available from the start, at high landing risk because they haven't been surveyed. The first Turn is a choice between surveying first and landing straight away.
 - No difficulty levels in the first version.
 

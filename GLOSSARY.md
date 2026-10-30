@@ -144,7 +144,7 @@ Points of public and political backing. Milestones add them, setbacks such as lo
 _Avoid_: Popularity, approval, morale
 
 **Funding Threshold**:
-One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached, for example $1 billion at 250 points. Reaching it again later pays nothing.
+One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached. Reaching it again later pays nothing.
 _Avoid_: Tier, level, bracket
 
 **Cancellation Level**:

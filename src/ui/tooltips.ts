@@ -68,7 +68,7 @@ export const tooltips = {
   "Public Support":
     "Points of public and political backing. Milestones add them, setbacks remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.",
   "Funding Threshold":
-    "One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached, for example $1 billion at 250 points. Reaching it again later pays nothing.",
+    "One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached. Reaching it again later pays nothing.",
   "Cancellation Level":
     "The Public Support level below which the Program is cancelled.",
   Duration:
