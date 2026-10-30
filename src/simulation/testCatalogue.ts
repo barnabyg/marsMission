@@ -13,6 +13,8 @@ export function testCatalogueFiles(): CatalogueFiles {
       startingMoneyMillions: 2000,
       startingPublicSupport: 100,
       transferDays: 200,
+      publicSupportDrainPercent: 15,
+      cancellationLevel: 50,
     },
     launchVehicles: [
       {

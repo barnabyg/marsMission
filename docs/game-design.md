@@ -5,7 +5,7 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 ## Program and Turns
 
 - A Program is open-ended. In practice it winds down when the player runs out of worthwhile things to build or do.
-- A Program ends when the player retires it or when Public Support falls to zero and it is cancelled. Either way, a Program summary shows total Science and the Milestones achieved.
+- A Program ends when the player retires it or when Public Support falls below the Cancellation Level and it is cancelled. Either way, a Program summary shows total Science and the Milestones achieved.
 - A late-game goal is to build up enough that the Program carries on indefinitely, producing enough money and Public Support with little input from the player.
 - At most one Mission is launched per Turn, as a single journey. This keeps Mission Mode buildable.
 - A Mission ends when it has delivered its Assets and Crew, or has failed. After that they operate at Mars on their own, so Mission Mode shows the Turn's Mission plus everything already operating.

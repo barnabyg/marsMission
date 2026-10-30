@@ -12,6 +12,11 @@ export function TurnSummaryScreen({
   return (
     <main className="summary-screen" data-testid="turn-summary">
       <h1>Turn summary</h1>
+      {summary.cancellationReason && (
+        <p className="problem" role="alert">
+          The Program has been cancelled. {summary.cancellationReason}
+        </p>
+      )}
       {summary.milestones.length > 0 && (
         <section>
           <h2>Milestones</h2>
@@ -44,9 +49,17 @@ export function TurnSummaryScreen({
           </tr>
           <tr>
             <th scope="row">Public Support</th>
-            <td>
+            <td data-testid="summary-public-support">
               {summary.publicSupportStart} to {summary.publicSupportEnd}
             </td>
+          </tr>
+          <tr>
+            <th scope="row">Gained from Milestones</th>
+            <td>{summary.publicSupportGained}</td>
+          </tr>
+          <tr>
+            <th scope="row">Faded over the Turn</th>
+            <td>{summary.publicSupportDrained}</td>
           </tr>
         </tbody>
       </table>

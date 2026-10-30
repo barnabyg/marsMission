@@ -20,6 +20,8 @@ import {
   type Planet,
 } from "./orbits";
 
+type Journey = NonNullable<Timeline["mission"]>;
+
 interface SolarSystemViewProps {
   timeline: Timeline;
   day: number;
@@ -127,8 +129,13 @@ function PlanetGlobe({
   );
 }
 
-function Route({ timeline }: { timeline: Timeline }) {
-  const { mission, startDate } = timeline;
+function Route({
+  mission,
+  startDate,
+}: {
+  mission: Journey;
+  startDate: string;
+}) {
   const geometry = useMemo(() => {
     const points: Vector3[] = [];
     for (let step = 0; step <= 120; step++) {
@@ -145,12 +152,16 @@ function Route({ timeline }: { timeline: Timeline }) {
   );
 }
 
-function Spacecraft({ timeline, day }: { timeline: Timeline; day: number }) {
-  const { x, z } = spacecraftPosition(
-    timeline.startDate,
-    timeline.mission,
-    day,
-  );
+function Spacecraft({
+  mission,
+  startDate,
+  day,
+}: {
+  mission: Journey;
+  startDate: string;
+  day: number;
+}) {
+  const { x, z } = spacecraftPosition(startDate, mission, day);
   return (
     <mesh position={[x, 0, z]}>
       <sphereGeometry args={[0.022, 24, 24]} />
@@ -253,12 +264,11 @@ export default function SolarSystemView({
   const date = addDays(timeline.startDate, Math.floor(day));
   const earth = planetPosition("earth", date);
   const mars = planetPosition("mars", date);
-  const spacecraft = spacecraftPosition(
-    timeline.startDate,
-    timeline.mission,
-    day,
-  );
-  const inFlight = day < timeline.mission.arrivalDay;
+  const { mission, startDate } = timeline;
+  const spacecraft = mission
+    ? spacecraftPosition(startDate, mission, day)
+    : { x: 0, z: 0 };
+  const inFlight = mission !== null && day < mission.arrivalDay;
 
   const earthLabel = useRef<HTMLDivElement>(null);
   const marsLabel = useRef<HTMLDivElement>(null);
@@ -301,8 +311,10 @@ export default function SolarSystemView({
           day={day}
           tiltDegrees={25.2}
         />
-        <Route timeline={timeline} />
-        {inFlight && <Spacecraft timeline={timeline} day={day} />}
+        {mission && <Route mission={mission} startDate={startDate} />}
+        {mission && inFlight && (
+          <Spacecraft mission={mission} startDate={startDate} day={day} />
+        )}
         <OperatingAssetMarkers
           date={date}
           day={day}
@@ -321,7 +333,7 @@ export default function SolarSystemView({
         className="view-label spacecraft-label"
         hidden={!inFlight}
       >
-        <span>{timeline.mission.assetNames.join(", ")}</span>
+        <span>{mission?.assetNames.join(", ")}</span>
       </div>
     </div>
   );

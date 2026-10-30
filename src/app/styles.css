@@ -119,6 +119,12 @@ button.primary {
   margin: 0;
 }
 
+.confirm {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .problem {
   color: var(--problem);
 }

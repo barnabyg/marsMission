@@ -1,8 +1,8 @@
 import type { Catalogue } from "../catalogue/catalogue";
 
 export interface TurnPlan {
-  /** The Turn's one Mission. */
-  mission: { launchVehicleId: string; assetIds: string[] };
+  /** The Turn's one Mission, or null to let the Turn pass without launching. */
+  mission: { launchVehicleId: string; assetIds: string[] } | null;
 }
 
 interface PlanCheck {
@@ -17,6 +17,11 @@ interface OperatingAsset {
   arrivedOn: string;
 }
 
+type ProgramStatus =
+  | { kind: "active" }
+  | { kind: "retired" }
+  | { kind: "cancelled"; reason: string };
+
 /** Everything about a Program in progress, as plain data. Treat it as opaque and read it through the Simulation. */
 export interface Program {
   seed: number;
@@ -27,9 +32,12 @@ export interface Program {
   science: number;
   milestoneIds: string[];
   operatingAssets: OperatingAsset[];
+  status: ProgramStatus;
 }
 
 interface ProgramView {
+  status: ProgramStatus;
+  cancellationLevel: number;
   turnNumber: number;
   date: string;
   moneyMillions: number;
@@ -73,20 +81,25 @@ export interface TurnSummary {
   moneyEndMillions: number;
   scienceGained: number;
   publicSupportStart: number;
+  publicSupportGained: number;
+  publicSupportDrained: number;
   publicSupportEnd: number;
   milestones: AwardedMilestone[];
+  /** Why the Program was cancelled at the end of this Turn, if it was. */
+  cancellationReason: string | null;
 }
 
 /** What happened in a Turn, for Mission Mode to display. */
 export interface Timeline {
   startDate: string;
   durationDays: number;
+  /** The Mission launched this Turn, if any. */
   mission: {
     launchDay: number;
     arrivalDay: number;
     launchVehicleName: string;
     assetNames: string[];
-  };
+  } | null;
   /** The Assets already operating at Mars when the Turn began. */
   operatingAssetNames: string[];
   entries: TimelineEntry[];
@@ -103,6 +116,7 @@ export interface Simulation {
   readProgram(program: Program): ProgramView;
   validatePlan(program: Program, plan: TurnPlan): PlanCheck;
   runTurn(program: Program, plan: TurnPlan): TurnResult;
+  retireProgram(program: Program): Program;
 }
 
 const millisecondsPerDay = 86_400_000;
@@ -125,6 +139,8 @@ function sum(values: number[]): number {
 
 export function createSimulation(catalogue: Catalogue): Simulation {
   function checkPlan(program: Program, plan: TurnPlan): PlanCheck {
+    if (!plan.mission) return { costMillions: 0, problems: [] };
+
     const { launchVehicleId, assetIds } = plan.mission;
     const problems: string[] = [];
     let costMillions = 0;
@@ -187,11 +203,14 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         science: 0,
         milestoneIds: [],
         operatingAssets: [],
+        status: { kind: "active" },
       };
     },
 
     readProgram(program) {
       return {
+        status: program.status,
+        cancellationLevel: catalogue.program.cancellationLevel,
         turnNumber: program.turnNumber,
         date: program.date,
         moneyMillions: program.moneyMillions,
@@ -216,20 +235,28 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     validatePlan: checkPlan,
 
     runTurn(program, plan) {
+      if (program.status.kind !== "active") {
+        throw new Error("This Program has ended.");
+      }
       const { costMillions, problems } = checkPlan(program, plan);
       if (problems.length > 0) throw new Error(problems.join(" "));
 
-      const { launchWindowIntervalDays, transferDays } = catalogue.program;
+      const {
+        launchWindowIntervalDays,
+        transferDays,
+        publicSupportDrainPercent,
+        cancellationLevel,
+      } = catalogue.program;
+
       const vehicle = catalogue.launchVehicles.find(
-        (candidate) => candidate.id === plan.mission.launchVehicleId,
+        (candidate) => candidate.id === plan.mission?.launchVehicleId,
       );
-      if (!vehicle) throw new Error("The plan has no Launch Vehicle");
-      const assets = plan.mission.assetIds.flatMap((assetId) =>
+      const assets = (plan.mission?.assetIds ?? []).flatMap((assetId) =>
         catalogue.assets.filter((candidate) => candidate.id === assetId),
       );
 
       const eventIds = [
-        ...vehicle.missionEvents,
+        ...(vehicle?.missionEvents ?? []),
         ...new Set(assets.flatMap((asset) => asset.missionEvents)),
       ];
       const missionEvents = eventIds
@@ -255,7 +282,18 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       }));
 
       const moneyEndMillions = program.moneyMillions - costMillions;
-      const publicSupportEnd = program.publicSupport + publicSupportGained;
+
+      // Rounding down keeps Public Support whole and means it always falls, so it can't stick above the Cancellation Level.
+      const publicSupportBeforeDrain =
+        program.publicSupport + publicSupportGained;
+      const publicSupportEnd = Math.floor(
+        (publicSupportBeforeDrain * (100 - publicSupportDrainPercent)) / 100,
+      );
+      const cancellationReason =
+        publicSupportEnd < cancellationLevel
+          ? `Public Support fell to ${publicSupportEnd}, below the Cancellation Level of ${cancellationLevel}.`
+          : null;
+
       const arrivedOn = addDays(program.date, transferDays);
       return {
         program: {
@@ -278,16 +316,22 @@ export function createSimulation(catalogue: Catalogue): Simulation {
               arrivedOn,
             })),
           ],
+          status:
+            cancellationReason === null
+              ? program.status
+              : { kind: "cancelled", reason: cancellationReason },
         },
         timeline: {
           startDate: program.date,
           durationDays: launchWindowIntervalDays,
-          mission: {
-            launchDay: 0,
-            arrivalDay: transferDays,
-            launchVehicleName: vehicle.name,
-            assetNames: assets.map((asset) => asset.name),
-          },
+          mission: vehicle
+            ? {
+                launchDay: 0,
+                arrivalDay: transferDays,
+                launchVehicleName: vehicle.name,
+                assetNames: assets.map((asset) => asset.name),
+              }
+            : null,
           operatingAssetNames: program.operatingAssets.map(
             (asset) => asset.name,
           ),
@@ -299,14 +343,24 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           moneyEndMillions,
           scienceGained,
           publicSupportStart: program.publicSupport,
+          publicSupportGained,
+          publicSupportDrained: publicSupportBeforeDrain - publicSupportEnd,
           publicSupportEnd,
           milestones: awarded.map(({ name, science, publicSupport }) => ({
             name,
             science,
             publicSupport,
           })),
+          cancellationReason,
         },
       };
+    },
+
+    retireProgram(program) {
+      if (program.status.kind !== "active") {
+        throw new Error("This Program has ended.");
+      }
+      return { ...program, status: { kind: "retired" } };
     },
   };
 }

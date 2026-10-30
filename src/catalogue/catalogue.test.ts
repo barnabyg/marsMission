@@ -6,6 +6,7 @@ import {
   parseCatalogue,
   type CatalogueFiles,
 } from "./catalogue";
+import { createSimulation } from "../simulation/simulation";
 import { testCatalogueFiles } from "../simulation/testCatalogue";
 
 function realFiles(): CatalogueFiles {
@@ -39,6 +40,22 @@ describe("the real data files", () => {
     const { program } = parseCatalogue(realFiles());
     expect(program.firstLaunchWindow).toMatch(/^2028-(1[0-2])/);
     expect(program.startingMoneyMillions).toBe(2000);
+  });
+
+  it("drain 15% per Turn with a Cancellation Level of 50", () => {
+    const { program } = parseCatalogue(realFiles());
+    expect(program.publicSupportDrainPercent).toBe(15);
+    expect(program.cancellationLevel).toBe(50);
+  });
+
+  it("cancel a Program that only skips Turns", () => {
+    const simulation = createSimulation(parseCatalogue(realFiles()));
+    let program = simulation.startProgram(1);
+    for (let turn = 0; turn < 100; turn++) {
+      if (simulation.readProgram(program).status.kind !== "active") break;
+      program = simulation.runTurn(program, { mission: null }).program;
+    }
+    expect(simulation.readProgram(program).status.kind).toBe("cancelled");
   });
 
   it("offer one Launch Vehicle and one orbiter", () => {
@@ -106,6 +123,24 @@ describe("invalid data files", () => {
     });
     expect(message).toContain("milestones.json");
     expect(message).toContain("submarine");
+  });
+
+  it("reject a Cancellation Level that could never be fallen below", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      program: { ...files.program, cancellationLevel: 0 },
+    });
+    expect(message).toContain("cancellationLevel");
+  });
+
+  it("reject a drain that wouldn't reduce Public Support", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      program: { ...files.program, publicSupportDrainPercent: 0 },
+    });
+    expect(message).toContain("publicSupportDrainPercent");
   });
 
   it("reject a date that isn't a real date", () => {

@@ -11,18 +11,21 @@ interface PlanningModeProps {
   simulation: Simulation;
   program: Program;
   onSubmit: (plan: TurnPlan) => void;
+  onRetire: () => void;
 }
 
 export function PlanningMode({
   simulation,
   program,
   onSubmit,
+  onRetire,
 }: PlanningModeProps) {
   const view = simulation.readProgram(program);
   const [launchVehicleId, setLaunchVehicleId] = useState(
     view.launchVehicles[0]?.id ?? "",
   );
   const [assetId, setAssetId] = useState(view.assets[0]?.id ?? "");
+  const [confirmingRetirement, setConfirmingRetirement] = useState(false);
 
   const plan: TurnPlan = {
     mission: { launchVehicleId, assetIds: [assetId] },
@@ -49,6 +52,10 @@ export function PlanningMode({
           <div>
             <dt>Public Support</dt>
             <dd data-testid="public-support">{view.publicSupport}</dd>
+          </div>
+          <div>
+            <dt>Cancellation Level</dt>
+            <dd>{view.cancellationLevel}</dd>
           </div>
           <div>
             <dt>Science</dt>
@@ -110,6 +117,14 @@ export function PlanningMode({
         >
           Launch Mission
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            onSubmit({ mission: null });
+          }}
+        >
+          End Turn without launching
+        </button>
       </section>
 
       <section className="panel">
@@ -135,6 +150,38 @@ export function PlanningMode({
               <li key={`${asset.assetId}-${asset.arrivedOn}`}>{asset.name}</li>
             ))}
           </ul>
+        )}
+      </section>
+      <section className="panel">
+        <h2>Retire</h2>
+        {confirmingRetirement ? (
+          <div
+            role="dialog"
+            aria-label="Confirm retirement"
+            className="confirm"
+          >
+            <p>Retire this Program? This ends it for good.</p>
+            <button type="button" className="primary" onClick={onRetire}>
+              Yes, retire the Program
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmingRetirement(false);
+              }}
+            >
+              Keep going
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setConfirmingRetirement(true);
+            }}
+          >
+            Retire Program
+          </button>
         )}
       </section>
     </main>

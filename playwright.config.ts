@@ -9,6 +9,8 @@ export default defineConfig({
   forbidOnly: true,
   reporter: "list",
   timeout: 180_000,
+  // Software rendering at 4K is slow, so Mission Mode can take a while on machines without a GPU.
+  expect: { timeout: 30_000 },
   use: {
     ...devices["Desktop Chrome"],
     baseURL: `http://localhost:${port}`,
@@ -25,6 +27,6 @@ export default defineConfig({
     reuseExistingServer: false,
     stdout: "ignore",
     // Development-only: runs Mission Mode fast enough for browser tests.
-    env: { VITE_MISSION_TIME_SCALE: "300" },
+    env: { VITE_MISSION_TIME_SCALE: "1000" },
   },
 });

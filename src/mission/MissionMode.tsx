@@ -27,11 +27,11 @@ export function MissionMode({ timeline, onFinished }: MissionModeProps) {
   const turnProgress = (state.day / timeline.durationDays) * 100;
 
   const { mission } = timeline;
-  const progress = journeyProgress(mission, state.day);
+  const progress = mission ? journeyProgress(mission, state.day) : 0;
   const operatingAssets =
-    progress < 1
-      ? timeline.operatingAssetNames
-      : [...timeline.operatingAssetNames, ...mission.assetNames];
+    mission && progress >= 1
+      ? [...timeline.operatingAssetNames, ...mission.assetNames]
+      : timeline.operatingAssetNames;
 
   return (
     <main className="mission">
@@ -72,9 +72,11 @@ export function MissionMode({ timeline, onFinished }: MissionModeProps) {
       </header>
       <aside className="mission-side">
         <p data-testid="journey-progress">
-          {progress < 1
-            ? `${mission.assetNames.join(", ")}: ${Math.round(progress * 100)}% of the way to Mars`
-            : `${mission.assetNames.join(", ")}: arrived at Mars`}
+          {!mission && "No Mission this Turn"}
+          {mission &&
+            (progress < 1
+              ? `${mission.assetNames.join(", ")}: ${Math.round(progress * 100)}% of the way to Mars`
+              : `${mission.assetNames.join(", ")}: arrived at Mars`)}
         </p>
         <h2>Operating at Mars</h2>
         <ul data-testid="operating-at-mars">

@@ -18,6 +18,9 @@ const programSchema = z.strictObject({
   startingMoneyMillions: money,
   startingPublicSupport: z.number().int().nonnegative(),
   transferDays: z.number().int().positive(),
+  // At least 1%, and a level of at least 1, so a Program that only skips Turns is always cancelled.
+  publicSupportDrainPercent: z.number().int().min(1).max(100),
+  cancellationLevel: z.number().int().min(1),
 });
 
 const launchVehiclesSchema = z.array(

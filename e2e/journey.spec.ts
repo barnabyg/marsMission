@@ -75,7 +75,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   ).toBeVisible();
   await expect(page.getByTestId("turn-number")).toHaveText("2");
   await expect(page.getByTestId("science")).toHaveText("100");
-  await expect(page.getByTestId("public-support")).toHaveText("300");
+  await expect(page.getByTestId("public-support")).toHaveText("255");
   await expect(page.getByTestId("milestones")).toContainText(
     "First orbiter at Mars",
   );
@@ -85,6 +85,60 @@ test("plays from a new Program through a launch to the next Turn", async ({
     "Pathfinder Orbiter",
   );
   expect(problems).toEqual([]);
+});
+
+test("retires a Program and starts a new one from the Program summary", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Retire Program" }).click();
+  await page.getByRole("button", { name: "Keep going" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Planning Mode" }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Retire Program" }).click();
+  await page.getByRole("button", { name: "Yes, retire the Program" }).click();
+
+  const summary = page.getByTestId("program-summary");
+  await expect(summary).toContainText("You retired this Program");
+  await expect(summary.getByTestId("total-science")).toHaveText("0");
+
+  await page.getByRole("button", { name: "Start a new Program" }).click();
+  await expect(page.getByTestId("turn-number")).toHaveText("1");
+  expect(problems).toEqual([]);
+});
+
+test("lets a Turn pass without launching, and cancels the Program when Public Support falls too far", async ({
+  page,
+}) => {
+  await page.route("**/data/program.json", async (route) => {
+    const response = await route.fetch();
+    const program = (await response.json()) as Record<string, unknown>;
+    await route.fulfill({ json: { ...program, cancellationLevel: 90 } });
+  });
+  await page.goto("/");
+
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await expect(page.getByTestId("journey-progress")).toHaveText(
+    "No Mission this Turn",
+  );
+
+  const turnSummary = page.getByTestId("turn-summary");
+  await expect(turnSummary).toContainText("cancelled");
+  await expect(turnSummary.getByTestId("summary-public-support")).toHaveText(
+    "100 to 85",
+  );
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  const programSummary = page.getByTestId("program-summary");
+  await expect(programSummary).toContainText(
+    "below the Cancellation Level of 90",
+  );
 });
 
 test("shows why a plan the player can't afford is rejected", async ({

@@ -3,5 +3,7 @@
   "launchWindowIntervalDays": 780,
   "startingMoneyMillions": 2000,
   "startingPublicSupport": 100,
-  "transferDays": 210
+  "transferDays": 210,
+  "publicSupportDrainPercent": 15,
+  "cancellationLevel": 50
 }

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { createSimulation, type TurnPlan } from "./simulation";
-import { testCatalogue } from "./testCatalogue";
+import { parseCatalogue } from "../catalogue/catalogue";
+import {
+  createSimulation,
+  type Program,
+  type Simulation,
+  type TurnPlan,
+} from "./simulation";
+import { testCatalogue, testCatalogueFiles } from "./testCatalogue";
 
 const sendOrbiter: TurnPlan = {
   mission: { launchVehicleId: "test-vehicle", assetIds: ["test-orbiter"] },
@@ -152,7 +158,7 @@ describe("Milestones", () => {
     const { program: next } = simulation.runTurn(program, sendOrbiter);
     const view = simulation.readProgram(next);
     expect(view.science).toBe(100);
-    expect(view.publicSupport).toBe(300);
+    expect(view.publicSupport).toBe(255);
     expect(view.milestones.map((milestone) => milestone.name)).toEqual([
       "First orbiter",
     ]);
@@ -198,7 +204,7 @@ describe("Milestones", () => {
       moneyEndMillions: 1500,
       scienceGained: 100,
       publicSupportStart: 100,
-      publicSupportEnd: 300,
+      publicSupportEnd: 255,
       milestones: [{ name: "First orbiter", science: 100, publicSupport: 200 }],
     });
   });
@@ -212,6 +218,149 @@ describe("Milestones", () => {
       },
     });
     expect(simulation.readProgram(next).science).toBe(110);
+  });
+});
+
+const skipTurn: TurnPlan = { mission: null };
+
+describe("a Turn without a Mission", () => {
+  it("still moves on to the next Launch Window, spending nothing", () => {
+    const { simulation, program } = setup();
+    const { program: next, timeline } = simulation.runTurn(program, skipTurn);
+    const view = simulation.readProgram(next);
+    expect(view.turnNumber).toBe(2);
+    expect(view.date).toBe("2031-01-20");
+    expect(view.moneyMillions).toBe(2000);
+    expect(timeline.mission).toBeNull();
+    expect(timeline.entries).toEqual([]);
+    expect(timeline.durationDays).toBe(780);
+  });
+
+  it("is a valid plan even with no money", () => {
+    const { simulation, program } = setup();
+    expect(simulation.validatePlan(program, skipTurn)).toEqual({
+      costMillions: 0,
+      problems: [],
+    });
+  });
+});
+
+describe("Public Support drain", () => {
+  it("falls by the configured percentage each Turn", () => {
+    const { simulation, program } = setup();
+    const first = simulation.runTurn(program, skipTurn).program;
+    expect(simulation.readProgram(first).publicSupport).toBe(85);
+    const second = simulation.runTurn(first, skipTurn).program;
+    expect(simulation.readProgram(second).publicSupport).toBe(72);
+  });
+
+  it("is shown in the Turn summary", () => {
+    const { simulation, program } = setup();
+    const { summary } = simulation.runTurn(program, sendOrbiter);
+    expect(summary).toMatchObject({
+      publicSupportStart: 100,
+      publicSupportGained: 200,
+      publicSupportDrained: 45,
+      publicSupportEnd: 255,
+    });
+  });
+});
+
+describe("cancellation", () => {
+  function skipUntilEnded(start: { simulation: Simulation; program: Program }) {
+    const { simulation } = start;
+    let { program } = start;
+    let turns = 0;
+    while (simulation.readProgram(program).status.kind === "active") {
+      program = simulation.runTurn(program, skipTurn).program;
+      turns += 1;
+      expect(turns).toBeLessThan(1000);
+    }
+    return { program, turns };
+  }
+
+  it("ends a Program that only skips Turns, with the reason", () => {
+    const start = setup();
+    const { program, turns } = skipUntilEnded(start);
+    // 100, 85, 72, 61, 51, then 43, which is below the Cancellation Level of 50.
+    expect(turns).toBe(5);
+    const { status, publicSupport } = start.simulation.readProgram(program);
+    expect(publicSupport).toBe(43);
+    expect(status).toEqual({
+      kind: "cancelled",
+      reason: "Public Support fell to 43, below the Cancellation Level of 50.",
+    });
+  });
+
+  it("doesn't cancel at exactly the Cancellation Level", () => {
+    const files = testCatalogueFiles();
+    const simulation = createSimulation(
+      parseCatalogue({
+        ...files,
+        program: { ...files.program, cancellationLevel: 85 },
+      }),
+    );
+    const { program } = simulation.runTurn(
+      simulation.startProgram(1),
+      skipTurn,
+    );
+    expect(simulation.readProgram(program).status.kind).toBe("active");
+  });
+
+  it("ends even a Program whose Public Support drains very slowly", () => {
+    const files = testCatalogueFiles();
+    const simulation = createSimulation(
+      parseCatalogue({
+        ...files,
+        program: {
+          ...files.program,
+          publicSupportDrainPercent: 1,
+          cancellationLevel: 1,
+        },
+      }),
+    );
+    const { turns } = skipUntilEnded({
+      simulation,
+      program: simulation.startProgram(1),
+    });
+    expect(turns).toBeGreaterThan(5);
+  });
+
+  it("reports the cancellation in the Turn summary", () => {
+    const { simulation } = setup();
+    let program = simulation.startProgram(1);
+    for (let turn = 0; turn < 4; turn++) {
+      program = simulation.runTurn(program, skipTurn).program;
+    }
+    const { summary } = simulation.runTurn(program, skipTurn);
+    expect(summary.cancellationReason).toContain("Cancellation Level");
+  });
+
+  it("doesn't let an ended Program run another Turn", () => {
+    const start = setup();
+    const { program } = skipUntilEnded(start);
+    expect(() => start.simulation.runTurn(program, skipTurn)).toThrow(
+      /has ended/,
+    );
+  });
+});
+
+describe("retirement", () => {
+  it("ends the Program and keeps its Science and Milestones", () => {
+    const { simulation, program } = setup();
+    const { program: flown } = simulation.runTurn(program, sendOrbiter);
+    const view = simulation.readProgram(simulation.retireProgram(flown));
+    expect(view.status).toEqual({ kind: "retired" });
+    expect(view.science).toBe(100);
+    expect(view.milestones.map((milestone) => milestone.name)).toEqual([
+      "First orbiter",
+    ]);
+  });
+
+  it("doesn't let a retired Program run another Turn", () => {
+    const { simulation, program } = setup();
+    const retired = simulation.retireProgram(program);
+    expect(() => simulation.runTurn(retired, skipTurn)).toThrow(/has ended/);
   });
 });
 

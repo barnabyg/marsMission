@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MissionMode } from "../mission/MissionMode";
 import { TurnSummaryScreen } from "../mission/TurnSummaryScreen";
 import { PlanningMode } from "../planning/PlanningMode";
+import { ProgramSummaryScreen } from "../planning/ProgramSummaryScreen";
 import type {
   Program,
   Simulation,
@@ -12,13 +13,15 @@ import type {
 type Screen =
   | { mode: "planning"; program: Program }
   | { mode: "mission"; result: TurnResult }
-  | { mode: "turnSummary"; result: TurnResult };
+  | { mode: "turnSummary"; result: TurnResult }
+  | { mode: "programSummary"; program: Program };
 
 export function App({ simulation }: { simulation: Simulation }) {
-  const [screen, setScreen] = useState<Screen>(() => ({
+  const newProgram = (): Screen => ({
     mode: "planning",
     program: simulation.startProgram(Date.now()),
-  }));
+  });
+  const [screen, setScreen] = useState<Screen>(newProgram);
 
   if (screen.mode === "planning") {
     const { program } = screen;
@@ -31,6 +34,23 @@ export function App({ simulation }: { simulation: Simulation }) {
             mode: "mission",
             result: simulation.runTurn(program, plan),
           });
+        }}
+        onRetire={() => {
+          setScreen({
+            mode: "programSummary",
+            program: simulation.retireProgram(program),
+          });
+        }}
+      />
+    );
+  }
+
+  if (screen.mode === "programSummary") {
+    return (
+      <ProgramSummaryScreen
+        view={simulation.readProgram(screen.program)}
+        onStartNew={() => {
+          setScreen(newProgram());
         }}
       />
     );
@@ -52,7 +72,9 @@ export function App({ simulation }: { simulation: Simulation }) {
     <TurnSummaryScreen
       summary={result.summary}
       onContinue={() => {
-        setScreen({ mode: "planning", program: result.program });
+        const { program } = result;
+        const active = simulation.readProgram(program).status.kind === "active";
+        setScreen({ mode: active ? "planning" : "programSummary", program });
       }}
     />
   );
