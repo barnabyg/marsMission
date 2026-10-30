@@ -208,6 +208,20 @@ test("uses a known seed in a production build, as the playtest command runs it",
   );
 });
 
+test("loads the data files, Mission Mode's view and its art from a production build", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`${productionBaseURL}/?seed=${successSeed}`);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(
+    page.getByTestId("solar-system-view").locator("canvas"),
+  ).toBeVisible();
+  // A failed file is only reported once its request ends, which can be after the canvas appears.
+  await page.waitForLoadState("networkidle");
+  expect(problems).toEqual([]);
+});
+
 test("lists the planned Mission's Mission Events with rough risk bands, which change with what it carries", async ({
   page,
 }) => {
