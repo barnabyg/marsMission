@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { TimelineEntry } from "../simulation/simulation";
+import { realCatalogueFiles } from "../testing/realCatalogue";
 import { soundFileNames, soundFor } from "./sounds";
 
 function missionEvent(
@@ -39,6 +40,13 @@ describe("matching sounds to timeline entries", () => {
 
   it("leaves any other entry silent", () => {
     expect(soundFor(missionEvent("mars-transfer-burn", "success"))).toBeNull();
+  });
+
+  it("matches the launch sound to a Mission Event that exists in the real data files", () => {
+    const { missionEvents } = realCatalogueFiles();
+    expect(
+      missionEvents.map(({ id }) => soundFor(missionEvent(id, "success"))),
+    ).toContain("launch");
   });
 
   it("gives each sound its own file", () => {
