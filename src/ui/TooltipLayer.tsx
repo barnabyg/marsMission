@@ -10,6 +10,11 @@ function termElementFrom(target: EventTarget | null): Element | null {
   return target instanceof Element ? target.closest("[data-term]") : null;
 }
 
+/** Raises the tooltip above an open dialog, which otherwise covers everything else on the page. */
+function showInTopLayer(tooltip: HTMLDivElement | null) {
+  tooltip?.showPopover();
+}
+
 /** Shows the tooltip for whichever game term is under the pointer or has keyboard focus. */
 export function TooltipLayer() {
   const [shown, setShown] = useState<ShownTooltip | null>(null);
@@ -50,6 +55,8 @@ export function TooltipLayer() {
   const nearBottom = box.bottom > window.innerHeight * 0.7;
   return (
     <div
+      ref={showInTopLayer}
+      popover="manual"
       role="tooltip"
       className="tooltip"
       style={{

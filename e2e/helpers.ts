@@ -68,6 +68,14 @@ export async function overrideProgramData(
   });
 }
 
+export async function openSaveDialog(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+}
+
+export async function openLoadDialog(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Load", exact: true }).click();
+}
+
 /** Plays out a Turn in Mission Mode, whatever happens in it, and continues past its Turn summary. */
 export async function playToNextTurn(page: Page): Promise<void> {
   const screen = page.getByTestId("text-screen");

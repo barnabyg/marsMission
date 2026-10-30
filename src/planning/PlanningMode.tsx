@@ -1,10 +1,13 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
+import { SaveSlots } from "../save/SaveSlots";
+import type { SaveStore } from "../save/saveStore";
 import {
   formatMoney,
   type Program,
   type Simulation,
   type TurnPlan,
 } from "../simulation/simulation";
+import { Dialog } from "../ui/Dialog";
 import { formatLaunchWindow } from "../ui/format";
 import { GameText } from "../ui/GameText";
 
@@ -13,7 +16,8 @@ interface PlanningModeProps {
   program: Program;
   /** Whether the automatic save at the start of this Planning Mode worked. */
   saved: boolean;
-  saveSlots: ReactNode;
+  saveStore: SaveStore;
+  onLoad: (program: Program) => void;
   onSubmit: (plan: TurnPlan) => void;
   onRetire: () => void;
 }
@@ -22,7 +26,8 @@ export function PlanningMode({
   simulation,
   program,
   saved,
-  saveSlots,
+  saveStore,
+  onLoad,
   onSubmit,
   onRetire,
 }: PlanningModeProps) {
@@ -33,6 +38,8 @@ export function PlanningMode({
   const [assetId, setAssetId] = useState(view.assets[0]?.id ?? "");
   const [reliability, setReliability] = useState<Record<string, string>>({});
   const [confirmingRetirement, setConfirmingRetirement] = useState(false);
+  const [openDialog, setOpenDialog] = useState<"save" | "load" | null>(null);
+  const [savedToSlot, setSavedToSlot] = useState<number | null>(null);
 
   const plannedEvents = simulation.previewMission({
     launchVehicleId,
@@ -104,6 +111,32 @@ export function PlanningMode({
           </div>
         </dl>
       </header>
+
+      <div className="program-actions">
+        <button
+          type="button"
+          onClick={() => {
+            setSavedToSlot(null);
+            setOpenDialog("save");
+          }}
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setSavedToSlot(null);
+            setOpenDialog("load");
+          }}
+        >
+          Load
+        </button>
+        {savedToSlot !== null && (
+          <p role="status">
+            <GameText>{`Saved to Save Slot ${savedToSlot}.`}</GameText>
+          </p>
+        )}
+      </div>
 
       {!saved && (
         <p className="problem" role="alert">
@@ -242,7 +275,6 @@ export function PlanningMode({
           </ul>
         )}
       </section>
-      {saveSlots}
       <section className="panel">
         <h2>Retire</h2>
         {confirmingRetirement ? (
@@ -277,6 +309,44 @@ export function PlanningMode({
           </button>
         )}
       </section>
+
+      {openDialog === "save" && (
+        <Dialog
+          title="Save to a Save Slot"
+          cancelLabel="Cancel"
+          onClose={() => {
+            setOpenDialog(null);
+          }}
+        >
+          <SaveSlots
+            simulation={simulation}
+            saveStore={saveStore}
+            action={{
+              kind: "save",
+              program,
+              onSaved: (slot) => {
+                setSavedToSlot(slot);
+                setOpenDialog(null);
+              },
+            }}
+          />
+        </Dialog>
+      )}
+      {openDialog === "load" && (
+        <Dialog
+          title="Load from a Save Slot"
+          cancelLabel="Cancel"
+          onClose={() => {
+            setOpenDialog(null);
+          }}
+        >
+          <SaveSlots
+            simulation={simulation}
+            saveStore={saveStore}
+            action={{ kind: "load", confirm: true, onLoad }}
+          />
+        </Dialog>
+      )}
     </main>
   );
 }

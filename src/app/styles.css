@@ -164,9 +164,43 @@ button.primary {
   color: var(--problem);
 }
 
+.program-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.program-actions p {
+  margin: 0;
+  color: var(--muted);
+}
+
+dialog {
+  color: var(--text);
+  background: var(--panel);
+  border: 2px solid var(--panel-border);
+  border-radius: 0.5rem;
+  padding: 1.5rem 2rem;
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 60%);
+}
+
+dialog p {
+  margin: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
 .save-slots {
   display: grid;
   gap: 0.8rem;
+  margin: 1rem 0 0;
   padding: 0;
   list-style: none;
 }
@@ -349,7 +383,8 @@ button.primary {
 
 .tooltip {
   position: fixed;
-  z-index: 10;
+  inset: auto;
+  margin: 0;
   width: 30rem;
   background: #0f1320;
   border: 2px solid var(--accent);

@@ -38,7 +38,12 @@ export function OpeningScreen({
       <button type="button" onClick={onStartNew}>
         Start a new Program
       </button>
-      {saveSlots}
+      <section className="panel">
+        <h2>
+          <GameText>Save Slots</GameText>
+        </h2>
+        {saveSlots}
+      </section>
     </main>
   );
 }
