@@ -1,15 +1,15 @@
 # Game design decisions
 
-The game rules settled so far, grouped by area. Most describe the finished game, so check Status below for what exists today. Current balance values live only in the data files in [public/data](../public/data), so any figure here is an example, not the game's value. Vocabulary follows [GLOSSARY.md](../GLOSSARY.md); platform and fidelity decisions are in [docs/adr/](adr/). Items marked _open_ are still being decided.
+The game rules settled so far, grouped by area. Most describe the finished game, so check Status below for what exists today. Current balance values, such as money, Public Support, Science and risk, live only in the data files in [public/data](../public/data), so any such figure here is an example, not the game's value. Vocabulary follows [GLOSSARY.md](../GLOSSARY.md); platform and fidelity decisions are in [docs/adr/](adr/). Items marked _open_ are still being decided.
 
 ## Status
 
 Phases are defined in the [Build order](#build-order). Phases 1 and 2 are built:
 
-- **Phase 1:** Planning Mode with one Launch Vehicle and one orbiter; Mission Mode with the solar system view, speed controls and text screens; Science, Milestones, Funding Thresholds, the Public Support drain and Cancellation Level; retiring a Program and the Program summary; tooltips.
+- **Phase 1:** Turns running from one Launch Window to the next, with at most one Mission each; Assets that stay operating at Mars; Mission Events listed from what a Mission carries; Planning Mode with one Launch Vehicle and one orbiter; Mission Mode with the solar system view, speed controls and text screens; Science, Milestones, Funding Thresholds, the Public Support drain and Cancellation Level; retiring a Program and the Program summary; tooltips.
 - **Phase 2:** Mission Event failure with Risk Bands; Reliability; the fixed random seed; automatic saves and manual save slots; the first sound effects.
 
-Every other rule in this document is planned, so its absence from the code isn't a bug.
+Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
 ## Program and Turns
 
