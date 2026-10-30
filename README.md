@@ -12,7 +12,7 @@ You need [Node.js](https://nodejs.org/) 24 or later. From the repository root, r
 
 You can also double-click `run.bat`. It installs what's needed, builds the game and opens it in your browser. The game is designed for a 4K desktop, at 100% or 150% display scaling.
 
-What to try, and the feedback wanted, is in the [Phase 2 playtest guide](docs/playtest/phase-2.md). The [Phase 1 guide](docs/playtest/phase-1.md) is kept as a record of that phase.
+The [Phase 1](docs/playtest/phase-1.md) and [Phase 2](docs/playtest/phase-2.md) playtest guides are kept as records of those phases, so some controls have changed since they were written: saving, loading and retiring are now buttons with dialogs, and Mission Mode lists what happens in an events column.
 
 ## Develop
 

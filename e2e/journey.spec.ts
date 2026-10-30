@@ -3,7 +3,9 @@ import { tooltips } from "../src/ui/tooltips";
 import { productionBaseURL } from "../playwright.config";
 import {
   cancelledAfterOneTurn,
+  eventEntries,
   overrideProgramData,
+  pauseAtEvent,
   playToNextTurn,
   termsInButtons,
   termsWithoutTooltips,
@@ -36,35 +38,40 @@ test("plays from a new Program through a launch to the next Turn", async ({
     page.getByRole("heading", { name: "Mission Mode" }),
   ).toBeVisible();
   await expect(page.getByTestId("current-speed")).toHaveText("1x");
-  await page.getByRole("button", { name: "10x" }).click();
-  await expect(page.getByTestId("current-speed")).toHaveText("10x");
+  await pauseAtEvent(page, "Launch");
 
   await expect(
     page.getByTestId("solar-system-view").locator("canvas"),
   ).toBeVisible();
   await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing yet");
+  await expect(eventEntries(page).last()).toContainText("1 December 2028");
+  await expect(eventEntries(page).last()).toContainText("carries the Mission");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  const screen = page.getByTestId("text-screen");
-  for (const title of [
-    "Launch",
-    "Mars transfer burn",
-    "Mars orbit insertion",
-    "First orbiter at Mars",
+  // Nothing needs dismissing, so time just carries on when a speed is chosen.
+  await page.getByRole("button", { name: "1x" }).click();
+  await pauseAtEvent(page, "Funding Threshold reached: 250 Public Support");
+  await expect(eventEntries(page).getByRole("heading")).toHaveText([
     "Funding Threshold reached: 250 Public Support",
-  ]) {
-    await expect(screen.getByRole("heading")).toHaveText(title);
-    expect(await termsWithoutTooltips(page)).toEqual([]);
-    // Checked here because the rest of the Turn is over in moments at this test's time scale.
-    if (title === "Funding Threshold reached: 250 Public Support") {
-      await expect(page.getByTestId("journey-progress")).toHaveText(
-        /Pathfinder Orbiter: arrived at Mars/,
-      );
-      await expect(page.getByTestId("operating-at-mars")).toHaveText(
-        "Pathfinder Orbiter",
-      );
-    }
-    await screen.getByRole("button", { name: "Continue" }).click();
-  }
+    "First orbiter at Mars",
+    "Mars orbit insertion",
+    "Mars transfer burn",
+    "Launch",
+  ]);
+  await expect(eventEntries(page).first()).toContainText("29 June 2029");
+  await expect(eventEntries(page).first()).toContainText("pay out $1B");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Continue" })).toHaveCount(0);
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await expect(page.getByTestId("journey-progress")).toHaveText(
+    /Pathfinder Orbiter: arrived at Mars/,
+  );
+  await expect(page.getByTestId("operating-at-mars")).toHaveText(
+    "Pathfinder Orbiter",
+  );
+
+  await page.getByRole("button", { name: "10x" }).click();
+  await expect(page.getByTestId("current-speed")).not.toHaveText("Paused");
 
   const summary = page.getByTestId("turn-summary");
   await expect(summary).toContainText("First orbiter at Mars");
@@ -114,16 +121,19 @@ for (const { missionEvent, before } of [
     await page.goto(`/?seed=${seedFailingAt(missionEvent)}`);
     await page.getByRole("button", { name: "Launch Mission" }).click();
 
-    const screen = page.getByTestId("text-screen");
-    for (const title of before) {
-      await expect(screen.getByRole("heading")).toHaveText(title);
-      await screen.getByRole("button", { name: "Continue" }).click();
-    }
-
-    await expect(screen.getByRole("heading")).toHaveText(
+    await pauseAtEvent(page, `${missionEvent} failed`);
+    const failedEntry = eventEntries(page).first();
+    await expect(eventEntries(page).getByRole("heading")).toHaveText([
       `${missionEvent} failed`,
+      ...[...before].reverse(),
+    ]);
+    await expect(failedEntry).toHaveClass(/failed/);
+    await expect(failedEntry).toContainText("Lost with the Mission");
+    await expect(failedEntry).toContainText("Pathfinder Orbiter");
+    await expect(failedEntry.getByRole("heading")).toHaveCSS(
+      "color",
+      "rgb(255, 143, 122)",
     );
-    await expect(screen).toContainText("Pathfinder Orbiter");
     expect(await termsWithoutTooltips(page)).toEqual([]);
     await expect(page.getByTestId("journey-progress")).toHaveText(
       /lost, and will not reach Mars/,
@@ -131,9 +141,8 @@ for (const { missionEvent, before } of [
     await expect(page.getByTestId("operating-at-mars")).toHaveText(
       "Nothing yet",
     );
-    await screen.getByRole("button", { name: "Continue" }).click();
+    await page.getByRole("button", { name: "10x" }).click();
 
-    // No later Mission Event appears: the next thing on screen is the Turn summary.
     const summary = page.getByTestId("turn-summary");
     await expect(summary).toBeVisible();
     const failure = summary.getByTestId("summary-failure");
@@ -157,7 +166,7 @@ test("uses a known seed in a production build, as the playtest command runs it",
 }) => {
   await page.goto(`${productionBaseURL}/?seed=${seedFailingAt("Launch")}`);
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(page.getByTestId("text-screen").getByRole("heading")).toHaveText(
+  await expect(eventEntries(page).first().getByRole("heading")).toHaveText(
     "Launch failed",
   );
 });
@@ -215,8 +224,6 @@ test("pauses Mission Mode and resumes from exactly where it stopped, without car
     "false",
   );
 
-  // Dismissing what's on screen lets game time run, were it not for the pause.
-  await page.getByTestId("text-screen").getByRole("button").click();
   const held = {
     date: await date.textContent(),
     journey: await journey.textContent(),
@@ -243,6 +250,41 @@ test("pauses Mission Mode and resumes from exactly where it stopped, without car
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(current).toHaveText("10x");
   expect(problems).toEqual([]);
+});
+
+test("keeps the events column beside the solar system view, scrolling by itself if it fills", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await pauseAtEvent(page, "Launch");
+
+  const column = page.getByTestId("events-column");
+  const view = page.getByTestId("solar-system-view");
+  await expect(view.locator("canvas")).toBeVisible();
+  const columnBox = await column.boundingBox();
+  const viewBox = await view.boundingBox();
+  expect(viewBox?.x).toBe(0);
+  expect((viewBox?.x ?? 0) + (viewBox?.width ?? 0)).toBeCloseTo(
+    columnBox?.x ?? 0,
+  );
+  expect((columnBox?.x ?? 0) + (columnBox?.width ?? 0)).toBeCloseTo(3840);
+
+  await page.getByRole("button", { name: "1x" }).click();
+  await pauseAtEvent(page, "Funding Threshold reached: 250 Public Support");
+  await page.setViewportSize({ width: 2560, height: 400 });
+  const entries = page.getByTestId("event-entries");
+  await expect
+    .poll(() =>
+      entries.evaluate((list) => list.scrollHeight > list.clientHeight),
+    )
+    .toBe(true);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollHeight > innerHeight,
+    ),
+  ).toBe(false);
+  await expect(column).toBeInViewport({ ratio: 1 });
 });
 
 test("lists the planned Mission's Mission Events with rough risk bands, which change with what it carries", async ({

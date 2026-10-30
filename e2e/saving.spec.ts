@@ -3,6 +3,7 @@ import { storageKeyFor } from "../src/save/saveStore";
 import { tooltips } from "../src/ui/tooltips";
 import {
   cancelledAfterOneTurn,
+  eventEntries,
   openLoadDialog,
   openSaveDialog,
   overrideProgramData,
@@ -51,7 +52,7 @@ test("returns to the start of the Turn after a reload in Mission Mode, and the s
 }) => {
   await page.goto(`/?seed=${seedFailingAt("Launch")}`);
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  const heading = page.getByTestId("text-screen").getByRole("heading");
+  const heading = eventEntries(page).first().getByRole("heading");
   await expect(heading).toHaveText("Launch failed");
 
   await page.reload();

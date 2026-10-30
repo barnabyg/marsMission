@@ -1,8 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
-import { playToNextTurn, watchForProblems } from "./helpers";
+import {
+  eventEntries,
+  pauseAtEvent,
+  playToNextTurn,
+  watchForProblems,
+} from "./helpers";
 import { seedFailingAt, successSeed } from "./seeds";
 
-/** Records each sound as it starts, with the text screen on show at that moment. */
+/** Records each sound as it starts, with what the events column shows at that moment. */
 async function listenForSounds(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const log: string[][] = [];
@@ -14,7 +19,7 @@ async function listenForSounds(page: Page): Promise<void> {
     HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
       log.push([
         this.src.split("/").at(-1) ?? "",
-        document.querySelector("[data-testid=text-screen] h2")?.textContent ??
+        document.querySelector("[data-testid=events-column]")?.textContent ??
           "",
       ]);
       return play.call(this);
@@ -37,7 +42,7 @@ for (const speed of ["1x", "10x"]) {
     await page.goto(`/?seed=${successSeed}`);
     await page.getByRole("button", { name: "Launch Mission" }).click();
     await page.getByRole("button", { name: speed }).click();
-    await playToNextTurn(page);
+    await expect(page.getByTestId("turn-summary")).toBeVisible();
 
     const heard = await soundsHeard(page);
     expect(heard.map(([file]) => file)).toEqual([
@@ -45,9 +50,10 @@ for (const speed of ["1x", "10x"]) {
       "milestone.wav",
       "funding-threshold.wav",
     ]);
-    expect(heard[0]?.[1]).toBe("Launch");
-    expect(heard[1]?.[1]).toBe("First orbiter at Mars");
-    expect(heard[2]?.[1]).toMatch(/^Funding Threshold reached/);
+    expect(heard[0]?.[1]).toContain("Launch");
+    expect(heard[0]?.[1]).not.toContain("First orbiter at Mars");
+    expect(heard[1]?.[1]).toContain("First orbiter at Mars");
+    expect(heard[2]?.[1]).toContain("Funding Threshold reached");
     expect(problems).toEqual([]);
   });
 }
@@ -56,10 +62,12 @@ test("plays the failure sound when a Mission Event fails", async ({ page }) => {
   await listenForSounds(page);
   await page.goto(`/?seed=${seedFailingAt("Launch")}`);
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(page.getByTestId("text-screen").getByRole("heading")).toHaveText(
+  await expect(eventEntries(page).first().getByRole("heading")).toHaveText(
     "Launch failed",
   );
-  expect(await soundsHeard(page)).toEqual([["failure.wav", "Launch failed"]]);
+  const heard = await soundsHeard(page);
+  expect(heard.map(([file]) => file)).toEqual(["failure.wav"]);
+  expect(heard[0]?.[1]).toContain("Launch failed");
 });
 
 test("stays silent for the rest of a Turn after muting partway through", async ({
@@ -68,7 +76,7 @@ test("stays silent for the rest of a Turn after muting partway through", async (
   await listenForSounds(page);
   await page.goto(`/?seed=${successSeed}`);
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(page.getByTestId("text-screen")).toBeVisible();
+  await pauseAtEvent(page, "Launch");
   await page.getByRole("button", { name: "Mute sound" }).click();
   await playToNextTurn(page);
   // Only the launch, which played before muting.
@@ -83,7 +91,7 @@ test("remembers the mute setting after the browser closes", async ({
   await listenForSounds(page);
   await page.goto(`/?seed=${successSeed}`);
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(page.getByTestId("text-screen")).toBeVisible();
+  await expect(eventEntries(page).first()).toBeVisible();
 
   const mute = page.getByRole("button", { name: "Mute sound" });
   await expect(mute).toHaveAttribute("aria-pressed", "false");
@@ -96,8 +104,8 @@ test("remembers the mute setting after the browser closes", async ({
   await expect(
     page.getByRole("button", { name: "Mute sound" }),
   ).toHaveAttribute("aria-pressed", "true");
-  // The launch sound would start as its text screen shows.
-  await expect(page.getByTestId("text-screen")).toBeVisible();
+  // The launch sound would start as its entry shows.
+  await expect(eventEntries(page).first()).toBeVisible();
   expect(await soundsHeard(page)).toEqual([]);
 });
 

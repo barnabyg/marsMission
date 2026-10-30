@@ -20,7 +20,7 @@ function writeMuted(muted: boolean): void {
   }
 }
 
-/** Loaded once and kept, so that each sound starts as soon as its entry is on screen. */
+/** Loaded once and kept, so that each sound starts at the moment its entry happens. */
 let audioElements: Partial<Record<SoundName, HTMLAudioElement>> | null = null;
 
 function loadAudio(): Partial<Record<SoundName, HTMLAudioElement>> {
@@ -50,16 +50,13 @@ interface Sounds {
   setMuted: (muted: boolean) => void;
 }
 
-/**
- * Plays an entry's sound when Mission Mode puts it on screen. Game time holds while an entry is up,
- * and only one can be up at a time, so sounds stay in step at every speed.
- */
+/** Plays each entry's sound at the moment it happens, which keeps sounds in step at every speed. */
 export function useSounds(
   entries: readonly TimelineEntry[],
-  activeEntry: number | null,
+  entriesHappened: number,
 ): Sounds {
   const [muted, setMutedState] = useState(readMuted);
-  const lastPlayed = useRef<number | null>(null);
+  const entriesHeard = useRef(0);
 
   useEffect(() => {
     loadAudio();
@@ -67,12 +64,14 @@ export function useSounds(
 
   useEffect(() => {
     // The ref stops React's development double-run of effects playing a sound twice.
-    if (activeEntry === null || activeEntry === lastPlayed.current) return;
-    lastPlayed.current = activeEntry;
-    const entry = entries[activeEntry];
-    const sound = entry ? soundFor(entry) : null;
-    if (sound && !muted) play(sound);
-  }, [entries, activeEntry, muted]);
+    const newEntries = entries.slice(entriesHeard.current, entriesHappened);
+    entriesHeard.current = entriesHappened;
+    if (muted) return;
+    for (const entry of newEntries) {
+      const sound = soundFor(entry);
+      if (sound) play(sound);
+    }
+  }, [entries, entriesHappened, muted]);
 
   return {
     muted,

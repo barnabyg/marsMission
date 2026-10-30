@@ -2,8 +2,8 @@ import { lazy, Suspense, useEffect } from "react";
 import { addDays, type Timeline } from "../simulation/simulation";
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
+import { EventsColumn } from "./EventsColumn";
 import { speeds } from "./playback";
-import { EntryPresentation } from "./presentation";
 import { journeyHasFailed, journeyProgress } from "./solarSystem/orbits";
 import { usePlayback } from "./usePlayback";
 import { useSounds } from "./useSounds";
@@ -24,22 +24,21 @@ export function MissionMode({
   onSpeedChange,
   onFinished,
 }: MissionModeProps) {
-  const { state, setSpeed, pause, dismiss } = usePlayback(
+  const { state, setSpeed, pause } = usePlayback(
     timeline,
     initialSpeed,
     onSpeedChange,
   );
 
-  const { muted, setMuted } = useSounds(timeline.entries, state.activeEntry);
+  const { muted, setMuted } = useSounds(
+    timeline.entries,
+    state.entriesHappened,
+  );
 
   useEffect(() => {
     if (state.finished) onFinished();
   }, [state.finished, onFinished]);
 
-  const entry =
-    state.activeEntry === null
-      ? undefined
-      : timeline.entries[state.activeEntry];
   const turnProgress = (state.day / timeline.durationDays) * 100;
 
   const { mission } = timeline;
@@ -124,13 +123,10 @@ export function MissionMode({
           ))}
         </ul>
       </aside>
-      {entry && (
-        <EntryPresentation
-          key={state.activeEntry}
-          entry={entry}
-          onDismiss={dismiss}
-        />
-      )}
+      <EventsColumn
+        timeline={timeline}
+        entriesHappened={state.entriesHappened}
+      />
     </main>
   );
 }

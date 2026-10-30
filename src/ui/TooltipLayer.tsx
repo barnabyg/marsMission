@@ -38,7 +38,7 @@ export function TooltipLayer() {
     };
   }, []);
 
-  // A text screen can close under the pointer, taking the term with it.
+  // Mission Mode can end its Turn under the pointer, taking the term with it.
   useEffect(() => {
     if (!shown) return;
     const check = setInterval(() => {
