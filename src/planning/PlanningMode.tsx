@@ -22,6 +22,8 @@ interface PlanningModeProps {
   onRetire: () => void;
 }
 
+type PlanningDialog = "save" | "load" | "retire";
+
 export function PlanningMode({
   simulation,
   program,
@@ -37,10 +39,17 @@ export function PlanningMode({
   );
   const [assetId, setAssetId] = useState(view.assets[0]?.id ?? "");
   const [reliability, setReliability] = useState<Record<string, string>>({});
-  const [openDialog, setOpenDialog] = useState<
-    "save" | "load" | "retire" | null
-  >(null);
+  const [openDialog, setOpenDialog] = useState<PlanningDialog | null>(null);
   const [savedToSlot, setSavedToSlot] = useState<number | null>(null);
+
+  function open(dialog: PlanningDialog) {
+    setSavedToSlot(null);
+    setOpenDialog(dialog);
+  }
+
+  function close() {
+    setOpenDialog(null);
+  }
 
   const plannedEvents = simulation.previewMission({
     launchVehicleId,
@@ -117,8 +126,7 @@ export function PlanningMode({
         <button
           type="button"
           onClick={() => {
-            setSavedToSlot(null);
-            setOpenDialog("save");
+            open("save");
           }}
         >
           Save
@@ -126,8 +134,7 @@ export function PlanningMode({
         <button
           type="button"
           onClick={() => {
-            setSavedToSlot(null);
-            setOpenDialog("load");
+            open("load");
           }}
         >
           Load
@@ -135,8 +142,7 @@ export function PlanningMode({
         <button
           type="button"
           onClick={() => {
-            setSavedToSlot(null);
-            setOpenDialog("retire");
+            open("retire");
           }}
         >
           Retire Program
@@ -296,9 +302,7 @@ export function PlanningMode({
         <Dialog
           title="Retire Program"
           cancelLabel="Keep going"
-          onClose={() => {
-            setOpenDialog(null);
-          }}
+          onClose={close}
           actions={
             <button type="button" className="primary" onClick={onRetire}>
               Yes, retire the Program
@@ -314,9 +318,7 @@ export function PlanningMode({
         <Dialog
           title="Save to a Save Slot"
           cancelLabel="Cancel"
-          onClose={() => {
-            setOpenDialog(null);
-          }}
+          onClose={close}
         >
           <SaveSlots
             simulation={simulation}
@@ -326,7 +328,7 @@ export function PlanningMode({
               program,
               onSaved: (slot) => {
                 setSavedToSlot(slot);
-                setOpenDialog(null);
+                close();
               },
             }}
           />
@@ -336,9 +338,7 @@ export function PlanningMode({
         <Dialog
           title="Load from a Save Slot"
           cancelLabel="Cancel"
-          onClose={() => {
-            setOpenDialog(null);
-          }}
+          onClose={close}
         >
           <SaveSlots
             simulation={simulation}
