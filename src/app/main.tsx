@@ -17,7 +17,19 @@ try {
   const simulation = createSimulation(await fetchCatalogue());
   const services: GameServices = {
     simulation,
-    saveStore: createSaveStore(localStorage, simulation),
+    saveStore: createSaveStore(
+      {
+        // Reached through calls, because just reading localStorage throws where the browser blocks it.
+        getItem: (key) => localStorage.getItem(key),
+        setItem: (key, value) => {
+          localStorage.setItem(key, value);
+        },
+        removeItem: (key) => {
+          localStorage.removeItem(key);
+        },
+      },
+      simulation,
+    ),
     newSeed: () => knownSeed(window.location.search) ?? Date.now(),
   };
   root.render(
