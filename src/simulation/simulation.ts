@@ -325,7 +325,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         costMillions +
         sum(fundingPayouts.map(({ payoutMillions }) => payoutMillions));
 
-      // Rounding down keeps Public Support whole and means it always falls, so it can't stick above the Cancellation Level.
+      // Public Support is whole points. Rounding down means it always falls, where rounding to the nearest point could stick at a low value.
       const publicSupportEnd = Math.floor(
         (publicSupportBeforeDrain * (100 - publicSupportDrainPercent)) / 100,
       );
