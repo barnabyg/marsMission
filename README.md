@@ -23,7 +23,7 @@ A typical feature touches these folders, in order:
 1. `public/data`: the new content
 2. `src/catalogue`: validating it
 3. `src/simulation`: the rules, with most of the tests
-4. `src/planning` or `src/mission`: displaying it, plus `src/ui/tooltips.ts` and `GLOSSARY.md` for a new game term
+4. `src/planning` or `src/mission`: displaying it, with styles and wiring in `src/app`, plus `src/ui/tooltips.ts` and `GLOSSARY.md` for a new game term
 5. `e2e`: a browser test of the journey
 
 | Command                | What it does                                  |
