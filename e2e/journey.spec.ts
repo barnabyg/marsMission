@@ -138,6 +138,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await expect(page.getByTestId("operating-assets")).toContainText(
     "Pathfinder Orbiter",
   );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(page.getByTestId("current-speed")).toHaveText("10x");
@@ -627,6 +628,7 @@ test("retires a Program and starts a new one from the Program summary", async ({
   await page.goto("/");
 
   await page.getByRole("button", { name: "Retire Program" }).click();
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Keep going" }).click();
   await expect(
     page.getByRole("heading", { name: "Planning Mode" }),
@@ -667,12 +669,14 @@ test("lets a Turn pass without launching, and cancels the Program when Public Su
   await expect(turnSummary.getByTestId("summary-public-support")).toHaveText(
     "100 to 85",
   );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Continue" }).click();
 
   const programSummary = page.getByTestId("program-summary");
   await expect(programSummary).toContainText(
     "below the Cancellation Level of 90",
   );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
 });
 
 test("shows why a plan the player can't afford is rejected", async ({
@@ -689,6 +693,7 @@ test("shows why a plan the player can't afford is rejected", async ({
 
   await expect(page.getByRole("alert")).toContainText("costs $1B");
   await expect(page.getByRole("alert")).toContainText("$500M");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   await expect(
     page.getByRole("button", { name: "Launch Mission" }),
   ).toBeDisabled();
