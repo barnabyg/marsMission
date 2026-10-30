@@ -10,7 +10,7 @@ You need [Node.js](https://nodejs.org/) 24 or later. From the repository root, r
 .\run.bat
 ```
 
-You can also double-click `run.bat`. It installs what's needed, builds the game and opens it in your browser. The game is designed for a 3840×2160 desktop.
+You can also double-click `run.bat`. It installs what's needed, builds the game and opens it in your browser. The game is designed for a 4K desktop, at 100% or 150% display scaling.
 
 What to try, and the feedback wanted, is in the [Phase 2 playtest guide](docs/playtest/phase-2.md). The [Phase 1 guide](docs/playtest/phase-1.md) is kept as a record of that phase.
 
@@ -30,7 +30,7 @@ A typical feature touches these folders, in order:
 | ---------------------- | --------------------------------------------- |
 | `npm.cmd run dev`      | Starts the development server                 |
 | `npm.cmd test`         | Runs every test that doesn't need a browser   |
-| `npm.cmd run test:e2e` | Runs the browser tests at 3840×2160           |
+| `npm.cmd run test:e2e` | Runs the browser tests, mostly at 3840×2160   |
 | `npm.cmd run verify`   | Runs every check (the canonical verification) |
 
 The browser tests need Chromium, once per machine: `npx.cmd playwright install chromium`.

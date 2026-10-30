@@ -157,134 +157,140 @@ export function PlanningMode({
         </p>
       )}
 
-      <section className="panel">
-        <h2>
-          <GameText>Mission</GameText>
-        </h2>
-        <label>
-          <span>
-            <GameText>Launch Vehicle</GameText>
-          </span>
-          <select
-            value={launchVehicleId}
-            onChange={(event) => {
-              setLaunchVehicleId(event.target.value);
-            }}
-          >
-            {view.launchVehicles.map((vehicle) => (
-              <option key={vehicle.id} value={vehicle.id}>
-                {vehicle.name} ({formatMoney(vehicle.costMillions)})
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>
-            <GameText>Asset</GameText>
-          </span>
-          <select
-            value={assetId}
-            onChange={(event) => {
-              setAssetId(event.target.value);
-            }}
-          >
-            {view.assets.map((asset) => (
-              <option key={asset.id} value={asset.id}>
-                {asset.name} ({formatMoney(asset.costMillions)})
-              </option>
-            ))}
-          </select>
-        </label>
-        <h3>
-          <GameText>Mission Events, Risk Bands and Reliability</GameText>
-        </h3>
-        <ol className="mission-events" data-testid="mission-events">
-          {plannedEvents.map((event) => (
-            <li key={event.eventId} data-testid="mission-event">
-              <span className="mission-event-name">{event.name}</span>
-              <strong className="risk-band" data-testid="risk-band">
-                {event.riskBand}
-              </strong>
-              <select
-                aria-label={`Reliability for ${event.name}`}
-                value={event.reliabilityLevelId}
-                onChange={(change) => {
-                  setReliability({
-                    ...reliability,
-                    [event.eventId]: change.target.value,
-                  });
-                }}
-              >
-                {event.reliabilityLevels.map((level) => (
-                  <option key={level.id} value={level.id}>
-                    {level.name} ({formatMoney(level.costMillions)},{" "}
-                    {level.riskBand})
-                  </option>
-                ))}
-              </select>
-            </li>
-          ))}
-        </ol>
-        <p className="total-cost">
-          Total cost:{" "}
-          <strong data-testid="mission-cost">
-            {formatMoney(costMillions)}
-          </strong>
-        </p>
-        {problems.map((problem) => (
-          <p key={problem} className="problem" role="alert">
-            <GameText>{problem}</GameText>
-          </p>
-        ))}
-        <button
-          type="button"
-          className="primary"
-          disabled={problems.length > 0}
-          onClick={() => {
-            onSubmit(plan);
-          }}
-        >
-          Launch Mission
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            onSubmit({ mission: null });
-          }}
-        >
-          End Turn without launching
-        </button>
-      </section>
-
-      <section className="panel">
-        <h2>
-          <GameText>Milestones</GameText>
-        </h2>
-        {view.milestones.length === 0 ? (
-          <p>None yet.</p>
-        ) : (
-          <ul data-testid="milestones">
-            {view.milestones.map((milestone) => (
-              <li key={milestone.id}>
-                <GameText>{milestone.name}</GameText>
+      <div className="planning-columns">
+        <section className="panel">
+          <h2>
+            <GameText>Mission</GameText>
+          </h2>
+          <label>
+            <span>
+              <GameText>Launch Vehicle</GameText>
+            </span>
+            <select
+              value={launchVehicleId}
+              onChange={(event) => {
+                setLaunchVehicleId(event.target.value);
+              }}
+            >
+              {view.launchVehicles.map((vehicle) => (
+                <option key={vehicle.id} value={vehicle.id}>
+                  {vehicle.name} ({formatMoney(vehicle.costMillions)})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>
+              <GameText>Asset</GameText>
+            </span>
+            <select
+              value={assetId}
+              onChange={(event) => {
+                setAssetId(event.target.value);
+              }}
+            >
+              {view.assets.map((asset) => (
+                <option key={asset.id} value={asset.id}>
+                  {asset.name} ({formatMoney(asset.costMillions)})
+                </option>
+              ))}
+            </select>
+          </label>
+          <h3>
+            <GameText>Mission Events, Risk Bands and Reliability</GameText>
+          </h3>
+          <ol className="mission-events" data-testid="mission-events">
+            {plannedEvents.map((event) => (
+              <li key={event.eventId} data-testid="mission-event">
+                <span className="mission-event-name">{event.name}</span>
+                <strong className="risk-band" data-testid="risk-band">
+                  {event.riskBand}
+                </strong>
+                <select
+                  aria-label={`Reliability for ${event.name}`}
+                  value={event.reliabilityLevelId}
+                  onChange={(change) => {
+                    setReliability({
+                      ...reliability,
+                      [event.eventId]: change.target.value,
+                    });
+                  }}
+                >
+                  {event.reliabilityLevels.map((level) => (
+                    <option key={level.id} value={level.id}>
+                      {level.name} ({formatMoney(level.costMillions)},{" "}
+                      {level.riskBand})
+                    </option>
+                  ))}
+                </select>
               </li>
             ))}
-          </ul>
-        )}
-      </section>
+          </ol>
+          <p className="total-cost">
+            Total cost:{" "}
+            <strong data-testid="mission-cost">
+              {formatMoney(costMillions)}
+            </strong>
+          </p>
+          {problems.map((problem) => (
+            <p key={problem} className="problem" role="alert">
+              <GameText>{problem}</GameText>
+            </p>
+          ))}
+          <button
+            type="button"
+            className="primary"
+            disabled={problems.length > 0}
+            onClick={() => {
+              onSubmit(plan);
+            }}
+          >
+            Launch Mission
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onSubmit({ mission: null });
+            }}
+          >
+            End Turn without launching
+          </button>
+        </section>
 
-      <section className="panel">
-        <h2>Operating at Mars</h2>
-        {view.operatingAssets.length === 0 ? (
-          <p>Nothing yet.</p>
-        ) : (
-          <ul data-testid="operating-assets">
-            {view.operatingAssets.map((asset) => (
-              <li key={`${asset.assetId}-${asset.arrivedOn}`}>{asset.name}</li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <div className="planning-side">
+          <section className="panel">
+            <h2>
+              <GameText>Milestones</GameText>
+            </h2>
+            {view.milestones.length === 0 ? (
+              <p>None yet.</p>
+            ) : (
+              <ul data-testid="milestones">
+                {view.milestones.map((milestone) => (
+                  <li key={milestone.id}>
+                    <GameText>{milestone.name}</GameText>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="panel">
+            <h2>Operating at Mars</h2>
+            {view.operatingAssets.length === 0 ? (
+              <p>Nothing yet.</p>
+            ) : (
+              <ul data-testid="operating-assets">
+                {view.operatingAssets.map((asset) => (
+                  <li key={`${asset.assetId}-${asset.arrivedOn}`}>
+                    {asset.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      </div>
 
       {openDialog === "retire" && (
         <Dialog

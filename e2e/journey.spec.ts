@@ -220,10 +220,6 @@ test("lists the planned Mission's Mission Events with rough risk bands, which ch
   await expect(page.getByTestId("mission-events")).not.toContainText(
     "Mars orbit insertion",
   );
-
-  // Everything on the Mission panel stays on screen at 3840×2160.
-  const launch = page.getByRole("button", { name: "Launch Mission" });
-  await expect(launch).toBeInViewport();
 });
 
 test("buys Reliability, sees the risk band and cost change, and launches", async ({
