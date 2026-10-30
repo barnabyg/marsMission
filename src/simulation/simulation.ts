@@ -37,7 +37,7 @@ export interface Program {
   status: ProgramStatus;
 }
 
-interface ProgramView {
+export interface ProgramView {
   status: ProgramStatus;
   cancellationLevel: number;
   turnNumber: number;
@@ -228,14 +228,17 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     },
 
     readProgram(program) {
-      const next = catalogue.fundingThresholds.find(
+      const nextThreshold = catalogue.fundingThresholds.find(
         ({ publicSupport }) =>
           !program.fundingThresholdsPaid.includes(publicSupport),
       );
       return {
         status: program.status,
-        nextFundingThreshold: next
-          ? { ...next, pointsAway: next.publicSupport - program.publicSupport }
+        nextFundingThreshold: nextThreshold
+          ? {
+              ...nextThreshold,
+              pointsAway: nextThreshold.publicSupport - program.publicSupport,
+            }
           : null,
         cancellationLevel: catalogue.program.cancellationLevel,
         turnNumber: program.turnNumber,

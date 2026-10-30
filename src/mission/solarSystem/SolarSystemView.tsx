@@ -268,7 +268,7 @@ export default function SolarSystemView({
   const spacecraft = mission
     ? spacecraftPosition(startDate, mission, day)
     : { x: 0, z: 0 };
-  const inFlight = mission !== null && day < mission.arrivalDay;
+  const inTransit = mission !== null && day < mission.arrivalDay;
 
   const earthLabel = useRef<HTMLDivElement>(null);
   const marsLabel = useRef<HTMLDivElement>(null);
@@ -312,7 +312,7 @@ export default function SolarSystemView({
           tiltDegrees={25.2}
         />
         {mission && <Route mission={mission} startDate={startDate} />}
-        {mission && inFlight && (
+        {mission && inTransit && (
           <Spacecraft mission={mission} startDate={startDate} day={day} />
         )}
         <OperatingAssetMarkers
@@ -331,7 +331,7 @@ export default function SolarSystemView({
       <div
         ref={spacecraftLabel}
         className="view-label spacecraft-label"
-        hidden={!inFlight}
+        hidden={!inTransit}
       >
         <span>{mission?.assetNames.join(", ")}</span>
       </div>

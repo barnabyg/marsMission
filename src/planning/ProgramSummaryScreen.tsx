@@ -1,8 +1,8 @@
-import type { Simulation } from "../simulation/simulation";
+import type { ProgramView } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 
 interface ProgramSummaryScreenProps {
-  view: ReturnType<Simulation["readProgram"]>;
+  view: ProgramView;
   onStartNew: () => void;
 }
 
