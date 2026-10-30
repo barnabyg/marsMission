@@ -1,6 +1,15 @@
 # Game design decisions
 
-The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md](../GLOSSARY.md); platform and fidelity decisions are in [docs/adr/](adr/). Items marked _open_ are still being decided.
+The game rules settled so far, grouped by area. Most describe the finished game, so check Status below for what exists today. Vocabulary follows [GLOSSARY.md](../GLOSSARY.md); platform and fidelity decisions are in [docs/adr/](adr/). Items marked _open_ are still being decided.
+
+## Status
+
+Phases are defined in the [Build order](#build-order). Phases 1 and 2 are built:
+
+- **Phase 1:** Planning Mode with one Launch Vehicle and one orbiter; Mission Mode with the solar system view, speed controls and text screens; Science, Milestones, Funding Thresholds, the Public Support drain and Cancellation Level; retiring a Program and the Program summary; tooltips.
+- **Phase 2:** Mission Event failure with Risk Bands; Reliability; the fixed random seed; automatic saves and manual save slots; the first sound effects.
+
+Every other rule in this document is planned, so its absence from the code isn't a bug.
 
 ## Program and Turns
 
@@ -75,11 +84,16 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 
 The aim is to get something playable as early as possible, so the player can give feedback. The simulation starts thin and grows alongside the game instead of being finished first.
 
-1. A playable slice with Robotic Missions only: Planning Mode, an orbiter and a lander, Mission Mode with the solar system and Mars orbit views, and a thin simulation behind them.
-2. The surface view, Ongoing Research and Research Grants.
-3. Crewed Missions, Health, Supplies and bases.
+The work is split into phases, each ending in a game the player can play and comment on. Phases after the current one can change with playtest feedback.
 
-Automated balance runs get added once the simulation has enough rules to balance.
+1. **First Orbiter:** the Turn loop with one orbiter, the solar system view, money, Science and Public Support.
+2. **Things Go Wrong:** Mission Event failure, Reliability, the fixed random seed, saving and the first sound effects.
+3. **Landing on Mars:** a lander, Landing Sites and Surveys, mass limits, the Mars orbit view and Service Life.
+4. **Doing Science:** a rover, the surface view, Activities, Ongoing Research, Research Grants and automated balance runs.
+5. **Tough Choices:** Decision Points, Contingency, Hazards, go/no-go checks, Trajectories and the spacecraft view.
+6. **Better Technology:** Technology Readiness, Development, Flight-proven status, more Launch Vehicles and benefits between Assets.
+7. **First Crew:** Crewed Missions, Crew and Health, Supplies and Protection.
+8. **Coming Home:** return journeys, returning samples, a fuel plant, a habitat and a Mars lab.
 
 ## Saving
 
