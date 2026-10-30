@@ -5,6 +5,9 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 ## Program and Turns
 
 - A Program is open-ended. In practice it winds down when the player runs out of worthwhile things to build or do.
+- A Program ends when the player retires it or when Public Support falls to zero and it is cancelled. Either way, a Program summary shows total Science and the Milestones achieved.
+- A late-game goal is to build up enough that the Program carries on indefinitely, producing enough money and Public Support with little input from the player.
+- At most one Mission is launched per Turn, as a single journey. This keeps Mission Mode buildable.
 - Each Turn begins at a Launch Window (roughly every 26 months) and consists of Planning Mode followed by Mission Mode.
 - No game time passes in Planning Mode. Mission Mode runs from one Launch Window to the next, showing every Mission in flight and every operating Asset together. Time speeds up and slows down automatically for Mission Events and Decision Points.
 - Missions can overlap Turns. For example, a Crewed Mission that stays on the surface for a long time lasts about 2.5 years, so the next Turn's Planning Mode happens while Crew are still at Mars.
@@ -15,6 +18,8 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 
 - Players choose pre-designed Assets from a catalogue. There is no assembly from parts.
 - Assets stay at Mars and keep working into later Turns, within reason: each has a limited Service Life, and longer Service Life costs more.
+- An Asset may fail before its Service Life ends. This is a probability that Reliability lowers.
+- No repairs or Service Life extensions in the first version.
 
 ## Risk and Safety Margin
 
@@ -32,18 +37,24 @@ The game rules settled so far, grouped by area. Vocabulary follows [GLOSSARY.md]
 - Science is the score. It is weighted heavily towards activity at Mars itself, for example 100 for an orbiter surveying landing sites and 1000 for returning samples to Earth.
 - Science comes from two sources:
   - Milestones: one-off achievements, such as returning a sample.
-  - Ongoing Research: a smaller, steady amount earned for as long as the work continues, such as analysing samples in a lab on Mars.
+  - Ongoing Research: a steady rate earned only while an Asset or Crew is actively doing the work, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time.
+- Science already earned is never taken away.
 
 ## Public Support and money
 
 - Milestones award Public Support points.
 - When Public Support reaches a Funding Threshold, it pays a fixed sum. For example, 100 points plus 200 for putting an orbiter at Mars crosses the 300-point threshold, which pays $1 billion.
+- Each Funding Threshold pays only the first time it is reached. Falling below and climbing back pays nothing.
+- There is no regular income. Running out of money through poor management is a way for the player to fail.
+- Public Support drains slowly over time.
 - Costs are in millions of dollars, at roughly real-world scale.
 
 ## Crew
 
 - Crew are named, with no other individual traits.
-- Losing Crew causes a large drop in Public Support. It costs Science only if that Crew was producing Science.
+- Losing Crew causes a large drop in Public Support. The only Science cost is that the Ongoing Research they were doing stops.
+- Crew don't have to come home. Staying at Mars harms them through radiation and other effects.
+- Bringing Crew home safely earns a large amount of Public Support.
 
 ## Technology
 

@@ -5,7 +5,7 @@ A planning and simulation game in which the player runs a Mars exploration Progr
 ## Program structure
 
 **Program**:
-One complete game: an open-ended sequence of Turns in which the player launches Missions and builds up Assets at Mars.
+One complete game: an open-ended sequence of Turns in which the player launches Missions and builds up Assets at Mars. It ends when the player retires it or when it is cancelled.
 _Avoid_: Campaign, run, playthrough
 
 **Turn**:
@@ -17,7 +17,7 @@ The recurring opportunity, roughly every 26 months, when an Earth–Mars transfe
 _Avoid_: Launch opportunity
 
 **Mission**:
-A single endeavour launched in one Launch Window to deliver one or more Assets, such as putting an orbiter at Mars or returning samples.
+The single journey launched in a Turn's Launch Window, carrying one or more Assets and possibly Crew. There is at most one Mission per Turn.
 _Avoid_: Expedition, flight
 
 **Robotic Mission**:
@@ -25,7 +25,7 @@ A Mission with no crew aboard. It is cheaper than a Crewed Mission and risks onl
 _Avoid_: Unmanned mission, probe mission
 
 **Crewed Mission**:
-A Mission carrying Crew. It costs much more than a Robotic Mission and earns more Public Support, and failure can cost lives.
+A Mission carrying Crew. It costs much more than a Robotic Mission and earns more Public Support, and failure can cost lives. Crew need not come home, but bringing them home safely earns a large amount of Public Support.
 _Avoid_: Manned mission, human mission
 
 **Precursor**:
@@ -92,15 +92,15 @@ A one-off achievement, such as the first orbiter at Mars or returning a sample t
 _Avoid_: Achievement, goal, objective
 
 **Ongoing Research**:
-Science earned steadily for as long as an Asset or Crew keeps doing it, such as analysing samples in a lab on Mars. It earns fewer points at a time than a Milestone.
+Science earned at a steady rate for as long as an Asset or Crew is actively doing it, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time.
 _Avoid_: Passive science, income
 
 **Public Support**:
-Points of public and political backing. Milestones add them and setbacks such as losing Crew remove them. Reaching a Funding Threshold pays money.
+Points of public and political backing. Milestones add them, setbacks such as losing Crew remove them, and they drain slowly over time. Reaching a Funding Threshold pays money; falling to zero cancels the Program.
 _Avoid_: Popularity, approval, morale
 
 **Funding Threshold**:
-A Public Support level that pays a fixed sum when reached, for example $1 billion at 300 points.
+A Public Support level that pays a fixed sum the first time it is reached, for example $1 billion at 300 points. Reaching it again later pays nothing.
 _Avoid_: Tier, level, bracket
 
 **Duration**:
