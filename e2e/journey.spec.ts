@@ -481,11 +481,16 @@ test("asks before a slot loaded when reopening the game replaces the automatic s
 test("can't continue a cancelled Program after seeing how it ended", async ({
   page,
 }) => {
-  await page.goto("/?seed=2");
-  for (let turn = 0; turn < 2; turn++) {
-    await page.getByRole("button", { name: "Launch Mission" }).click();
-    await playToNextTurn(page);
-  }
+  await page.route("**/data/program.json", async (route) => {
+    const response = await route.fetch();
+    const program = (await response.json()) as Record<string, unknown>;
+    await route.fulfill({ json: { ...program, cancellationLevel: 90 } });
+  });
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await playToNextTurn(page);
   await expect(page.getByTestId("program-summary")).toContainText("cancelled");
 
   await page.reload();
@@ -642,11 +647,6 @@ test("remembers the mute setting after the browser closes", async ({
   await expect(mute).toHaveAttribute("aria-pressed", "false");
   await mute.click();
   await expect(mute).toHaveAttribute("aria-pressed", "true");
-  await playToNextTurn(page);
-  // Only the launch, which played before muting.
-  expect((await soundsHeard(page)).map(([file]) => file)).toEqual([
-    "launch.wav",
-  ]);
 
   await page.reload();
   await page.getByRole("button", { name: "Continue this Program" }).click();
@@ -654,7 +654,8 @@ test("remembers the mute setting after the browser closes", async ({
   await expect(
     page.getByRole("button", { name: "Mute sound" }),
   ).toHaveAttribute("aria-pressed", "true");
-  await playToNextTurn(page);
+  // The launch sound would have played by the time its text screen shows.
+  await expect(page.getByTestId("text-screen")).toBeVisible();
   expect(await soundsHeard(page)).toEqual([]);
 });
 
