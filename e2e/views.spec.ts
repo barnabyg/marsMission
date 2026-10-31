@@ -91,7 +91,12 @@ test("shows an orbiter going round Mars from the day it arrives, only in the Mar
   page,
 }) => {
   const problems = watchForProblems(page);
-  await launchFirstMission(page, successSeed);
+  await page.goto(`/?seed=${successSeed}`);
+  // The shortest Service Life ends under a second into next Turn at 10x, which can be before the view switches.
+  await page
+    .getByLabel("Service Life for Pathfinder Orbiter")
+    .selectOption("1700");
+  await page.getByRole("button", { name: "Launch Mission" }).click();
   await pauseAtEvent(page, "Launch");
   await viewButton(page, "Mars orbit").click();
   await expect(orbiterLabels(page)).toHaveCount(0);
