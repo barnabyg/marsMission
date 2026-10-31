@@ -54,7 +54,7 @@ The sound effects in `public/sounds` are synthesised by `node scripts/generate-s
 
 ### Verification
 
-`npm.cmd run verify` is the canonical check, and it runs in CI. It changes no tracked files, stops at the first failure and treats warning output as a failure. In order, it runs:
+`npm.cmd run verify` is the canonical check, and it runs in CI. It changes no tracked files, stops at the first failure, including the first failing test, and treats warning output as a failure. Run a test command directly to see every failure. In order, it runs:
 
 1. Formatting: Prettier
 2. Lint: ESLint with typescript-eslint's strict type-checked rules

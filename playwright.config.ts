@@ -12,6 +12,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   forbidOnly: true,
+  // One failure is enough to stop and look. A direct local run still reports every failure.
+  maxFailures: process.env.CI ? 1 : 0,
   reporter: "list",
   timeout: 180_000,
   // Software rendering at 4K is slow, so Mission Mode can take a while on machines without a GPU.

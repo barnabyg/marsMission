@@ -54,7 +54,7 @@ _Avoid_: Consumables, life support (as the general term)
 ## Assets
 
 **Asset**:
-A pre-designed piece of hardware chosen from a catalogue, such as an orbiter, lander, rover, drone, habitat or fuel plant. Assets remain in place and keep working after their Mission until their Service Life ends.
+A pre-designed piece of hardware chosen from a catalogue, such as an orbiter, lander, rover, drone, habitat or fuel plant. Assets remain in place and keep working after their Mission until their Service Life ends or they fail.
 _Avoid_: Part, module, component, unit
 
 **Service Life**:
@@ -66,7 +66,7 @@ The one task given to an Asset, or to all the Crew at one Landing Site, for a Tu
 _Avoid_: Task, job, assignment
 
 **Landing Site**:
-A named location on Mars where a Mission can land, with its own landing risk, Science value and resources such as water ice. Apart from a couple of well-known sites, they become available only through a Survey.
+A named location on Mars where a Mission can land, with its own landing risk and Science value. Apart from a couple of well-known sites, they become available only through a Survey.
 _Avoid_: Location, zone, region
 
 **Survey**:
@@ -94,7 +94,7 @@ _Avoid_: Prompt, intervention
 ## Risk
 
 **Mission Event**:
-A discrete, riskable step within a Mission, such as launch, Mars transfer burn, aerocapture, entry/descent/landing or rendezvous. Each one has a failure probability.
+A discrete, riskable step within a Mission, such as launch, Mars transfer burn, Mars orbit insertion, entry/descent/landing or rendezvous. Each one has a failure probability.
 _Avoid_: Step, phase
 
 **Safety Margin**:
