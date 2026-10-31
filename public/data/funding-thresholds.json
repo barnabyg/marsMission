@@ -1,1 +1,10 @@
-[{ "publicSupport": 250, "payoutMillions": 1000 }]
+[
+  {
+    "publicSupport": 250,
+    "payoutMillions": 1000
+  },
+  {
+    "publicSupport": 425,
+    "payoutMillions": 1500
+  }
+]

@@ -48,9 +48,9 @@ export const tooltips = {
   "Safety Margin":
     "Everything the player buys to reduce risk. It comes in three kinds (Reliability, Contingency and Protection) and costs money and sometimes mass.",
   "Risk Band":
-    'A rough failure figure shown for a Mission Event in Planning Mode, such as "~5%", in place of its exact failure probability.',
+    'A rough failure figure shown for a Mission Event or an Asset in Planning Mode, such as "~5%", in place of its exact failure probability.',
   Reliability:
-    "Safety Margin that lowers a Mission Event's failure probability, such as testing or redundancy.",
+    "Safety Margin that lowers the chance of a Mission Event or an Asset failing, such as testing or redundancy.",
   Contingency:
     "Safety Margin that changes the outcome when a Mission Event fails, such as an escape module or abort fuel.",
   Protection:

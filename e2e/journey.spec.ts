@@ -44,7 +44,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await expect(
     page.getByTestId("solar-system-view").locator("canvas"),
   ).toBeVisible();
-  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing yet");
+  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
   await expect(eventEntries(page).last()).toContainText("1 December 2028");
   await expect(eventEntries(page).last()).toContainText("carries the Mission");
   expect(await termsWithoutTooltips(page)).toEqual([]);
@@ -96,7 +96,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await expect(page.getByTestId("launch-window")).toHaveText("January 2031");
   await expect(page.getByTestId("money")).toHaveText("$2.3B");
   await expect(page.getByTestId("next-funding-threshold")).toHaveText(
-    "None left",
+    "$1.5B at 425 (170 away)",
   );
   await expect(page.getByTestId("operating-assets")).toContainText(
     "Pathfinder Orbiter",
@@ -140,9 +140,7 @@ for (const { missionEvent, before } of [
     await expect(page.getByTestId("journey-progress")).toHaveText(
       /lost, and will not reach Mars/,
     );
-    await expect(page.getByTestId("operating-at-mars")).toHaveText(
-      "Nothing yet",
-    );
+    await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
     await page.getByRole("button", { name: "10x" }).click();
 
     const summary = page.getByTestId("turn-summary");

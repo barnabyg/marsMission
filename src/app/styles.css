@@ -321,6 +321,19 @@ dialog p {
   color: #ffd9bd;
 }
 
+/* Until the scene has placed it, a label would otherwise show in the corner. */
+.view-label {
+  visibility: hidden;
+}
+
+.surface-label span {
+  color: #ffe08a;
+}
+
+.crashed-label span {
+  color: #ff8a75;
+}
+
 .mission-side {
   z-index: 1;
   grid-row: 2;

@@ -1,5 +1,9 @@
 import { parseCatalogue } from "../src/catalogue/catalogue";
-import { createSimulation, type TurnPlan } from "../src/simulation/simulation";
+import {
+  createSimulation,
+  type TurnPlan,
+  type TurnSummary,
+} from "../src/simulation/simulation";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
 
 const catalogue = parseCatalogue(realCatalogueFiles());
@@ -60,27 +64,26 @@ export const orbiterSafeSeed = seedWhere(
   orbiterAndLander,
 );
 
-/** A seed where the first orbiter arrives and fails in service during the next Turn. */
-export const orbiterFailsInServiceSeed = (() => {
+/** A seed where the first orbiter arrives, and what happens to it during the next Turn is as asked. */
+function seedWhereOrbiter(nextTurn: (summary: TurnSummary) => boolean): number {
   for (let seed = 1; seed < 100_000; seed++) {
     const first = simulation.runTurn(simulation.startProgram(seed), firstPlan);
     if (first.summary.failure) continue;
     const second = simulation.runTurn(first.program, { mission: null });
-    if (second.summary.assetsFailed.length > 0) return seed;
+    if (nextTurn(second.summary)) return seed;
   }
-  throw new Error("No seed gives an orbiter failing in service");
-})();
+  throw new Error("No seed gives the orbiter that outcome");
+}
+
+/** A seed where the first orbiter arrives and fails in service during the next Turn. */
+export const orbiterFailsInServiceSeed = seedWhereOrbiter(
+  ({ assetsFailed }) => assetsFailed.length > 0,
+);
 
 /** A seed where the first orbiter arrives and outlasts its Service Life without failing. */
-export const orbiterLastsSeed = (() => {
-  for (let seed = 1; seed < 100_000; seed++) {
-    const first = simulation.runTurn(simulation.startProgram(seed), firstPlan);
-    if (first.summary.failure) continue;
-    const second = simulation.runTurn(first.program, { mission: null });
-    if (second.summary.assetsEnded.length > 0) return seed;
-  }
-  throw new Error("No seed gives an orbiter lasting its Service Life");
-})();
+export const orbiterLastsSeed = seedWhereOrbiter(
+  ({ assetsEnded }) => assetsEnded.length > 0,
+);
 
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);

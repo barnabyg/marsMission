@@ -1,7 +1,7 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import {
   addDays,
-  daysBetween,
+  daysUntilServiceEnds,
   formatMoney,
   roll,
   sum,
@@ -203,6 +203,7 @@ interface AssetInService {
  */
 function inServiceFailureDay(
   catalogue: Catalogue,
+  rules: Rules,
   program: Program,
   asset: Program["operatingAssets"][number],
   limitDay: number,
@@ -214,7 +215,7 @@ function inServiceFailureDay(
   // An Asset with no time left in this Turn has nothing to fail in.
   if (!design || !level || limitDay <= 1) return null;
   const key = `in-service:${asset.assetId}:${asset.arrivedOn}`;
-  const chance = design.failureChancePerTurn * level.failureMultiplier;
+  const chance = rules.inServiceFailureChance(design, level);
   if (roll(program.seed, program.turnNumber, key) >= chance) return null;
   const dayRoll = roll(program.seed, program.turnNumber, `${key}:day`);
   return 1 + Math.floor(dayRoll * (limitDay - 1));
@@ -248,10 +249,7 @@ function operateAssets(
     ...program.operatingAssets.map((asset) => ({ asset, fromDay: 0 })),
     ...delivered,
   ].map(({ asset, fromDay }): AssetInService => {
-    const endDay = daysBetween(
-      program.date,
-      addDays(asset.arrivedOn, asset.serviceLifeDays),
-    );
+    const endDay = daysUntilServiceEnds(program.date, asset);
     // An upgraded save can hold an Asset whose Service Life has already passed. It ends as the Turn starts.
     const untilDay =
       endDay < launchWindowIntervalDays ? Math.max(endDay, 0) : null;
@@ -260,6 +258,7 @@ function operateAssets(
       fromDay === 0
         ? inServiceFailureDay(
             catalogue,
+            rules,
             program,
             asset,
             untilDay ?? launchWindowIntervalDays,
@@ -303,6 +302,7 @@ function operateAssets(
  */
 function carryOutSurvey(
   catalogue: Catalogue,
+  rules: Rules,
   program: Program,
   inService: AssetInService[],
 ) {
@@ -336,10 +336,8 @@ function carryOutSurvey(
     ...program.knownLandingSiteIds,
     ...(revealed ? [revealed.id] : []),
   ];
-  const namesSurveyed = newlySurveyed.flatMap((id) =>
-    catalogue.landingSites
-      .filter((site) => site.id === id)
-      .map(({ name }) => name),
+  const namesSurveyed = newlySurveyed.flatMap(
+    (id) => rules.landingSiteById(id)?.name ?? [],
   );
   const findings = [
     ...(namesSurveyed.length > 0
@@ -428,7 +426,7 @@ export function resolveTurn(
   );
   const firstLanding = creditFirstLanding(rules, program, flown);
   const operated = operateAssets(catalogue, rules, program, plan, flown);
-  const survey = carryOutSurvey(catalogue, program, operated.inService);
+  const survey = carryOutSurvey(catalogue, rules, program, operated.inService);
   const scienceGained =
     milestones.science + (firstLanding ? firstLanding.site.science : 0);
   const publicSupportBeforeDrain =
@@ -516,6 +514,9 @@ export function resolveTurn(
               failedOnDay,
             }
           : null,
+      landingSites: catalogue.landingSites.map(
+        ({ name, latitude, longitude }) => ({ name, latitude, longitude }),
+      ),
       assetsAtMars,
       // The sort is stable, so an award stays after the arrival that earned it.
       entries: [

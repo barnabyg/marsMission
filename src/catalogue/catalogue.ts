@@ -69,6 +69,9 @@ const landingSitesSchema = z.array(
     // Earned by the first successful landing at this site.
     science: z.number().int().nonnegative(),
     knownFromStart: z.boolean(),
+    // In degrees, north and east, as the map in public/art/mars.jpg has them.
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
   }),
 );
 

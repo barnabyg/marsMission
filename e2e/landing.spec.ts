@@ -174,7 +174,7 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
     "Pathfinder Orbiter",
   );
   await pauseAtEvent(page, "Pathfinder Orbiter: Service Life ended");
-  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing yet");
+  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
   await expect(eventEntries(page).first()).toContainText(
     "costs no Public Support",
   );
@@ -217,7 +217,7 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
   const failed = eventEntries(page).first();
   await expect(failed).toHaveClass(/failed/);
   await expect(failed).toContainText("costs no Public Support");
-  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing yet");
+  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await page.getByRole("button", { name: "10x" }).click();
@@ -242,7 +242,7 @@ test("reports a failed landing as a crash at the Landing Site", async ({
   await expect(page.getByTestId("journey-progress")).toHaveText(
     "Prospector Lander: crashed at Jezero Crater",
   );
-  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing yet");
+  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await page.getByRole("button", { name: "10x" }).click();

@@ -3,19 +3,23 @@
     "id": "jezero-crater",
     "name": "Jezero Crater",
     "description": "An ancient river delta, where past water may have left signs of life.",
-    "landingRisk": 0.35,
+    "landingRisk": 0.45,
     "surveyedLandingRisk": 0.12,
     "science": 120,
-    "knownFromStart": true
+    "knownFromStart": true,
+    "latitude": 18.4,
+    "longitude": 77.5
   },
   {
     "id": "gale-crater",
     "name": "Gale Crater",
     "description": "A deep crater with a layered mountain that records the climate of early Mars.",
-    "landingRisk": 0.35,
+    "landingRisk": 0.45,
     "surveyedLandingRisk": 0.12,
     "science": 100,
-    "knownFromStart": true
+    "knownFromStart": true,
+    "latitude": -5.4,
+    "longitude": 137.8
   },
   {
     "id": "meridiani-planum",
@@ -24,7 +28,9 @@
     "landingRisk": 0.3,
     "surveyedLandingRisk": 0.08,
     "science": 80,
-    "knownFromStart": false
+    "knownFromStart": false,
+    "latitude": -2,
+    "longitude": -6
   },
   {
     "id": "utopia-planitia",
@@ -33,7 +39,9 @@
     "landingRisk": 0.3,
     "surveyedLandingRisk": 0.1,
     "science": 150,
-    "knownFromStart": false
+    "knownFromStart": false,
+    "latitude": 46.7,
+    "longitude": 117.5
   },
   {
     "id": "valles-marineris",
@@ -42,6 +50,8 @@
     "landingRisk": 0.45,
     "surveyedLandingRisk": 0.2,
     "science": 220,
-    "knownFromStart": false
+    "knownFromStart": false,
+    "latitude": -14,
+    "longitude": -59
   }
 ]

@@ -3,12 +3,14 @@ import { addDays, type Timeline } from "../simulation/simulation";
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { EventsColumn } from "./EventsColumn";
+import { missionViews, viewName } from "./missionViews";
 import { speeds } from "./playback";
 import { assetsOperatingOn, describeJourney } from "./journey";
+import { useMissionView } from "./useMissionView";
 import { usePlayback } from "./usePlayback";
 import { useSounds } from "./useSounds";
 
-const SolarSystemView = lazy(() => import("./solarSystem/SolarSystemView"));
+const MissionScene = lazy(() => import("./MissionScene"));
 
 interface MissionModeProps {
   timeline: Timeline;
@@ -35,6 +37,11 @@ export function MissionMode({
     state.entriesHappened,
   );
 
+  const { view, chooseView } = useMissionView(
+    timeline.entries,
+    state.entriesHappened,
+  );
+
   useEffect(() => {
     if (state.finished) onFinished();
   }, [state.finished, onFinished]);
@@ -46,9 +53,10 @@ export function MissionMode({
   return (
     <main className="mission">
       <Suspense fallback={null}>
-        <SolarSystemView
+        <MissionScene
           timeline={timeline}
           day={state.day}
+          view={view}
           operatingAssetCount={operatingAssets.length}
         />
       </Suspense>
@@ -73,6 +81,23 @@ export function MissionMode({
         >
           Mute sound
         </button>
+        <div role="group" aria-label="View" className="speed-controls">
+          <span>
+            View: <strong data-testid="current-view">{viewName(view)}</strong>
+          </span>
+          {missionViews.map(({ id, name }) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={view === id}
+              onClick={() => {
+                chooseView(id);
+              }}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
         <div role="group" aria-label="Speed" className="speed-controls">
           <span>
             Speed:{" "}
@@ -103,7 +128,7 @@ export function MissionMode({
         </p>
         <h2>Operating at Mars</h2>
         <ul data-testid="operating-at-mars">
-          {operatingAssets.length === 0 && <li>Nothing yet</li>}
+          {operatingAssets.length === 0 && <li>Nothing</li>}
           {operatingAssets.map((asset, index) => (
             <li key={index}>{asset}</li>
           ))}

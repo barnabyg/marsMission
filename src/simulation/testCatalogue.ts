@@ -92,6 +92,8 @@ export function testCatalogueFiles(): CatalogueFiles {
         surveyedLandingRisk: 0,
         science: 50,
         knownFromStart: true,
+        latitude: 10,
+        longitude: 20,
       },
       {
         id: "beta-crater",
@@ -101,6 +103,8 @@ export function testCatalogueFiles(): CatalogueFiles {
         surveyedLandingRisk: 0,
         science: 80,
         knownFromStart: true,
+        latitude: -10,
+        longitude: -20,
       },
       {
         id: "gamma-basin",
@@ -110,6 +114,8 @@ export function testCatalogueFiles(): CatalogueFiles {
         surveyedLandingRisk: 0,
         science: 200,
         knownFromStart: false,
+        latitude: 30,
+        longitude: 40,
       },
       {
         id: "delta-rift",
@@ -119,6 +125,8 @@ export function testCatalogueFiles(): CatalogueFiles {
         surveyedLandingRisk: 0,
         science: 300,
         knownFromStart: false,
+        latitude: -30,
+        longitude: -40,
       },
     ],
     fundingThresholds: [

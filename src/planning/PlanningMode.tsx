@@ -75,7 +75,7 @@ export function PlanningMode({
     ...mission,
     reliability,
   });
-  const plannedAssets = simulation.previewAssets(program, {
+  const plannedAssets = simulation.previewAssets({
     ...mission,
     assetChoices,
   });
@@ -418,7 +418,7 @@ export function PlanningMode({
           <section className="panel">
             <h2>Operating at Mars</h2>
             {view.operatingAssets.length === 0 ? (
-              <p>Nothing yet.</p>
+              <p>Nothing.</p>
             ) : (
               <ul data-testid="operating-assets">
                 {view.operatingAssets.map((asset) => (

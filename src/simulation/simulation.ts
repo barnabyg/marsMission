@@ -1,5 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import { addDays, createRules, daysBetween, formatMoney, sum } from "./rules";
+import { createRules, daysUntilServiceEnds, formatMoney, sum } from "./rules";
 import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
 import { resolveTurn } from "./turnSteps";
 import type {
@@ -41,7 +41,7 @@ export interface Simulation {
     mission: PlannedMission,
   ): PlannedMissionEvent[];
   /** The choices a Mission can make for each Asset it carries. Ids that aren't in the catalogue are skipped. */
-  previewAssets(program: Program, mission: PlannedMission): PlannedAsset[];
+  previewAssets(mission: PlannedMission): PlannedAsset[];
   runTurn(program: Program, plan: TurnPlan): TurnResult;
   retireProgram(program: Program): Program;
 }
@@ -53,6 +53,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
   const {
     failureProbability,
     assetReliabilityFor,
+    inServiceFailureChance,
     knownLandingSites,
     serviceLifeFor,
     landingRisk,
@@ -240,13 +241,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           .map(({ id, name }) => ({ id, name })),
         operatingAssets: program.operatingAssets.map((asset) => ({
           ...asset,
-          daysLeft: Math.max(
-            0,
-            daysBetween(
-              program.date,
-              addDays(asset.arrivedOn, asset.serviceLifeDays),
-            ),
-          ),
+          daysLeft: Math.max(0, daysUntilServiceEnds(program.date, asset)),
           landingSiteName: landingSiteById(asset.landingSiteId)?.name ?? null,
         })),
         landingSites: knownLandingSites(program).map((site) => ({
@@ -305,7 +300,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       );
     },
 
-    previewAssets(_program, mission) {
+    previewAssets(mission) {
       return catalogue.assets
         .filter((asset) => mission.assetIds.includes(asset.id))
         .map((asset) => ({
@@ -315,16 +310,13 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           serviceLifeOptions: asset.serviceLifeOptions,
           reliabilityLevelId: assetReliabilityFor(mission, asset).id,
           riskBand: riskBandFor(
-            asset.failureChancePerTurn *
-              assetReliabilityFor(mission, asset).failureMultiplier,
+            inServiceFailureChance(asset, assetReliabilityFor(mission, asset)),
           ),
           reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
             id: level.id,
             name: level.name,
             costMillions: level.costMillions,
-            riskBand: riskBandFor(
-              asset.failureChancePerTurn * level.failureMultiplier,
-            ),
+            riskBand: riskBandFor(inServiceFailureChance(asset, level)),
           })),
         }));
     },

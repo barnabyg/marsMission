@@ -44,11 +44,19 @@ export function roll(seed: number, turnNumber: number, key: string): number {
 }
 
 /** How many days after the first date the second is. */
-export function daysBetween(from: string, to: string): number {
+function daysBetween(from: string, to: string): number {
   return (
     (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) /
     millisecondsPerDay
   );
+}
+
+/** How many days after `date` an Asset's Service Life ends, which is negative if it already has. */
+export function daysUntilServiceEnds(
+  date: string,
+  asset: { arrivedOn: string; serviceLifeDays: number },
+): number {
+  return daysBetween(date, addDays(asset.arrivedOn, asset.serviceLifeDays));
 }
 
 /** The calculations shared by planning a Mission and resolving a Turn. */
@@ -59,19 +67,22 @@ export function createRules(catalogue: Catalogue) {
       : catalogue.program.transferDays + timing.days;
   }
 
-  /** The level a Mission has bought for a Mission Event, which is the cheapest unless it chose another. */
-  function reliabilityLevelFor(
-    mission: PlannedMission | null,
-    eventId: string,
-  ): ReliabilityLevel {
+  function levelOrCheapest(chosenId: string | undefined): ReliabilityLevel {
     const { reliabilityLevels } = catalogue;
-    const chosenId = mission?.reliability?.[eventId];
     const level =
       reliabilityLevels.find(({ id }) => id === chosenId) ??
       reliabilityLevels[0];
     // The Catalogue guarantees at least one level.
     if (!level) throw new Error("The catalogue has no Reliability levels");
     return level;
+  }
+
+  /** The level a Mission has bought for a Mission Event, which is the cheapest unless it chose another. */
+  function reliabilityLevelFor(
+    mission: PlannedMission | null,
+    eventId: string,
+  ): ReliabilityLevel {
+    return levelOrCheapest(mission?.reliability?.[eventId]);
   }
 
   /** The Service Life a Mission has chosen for an Asset, which is the shortest unless it chose another. */
@@ -90,14 +101,17 @@ export function createRules(catalogue: Catalogue) {
     mission: PlannedMission | null,
     asset: Asset,
   ): ReliabilityLevel {
-    const { reliabilityLevels } = catalogue;
-    const chosenId = mission?.assetChoices?.[asset.id]?.reliabilityLevelId;
-    const level =
-      reliabilityLevels.find(({ id }) => id === chosenId) ??
-      reliabilityLevels[0];
-    // The Catalogue guarantees at least one level.
-    if (!level) throw new Error("The catalogue has no Reliability levels");
-    return level;
+    return levelOrCheapest(
+      mission?.assetChoices?.[asset.id]?.reliabilityLevelId,
+    );
+  }
+
+  /** The one calculation behind both an Asset's roll in service and the risk band Planning Mode shows. */
+  function inServiceFailureChance(
+    asset: Asset,
+    level: ReliabilityLevel,
+  ): number {
+    return asset.failureChancePerTurn * level.failureMultiplier;
   }
 
   /** The Landing Sites that can be chosen so far. */
@@ -177,6 +191,7 @@ export function createRules(catalogue: Catalogue) {
     deliveryDay,
     serviceLifeFor,
     assetReliabilityFor,
+    inServiceFailureChance,
     knownLandingSites,
     landingRisk,
     landingSiteById,
