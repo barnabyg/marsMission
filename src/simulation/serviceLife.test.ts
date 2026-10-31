@@ -228,8 +228,8 @@ describe("Service Life in saves", () => {
     });
     expect(simulation.readProgram(restored).operatingAssets[0]).toMatchObject({
       serviceLifeDays: 1000,
-      // 1000 days from 19 June 2029 is 14 March 2032, which is 420 days after 19 January 2031.
-      daysLeft: 420,
+      // 579 of the 1000 days have passed between 19 June 2029 and 19 January 2031.
+      daysLeft: 421,
     });
   });
 

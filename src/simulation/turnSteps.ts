@@ -1,6 +1,7 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import {
   addDays,
+  daysBetween,
   formatMoney,
   missionEventRoll,
   sum,
@@ -11,6 +12,7 @@ import {
 } from "./rules";
 import type {
   AssetAtMars,
+  AssetEndedEntry,
   FirstLandingEntry,
   FundingThresholdEntry,
   MilestoneEntry,
@@ -183,31 +185,93 @@ function creditFirstLanding(
   };
 }
 
+/** One Asset's time at Mars during this Turn. */
+interface AssetInService {
+  asset: Program["operatingAssets"][number];
+  /** The day of the Turn it starts operating, which is 0 if it already was. */
+  fromDay: number;
+  /** The day of the Turn it stops, or null if it lasts beyond the Turn. */
+  untilDay: number | null;
+}
+
+/** Works out when each Asset at Mars stops operating this Turn, because its Service Life has ended. */
+function operateAssets(
+  catalogue: Catalogue,
+  rules: Rules,
+  program: Program,
+  plan: TurnPlan,
+  flown: MissionOutcome,
+): { inService: AssetInService[]; entries: AssetEndedEntry[] } {
+  const { launchWindowIntervalDays } = catalogue.program;
+  const delivered = flown.deliveredAssets.map((asset) => ({
+    asset: {
+      assetId: asset.id,
+      name: asset.name,
+      kind: asset.kind,
+      arrivedOn: addDays(program.date, rules.deliveryDay(asset)),
+      landingSiteId: asset.landsAtSite ? (flown.landingSite?.id ?? null) : null,
+      serviceLifeDays: rules.serviceLifeFor(plan.mission, asset).days,
+    },
+    fromDay: rules.deliveryDay(asset),
+  }));
+  const inService = [
+    ...program.operatingAssets.map((asset) => ({ asset, fromDay: 0 })),
+    ...delivered,
+  ].map(({ asset, fromDay }): AssetInService => {
+    const endDay = daysBetween(
+      program.date,
+      addDays(asset.arrivedOn, asset.serviceLifeDays),
+    );
+    return {
+      asset,
+      fromDay,
+      // An upgraded save can hold an Asset whose Service Life has already passed. It ends as the Turn starts.
+      untilDay: endDay < launchWindowIntervalDays ? Math.max(endDay, 0) : null,
+    };
+  });
+  return {
+    inService,
+    entries: inService.flatMap(({ asset, untilDay }): AssetEndedEntry[] => {
+      if (untilDay === null) return [];
+      const site = rules.landingSiteById(asset.landingSiteId)?.name;
+      return [
+        {
+          kind: "assetEnded",
+          day: untilDay,
+          title: `${asset.name}: Service Life ended`,
+          description: `${asset.name} has stopped operating ${site ? `at ${site}` : "at Mars"}. It costs no Public Support.`,
+        },
+      ];
+    }),
+  };
+}
+
 /**
  * Carries out the Turn's Survey, if a surveying Asset operates at Mars during it. Every known site
  * drops to its surveyed risk in one step, and the next site in the catalogue becomes known.
  */
 function carryOutSurvey(
   catalogue: Catalogue,
-  rules: Rules,
   program: Program,
-  flown: MissionOutcome,
+  inService: AssetInService[],
 ) {
-  const surveying = (assetId: string) =>
-    catalogue.assets.some((asset) => asset.id === assetId && asset.surveys);
-  const alreadyOperating = program.operatingAssets.some(({ assetId }) =>
-    surveying(assetId),
-  );
-  const arrivalDays = flown.deliveredAssets
-    .filter((asset) => asset.surveys)
-    .map(rules.deliveryDay);
+  // An Asset counts if it operated at any point in the Turn, however briefly.
+  const surveyDays = inService
+    .filter(
+      ({ asset, fromDay, untilDay }) =>
+        catalogue.assets.some(
+          ({ id, surveys }) => id === asset.assetId && surveys,
+        ) &&
+        (untilDay === null || untilDay > fromDay),
+    )
+    .map(({ fromDay }) => fromDay);
   const unchanged = {
     knownLandingSiteIds: program.knownLandingSiteIds,
     surveyedLandingSiteIds: program.surveyedLandingSiteIds,
     entry: null,
     summary: null,
   };
-  if (!alreadyOperating && arrivalDays.length === 0) return unchanged;
+  if (surveyDays.length === 0) return unchanged;
 
   const newlySurveyed = program.knownLandingSiteIds.filter(
     (id) => !program.surveyedLandingSiteIds.includes(id),
@@ -234,7 +298,7 @@ function carryOutSurvey(
   ];
   const entry: SurveyEntry = {
     kind: "survey",
-    day: alreadyOperating ? 0 : Math.min(...arrivalDays),
+    day: Math.min(...surveyDays),
     title: "Survey from orbit",
     description: findings.join(" "),
   };
@@ -312,7 +376,8 @@ export function resolveTurn(
     flown.deliveredAssets,
   );
   const firstLanding = creditFirstLanding(rules, program, flown);
-  const survey = carryOutSurvey(catalogue, rules, program, flown);
+  const operated = operateAssets(catalogue, rules, program, plan, flown);
+  const survey = carryOutSurvey(catalogue, program, operated.inService);
   const scienceGained =
     milestones.science + (firstLanding ? firstLanding.site.science : 0);
   const publicSupportBeforeDrain =
@@ -347,20 +412,15 @@ export function resolveTurn(
         asset.missionEvents.includes(flown.failedEvent.id),
     };
   });
-  const assetsAtMars: AssetAtMars[] = [
-    ...program.operatingAssets.map((asset) => ({
+  const assetsAtMars = operated.inService.map(
+    ({ asset, fromDay, untilDay }): AssetAtMars => ({
       name: asset.name,
       kind: asset.kind,
       landingSiteName: rules.landingSiteById(asset.landingSiteId)?.name ?? null,
-      fromDay: 0,
-    })),
-    ...flown.deliveredAssets.map((asset) => ({
-      name: asset.name,
-      kind: asset.kind,
-      landingSiteName: siteNameOf(asset),
-      fromDay: rules.deliveryDay(asset),
-    })),
-  ];
+      fromDay,
+      untilDay,
+    }),
+  );
 
   return {
     program: {
@@ -383,18 +443,9 @@ export function resolveTurn(
         ...program.fundingThresholdsPaid,
         ...funding.payouts.map(({ publicSupport }) => publicSupport),
       ],
-      operatingAssets: [
-        ...program.operatingAssets,
-        ...flown.deliveredAssets.map((asset) => ({
-          assetId: asset.id,
-          name: asset.name,
-          kind: asset.kind,
-          arrivedOn: addDays(program.date, rules.deliveryDay(asset)),
-          landingSiteId: asset.landsAtSite
-            ? (flown.landingSite?.id ?? null)
-            : null,
-        })),
-      ],
+      operatingAssets: operated.inService
+        .filter(({ untilDay }) => untilDay === null)
+        .map(({ asset }) => asset),
       status:
         faded.cancellationReason === null
           ? program.status
@@ -421,6 +472,7 @@ export function resolveTurn(
         ...milestones.entries,
         ...(firstLanding ? [firstLanding.entry] : []),
         ...(survey.entry ? [survey.entry] : []),
+        ...operated.entries,
         ...funding.entries,
       ].sort((first, second) => first.day - second.day),
     },
@@ -444,6 +496,9 @@ export function resolveTurn(
         siteName: firstLanding.site.name,
         science: firstLanding.site.science,
       },
+      assetsEnded: operated.inService
+        .filter(({ untilDay }) => untilDay !== null)
+        .map(({ asset }) => asset.name),
       survey: survey.summary,
       fundingPayouts: funding.payouts,
       failure: flown.failedEvent

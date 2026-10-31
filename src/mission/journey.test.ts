@@ -61,18 +61,41 @@ describe("describing a Mission's journey", () => {
 });
 
 describe("listing what's operating at Mars", () => {
+  it("removes an Asset from the day it stops operating", () => {
+    const timeline = {
+      assetsAtMars: [
+        {
+          name: "Ending",
+          kind: "orbiter",
+          landingSiteName: null,
+          fromDay: 0,
+          untilDay: 300,
+        },
+      ],
+    };
+    expect(assetsOperatingOn(timeline, 299)).toEqual(["Ending"]);
+    expect(assetsOperatingOn(timeline, 300)).toEqual([]);
+  });
+
   it("adds each Asset from its day, with its Landing Site", () => {
     const timeline = {
       assetsAtMars: [
-        { name: "Old", kind: "orbiter", landingSiteName: null, fromDay: 0 },
+        {
+          name: "Old",
+          kind: "orbiter",
+          landingSiteName: null,
+          fromDay: 0,
+          untilDay: null,
+        },
         {
           name: "New",
           kind: "lander",
           landingSiteName: "Alpha Plain",
           fromDay: 205,
+          untilDay: null,
         },
       ],
-    } as unknown as Timeline;
+    };
     expect(assetsOperatingOn(timeline, 204)).toEqual(["Old"]);
     expect(assetsOperatingOn(timeline, 205)).toEqual([
       "Old",

@@ -91,7 +91,7 @@ export async function pauseAtEvent(page: Page, title: string): Promise<void> {
 
 /** Ticks exactly these Assets for the planned Mission. */
 export async function chooseAssets(page: Page, names: string[]): Promise<void> {
-  const boxes = page.locator(".asset-choices label");
+  const boxes = page.locator(".asset-choice");
   await expect(boxes.first()).toBeVisible();
   for (const box of await boxes.all()) {
     const text = (await box.textContent()) ?? "";

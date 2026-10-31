@@ -47,7 +47,10 @@ export function assetsAtMarsOn(
   timeline: Pick<Timeline, "assetsAtMars">,
   day: number,
 ): AssetAtMars[] {
-  return timeline.assetsAtMars.filter((asset) => day >= asset.fromDay);
+  return timeline.assetsAtMars.filter(
+    ({ fromDay, untilDay }) =>
+      day >= fromDay && (untilDay === null || day < untilDay),
+  );
 }
 
 /** What the "Operating at Mars" list shows on a given day. */

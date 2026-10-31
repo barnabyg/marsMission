@@ -13,6 +13,8 @@ export class SaveError extends Error {
   override name = "SaveError";
 }
 
+export const corruptSave = "This save is corrupt, so it can't be loaded.";
+
 /**
  * One released save format. Released saves are a compatibility contract: to change the saved shape,
  * add a new format to the end of `formats`, and give the one before it an `upgrade` to the new shape.
@@ -68,7 +70,29 @@ const format3 = format2.extend({
   surveyedLandingSiteIds: z.array(z.string()),
 });
 
-const newestFormat = format3;
+/** Adds each Asset's Service Life. A save from before Service Life gets the shortest option for its kind, counted from its arrival. */
+const format4 = format3.extend({
+  operatingAssets: z.array(
+    z.strictObject({
+      ...format2.shape.operatingAssets.element.shape,
+      serviceLifeDays: z.number().int().positive(),
+    }),
+  ),
+});
+
+function shortestServiceLife(
+  { assetId, kind }: { assetId: string; kind: string },
+  { assets }: Catalogue,
+): number {
+  const asset =
+    assets.find(({ id }) => id === assetId) ??
+    assets.find((candidate) => candidate.kind === kind);
+  const shortest = asset?.serviceLifeOptions[0];
+  if (!shortest) throw new SaveError(corruptSave);
+  return shortest.days;
+}
+
+const newestFormat = format4;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -96,10 +120,21 @@ const formats: readonly SaveFormat[] = [
       surveyedLandingSiteIds: [],
     }),
   },
+  {
+    schema: format3,
+    upgrade: (
+      old: z.output<typeof format3>,
+      catalogue: Catalogue,
+    ): z.output<typeof format4> => ({
+      ...old,
+      operatingAssets: old.operatingAssets.map((asset) => ({
+        ...asset,
+        serviceLifeDays: shortestServiceLife(asset, catalogue),
+      })),
+    }),
+  },
   { schema: newestFormat },
 ];
-
-export const corruptSave = "This save is corrupt, so it can't be loaded.";
 
 export function saveProgram(program: Program): SavedProgram {
   return { formatVersion: formats.length, program };

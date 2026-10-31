@@ -49,8 +49,8 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
   await playToNextTurn(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
   await expect(page.getByTestId("science")).toHaveText("270");
-  await expect(page.getByTestId("operating-assets")).toHaveText(
-    "Prospector Lander at Jezero Crater",
+  await expect(page.getByTestId("operating-assets")).toContainText(
+    "Prospector Lander at Jezero Crater: 35 days of Service Life left",
   );
   await chooseAssets(page, ["Prospector Lander"]);
   await expect(page.getByTestId("landing-site-details")).toContainText(
@@ -138,6 +138,47 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
   await expect(page.getByTestId("landing-site-details")).toContainText(
     "Surveyed.",
   );
+  expect(problems).toEqual([]);
+});
+
+test("offers a Service Life for each chosen Asset, which changes the cost, and sees one end during a Turn", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+  const life = page.getByLabel("Service Life for Pathfinder Orbiter");
+  await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
+  await life.selectOption("1700");
+  await expect(page.getByTestId("mission-cost")).toHaveText("$1.15B");
+  await life.selectOption("900");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await playToNextTurn(page);
+  await expect(page.getByTestId("operating-assets")).toContainText(
+    "Pathfinder Orbiter: 330 days of Service Life left",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await expect(page.getByTestId("operating-at-mars")).toHaveText(
+    "Pathfinder Orbiter",
+  );
+  await pauseAtEvent(page, "Pathfinder Orbiter: Service Life ended");
+  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing yet");
+  await expect(eventEntries(page).first()).toContainText(
+    "costs no Public Support",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.getByRole("button", { name: "10x" }).click();
+  await expect(page.getByTestId("summary-assets-ended")).toContainText(
+    "Pathfinder Orbiter",
+  );
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByTestId("operating-assets")).toHaveCount(0);
   expect(problems).toEqual([]);
 });
 

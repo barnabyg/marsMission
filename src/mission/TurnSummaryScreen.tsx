@@ -69,6 +69,13 @@ export function TurnSummaryScreen({
           </GameText>
         </p>
       )}
+      {summary.assetsEnded.length > 0 && (
+        <p data-testid="summary-assets-ended">
+          <GameText>
+            {`Service Life ended: ${summary.assetsEnded.join(", ")}`}
+          </GameText>
+        </p>
+      )}
       {summary.survey && (
         <section data-testid="summary-survey">
           <h2>

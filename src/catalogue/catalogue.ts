@@ -40,6 +40,15 @@ const assetsSchema = z.array(
     kind: id,
     costMillions: money,
     massTonnes: z.number().positive(),
+    // In order, shortest first. Service Life starts when the Asset arrives, and the first option is what's chosen unless the player picks another.
+    serviceLifeOptions: z
+      .array(
+        z.strictObject({
+          days: z.number().int().positive(),
+          costMillions: money,
+        }),
+      )
+      .min(1),
     missionEvents: z.array(id),
     // Whether this Asset is a lander, so that a Mission carrying it must name a Landing Site.
     landsAtSite: z.boolean().optional(),
@@ -267,6 +276,22 @@ function crossCheck(catalogue: Catalogue): string[] {
         `${catalogueFileNames.assets}: "${asset.id}" can't both land and survey, because a Survey is made from orbit`,
       );
     }
+  }
+  for (const asset of assets) {
+    asset.serviceLifeOptions.forEach((option, index) => {
+      const shorter = asset.serviceLifeOptions[index - 1];
+      if (!shorter) return;
+      if (option.days <= shorter.days) {
+        problems.push(
+          `${catalogueFileNames.assets}: "${asset.id}" has a Service Life of ${option.days} days after one of ${shorter.days}. They go in ascending order`,
+        );
+      }
+      if (option.costMillions < shorter.costMillions) {
+        problems.push(
+          `${catalogueFileNames.assets}: "${asset.id}" has a Service Life of ${option.days} days that costs less than a shorter one`,
+        );
+      }
+    });
   }
   for (const site of landingSites) {
     if (site.surveyedLandingRisk > site.landingRisk) {

@@ -5,6 +5,12 @@ export interface PlannedMission {
   reliability?: Record<string, string>;
   /** Where the Mission's lander comes down. Only a Mission carrying a lander has one. */
   landingSiteId?: string;
+  /** The choices made for each Asset, by id. Anything left out gets the shortest Service Life. */
+  assetChoices?: Record<string, AssetChoices>;
+}
+
+export interface AssetChoices {
+  serviceLifeDays?: number;
 }
 
 export interface TurnPlan {
@@ -27,6 +33,8 @@ interface OperatingAsset {
   arrivedOn: string;
   /** Where it is on the surface, or null if it's in orbit. */
   landingSiteId: string | null;
+  /** How long after arrivedOn it stops operating. */
+  serviceLifeDays: number;
 }
 
 type ProgramStatus =
@@ -69,7 +77,11 @@ export interface ProgramView {
     payoutMillions: number;
     pointsAway: number;
   } | null;
-  operatingAssets: (OperatingAsset & { landingSiteName: string | null })[];
+  operatingAssets: (OperatingAsset & {
+    landingSiteName: string | null;
+    /** How many days of Service Life are left, which is 0 if it ends as the coming Turn starts. */
+    daysLeft: number;
+  })[];
   launchVehicles: {
     id: string;
     name: string;
@@ -137,7 +149,15 @@ export interface SurveyEntry {
   description: string;
 }
 
+export interface AssetEndedEntry {
+  kind: "assetEnded";
+  day: number;
+  title: string;
+  description: string;
+}
+
 export type TimelineEntry =
+  | AssetEndedEntry
   | SurveyEntry
   | MissionEventEntry
   | MilestoneEntry
@@ -163,6 +183,8 @@ export interface TurnSummary {
   milestones: AwardedMilestone[];
   /** The Science from landing at a Landing Site for the first time, if a lander did. */
   firstLanding: { siteName: string; science: number } | null;
+  /** The Assets whose Service Life ended this Turn. */
+  assetsEnded: string[];
   /** What this Turn's Survey found, if there was one and it changed anything. */
   survey: {
     siteNamesSurveyed: string[];
@@ -200,6 +222,8 @@ export interface AssetAtMars {
   landingSiteName: string | null;
   /** The day of the Turn it starts operating, which is 0 if it already was. */
   fromDay: number;
+  /** The day of the Turn it stops operating, or null if it lasts beyond the Turn. */
+  untilDay: number | null;
 }
 
 /** What happened in a Turn, for Mission Mode to display. */
@@ -225,6 +249,14 @@ export interface TurnResult {
   program: Program;
   timeline: Timeline;
   summary: TurnSummary;
+}
+
+/** An Asset on a planned Mission as Planning Mode shows it. */
+export interface PlannedAsset {
+  assetId: string;
+  name: string;
+  serviceLifeDays: number;
+  serviceLifeOptions: { days: number; costMillions: number }[];
 }
 
 /** A Mission Event as Planning Mode shows it: a rough risk band, never the exact probability. */

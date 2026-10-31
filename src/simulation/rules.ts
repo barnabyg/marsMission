@@ -47,6 +47,14 @@ export function missionEventRoll(
   return (hash >>> 0) / 2 ** 32;
 }
 
+/** How many days after the first date the second is. */
+export function daysBetween(from: string, to: string): number {
+  return (
+    (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) /
+    millisecondsPerDay
+  );
+}
+
 /** The calculations shared by planning a Mission and resolving a Turn. */
 export function createRules(catalogue: Catalogue) {
   function dayOf({ timing }: MissionEvent): number {
@@ -68,6 +76,17 @@ export function createRules(catalogue: Catalogue) {
     // The Catalogue guarantees at least one level.
     if (!level) throw new Error("The catalogue has no Reliability levels");
     return level;
+  }
+
+  /** The Service Life a Mission has chosen for an Asset, which is the shortest unless it chose another. */
+  function serviceLifeFor(mission: PlannedMission | null, asset: Asset) {
+    const chosen = mission?.assetChoices?.[asset.id]?.serviceLifeDays;
+    const option =
+      asset.serviceLifeOptions.find(({ days }) => days === chosen) ??
+      asset.serviceLifeOptions[0];
+    // The Catalogue guarantees at least one option.
+    if (!option) throw new Error(`"${asset.id}" has no Service Life options`);
+    return option;
   }
 
   /** The Landing Sites that can be chosen so far. */
@@ -145,6 +164,7 @@ export function createRules(catalogue: Catalogue) {
   return {
     dayOf,
     deliveryDay,
+    serviceLifeFor,
     knownLandingSites,
     landingRisk,
     landingSiteById,

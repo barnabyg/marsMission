@@ -1,9 +1,10 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import { createRules, formatMoney, sum } from "./rules";
+import { addDays, createRules, daysBetween, formatMoney, sum } from "./rules";
 import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
 import { resolveTurn } from "./turnSteps";
 import type {
   PlanCheck,
+  PlannedAsset,
   PlannedMission,
   PlannedMissionEvent,
   Program,
@@ -16,6 +17,7 @@ export { addDays, formatMoney } from "./rules";
 export { corruptSave, SaveError } from "./saveFormat";
 export type {
   AssetAtMars,
+  AssetChoices,
   Program,
   ProgramView,
   Timeline,
@@ -38,6 +40,8 @@ export interface Simulation {
     program: Program,
     mission: PlannedMission,
   ): PlannedMissionEvent[];
+  /** The choices a Mission can make for each Asset it carries. Ids that aren't in the catalogue are skipped. */
+  previewAssets(program: Program, mission: PlannedMission): PlannedAsset[];
   runTurn(program: Program, plan: TurnPlan): TurnResult;
   retireProgram(program: Program): Program;
 }
@@ -49,6 +53,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
   const {
     failureProbability,
     knownLandingSites,
+    serviceLifeFor,
     landingRisk,
     landingSiteById,
     missionEventsFor,
@@ -67,6 +72,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       assetIds,
       reliability = {},
       landingSiteId,
+      assetChoices = {},
     } = plan.mission;
     const problems: string[] = [];
     let costMillions = 0;
@@ -120,6 +126,31 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       }
     } else if (landingSiteId !== undefined) {
       problems.push("Only a Mission carrying a lander has a Landing Site.");
+    }
+
+    for (const [assetId, choices] of Object.entries(assetChoices)) {
+      if (!assetIds.includes(assetId)) {
+        problems.push(
+          `This Mission isn't carrying an Asset called "${assetId}".`,
+        );
+        continue;
+      }
+      const asset = catalogue.assets.find(({ id }) => id === assetId);
+      const { serviceLifeDays } = choices;
+      if (
+        asset &&
+        serviceLifeDays !== undefined &&
+        !asset.serviceLifeOptions.some(({ days }) => days === serviceLifeDays)
+      ) {
+        problems.push(
+          `${asset.name} has no Service Life of ${serviceLifeDays} days.`,
+        );
+      }
+    }
+    for (const asset of catalogue.assets) {
+      if (assetIds.includes(asset.id)) {
+        costMillions += serviceLifeFor(plan.mission, asset).costMillions;
+      }
     }
 
     const plannedEvents = missionEventsFor(launchVehicleId, assetIds);
@@ -199,6 +230,13 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           .map(({ id, name }) => ({ id, name })),
         operatingAssets: program.operatingAssets.map((asset) => ({
           ...asset,
+          daysLeft: Math.max(
+            0,
+            daysBetween(
+              program.date,
+              addDays(asset.arrivedOn, asset.serviceLifeDays),
+            ),
+          ),
           landingSiteName: landingSiteById(asset.landingSiteId)?.name ?? null,
         })),
         landingSites: knownLandingSites(program).map((site) => ({
@@ -255,6 +293,17 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           };
         },
       );
+    },
+
+    previewAssets(_program, mission) {
+      return catalogue.assets
+        .filter((asset) => mission.assetIds.includes(asset.id))
+        .map((asset) => ({
+          assetId: asset.id,
+          name: asset.name,
+          serviceLifeDays: serviceLifeFor(mission, asset).days,
+          serviceLifeOptions: asset.serviceLifeOptions,
+        }));
     },
 
     runTurn(program, plan) {

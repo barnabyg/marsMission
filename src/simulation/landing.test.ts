@@ -147,6 +147,8 @@ describe("a successful landing", () => {
         kind: "lander",
         arrivedOn: "2029-06-24",
         landingSiteId: "alpha-plain",
+        serviceLifeDays: 50_000,
+        daysLeft: 49_425,
         landingSiteName: "Alpha Plain",
       },
     ]);
@@ -156,6 +158,7 @@ describe("a successful landing", () => {
         kind: "lander",
         landingSiteName: "Alpha Plain",
         fromDay: 205,
+        untilDay: null,
       },
     ]);
   });

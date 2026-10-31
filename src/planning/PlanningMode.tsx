@@ -5,6 +5,7 @@ import {
   formatMoney,
   type Program,
   type Simulation,
+  type AssetChoices,
   type TurnPlan,
 } from "../simulation/simulation";
 import { Dialog } from "../ui/Dialog";
@@ -44,6 +45,9 @@ export function PlanningMode({
   const [chosenSiteId, setChosenSiteId] = useState(
     view.landingSites[0]?.id ?? "",
   );
+  const [assetChoices, setAssetChoices] = useState<
+    Record<string, AssetChoices>
+  >({});
   const [openDialog, setOpenDialog] = useState<PlanningDialog | null>(null);
   const [savedToSlot, setSavedToSlot] = useState<number | null>(null);
 
@@ -71,12 +75,23 @@ export function PlanningMode({
     ...mission,
     reliability,
   });
+  const plannedAssets = simulation.previewAssets(program, {
+    ...mission,
+    assetChoices,
+  });
   const plan: TurnPlan = {
     mission: {
       ...mission,
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
       reliability: Object.fromEntries(
         plannedEvents.map((event) => [event.eventId, event.reliabilityLevelId]),
+      ),
+      // Only the Assets this Mission carries, for the same reason.
+      assetChoices: Object.fromEntries(
+        plannedAssets.map((asset) => [
+          asset.assetId,
+          { serviceLifeDays: asset.serviceLifeDays },
+        ]),
       ),
     },
   };
@@ -205,23 +220,57 @@ export function PlanningMode({
             <legend>
               <GameText>Assets</GameText>
             </legend>
-            {view.assets.map((asset) => (
-              <label key={asset.id}>
-                <input
-                  type="checkbox"
-                  checked={assetIds.includes(asset.id)}
-                  onChange={(event) => {
-                    setAssetIds(
-                      event.target.checked
-                        ? [...assetIds, asset.id]
-                        : assetIds.filter((id) => id !== asset.id),
-                    );
-                  }}
-                />
-                {asset.name} ({formatMoney(asset.costMillions)},{" "}
-                {asset.massTonnes} t)
-              </label>
-            ))}
+            {view.assets.map((asset) => {
+              const planned = plannedAssets.find(
+                ({ assetId }) => assetId === asset.id,
+              );
+              return (
+                <div key={asset.id} className="asset-choice">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={assetIds.includes(asset.id)}
+                      onChange={(event) => {
+                        setAssetIds(
+                          event.target.checked
+                            ? [...assetIds, asset.id]
+                            : assetIds.filter((id) => id !== asset.id),
+                        );
+                      }}
+                    />
+                    {asset.name} ({formatMoney(asset.costMillions)},{" "}
+                    {asset.massTonnes} t)
+                  </label>
+                  {planned && (
+                    <>
+                      <span>
+                        <GameText>Service Life</GameText>
+                      </span>
+                      <select
+                        aria-label={`Service Life for ${asset.name}`}
+                        value={planned.serviceLifeDays}
+                        onChange={(event) => {
+                          setAssetChoices({
+                            ...assetChoices,
+                            [asset.id]: {
+                              ...assetChoices[asset.id],
+                              serviceLifeDays: Number(event.target.value),
+                            },
+                          });
+                        }}
+                      >
+                        {planned.serviceLifeOptions.map((option) => (
+                          <option key={option.days} value={option.days}>
+                            {option.days} days (
+                            {formatMoney(option.costMillions)})
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </fieldset>
           {landingSite && (
             <>
@@ -345,9 +394,17 @@ export function PlanningMode({
               <ul data-testid="operating-assets">
                 {view.operatingAssets.map((asset) => (
                   <li key={`${asset.assetId}-${asset.arrivedOn}`}>
-                    {asset.landingSiteName
-                      ? `${asset.name} at ${asset.landingSiteName}`
-                      : asset.name}
+                    <GameText>
+                      {`${
+                        asset.landingSiteName
+                          ? `${asset.name} at ${asset.landingSiteName}`
+                          : asset.name
+                      }: ${
+                        asset.daysLeft > 0
+                          ? `${asset.daysLeft} days of Service Life left`
+                          : "Service Life ends as this Turn starts"
+                      }`}
+                    </GameText>
                   </li>
                 ))}
               </ul>

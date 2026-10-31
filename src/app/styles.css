@@ -170,10 +170,25 @@ button.primary {
   color: var(--muted);
 }
 
+.asset-choice {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.asset-choice > span {
+  color: var(--muted);
+}
+
+.asset-choice select {
+  min-width: 13rem;
+}
+
 .panel .asset-choices label {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  min-width: 28rem;
   color: var(--text);
 }
 

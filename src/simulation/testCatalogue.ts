@@ -4,6 +4,12 @@ import {
   type CatalogueFiles,
 } from "../catalogue/catalogue";
 
+/** Long enough that an Asset outlasts the rule tests that aren't about Service Life. */
+const longLife = [
+  { days: 50_000, costMillions: 0 },
+  { days: 90_000, costMillions: 100 },
+];
+
 /** A small catalogue with round numbers, so balance changes to the real data files don't break rule tests. */
 export function testCatalogueFiles(): CatalogueFiles {
   return {
@@ -39,6 +45,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         kind: "orbiter",
         costMillions: 400,
         massTonnes: 2,
+        serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
         surveys: true,
       },
@@ -48,6 +55,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         kind: "orbiter",
         costMillions: 5000,
         massTonnes: 1,
+        serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
         surveys: true,
       },
@@ -57,6 +65,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         kind: "relay",
         costMillions: 100,
         massTonnes: 2,
+        serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
       },
       {
@@ -65,6 +74,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         kind: "lander",
         costMillions: 300,
         massTonnes: 3,
+        serviceLifeOptions: longLife,
         missionEvents: ["test-landing"],
         landsAtSite: true,
       },

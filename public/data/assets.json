@@ -6,7 +6,17 @@
     "costMillions": 700,
     "missionEvents": ["mars-orbit-insertion"],
     "massTonnes": 2.5,
-    "surveys": true
+    "surveys": true,
+    "serviceLifeOptions": [
+      {
+        "days": 900,
+        "costMillions": 0
+      },
+      {
+        "days": 1700,
+        "costMillions": 150
+      }
+    ]
   },
   {
     "id": "prospector-lander",
@@ -15,6 +25,16 @@
     "costMillions": 800,
     "missionEvents": ["entry-descent-landing"],
     "landsAtSite": true,
-    "massTonnes": 3
+    "massTonnes": 3,
+    "serviceLifeOptions": [
+      {
+        "days": 600,
+        "costMillions": 0
+      },
+      {
+        "days": 1500,
+        "costMillions": 100
+      }
+    ]
   }
 ]
