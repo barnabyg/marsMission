@@ -17,6 +17,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "verify": "node scripts/verify.mjs",
+    "balance": "node scripts/balance.mjs",
     "secrets": "secretlint \"**/*\" --secretlintignore .gitignore"
   },
   "dependencies": {
