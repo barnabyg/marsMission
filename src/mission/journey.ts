@@ -43,7 +43,7 @@ export function describeJourney(
 }
 
 /** The Assets operating at Mars on a given day. */
-export function assetsAtMarsOn(
+function assetsAtMarsOn(
   timeline: Pick<Timeline, "assetsAtMars">,
   day: number,
 ): AssetAtMars[] {
