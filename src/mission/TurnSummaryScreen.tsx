@@ -62,6 +62,50 @@ export function TurnSummaryScreen({
           </ul>
         </section>
       )}
+      {summary.firstLanding && (
+        <p data-testid="summary-first-landing">
+          <GameText>
+            {`First landing at ${summary.firstLanding.siteName}: ${summary.firstLanding.science} Science`}
+          </GameText>
+        </p>
+      )}
+      {summary.assetsFailed.length > 0 && (
+        <p className="problem" data-testid="summary-assets-failed">
+          <GameText>
+            {`Failed in service: ${summary.assetsFailed.join(", ")}`}
+          </GameText>
+        </p>
+      )}
+      {summary.assetsEnded.length > 0 && (
+        <p data-testid="summary-assets-ended">
+          <GameText>
+            {`Service Life ended: ${summary.assetsEnded.join(", ")}`}
+          </GameText>
+        </p>
+      )}
+      {summary.survey && (
+        <section data-testid="summary-survey">
+          <h2>
+            <GameText>Survey</GameText>
+          </h2>
+          <ul>
+            {summary.survey.siteNamesSurveyed.length > 0 && (
+              <li>
+                <GameText>
+                  {`Lower landing risk: ${summary.survey.siteNamesSurveyed.join(", ")}`}
+                </GameText>
+              </li>
+            )}
+            {summary.survey.siteNameRevealed && (
+              <li>
+                <GameText>
+                  {`New Landing Site: ${summary.survey.siteNameRevealed}`}
+                </GameText>
+              </li>
+            )}
+          </ul>
+        </section>
+      )}
       {summary.fundingPayouts.length > 0 && (
         <section data-testid="summary-funding-payouts">
           <h2>

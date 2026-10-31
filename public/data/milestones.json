@@ -3,8 +3,20 @@
     "id": "first-orbiter-at-mars",
     "name": "First orbiter at Mars",
     "description": "The Program has its first spacecraft in orbit around Mars, and the world is watching.",
-    "trigger": { "assetKindArrives": "orbiter" },
+    "trigger": {
+      "assetKindArrives": "orbiter"
+    },
     "science": 100,
     "publicSupport": 200
+  },
+  {
+    "id": "first-landing-on-mars",
+    "name": "First landing on Mars",
+    "description": "The Program has put a working lander on the surface of Mars, and the pictures are on every front page.",
+    "trigger": {
+      "assetKindArrives": "lander"
+    },
+    "science": 150,
+    "publicSupport": 250
   }
 ]

@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
+import { chooseAssets } from "./helpers";
 import { successSeed } from "./seeds";
 
 /** A 4K monitor, at 150% Windows display scaling and at 100% (ADR 0001). */
@@ -97,6 +98,18 @@ for (const size of screenSizes) {
           ratio: 1,
         });
       }
+    });
+
+    test("Planning Mode fits on one screen with everything chosen for a Mission", async ({
+      page,
+    }) => {
+      await page.goto(`/?seed=${successSeed}`);
+      await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
+      await expect(page.getByTestId("landing-site-details")).toBeVisible();
+      expect(await somethingScrolls(page)).toBe(false);
+      await expect(
+        page.getByRole("button", { name: "Launch Mission" }),
+      ).toBeInViewport({ ratio: 1 });
     });
 
     test("Planning Mode fits on one screen with several Milestones and operating Assets", async ({

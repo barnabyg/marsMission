@@ -3,6 +3,7 @@ import { tooltips } from "../src/ui/tooltips";
 import { productionBaseURL } from "../playwright.config";
 import {
   cancelledAfterOneTurn,
+  chooseAssets,
   eventEntries,
   overrideProgramData,
   pauseAtEvent,
@@ -53,6 +54,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await pauseAtEvent(page, "Funding Threshold reached: 250 Public Support");
   await expect(eventEntries(page).getByRole("heading")).toHaveText([
     "Funding Threshold reached: 250 Public Support",
+    "Survey from orbit",
     "First orbiter at Mars",
     "Mars orbit insertion",
     "Mars transfer burn",
@@ -301,6 +303,9 @@ test("lists the planned Mission's Mission Events with rough risk bands, which ch
           name: "Flyby Probe",
           kind: "orbiter",
           costMillions: 100,
+          massTonnes: 1,
+          serviceLifeOptions: [{ days: 900, costMillions: 0 }],
+          failureChancePerTurn: 0,
           missionEvents: [],
         },
       ],
@@ -318,7 +323,7 @@ test("lists the planned Mission's Mission Events with rough risk bands, which ch
   }
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByLabel("Asset").selectOption("test-probe");
+  await chooseAssets(page, ["Flyby Probe"]);
   await expect(events).toHaveCount(2);
   await expect(page.getByTestId("mission-events")).not.toContainText(
     "Mars orbit insertion",

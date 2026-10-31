@@ -35,7 +35,7 @@ function missionWithEveryEventAt(levelId: string): TurnPlan {
       ...mission,
       reliability: Object.fromEntries(
         succeeding
-          .previewMission(mission)
+          .previewMission(succeeding.startProgram(1), mission)
           .map((event) => [event.eventId, levelId]),
       ),
     },

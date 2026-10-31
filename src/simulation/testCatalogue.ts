@@ -4,6 +4,12 @@ import {
   type CatalogueFiles,
 } from "../catalogue/catalogue";
 
+/** Long enough that an Asset outlasts the rule tests that aren't about Service Life. */
+const longLife = [
+  { days: 50_000, costMillions: 0 },
+  { days: 90_000, costMillions: 100 },
+];
+
 /** A small catalogue with round numbers, so balance changes to the real data files don't break rule tests. */
 export function testCatalogueFiles(): CatalogueFiles {
   return {
@@ -21,6 +27,14 @@ export function testCatalogueFiles(): CatalogueFiles {
         id: "test-vehicle",
         name: "Test Vehicle",
         costMillions: 100,
+        capacityTonnes: 5,
+        missionEvents: ["test-launch", "test-burn"],
+      },
+      {
+        id: "test-heavy",
+        name: "Test Heavy",
+        costMillions: 300,
+        capacityTonnes: 10,
         missionEvents: ["test-launch", "test-burn"],
       },
     ],
@@ -30,21 +44,81 @@ export function testCatalogueFiles(): CatalogueFiles {
         name: "Test Orbiter",
         kind: "orbiter",
         costMillions: 400,
+        massTonnes: 2,
+        failureChancePerTurn: 0,
+        serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
+        surveys: true,
       },
       {
         id: "gold-orbiter",
         name: "Gold Orbiter",
         kind: "orbiter",
         costMillions: 5000,
+        massTonnes: 1,
+        failureChancePerTurn: 0,
+        serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
+        surveys: true,
       },
       {
         id: "test-relay",
         name: "Test Relay",
         kind: "relay",
         costMillions: 100,
+        massTonnes: 2,
+        failureChancePerTurn: 0,
+        serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
+      },
+      {
+        id: "test-lander",
+        name: "Test Lander",
+        kind: "lander",
+        costMillions: 300,
+        massTonnes: 3,
+        failureChancePerTurn: 0,
+        serviceLifeOptions: longLife,
+        missionEvents: ["test-landing"],
+        landsAtSite: true,
+      },
+    ],
+    landingSites: [
+      {
+        id: "alpha-plain",
+        name: "Alpha Plain",
+        description: "Flat.",
+        landingRisk: 0.8,
+        surveyedLandingRisk: 0,
+        science: 50,
+        knownFromStart: true,
+      },
+      {
+        id: "beta-crater",
+        name: "Beta Crater",
+        description: "Deep.",
+        landingRisk: 0.8,
+        surveyedLandingRisk: 0,
+        science: 80,
+        knownFromStart: true,
+      },
+      {
+        id: "gamma-basin",
+        name: "Gamma Basin",
+        description: "Hidden.",
+        landingRisk: 0,
+        surveyedLandingRisk: 0,
+        science: 200,
+        knownFromStart: false,
+      },
+      {
+        id: "delta-rift",
+        name: "Delta Rift",
+        description: "Hidden too.",
+        landingRisk: 0,
+        surveyedLandingRisk: 0,
+        science: 300,
+        knownFromStart: false,
       },
     ],
     fundingThresholds: [
@@ -67,6 +141,14 @@ export function testCatalogueFiles(): CatalogueFiles {
         trigger: { assetKindArrives: "relay" },
         science: 10,
         publicSupport: 100,
+      },
+      {
+        id: "first-landing",
+        name: "First landing",
+        description: "A lander reached the surface.",
+        trigger: { assetKindArrives: "lander" },
+        science: 40,
+        publicSupport: 60,
       },
     ],
     reliabilityLevels: [
@@ -117,6 +199,15 @@ export function testCatalogueFiles(): CatalogueFiles {
         timing: { from: "arrival", days: 0 },
         failureProbability: 0,
         publicSupportLoss: 40,
+      },
+      {
+        id: "test-landing",
+        name: "Test landing",
+        description: "Touched down at {site}.",
+        failureDescription: "It crashed at {site}.",
+        timing: { from: "arrival", days: 5 },
+        failureProbability: "landingSite",
+        publicSupportLoss: 50,
       },
     ],
   };

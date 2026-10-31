@@ -1,0 +1,47 @@
+[
+  {
+    "id": "jezero-crater",
+    "name": "Jezero Crater",
+    "description": "An ancient river delta, where past water may have left signs of life.",
+    "landingRisk": 0.35,
+    "surveyedLandingRisk": 0.12,
+    "science": 120,
+    "knownFromStart": true
+  },
+  {
+    "id": "gale-crater",
+    "name": "Gale Crater",
+    "description": "A deep crater with a layered mountain that records the climate of early Mars.",
+    "landingRisk": 0.35,
+    "surveyedLandingRisk": 0.12,
+    "science": 100,
+    "knownFromStart": true
+  },
+  {
+    "id": "meridiani-planum",
+    "name": "Meridiani Planum",
+    "description": "Flat, safe plains rich in minerals that form in water.",
+    "landingRisk": 0.3,
+    "surveyedLandingRisk": 0.08,
+    "science": 80,
+    "knownFromStart": false
+  },
+  {
+    "id": "utopia-planitia",
+    "name": "Utopia Planitia",
+    "description": "A vast northern basin with ice not far below the surface.",
+    "landingRisk": 0.3,
+    "surveyedLandingRisk": 0.1,
+    "science": 150,
+    "knownFromStart": false
+  },
+  {
+    "id": "valles-marineris",
+    "name": "Valles Marineris",
+    "description": "The largest canyon in the solar system, with billions of years of rock laid bare.",
+    "landingRisk": 0.45,
+    "surveyedLandingRisk": 0.2,
+    "science": 220,
+    "knownFromStart": false
+  }
+]

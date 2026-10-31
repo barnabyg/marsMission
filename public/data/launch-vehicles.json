@@ -3,6 +3,14 @@
     "id": "meridian-medium",
     "name": "Meridian Medium",
     "costMillions": 300,
+    "missionEvents": ["launch", "mars-transfer-burn"],
+    "capacityTonnes": 4
+  },
+  {
+    "id": "meridian-heavy",
+    "name": "Meridian Heavy",
+    "costMillions": 700,
+    "capacityTonnes": 8,
     "missionEvents": ["launch", "mars-transfer-burn"]
   }
 ]

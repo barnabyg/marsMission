@@ -157,6 +157,41 @@ button.primary {
   font-weight: 600;
 }
 
+.asset-choices {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.asset-choices legend {
+  padding: 0 0 0.3rem;
+  color: var(--muted);
+}
+
+.asset-choice {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.asset-choice > span {
+  color: var(--muted);
+}
+
+.asset-choice select {
+  min-width: 15rem;
+}
+
+.panel .asset-choices label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 28rem;
+  color: var(--text);
+}
+
 .mission-events {
   display: grid;
   gap: 0.6rem;

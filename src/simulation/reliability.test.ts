@@ -22,7 +22,7 @@ describe("previewing a Mission's risk", () => {
     const { simulation } = setup();
     expect(
       simulation
-        .previewMission({
+        .previewMission(simulation.startProgram(42), {
           launchVehicleId: "test-vehicle",
           assetIds: ["test-orbiter"],
         })
@@ -34,7 +34,10 @@ describe("previewing a Mission's risk", () => {
     const { simulation } = setup();
     expect(
       simulation
-        .previewMission({ launchVehicleId: "test-vehicle", assetIds: [] })
+        .previewMission(simulation.startProgram(42), {
+          launchVehicleId: "test-vehicle",
+          assetIds: [],
+        })
         .map((event) => event.name),
     ).toEqual(["Test launch", "Test burn"]);
   });
@@ -42,7 +45,7 @@ describe("previewing a Mission's risk", () => {
   it("lists a Mission Event once when several things share it", () => {
     const { simulation } = setup();
     expect(
-      simulation.previewMission({
+      simulation.previewMission(simulation.startProgram(42), {
         launchVehicleId: "test-vehicle",
         assetIds: ["test-orbiter", "test-relay"],
       }),
@@ -60,7 +63,7 @@ describe("previewing a Mission's risk", () => {
     "shows a failure probability of %s as the band %s",
     (probability, band) => {
       const simulation = withEvents({ "test-launch": probability });
-      const [launch] = simulation.previewMission({
+      const [launch] = simulation.previewMission(simulation.startProgram(42), {
         launchVehicleId: "test-vehicle",
         assetIds: [],
       });
@@ -70,7 +73,7 @@ describe("previewing a Mission's risk", () => {
 
   it("never exposes the exact probability", () => {
     const simulation = withEvents({ "test-launch": 0.0437 });
-    const preview = simulation.previewMission({
+    const preview = simulation.previewMission(simulation.startProgram(42), {
       launchVehicleId: "test-vehicle",
       assetIds: [],
     });
@@ -124,7 +127,7 @@ describe("Reliability", () => {
 
   it("offers every level for each Mission Event, defaulting to the cheapest", () => {
     const { simulation } = setup();
-    const [launch] = simulation.previewMission({
+    const [launch] = simulation.previewMission(simulation.startProgram(42), {
       launchVehicleId: "test-vehicle",
       assetIds: ["test-orbiter"],
     });
@@ -138,7 +141,7 @@ describe("Reliability", () => {
 
   it("moves a Mission Event's risk band when its level changes, and no other's", () => {
     const simulation = riskyCatalogue(0.08);
-    const preview = simulation.previewMission({
+    const preview = simulation.previewMission(simulation.startProgram(42), {
       launchVehicleId: "test-vehicle",
       assetIds: ["test-orbiter"],
       reliability: { "test-launch": "redundant" },
@@ -157,7 +160,7 @@ describe("Reliability", () => {
         program,
         planWith({ "test-launch": "tested", "test-burn": "redundant" }),
       ),
-    ).toEqual({ costMillions: 750, problems: [] });
+    ).toMatchObject({ costMillions: 750, problems: [] });
   });
 
   it("spends the money", () => {
@@ -261,7 +264,7 @@ describe("Reliability", () => {
     expect(simulation.validatePlan(next, sendOrbiter).costMillions).toBe(500);
     expect(
       simulation
-        .previewMission({
+        .previewMission(simulation.startProgram(42), {
           launchVehicleId: "test-vehicle",
           assetIds: ["test-orbiter"],
         })

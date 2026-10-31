@@ -20,11 +20,13 @@ describe("starting a Program", () => {
     const view = simulation.readProgram(program);
     expect(view.launchVehicles.map((vehicle) => vehicle.id)).toEqual([
       "test-vehicle",
+      "test-heavy",
     ]);
     expect(view.assets.map((asset) => asset.id)).toEqual([
       "test-orbiter",
       "gold-orbiter",
       "test-relay",
+      "test-lander",
     ]);
   });
 });
@@ -34,6 +36,8 @@ describe("validating a plan", () => {
     const { simulation, program } = setup();
     expect(simulation.validatePlan(program, sendOrbiter)).toEqual({
       costMillions: 500,
+      massTonnes: 2,
+      capacityTonnes: 5,
       problems: [],
     });
   });
@@ -131,7 +135,7 @@ describe("running a Turn with a Mission", () => {
     const { timeline } = simulation.runTurn(program, sendOrbiter);
     expect(timeline.startDate).toBe("2028-12-01");
     expect(timeline.durationDays).toBe(780);
-    expect(timeline.mission).toEqual({
+    expect(timeline.mission).toMatchObject({
       launchDay: 0,
       arrivalDay: 200,
       launchVehicleName: "Test Vehicle",
@@ -143,16 +147,24 @@ describe("running a Turn with a Mission", () => {
   it("tells Mission Mode which Assets were already operating when the Turn began", () => {
     const { simulation, program } = setup();
     const first = simulation.runTurn(program, sendOrbiter);
-    expect(first.timeline.operatingAssetNames).toEqual([]);
+    const before = first.timeline.assetsAtMars;
+    expect(before.map(({ name, fromDay }) => [name, fromDay])).toEqual([
+      ["Test Orbiter", 200],
+    ]);
     const second = simulation.runTurn(first.program, sendOrbiter);
-    expect(second.timeline.operatingAssetNames).toEqual(["Test Orbiter"]);
+    expect(
+      second.timeline.assetsAtMars.map(({ name, fromDay }) => [name, fromDay]),
+    ).toEqual([
+      ["Test Orbiter", 0],
+      ["Test Orbiter", 200],
+    ]);
   });
 
   it("leaves the orbiter operating at Mars in later Turns", () => {
     const { simulation, program } = setup();
     const first = simulation.runTurn(program, sendOrbiter).program;
     const second = simulation.runTurn(first, sendOrbiter).program;
-    expect(simulation.readProgram(second).operatingAssets).toEqual([
+    expect(simulation.readProgram(second).operatingAssets).toMatchObject([
       {
         assetId: "test-orbiter",
         name: "Test Orbiter",
@@ -192,7 +204,7 @@ describe("a Turn without a Mission", () => {
 
   it("is a valid plan even with no money", () => {
     const { simulation, program } = setup();
-    expect(simulation.validatePlan(program, skipTurn)).toEqual({
+    expect(simulation.validatePlan(program, skipTurn)).toMatchObject({
       costMillions: 0,
       problems: [],
     });

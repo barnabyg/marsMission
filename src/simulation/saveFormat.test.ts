@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { parseCatalogue } from "../catalogue/catalogue";
+import { z } from "zod";
+import { parseCatalogue, type Catalogue } from "../catalogue/catalogue";
+import { restoreThroughFormats, type SaveFormat } from "./saveFormat";
 import {
   createSimulation,
   SaveError,
   type Program,
   type Simulation,
 } from "./simulation";
-import { testCatalogueFiles } from "./testCatalogue";
+import { testCatalogue, testCatalogueFiles } from "./testCatalogue";
 import { sendOrbiter, setup } from "./testHelpers";
 
 describe("saving and restoring a Program", () => {
@@ -28,9 +30,9 @@ describe("saving and restoring a Program", () => {
     );
   }
 
-  it("carries a format version from the first release", () => {
+  it("carries a format version newer than the first release", () => {
     const { simulation, program } = setup();
-    expect(simulation.saveProgram(program).formatVersion).toBe(1);
+    expect(simulation.saveProgram(program).formatVersion).toBeGreaterThan(1);
   });
 
   it("restores a save made by the first release, whatever later versions do", () => {
@@ -121,9 +123,68 @@ describe("saving and restoring a Program", () => {
 
   it("names the format version even when a future format has a different shape", () => {
     const { simulation } = setup();
-    expect(() => simulation.restoreProgram({ formatVersion: 2 })).toThrow(
-      /format 2/,
+    expect(() => simulation.restoreProgram({ formatVersion: 999 })).toThrow(
+      /format 999/,
     );
+  });
+
+  describe("upgrading through each format", () => {
+    const catalogue = testCatalogue();
+    const steps: SaveFormat[] = [
+      {
+        schema: z.strictObject({ money: z.number() }),
+        upgrade: (old: { money: number }) => ({ cash: old.money }),
+      },
+      {
+        schema: z.strictObject({ cash: z.number() }),
+        // Reads the Catalogue, as a real step does to fill in a new field.
+        upgrade: (old: { cash: number }, { program }: Catalogue) => ({
+          ...old,
+          support: program.startingPublicSupport,
+        }),
+      },
+      { schema: z.strictObject({ cash: z.number(), support: z.number() }) },
+    ];
+
+    it("runs every step after the version saved, in order, each able to read the Catalogue", () => {
+      expect(
+        restoreThroughFormats(
+          { formatVersion: 1, program: { money: 5 } },
+          catalogue,
+          steps,
+        ),
+      ).toEqual({ cash: 5, support: 100 });
+    });
+
+    it("starts from the version the save was made in", () => {
+      expect(
+        restoreThroughFormats(
+          { formatVersion: 2, program: { cash: 7 } },
+          catalogue,
+          steps,
+        ),
+      ).toEqual({ cash: 7, support: 100 });
+    });
+
+    it("reports a save that doesn't match its own format as corrupt", () => {
+      expect(() =>
+        restoreThroughFormats(
+          { formatVersion: 1, program: { cash: 7 } },
+          catalogue,
+          steps,
+        ),
+      ).toThrow(/corrupt/);
+    });
+
+    it.each([0, 4, 1.5])("names format %s as one it can't read", (version) => {
+      expect(() =>
+        restoreThroughFormats(
+          { formatVersion: version, program: {} },
+          catalogue,
+          steps,
+        ),
+      ).toThrow(`format ${version}`);
+    });
   });
 
   it("refuses to continue a Program that has ended", () => {
