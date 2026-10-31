@@ -25,17 +25,13 @@ export function sum(values: number[]): number {
 }
 
 /**
- * A number from 0 up to 1 for one Mission Event's failure roll. It depends only on these three
- * values, so changing anything about another Mission Event can't change this roll. The hash is
+ * A number from 0 up to 1 for one roll. It depends only on these three values, so changing anything
+ * about another Mission Event or Asset can't change this roll. The hash is
  * FNV-1a followed by MurmurHash3's finaliser, which spreads out similar inputs such as adjacent seeds.
  */
-export function missionEventRoll(
-  seed: number,
-  turnNumber: number,
-  eventId: string,
-): number {
+export function roll(seed: number, turnNumber: number, key: string): number {
   let hash = 0x811c9dc5;
-  for (const character of `${seed}:${turnNumber}:${eventId}`) {
+  for (const character of `${seed}:${turnNumber}:${key}`) {
     hash ^= character.charCodeAt(0);
     hash = Math.imul(hash, 0x01000193);
   }
@@ -87,6 +83,21 @@ export function createRules(catalogue: Catalogue) {
     // The Catalogue guarantees at least one option.
     if (!option) throw new Error(`"${asset.id}" has no Service Life options`);
     return option;
+  }
+
+  /** The level bought for an Asset, which is the cheapest unless the Mission chose another. */
+  function assetReliabilityFor(
+    mission: PlannedMission | null,
+    asset: Asset,
+  ): ReliabilityLevel {
+    const { reliabilityLevels } = catalogue;
+    const chosenId = mission?.assetChoices?.[asset.id]?.reliabilityLevelId;
+    const level =
+      reliabilityLevels.find(({ id }) => id === chosenId) ??
+      reliabilityLevels[0];
+    // The Catalogue guarantees at least one level.
+    if (!level) throw new Error("The catalogue has no Reliability levels");
+    return level;
   }
 
   /** The Landing Sites that can be chosen so far. */
@@ -165,6 +176,7 @@ export function createRules(catalogue: Catalogue) {
     dayOf,
     deliveryDay,
     serviceLifeFor,
+    assetReliabilityFor,
     knownLandingSites,
     landingRisk,
     landingSiteById,

@@ -5,12 +5,13 @@ export interface PlannedMission {
   reliability?: Record<string, string>;
   /** Where the Mission's lander comes down. Only a Mission carrying a lander has one. */
   landingSiteId?: string;
-  /** The choices made for each Asset, by id. Anything left out gets the shortest Service Life. */
+  /** The choices made for each Asset, by id. Anything left out gets the shortest Service Life and the cheapest Reliability. */
   assetChoices?: Record<string, AssetChoices>;
 }
 
 export interface AssetChoices {
   serviceLifeDays?: number;
+  reliabilityLevelId?: string;
 }
 
 export interface TurnPlan {
@@ -35,6 +36,8 @@ interface OperatingAsset {
   landingSiteId: string | null;
   /** How long after arrivedOn it stops operating. */
   serviceLifeDays: number;
+  /** The Reliability level bought for it, which lowers its chance of failing in service. */
+  reliabilityLevelId: string;
 }
 
 type ProgramStatus =
@@ -156,7 +159,15 @@ export interface AssetEndedEntry {
   description: string;
 }
 
+export interface AssetFailedEntry {
+  kind: "assetFailed";
+  day: number;
+  title: string;
+  description: string;
+}
+
 export type TimelineEntry =
+  | AssetFailedEntry
   | AssetEndedEntry
   | SurveyEntry
   | MissionEventEntry
@@ -185,6 +196,8 @@ export interface TurnSummary {
   firstLanding: { siteName: string; science: number } | null;
   /** The Assets whose Service Life ended this Turn. */
   assetsEnded: string[];
+  /** The Assets that failed in service this Turn, before their Service Life ended. */
+  assetsFailed: string[];
   /** What this Turn's Survey found, if there was one and it changed anything. */
   survey: {
     siteNamesSurveyed: string[];
@@ -257,6 +270,15 @@ export interface PlannedAsset {
   name: string;
   serviceLifeDays: number;
   serviceLifeOptions: { days: number; costMillions: number }[];
+  reliabilityLevelId: string;
+  /** The chance of failing in each Turn after it arrives, as a rough figure. */
+  riskBand: string;
+  reliabilityLevels: {
+    id: string;
+    name: string;
+    costMillions: number;
+    riskBand: string;
+  }[];
 }
 
 /** A Mission Event as Planning Mode shows it: a rough risk band, never the exact probability. */

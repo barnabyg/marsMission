@@ -16,7 +16,8 @@
         "days": 1700,
         "costMillions": 150
       }
-    ]
+    ],
+    "failureChancePerTurn": 0.08
   },
   {
     "id": "prospector-lander",
@@ -35,6 +36,7 @@
         "days": 1500,
         "costMillions": 100
       }
-    ]
+    ],
+    "failureChancePerTurn": 0.12
   }
 ]

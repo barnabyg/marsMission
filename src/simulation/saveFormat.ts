@@ -92,7 +92,17 @@ function shortestServiceLife(
   return shortest.days;
 }
 
-const newestFormat = format4;
+/** Adds each Asset's Reliability. A save from before it gets the cheapest level. */
+const format5 = format4.extend({
+  operatingAssets: z.array(
+    z.strictObject({
+      ...format4.shape.operatingAssets.element.shape,
+      reliabilityLevelId: z.string(),
+    }),
+  ),
+});
+
+const newestFormat = format5;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -132,6 +142,23 @@ const formats: readonly SaveFormat[] = [
         serviceLifeDays: shortestServiceLife(asset, catalogue),
       })),
     }),
+  },
+  {
+    schema: format4,
+    upgrade: (
+      old: z.output<typeof format4>,
+      { reliabilityLevels }: Catalogue,
+    ): z.output<typeof format5> => {
+      const cheapest = reliabilityLevels[0];
+      if (!cheapest) throw new SaveError(corruptSave);
+      return {
+        ...old,
+        operatingAssets: old.operatingAssets.map((asset) => ({
+          ...asset,
+          reliabilityLevelId: cheapest.id,
+        })),
+      };
+    },
   },
   { schema: newestFormat },
 ];

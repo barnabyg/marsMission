@@ -7,7 +7,14 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
-import { crashSeed, landingSeed, orbiterSafeSeed, successSeed } from "./seeds";
+import {
+  crashSeed,
+  landingSeed,
+  orbiterFailsInServiceSeed,
+  orbiterLastsSeed,
+  orbiterSafeSeed,
+  successSeed,
+} from "./seeds";
 
 async function planLanding(page: Page, seed: number): Promise<void> {
   await page.goto(`/?seed=${seed}`);
@@ -145,7 +152,7 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   page,
 }) => {
   const problems = watchForProblems(page);
-  await page.goto(`/?seed=${successSeed}`);
+  await page.goto(`/?seed=${orbiterLastsSeed}`);
   const life = page.getByLabel("Service Life for Pathfinder Orbiter");
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
   await life.selectOption("1700");
@@ -179,6 +186,45 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   );
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByTestId("operating-assets")).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test("buys Reliability for an Asset, then sees one fail in service with a known seed", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${orbiterFailsInServiceSeed}`);
+
+  const reliability = page.getByLabel(
+    "Reliability for Pathfinder Orbiter in service",
+  );
+  const band = page.getByTestId("asset-risk-band");
+  await expect(band).toHaveText("~10% per Turn");
+  await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
+  await reliability.selectOption("redundant");
+  await expect(band).toHaveText("~2% per Turn");
+  await expect(page.getByTestId("mission-cost")).toHaveText("$1.15B");
+  await reliability.selectOption("none");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await playToNextTurn(page);
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+
+  await pauseAtEvent(page, "Pathfinder Orbiter failed");
+  const failed = eventEntries(page).first();
+  await expect(failed).toHaveClass(/failed/);
+  await expect(failed).toContainText("costs no Public Support");
+  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing yet");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.getByRole("button", { name: "10x" }).click();
+  await expect(page.getByTestId("summary-assets-failed")).toContainText(
+    "Pathfinder Orbiter",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   expect(problems).toEqual([]);
 });
 

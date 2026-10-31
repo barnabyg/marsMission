@@ -90,7 +90,10 @@ export function PlanningMode({
       assetChoices: Object.fromEntries(
         plannedAssets.map((asset) => [
           asset.assetId,
-          { serviceLifeDays: asset.serviceLifeDays },
+          {
+            serviceLifeDays: asset.serviceLifeDays,
+            reliabilityLevelId: asset.reliabilityLevelId,
+          },
         ]),
       ),
     },
@@ -266,6 +269,32 @@ export function PlanningMode({
                           </option>
                         ))}
                       </select>
+                      <span>
+                        <GameText>Reliability</GameText>
+                      </span>
+                      <select
+                        aria-label={`Reliability for ${asset.name} in service`}
+                        value={planned.reliabilityLevelId}
+                        onChange={(event) => {
+                          setAssetChoices({
+                            ...assetChoices,
+                            [asset.id]: {
+                              ...assetChoices[asset.id],
+                              reliabilityLevelId: event.target.value,
+                            },
+                          });
+                        }}
+                      >
+                        {planned.reliabilityLevels.map((level) => (
+                          <option key={level.id} value={level.id}>
+                            {level.name} ({formatMoney(level.costMillions)},{" "}
+                            {level.riskBand})
+                          </option>
+                        ))}
+                      </select>
+                      <strong data-testid="asset-risk-band">
+                        <GameText>{`${planned.riskBand} per Turn`}</GameText>
+                      </strong>
                     </>
                   )}
                 </div>

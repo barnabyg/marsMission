@@ -22,6 +22,7 @@ export function soundFor(entry: TimelineEntry): SoundName | null {
       ? "failure"
       : (successSounds[entry.eventId] ?? null);
   }
+  if (entry.kind === "assetFailed") return "failure";
   return entry.kind === "milestone" || entry.kind === "fundingThreshold"
     ? entry.kind
     : null;

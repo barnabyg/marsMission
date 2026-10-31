@@ -148,6 +148,7 @@ describe("a successful landing", () => {
         arrivedOn: "2029-06-24",
         landingSiteId: "alpha-plain",
         serviceLifeDays: 50_000,
+        reliabilityLevelId: "none",
         daysLeft: 49_425,
         landingSiteName: "Alpha Plain",
       },

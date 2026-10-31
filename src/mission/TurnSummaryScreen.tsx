@@ -69,6 +69,13 @@ export function TurnSummaryScreen({
           </GameText>
         </p>
       )}
+      {summary.assetsFailed.length > 0 && (
+        <p className="problem" data-testid="summary-assets-failed">
+          <GameText>
+            {`Failed in service: ${summary.assetsFailed.join(", ")}`}
+          </GameText>
+        </p>
+      )}
       {summary.assetsEnded.length > 0 && (
         <p data-testid="summary-assets-ended">
           <GameText>

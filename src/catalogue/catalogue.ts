@@ -40,6 +40,8 @@ const assetsSchema = z.array(
     kind: id,
     costMillions: money,
     massTonnes: z.number().positive(),
+    // The chance of failing in each Turn after the one it arrives in, before Reliability.
+    failureChancePerTurn: z.number().min(0).max(1),
     // In order, shortest first. Service Life starts when the Asset arrives, and the first option is what's chosen unless the player picks another.
     serviceLifeOptions: z
       .array(

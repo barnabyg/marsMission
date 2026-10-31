@@ -52,6 +52,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
   const rules = createRules(catalogue);
   const {
     failureProbability,
+    assetReliabilityFor,
     knownLandingSites,
     serviceLifeFor,
     landingRisk,
@@ -136,7 +137,15 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         continue;
       }
       const asset = catalogue.assets.find(({ id }) => id === assetId);
-      const { serviceLifeDays } = choices;
+      const { serviceLifeDays, reliabilityLevelId } = choices;
+      if (
+        reliabilityLevelId !== undefined &&
+        !catalogue.reliabilityLevels.some(({ id }) => id === reliabilityLevelId)
+      ) {
+        problems.push(
+          `There is no Reliability level called "${reliabilityLevelId}".`,
+        );
+      }
       if (
         asset &&
         serviceLifeDays !== undefined &&
@@ -150,6 +159,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     for (const asset of catalogue.assets) {
       if (assetIds.includes(asset.id)) {
         costMillions += serviceLifeFor(plan.mission, asset).costMillions;
+        costMillions += assetReliabilityFor(plan.mission, asset).costMillions;
       }
     }
 
@@ -303,6 +313,19 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           name: asset.name,
           serviceLifeDays: serviceLifeFor(mission, asset).days,
           serviceLifeOptions: asset.serviceLifeOptions,
+          reliabilityLevelId: assetReliabilityFor(mission, asset).id,
+          riskBand: riskBandFor(
+            asset.failureChancePerTurn *
+              assetReliabilityFor(mission, asset).failureMultiplier,
+          ),
+          reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
+            id: level.id,
+            name: level.name,
+            costMillions: level.costMillions,
+            riskBand: riskBandFor(
+              asset.failureChancePerTurn * level.failureMultiplier,
+            ),
+          })),
         }));
     },
 

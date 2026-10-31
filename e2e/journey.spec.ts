@@ -305,6 +305,7 @@ test("lists the planned Mission's Mission Events with rough risk bands, which ch
           costMillions: 100,
           massTonnes: 1,
           serviceLifeOptions: [{ days: 900, costMillions: 0 }],
+          failureChancePerTurn: 0,
           missionEvents: [],
         },
       ],

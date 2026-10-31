@@ -38,7 +38,7 @@ describe("choosing a Service Life", () => {
     const plan = orbiterWith(2000);
     expect(
       simulation.previewAssets(program, plan.mission ?? orbiterWithout()),
-    ).toEqual([
+    ).toMatchObject([
       {
         assetId: "test-orbiter",
         name: "Test Orbiter",

@@ -3,7 +3,7 @@ import {
   addDays,
   daysBetween,
   formatMoney,
-  missionEventRoll,
+  roll,
   sum,
   type Asset,
   type LandingSite,
@@ -13,6 +13,7 @@ import {
 import type {
   AssetAtMars,
   AssetEndedEntry,
+  AssetFailedEntry,
   FirstLandingEntry,
   FundingThresholdEntry,
   MilestoneEntry,
@@ -73,7 +74,7 @@ function flyMission(
     : [];
   const failedIndex = plannedEvents.findIndex(
     (event) =>
-      missionEventRoll(program.seed, program.turnNumber, event.id) <
+      roll(program.seed, program.turnNumber, event.id) <
       rules.failureProbability(
         event,
         rules.reliabilityLevelFor(mission, event.id),
@@ -192,16 +193,44 @@ interface AssetInService {
   fromDay: number;
   /** The day of the Turn it stops, or null if it lasts beyond the Turn. */
   untilDay: number | null;
+  /** Whether it stopped by failing, rather than its Service Life ending. */
+  failed: boolean;
 }
 
-/** Works out when each Asset at Mars stops operating this Turn, because its Service Life has ended. */
+/**
+ * The day an already operating Asset fails this Turn, if it does. Each roll depends only on the seed,
+ * the Turn and this Asset, and the day comes before `limitDay`, when its time in this Turn ends anyway.
+ */
+function inServiceFailureDay(
+  catalogue: Catalogue,
+  program: Program,
+  asset: Program["operatingAssets"][number],
+  limitDay: number,
+): number | null {
+  const design = catalogue.assets.find(({ id }) => id === asset.assetId);
+  const level = catalogue.reliabilityLevels.find(
+    ({ id }) => id === asset.reliabilityLevelId,
+  );
+  // An Asset with no time left in this Turn has nothing to fail in.
+  if (!design || !level || limitDay <= 1) return null;
+  const key = `in-service:${asset.assetId}:${asset.arrivedOn}`;
+  const chance = design.failureChancePerTurn * level.failureMultiplier;
+  if (roll(program.seed, program.turnNumber, key) >= chance) return null;
+  const dayRoll = roll(program.seed, program.turnNumber, `${key}:day`);
+  return 1 + Math.floor(dayRoll * (limitDay - 1));
+}
+
+/** Works out when each Asset at Mars stops operating this Turn, because its Service Life has ended or it has failed. */
 function operateAssets(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
   plan: TurnPlan,
   flown: MissionOutcome,
-): { inService: AssetInService[]; entries: AssetEndedEntry[] } {
+): {
+  inService: AssetInService[];
+  entries: (AssetEndedEntry | AssetFailedEntry)[];
+} {
   const { launchWindowIntervalDays } = catalogue.program;
   const delivered = flown.deliveredAssets.map((asset) => ({
     asset: {
@@ -211,6 +240,7 @@ function operateAssets(
       arrivedOn: addDays(program.date, rules.deliveryDay(asset)),
       landingSiteId: asset.landsAtSite ? (flown.landingSite?.id ?? null) : null,
       serviceLifeDays: rules.serviceLifeFor(plan.mission, asset).days,
+      reliabilityLevelId: rules.assetReliabilityFor(plan.mission, asset).id,
     },
     fromDay: rules.deliveryDay(asset),
   }));
@@ -222,27 +252,48 @@ function operateAssets(
       program.date,
       addDays(asset.arrivedOn, asset.serviceLifeDays),
     );
-    return {
-      asset,
-      fromDay,
-      // An upgraded save can hold an Asset whose Service Life has already passed. It ends as the Turn starts.
-      untilDay: endDay < launchWindowIntervalDays ? Math.max(endDay, 0) : null,
-    };
+    // An upgraded save can hold an Asset whose Service Life has already passed. It ends as the Turn starts.
+    const untilDay =
+      endDay < launchWindowIntervalDays ? Math.max(endDay, 0) : null;
+    // An Asset can't fail in the Turn it arrives.
+    const failureDay =
+      fromDay === 0
+        ? inServiceFailureDay(
+            catalogue,
+            program,
+            asset,
+            untilDay ?? launchWindowIntervalDays,
+          )
+        : null;
+    return failureDay === null
+      ? { asset, fromDay, untilDay, failed: false }
+      : { asset, fromDay, untilDay: failureDay, failed: true };
   });
   return {
     inService,
-    entries: inService.flatMap(({ asset, untilDay }): AssetEndedEntry[] => {
-      if (untilDay === null) return [];
-      const site = rules.landingSiteById(asset.landingSiteId)?.name;
-      return [
-        {
+    entries: inService.flatMap(
+      ({ asset, untilDay, failed }): (AssetEndedEntry | AssetFailedEntry)[] => {
+        if (untilDay === null) return [];
+        const site = rules.landingSiteById(asset.landingSiteId)?.name;
+        const place = site ? `at ${site}` : "at Mars";
+        if (failed) {
+          const entry: AssetFailedEntry = {
+            kind: "assetFailed",
+            day: untilDay,
+            title: `${asset.name} failed`,
+            description: `${asset.name} has broken down and stopped operating ${place}. It costs no Public Support.`,
+          };
+          return [entry];
+        }
+        const entry: AssetEndedEntry = {
           kind: "assetEnded",
           day: untilDay,
           title: `${asset.name}: Service Life ended`,
-          description: `${asset.name} has stopped operating ${site ? `at ${site}` : "at Mars"}. It costs no Public Support.`,
-        },
-      ];
-    }),
+          description: `${asset.name} has stopped operating ${place}. It costs no Public Support.`,
+        };
+        return [entry];
+      },
+    ),
   };
 }
 
@@ -497,7 +548,10 @@ export function resolveTurn(
         science: firstLanding.site.science,
       },
       assetsEnded: operated.inService
-        .filter(({ untilDay }) => untilDay !== null)
+        .filter(({ untilDay, failed }) => untilDay !== null && !failed)
+        .map(({ asset }) => asset.name),
+      assetsFailed: operated.inService
+        .filter(({ failed }) => failed)
         .map(({ asset }) => asset.name),
       survey: survey.summary,
       fundingPayouts: funding.payouts,

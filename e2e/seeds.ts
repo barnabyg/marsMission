@@ -60,6 +60,28 @@ export const orbiterSafeSeed = seedWhere(
   orbiterAndLander,
 );
 
+/** A seed where the first orbiter arrives and fails in service during the next Turn. */
+export const orbiterFailsInServiceSeed = (() => {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const first = simulation.runTurn(simulation.startProgram(seed), firstPlan);
+    if (first.summary.failure) continue;
+    const second = simulation.runTurn(first.program, { mission: null });
+    if (second.summary.assetsFailed.length > 0) return seed;
+  }
+  throw new Error("No seed gives an orbiter failing in service");
+})();
+
+/** A seed where the first orbiter arrives and outlasts its Service Life without failing. */
+export const orbiterLastsSeed = (() => {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const first = simulation.runTurn(simulation.startProgram(seed), firstPlan);
+    if (first.summary.failure) continue;
+    const second = simulation.runTurn(first.program, { mission: null });
+    if (second.summary.assetsEnded.length > 0) return seed;
+  }
+  throw new Error("No seed gives an orbiter lasting its Service Life");
+})();
+
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);
 
