@@ -50,6 +50,13 @@ export function carryOutOngoingResearch(
   publicSupport: number;
   researchGrants: TurnSummary["researchGrants"];
   researchGrantMillions: number;
+  /** When each Asset earned what it did, which builds up evenly over its days. */
+  stints: {
+    fromDay: number;
+    toDay: number;
+    science: number;
+    publicSupport: number;
+  }[];
 } {
   const { launchWindowIntervalDays } = catalogue.program;
   const results = inService.flatMap(({ asset, fromDay, untilDay }) => {
@@ -72,7 +79,7 @@ export function carryOutOngoingResearch(
       name: asset.name,
       millions: researchGrantFor(catalogue, researchKind, science),
     };
-    return [{ earned, grant }];
+    return [{ earned, grant, fromDay }];
   });
   const earned = results.map((result) => result.earned);
   const researchGrants = results
@@ -84,5 +91,11 @@ export function carryOutOngoingResearch(
     publicSupport: sum(earned.map(({ publicSupport }) => publicSupport)),
     researchGrants,
     researchGrantMillions: sum(researchGrants.map(({ millions }) => millions)),
+    stints: results.map(({ earned, fromDay }) => ({
+      fromDay,
+      toDay: fromDay + earned.days,
+      science: earned.science,
+      publicSupport: earned.publicSupport,
+    })),
   };
 }

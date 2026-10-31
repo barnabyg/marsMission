@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
+import { realCatalogueFiles } from "../src/testing/realCatalogue";
 import { chooseAssets } from "./helpers";
 import { successSeed } from "./seeds";
 
@@ -40,20 +41,10 @@ const allAssets = [
   "Trailblazer Rover",
 ];
 
-const extraMilestones = Array.from({ length: 8 }, (_, index) => ({
-  id: `milestone-${index}`,
-  name: `Test Milestone ${index}`,
-  description: "A Milestone that only this test has.",
-  trigger: { assetKindArrives: "orbiter" },
-  science: 1,
-  publicSupport: 1,
-}));
+const realMilestones = realCatalogueFiles().milestones;
 
-/** Opens Planning Mode with several Milestones and operating Assets listed. */
+/** Opens Planning Mode with every Milestone earned and several operating Assets listed. */
 async function openBusyProgram(page: Page): Promise<void> {
-  await page.route("**/data/milestones.json", (route) =>
-    route.fulfill({ json: extraMilestones }),
-  );
   await page.addInitScript(
     ([key, value]) => {
       localStorage.setItem(key, value);
@@ -69,7 +60,7 @@ async function openBusyProgram(page: Page): Promise<void> {
           moneyMillions: 5000,
           publicSupport: 200,
           science: 800,
-          milestoneIds: extraMilestones.map(({ id }) => id),
+          milestoneIds: realMilestones.map(({ id }) => id),
           landedSiteIds: ["jezero-crater"],
           knownLandingSiteIds: ["jezero-crater", "gale-crater"],
           surveyedLandingSiteIds: [],
@@ -163,7 +154,7 @@ for (const size of screenSizes) {
       ).toBeInViewport({ ratio: 1 });
       const milestones = page.getByTestId("milestones").getByRole("listitem");
       const assets = page.getByTestId("operating-assets").getByRole("listitem");
-      await expect(milestones).toHaveCount(8);
+      await expect(milestones).toHaveCount(realMilestones.length);
       await expect(assets).toHaveCount(8);
       await expect(milestones.last()).toBeInViewport({ ratio: 1 });
       await expect(assets.last()).toBeInViewport({ ratio: 1 });
@@ -219,6 +210,25 @@ for (const size of screenSizes) {
           ratio: 1,
         });
       }
+    });
+
+    test("the Program summary fits on one screen with every Milestone earned", async ({
+      page,
+    }) => {
+      await openBusyProgram(page);
+      await page.getByRole("button", { name: "Retire Program" }).click();
+      await page
+        .getByRole("dialog", { name: "Retire Program" })
+        .getByRole("button", { name: "Yes, retire the Program" })
+        .click();
+      const summary = page.getByTestId("program-summary");
+      await expect(summary.getByRole("listitem")).toHaveCount(
+        realMilestones.length,
+      );
+      expect(await somethingScrolls(page)).toBe(false);
+      await expect(
+        page.getByRole("button", { name: "Start a new Program" }),
+      ).toBeInViewport({ ratio: 1 });
     });
 
     test("Mission Mode's controls fit on one line", async ({ page }) => {

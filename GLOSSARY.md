@@ -128,7 +128,7 @@ The Program's score. It comes from Milestones and Ongoing Research, and is weigh
 _Avoid_: Points, research
 
 **Milestone**:
-A one-off achievement, such as the first orbiter at Mars or returning a sample to Earth. It awards Science and Public Support.
+A one-off achievement, such as the first orbiter at Mars, reaching a total of Science, or returning a sample to Earth. It awards Science and Public Support.
 _Avoid_: Achievement, goal, objective
 
 **Ongoing Research**:

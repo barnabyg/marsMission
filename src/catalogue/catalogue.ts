@@ -133,11 +133,18 @@ const milestonesSchema = z.array(
     id,
     name: z.string().min(1),
     description: z.string().min(1),
-    // Earned by the first Asset of a kind to be delivered, or the first Asset to land.
-    trigger: z.union([
-      z.strictObject({ assetKindArrives: id }),
-      z.strictObject({ assetLands: z.literal(true) }),
-    ]),
+    // Earned by the first Asset of a kind to be delivered, the first Asset to land, or reaching a total of Science.
+    trigger: z.union(
+      [
+        z.strictObject({ assetKindArrives: id }),
+        z.strictObject({ assetLands: z.literal(true) }),
+        z.strictObject({ totalScience: z.number().int().positive() }),
+      ],
+      {
+        error:
+          "must be one of assetKindArrives with a kind of Asset, assetLands with true, or totalScience with a positive whole number",
+      },
+    ),
     science: z.number().int().nonnegative(),
     publicSupport: z.number().int().nonnegative(),
   }),
@@ -394,6 +401,7 @@ function crossCheck(catalogue: Catalogue): string[] {
       }
       continue;
     }
+    if ("totalScience" in milestone.trigger) continue;
     const kind = milestone.trigger.assetKindArrives;
     if (!assetKinds.has(kind)) {
       problems.push(

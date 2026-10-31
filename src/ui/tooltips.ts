@@ -60,7 +60,7 @@ export const tooltips = {
   Science:
     "The Program's score. It comes from Milestones and Ongoing Research, and is weighted heavily towards activity at Mars itself.",
   Milestone:
-    "A one-off achievement, such as the first orbiter at Mars or returning a sample to Earth. It awards Science and Public Support.",
+    "A one-off achievement, such as the first orbiter at Mars, reaching a total of Science, or returning a sample to Earth. It awards Science and Public Support.",
   "Ongoing Research":
     "Science earned at a steady rate for as long as an Asset or Crew is actively doing it, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time. It also adds a small, steady amount of Public Support.",
   "Research Grant":

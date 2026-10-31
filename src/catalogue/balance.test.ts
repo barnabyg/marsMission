@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseCatalogue } from "./catalogue";
-import { createSimulation, type TurnPlan } from "../simulation/simulation";
+import {
+  createSimulation,
+  type Program,
+  type TurnPlan,
+} from "../simulation/simulation";
 import { realCatalogueFiles } from "../testing/realCatalogue";
 
 /** The real numbers, with every Mission Event certain to fail or certain to succeed. */
@@ -343,6 +347,112 @@ describe("the rover in the real data files", () => {
     expect(soil?.science).toBeLessThan(traverse?.science ?? 0);
     expect(soil?.researchGrantMillions).toBeGreaterThan(0);
     expect(traverse?.researchGrantMillions).toBe(0);
+  });
+});
+
+describe("a productive Program in the real data files", () => {
+  // Nothing fails, so that the Program only shows what the numbers can reach.
+  const safe = createSimulation(
+    parseCatalogue({
+      ...files,
+      assets: files.assets.map((asset) => ({
+        ...asset,
+        failureChancePerTurn: 0,
+      })),
+      missionEvents: files.missionEvents.map((event) => ({
+        ...event,
+        failureProbability: 0,
+      })),
+    }),
+  );
+  const start = safe.startProgram(1);
+  const vehicles = safe.readProgram(start).launchVehicles;
+
+  /** A Mission carrying this Asset, for this Service Life and on the Activity that earns the most Science. */
+  function missionWith(
+    program: Program,
+    asset: (typeof files.assets)[number],
+    serviceLifeDays: number,
+  ): TurnPlan {
+    const sites = safe.readProgram(program).landingSites;
+    const site = sites.find(({ landed }) => !landed) ?? sites[0];
+    const mission = {
+      launchVehicleId:
+        vehicles.find(
+          ({ capacityTonnes }) => capacityTonnes >= asset.massTonnes,
+        )?.id ?? "",
+      assetIds: [asset.id],
+      ...(asset.landsAtSite ? { landingSiteId: site?.id ?? "" } : {}),
+    };
+    const best = safe
+      .previewAssets(mission)[0]
+      ?.activities.toSorted(
+        (first, second) =>
+          (second.earnsPerTurn?.science ?? 0) -
+          (first.earnsPerTurn?.science ?? 0),
+      )[0];
+    return {
+      mission: {
+        ...mission,
+        assetChoices: {
+          [asset.id]: {
+            activityId: best?.id ?? "",
+            serviceLifeDays,
+          },
+        },
+      },
+    };
+  }
+
+  /** A first orbiter for its Surveys, and then the dearest thing that lands that the money allows, at a new site if there is one. */
+  function nextPlan(program: Program): TurnPlan {
+    const { turnNumber } = safe.readProgram(program);
+    const choices = files.assets
+      .filter(({ landsAtSite, kind }) =>
+        turnNumber === 1 ? kind === "orbiter" : landsAtSite,
+      )
+      .toSorted((first, second) => second.costMillions - first.costMillions)
+      .flatMap((asset) =>
+        asset.serviceLifeOptions
+          .toSorted((first, second) => second.days - first.days)
+          .map(({ days }) => missionWith(program, asset, days)),
+      );
+    return (
+      choices.find(
+        (plan) => safe.validatePlan(program, plan).problems.length === 0,
+      ) ?? { mission: null }
+    );
+  }
+
+  function play(turns: number) {
+    let program = start;
+    const paid: number[] = [];
+    for (let turn = 0; turn < turns; turn++) {
+      if (safe.readProgram(program).status.kind !== "active") break;
+      const result = safe.runTurn(program, nextPlan(program));
+      program = result.program;
+      paid.push(
+        ...result.summary.fundingPayouts.map(
+          ({ publicSupport }) => publicSupport,
+        ),
+      );
+    }
+    return { paid, view: safe.readProgram(program) };
+  }
+
+  const played = play(20);
+
+  it.each(files.fundingThresholds)(
+    "reaches the Funding Threshold at $publicSupport Public Support",
+    ({ publicSupport }) => {
+      expect(played.paid).toContain(publicSupport);
+    },
+  );
+
+  it.each(files.milestones)("earns the Milestone $name", ({ id }) => {
+    expect(played.view.milestones.map((milestone) => milestone.id)).toContain(
+      id,
+    );
   });
 });
 

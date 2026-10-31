@@ -292,7 +292,11 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         nextFundingThreshold: nextThreshold
           ? {
               ...nextThreshold,
-              pointsAway: nextThreshold.publicSupport - program.publicSupport,
+              // A save can already be above a level that pays when its next Turn runs.
+              pointsAway: Math.max(
+                0,
+                nextThreshold.publicSupport - program.publicSupport,
+              ),
             }
           : null,
         cancellationLevel: catalogue.program.cancellationLevel,

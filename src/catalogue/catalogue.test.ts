@@ -129,6 +129,23 @@ describe("invalid data files", () => {
   });
 
   it.each([
+    ["zero", { totalScience: 0 }],
+    ["negative", { totalScience: -5 }],
+    ["not a whole number", { totalScience: 1.5 }],
+    ["not a number", { totalScience: "100" }],
+    ["alongside another trigger", { totalScience: 100, assetLands: true }],
+  ])("reject a Milestone for total Science that is %s", (_, trigger) => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      milestones: [{ ...files.milestones[0], trigger }],
+    });
+    expect(message).toContain("milestones.json");
+    expect(message).toContain("0.trigger");
+    expect(message).toContain("totalScience");
+  });
+
+  it.each([
     ["no way of moving", undefined],
     ["an unknown way of moving", "hopping"],
   ])("reject a research Activity with %s", (_, surfaceMotion) => {
