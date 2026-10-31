@@ -3,7 +3,7 @@ export interface PlannedMission {
   assetIds: string[];
   /** The Reliability level bought for each Mission Event, by id. Any left out get the cheapest level. */
   reliability?: Record<string, string>;
-  /** Where the Mission's lander comes down. Only a Mission carrying a lander has one. */
+  /** Where the Mission comes down. Only a Mission carrying an Asset that lands has one. */
   landingSiteId?: string;
   /** The choices made for each Asset, by id. Anything left out gets the shortest Service Life, the cheapest Reliability and the first Activity it lists. */
   assetChoices?: Record<string, AssetChoices>;
@@ -74,7 +74,7 @@ export interface Program {
   publicSupport: number;
   science: number;
   milestoneIds: string[];
-  /** The Landing Sites where a lander has already landed. */
+  /** The Landing Sites where something has already landed. */
   landedSiteIds: string[];
   /** The Landing Sites that can be chosen so far, in the order they became known. */
   knownLandingSiteIds: string[];
@@ -134,7 +134,7 @@ export interface ProgramView {
     surveyed: boolean;
     /** The site's landing risk with no Reliability, as a rough figure. */
     riskBand: string;
-    /** Whether a lander has landed here, so that landing again earns no Science. */
+    /** Whether anything has landed here, so that landing again earns no Science. */
     landed: boolean;
   }[];
 }
@@ -227,7 +227,7 @@ export interface TurnSummary {
   publicSupportDrained: number;
   publicSupportEnd: number;
   milestones: AwardedMilestone[];
-  /** The Science from landing at a Landing Site for the first time, if a lander did. */
+  /** The Science from landing at a Landing Site for the first time, if something did. */
   firstLanding: { siteName: string; science: number } | null;
   /** What each Asset doing research earned, which scienceGained and publicSupportGained include. */
   ongoingResearch: OngoingResearchEarned[];
@@ -257,7 +257,7 @@ export interface TurnSummary {
 /** One Asset on this Turn's Mission and how its journey ended. */
 export interface MissionAsset {
   name: string;
-  /** The Landing Site it is heading for, if it's a lander. */
+  /** The Landing Site it is heading for, if it lands. */
   landingSiteName: string | null;
   /** The day it was delivered, if it was. */
   deliveredOnDay: number | null;

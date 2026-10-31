@@ -8,5 +8,15 @@
     "id": "surface-research",
     "name": "Surface research",
     "grantMillionsPerScience": 0.5
+  },
+  {
+    "id": "soil-analysis",
+    "name": "Soil analysis",
+    "grantMillionsPerScience": 0.6
+  },
+  {
+    "id": "long-traverse",
+    "name": "Long traverse",
+    "grantMillionsPerScience": 0
   }
 ]

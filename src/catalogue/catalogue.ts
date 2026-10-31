@@ -49,6 +49,8 @@ const activitiesSchema = z
           sciencePerTurn: z.number().int().positive(),
           publicSupportPerTurn: z.number().int().nonnegative(),
           researchKind: id,
+          // How it looks in the surface view. Standing still is the "nothing" effect.
+          surfaceMotion: z.enum(["traverse", "nearby"]),
         }),
       ]),
     }),
@@ -85,7 +87,7 @@ const assetsSchema = z.array(
     missionEvents: z.array(id),
     // The Activities it can do. The first is what it does unless the player picks another.
     activities: z.array(id).min(1),
-    // Whether this Asset is a lander, so that a Mission carrying it must name a Landing Site.
+    // Whether this Asset lands on Mars, so that a Mission carrying it must name a Landing Site.
     landsAtSite: z.boolean().optional(),
   }),
 );
@@ -110,7 +112,7 @@ const missionEventsSchema = z.array(
   z.strictObject({
     id,
     name: z.string().min(1),
-    // {site} in either description stands for the Mission's Landing Site.
+    // In either description, {site} stands for the Mission's Landing Site and {lander}, which starts a sentence, for what is landing there, such as "The rover".
     description: z.string().min(1),
     failureDescription: z.string().min(1),
     timing: z.strictObject({
@@ -131,7 +133,11 @@ const milestonesSchema = z.array(
     id,
     name: z.string().min(1),
     description: z.string().min(1),
-    trigger: z.strictObject({ assetKindArrives: id }),
+    // Earned by the first Asset of a kind to be delivered, or the first Asset to land.
+    trigger: z.union([
+      z.strictObject({ assetKindArrives: id }),
+      z.strictObject({ assetLands: z.literal(true) }),
+    ]),
     science: z.number().int().nonnegative(),
     publicSupport: z.number().int().nonnegative(),
   }),
@@ -313,7 +319,7 @@ function crossCheck(catalogue: Catalogue): string[] {
     !landingSites.some((site) => site.knownFromStart)
   ) {
     problems.push(
-      `${catalogueFileNames.landingSites}: there is a lander in ${catalogueFileNames.assets}, so at least one Landing Site must be known from the start`,
+      `${catalogueFileNames.landingSites}: an Asset in ${catalogueFileNames.assets} sets landsAtSite, so at least one Landing Site must be known from the start`,
     );
   }
   // An old save's Asset does nothing unless it can survey, so there must be an Activity to give it.
@@ -380,6 +386,14 @@ function crossCheck(catalogue: Catalogue): string[] {
 
   const assetKinds = new Set(assets.map((asset) => asset.kind));
   for (const milestone of milestones) {
+    if ("assetLands" in milestone.trigger) {
+      if (!assets.some((asset) => asset.landsAtSite === true)) {
+        problems.push(
+          `${catalogueFileNames.milestones}: "${milestone.id}" needs an Asset that lands, but none in ${catalogueFileNames.assets} sets landsAtSite`,
+        );
+      }
+      continue;
+    }
     const kind = milestone.trigger.assetKindArrives;
     if (!assetKinds.has(kind)) {
       problems.push(

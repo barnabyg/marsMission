@@ -13,7 +13,8 @@
       "kind": "research",
       "sciencePerTurn": 40,
       "publicSupportPerTurn": 5,
-      "researchKind": "orbital-research"
+      "researchKind": "orbital-research",
+      "surfaceMotion": "nearby"
     }
   },
   {
@@ -24,7 +25,32 @@
       "kind": "research",
       "sciencePerTurn": 60,
       "publicSupportPerTurn": 8,
-      "researchKind": "surface-research"
+      "researchKind": "surface-research",
+      "surfaceMotion": "nearby"
+    }
+  },
+  {
+    "id": "soil-analysis",
+    "name": "Soil analysis",
+    "description": "Stays near the Landing Site and analyses soil samples, which pays a Research Grant.",
+    "effect": {
+      "kind": "research",
+      "sciencePerTurn": 70,
+      "publicSupportPerTurn": 8,
+      "researchKind": "soil-analysis",
+      "surfaceMotion": "nearby"
+    }
+  },
+  {
+    "id": "long-traverse",
+    "name": "Long traverse",
+    "description": "Drives long distances around the Landing Site and finds more, but pays no Research Grant. The other Landing Sites are too far away to reach.",
+    "effect": {
+      "kind": "research",
+      "sciencePerTurn": 110,
+      "publicSupportPerTurn": 14,
+      "researchKind": "long-traverse",
+      "surfaceMotion": "traverse"
     }
   },
   {

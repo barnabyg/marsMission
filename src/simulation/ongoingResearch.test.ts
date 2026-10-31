@@ -50,6 +50,7 @@ function oneSciencePerDay(): CatalogueFiles {
               sciencePerTurn: 780,
               publicSupportPerTurn: 0,
               researchKind: "test-unpaid",
+              surfaceMotion: "nearby",
             },
           }
         : activity,

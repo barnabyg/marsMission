@@ -50,6 +50,15 @@ interface FundingOutcome {
   entries: FundingThresholdEntry[];
 }
 
+/** What is landing, to start a sentence, such as "The rover". Always in the Catalogue's order, whatever order the Mission lists them. */
+function whatLands(catalogue: Catalogue, assets: Asset[]): string {
+  const kinds = catalogue.assets
+    .filter((asset) => asset.landsAtSite && assets.includes(asset))
+    .map(({ kind }) => `the ${kind}`);
+  const named = new Intl.ListFormat("en").format(new Set(kinds));
+  return named.charAt(0).toUpperCase() + named.slice(1);
+}
+
 /** Rolls each of the Mission's Mission Events in turn, up to the first that fails. */
 function flyMission(
   catalogue: Catalogue,
@@ -65,8 +74,10 @@ function flyMission(
     catalogue.assets.filter((candidate) => candidate.id === assetId),
   );
   const landingSite = rules.landingSiteById(mission?.landingSiteId);
-  const withSite = (text: string) =>
-    text.replaceAll("{site}", landingSite?.name ?? "");
+  const filledIn = (text: string) =>
+    text
+      .replaceAll("{site}", landingSite?.name ?? "")
+      .replaceAll("{lander}", whatLands(catalogue, assets));
   const plannedEvents = mission
     ? rules.missionEventsFor(mission.launchVehicleId, mission.assetIds)
     : [];
@@ -107,7 +118,7 @@ function flyMission(
             day: rules.dayOf(event),
             eventId: event.id,
             title: `${event.name} failed`,
-            description: `${withSite(event.failureDescription)} Lost with the Mission: ${lostNames.join(", ")}.${safe} It costs ${publicSupportLost} Public Support.`,
+            description: `${filledIn(event.failureDescription)} Lost with the Mission: ${lostNames.join(", ")}.${safe} It costs ${publicSupportLost} Public Support.`,
             outcome: "failure",
           }
         : {
@@ -115,7 +126,7 @@ function flyMission(
             day: rules.dayOf(event),
             eventId: event.id,
             title: event.name,
-            description: withSite(event.description),
+            description: filledIn(event.description),
             outcome: "success",
           },
     );
@@ -138,17 +149,18 @@ function awardMilestones(
   program: Program,
   deliveredAssets: Asset[],
 ): MilestoneAwards {
-  const arrivingKinds = deliveredAssets.map((asset) => asset.kind);
-  const dayEarned = ({ trigger }: Milestone) =>
-    Math.min(
-      ...deliveredAssets
-        .filter((asset) => asset.kind === trigger.assetKindArrives)
-        .map(rules.deliveryDay),
+  const earnedBy = ({ trigger }: Milestone) =>
+    deliveredAssets.filter((asset) =>
+      "assetLands" in trigger
+        ? asset.landsAtSite === true
+        : asset.kind === trigger.assetKindArrives,
     );
+  const dayEarned = (milestone: Milestone) =>
+    Math.min(...earnedBy(milestone).map(rules.deliveryDay));
   const awarded = catalogue.milestones.filter(
-    ({ id, trigger }) =>
-      !program.milestoneIds.includes(id) &&
-      arrivingKinds.includes(trigger.assetKindArrives),
+    (milestone) =>
+      !program.milestoneIds.includes(milestone.id) &&
+      earnedBy(milestone).length > 0,
   );
   return {
     awarded,
@@ -164,20 +176,20 @@ function awardMilestones(
   };
 }
 
-/** The Science for landing at a Landing Site for the first time, if a lander did. */
+/** The Science for landing at a Landing Site for the first time, if something did. */
 function creditFirstLanding(
   rules: Rules,
   program: Program,
   flown: MissionOutcome,
 ): { site: LandingSite; entry: FirstLandingEntry } | null {
-  const lander = flown.deliveredAssets.find((asset) => asset.landsAtSite);
+  const landed = flown.deliveredAssets.find((asset) => asset.landsAtSite);
   const site = flown.landingSite;
-  if (!lander || !site || program.landedSiteIds.includes(site.id)) return null;
+  if (!landed || !site || program.landedSiteIds.includes(site.id)) return null;
   return {
     site,
     entry: {
       kind: "firstLanding",
-      day: rules.deliveryDay(lander),
+      day: rules.deliveryDay(landed),
       title: `First landing at ${site.name}`,
       description: `${site.description} It earns ${site.science} Science.`,
     },

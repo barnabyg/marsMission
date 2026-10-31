@@ -39,5 +39,26 @@
       }
     ],
     "failureChancePerTurn": 0.12
+  },
+  {
+    "id": "trailblazer-rover",
+    "name": "Trailblazer Rover",
+    "kind": "rover",
+    "costMillions": 1100,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "activities": ["soil-analysis", "long-traverse", "nothing"],
+    "massTonnes": 3.5,
+    "serviceLifeOptions": [
+      {
+        "days": 700,
+        "costMillions": 0
+      },
+      {
+        "days": 1600,
+        "costMillions": 150
+      }
+    ],
+    "failureChancePerTurn": 0.14
   }
 ]

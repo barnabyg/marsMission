@@ -38,8 +38,8 @@
   {
     "id": "entry-descent-landing",
     "name": "Entry/descent/landing",
-    "description": "The lander came through the atmosphere and touched down at {site}.",
-    "failureDescription": "The lander hit the ground too fast and crashed at {site}.",
+    "description": "{lander} came through the atmosphere and touched down at {site}.",
+    "failureDescription": "{lander} hit the ground too fast and crashed at {site}.",
     "timing": {
       "from": "arrival",
       "days": 5

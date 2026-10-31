@@ -314,6 +314,38 @@ describe("Research Grants in the real data files", () => {
   });
 });
 
+describe("the rover in the real data files", () => {
+  const files = realCatalogueFiles();
+  const assetOfKind = (kind: string) =>
+    files.assets.find((asset) => asset.kind === kind);
+  const earnings = (id: string) =>
+    succeeding
+      .previewAssets({
+        ...mission,
+        assetIds: [assetOfKind("rover")?.id ?? ""],
+      })[0]
+      ?.activities.find((activity) => activity.id === id)?.earnsPerTurn;
+
+  it("costs and weighs more than a lander, but both land together on the larger Launch Vehicle", () => {
+    const rover = assetOfKind("rover");
+    const lander = assetOfKind("lander");
+    expect(rover?.costMillions).toBeGreaterThan(lander?.costMillions ?? 0);
+    expect(rover?.massTonnes).toBeGreaterThan(lander?.massTonnes ?? 0);
+    const heavy = files.launchVehicles.at(-1);
+    expect(
+      (rover?.massTonnes ?? 0) + (lander?.massTonnes ?? 0),
+    ).toBeLessThanOrEqual(heavy?.capacityTonnes ?? 0);
+  });
+
+  it("chooses between Science and a Research Grant", () => {
+    const soil = earnings("soil-analysis");
+    const traverse = earnings("long-traverse");
+    expect(soil?.science).toBeLessThan(traverse?.science ?? 0);
+    expect(soil?.researchGrantMillions).toBeGreaterThan(0);
+    expect(traverse?.researchGrantMillions).toBe(0);
+  });
+});
+
 describe("the known seeds in the Phase 3 playtest guide", () => {
   const guide = readFileSync("docs/playtest/phase-3.md", "utf8");
   const real = createSimulation(parseCatalogue(realCatalogueFiles()));

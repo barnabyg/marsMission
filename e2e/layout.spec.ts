@@ -34,6 +34,12 @@ async function onOneLine(elements: Locator[]): Promise<boolean> {
   return lowest >= 0 && Math.max(...middles) - lowest < 10;
 }
 
+const allAssets = [
+  "Pathfinder Orbiter",
+  "Prospector Lander",
+  "Trailblazer Rover",
+];
+
 const extraMilestones = Array.from({ length: 8 }, (_, index) => ({
   id: `milestone-${index}`,
   name: `Test Milestone ${index}`,
@@ -55,7 +61,7 @@ async function openBusyProgram(page: Page): Promise<void> {
     [
       storageKeyFor("automatic"),
       JSON.stringify({
-        formatVersion: 1,
+        formatVersion: 6,
         program: {
           seed: successSeed,
           turnNumber: 9,
@@ -64,21 +70,38 @@ async function openBusyProgram(page: Page): Promise<void> {
           publicSupport: 200,
           science: 800,
           milestoneIds: extraMilestones.map(({ id }) => id),
+          landedSiteIds: ["jezero-crater"],
+          knownLandingSiteIds: ["jezero-crater", "gale-crater"],
+          surveyedLandingSiteIds: [],
           fundingThresholdsPaid: [250],
-          // The last is a lander, so that the Operating at Mars panel shows a Research Grant too.
+          // A lander and a rover at a Landing Site too, whose rows are the longest and whose research lengthens the panel's text.
           operatingAssets: Array.from({ length: 8 }, (_, index) => ({
-            ...(index < 7
+            ...(index < 6
               ? {
                   assetId: "pathfinder-orbiter",
                   name: "Pathfinder Orbiter",
                   kind: "orbiter",
+                  landingSiteId: null,
+                  activityId: "survey",
                 }
-              : {
-                  assetId: "prospector-lander",
-                  name: "Prospector Lander",
-                  kind: "lander",
-                }),
+              : index < 7
+                ? {
+                    assetId: "prospector-lander",
+                    name: "Prospector Lander",
+                    kind: "lander",
+                    landingSiteId: "jezero-crater",
+                    activityId: "surface-research",
+                  }
+                : {
+                    assetId: "trailblazer-rover",
+                    name: "Trailblazer Rover",
+                    kind: "rover",
+                    landingSiteId: "jezero-crater",
+                    activityId: "long-traverse",
+                  }),
             arrivedOn: `203${index}-08-01`,
+            serviceLifeDays: 9000,
+            reliabilityLevelId: "none",
           })),
           status: { kind: "active" },
         },
@@ -160,6 +183,42 @@ for (const size of screenSizes) {
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
       ).toBeInViewport({ ratio: 1 });
+    });
+
+    test("Planning Mode fits on one screen with all three Assets ticked on a new Program", async ({
+      page,
+    }) => {
+      await page.goto(`/?seed=${successSeed}`);
+      await chooseAssets(page, allAssets);
+      // Too heavy and too dear for a new Program, so both problems show as well.
+      await expect(page.getByRole("alert")).toHaveCount(2);
+      expect(await somethingScrolls(page)).toBe(false);
+      await expect(
+        page.getByRole("button", { name: "End Turn without launching" }),
+      ).toBeInViewport({ ratio: 1 });
+    });
+
+    test("Planning Mode fits on one screen with a busy Program and all three Assets on the Mission", async ({
+      page,
+    }) => {
+      await openBusyProgram(page);
+      await chooseAssets(page, allAssets);
+      await expect(page.getByRole("alert")).toHaveCount(1);
+      const mission = page
+        .locator(".panel", { hasText: "Launch Vehicle" })
+        .getByTestId("research-earnings");
+      await expect(mission).toContainText("Soil analysis earns");
+      await expect(mission).toContainText("Long traverse earns");
+      await expect(page.getByTestId("landing-site-details")).toBeVisible();
+      await expect(
+        page.getByTestId("operating-assets").getByRole("listitem").last(),
+      ).toContainText("Trailblazer Rover at Jezero Crater");
+      expect(await somethingScrolls(page)).toBe(false);
+      for (const name of ["Launch Mission", "End Turn without launching"]) {
+        await expect(page.getByRole("button", { name })).toBeInViewport({
+          ratio: 1,
+        });
+      }
     });
 
     test("Mission Mode's controls fit on one line", async ({ page }) => {

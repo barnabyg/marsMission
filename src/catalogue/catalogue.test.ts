@@ -26,6 +26,7 @@ describe("the real data files", () => {
   it.each([
     ["orbiter", ["survey", "research", "nothing"]],
     ["lander", ["research", "nothing"]],
+    ["rover", ["research", "research", "nothing"]],
   ])("give a %s these choices, starting on the first", (kind, expected) => {
     const { assets, activities } = parseCatalogue(realCatalogueFiles());
     const effects = assets
@@ -114,6 +115,44 @@ describe("invalid data files", () => {
     });
     expect(message).toContain("milestones.json");
     expect(message).toContain("submarine");
+  });
+
+  it("reject a Milestone for landing when no Asset lands", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      assets: files.assets.filter(({ landsAtSite }) => !landsAtSite),
+      milestones: [{ ...files.milestones[0], trigger: { assetLands: true } }],
+    });
+    expect(message).toContain("milestones.json");
+    expect(message).toContain("landsAtSite");
+  });
+
+  it.each([
+    ["no way of moving", undefined],
+    ["an unknown way of moving", "hopping"],
+  ])("reject a research Activity with %s", (_, surfaceMotion) => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      activities: [
+        ...files.activities,
+        {
+          id: "bad-research",
+          name: "Bad research",
+          description: "Doesn't say how it moves.",
+          effect: {
+            kind: "research",
+            sciencePerTurn: 10,
+            publicSupportPerTurn: 1,
+            researchKind: "test-unpaid",
+            surfaceMotion,
+          },
+        },
+      ],
+    });
+    expect(message).toContain("activities.json");
+    expect(message).toContain("surfaceMotion");
   });
 
   it("reject a Cancellation Level that could never be fallen below", () => {
@@ -359,6 +398,7 @@ describe("invalid data files", () => {
             sciencePerTurn: 10,
             publicSupportPerTurn: 1,
             researchKind: "test-unpaid",
+            surfaceMotion: "nearby",
             ...rates,
           },
         },
@@ -386,6 +426,7 @@ describe("invalid data files", () => {
             sciencePerTurn: 10,
             publicSupportPerTurn: 1,
             researchKind,
+            surfaceMotion: "nearby",
           },
         },
       ],

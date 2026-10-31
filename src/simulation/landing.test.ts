@@ -47,7 +47,7 @@ describe("validating a landing", () => {
     ).toEqual(["alpha-plain", "beta-crater"]);
   });
 
-  it("needs a Landing Site when the Mission carries a lander", () => {
+  it("needs a Landing Site when the Mission carries something that lands", () => {
     const { simulation, program } = setup();
     const { problems } = simulation.validatePlan(program, {
       mission: { launchVehicleId: "test-vehicle", assetIds: ["test-lander"] },
@@ -64,7 +64,7 @@ describe("validating a landing", () => {
     },
   );
 
-  it("refuses a Landing Site on a Mission with no lander", () => {
+  it("refuses a Landing Site on a Mission where nothing lands", () => {
     const { simulation, program } = setup();
     const { problems } = simulation.validatePlan(program, {
       mission: {
@@ -73,7 +73,7 @@ describe("validating a landing", () => {
         landingSiteId: "alpha-plain",
       },
     });
-    expect(problems.join(" ")).toMatch(/Only a Mission carrying a lander/);
+    expect(problems.join(" ")).toMatch(/Only a Mission that lands/);
   });
 
   it("accepts a known Landing Site", () => {
@@ -217,7 +217,9 @@ describe("a successful landing", () => {
       "First landing",
       "First landing at Alpha Plain",
     ]);
-    expect(onTheDay[0]?.description).toBe("Touched down at Alpha Plain.");
+    expect(onTheDay[0]?.description).toBe(
+      "The lander touched down at Alpha Plain.",
+    );
   });
 
   it("doesn't affect a Mission without a lander", () => {
@@ -243,7 +245,7 @@ describe("a failed landing", () => {
     const { timeline, summary } = crash();
     const entry = timeline.entries.at(-1);
     expect(entry?.title).toBe("Test landing failed");
-    expect(entry?.description).toContain("It crashed at Alpha Plain.");
+    expect(entry?.description).toContain("The lander crashed at Alpha Plain.");
     expect(summary.failure).toMatchObject({
       missionEventName: "Test landing",
       assetsLost: ["Test Lander"],

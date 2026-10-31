@@ -12,11 +12,21 @@
   {
     "id": "first-landing-on-mars",
     "name": "First landing on Mars",
-    "description": "The Program has put a working lander on the surface of Mars, and the pictures are on every front page.",
+    "description": "The Program has put a working spacecraft on the surface of Mars, and the pictures are on every front page.",
     "trigger": {
-      "assetKindArrives": "lander"
+      "assetLands": true
     },
     "science": 150,
     "publicSupport": 250
+  },
+  {
+    "id": "first-rover-on-mars",
+    "name": "First rover on Mars",
+    "description": "The Program has a rover driving on Mars, and people everywhere are following where it goes next.",
+    "trigger": {
+      "assetKindArrives": "rover"
+    },
+    "science": 60,
+    "publicSupport": 100
   }
 ]

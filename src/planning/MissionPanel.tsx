@@ -43,10 +43,10 @@ export function MissionPanel({
     Record<string, AssetChoices>
   >({});
 
-  const carriesLander = view.assets.some(
+  const landsOnMars = view.assets.some(
     (asset) => assetIds.includes(asset.id) && asset.landsAtSite,
   );
-  const landingSite = carriesLander
+  const landingSite = landsOnMars
     ? view.landingSites.find((site) => site.id === chosenSiteId)
     : undefined;
   const mission = {

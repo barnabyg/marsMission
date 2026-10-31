@@ -171,13 +171,13 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       );
     }
 
-    const carriesLander = catalogue.assets.some(
+    const landsOnMars = catalogue.assets.some(
       (asset) => assetIds.includes(asset.id) && asset.landsAtSite === true,
     );
-    if (carriesLander) {
+    if (landsOnMars) {
       if (landingSiteId === undefined) {
         problems.push(
-          "A Mission carrying a lander must choose a Landing Site.",
+          "A Mission that lands on Mars must choose a Landing Site.",
         );
       } else if (
         !knownLandingSites(program).some((site) => site.id === landingSiteId)
@@ -187,7 +187,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         );
       }
     } else if (landingSiteId !== undefined) {
-      problems.push("Only a Mission carrying a lander has a Landing Site.");
+      problems.push("Only a Mission that lands on Mars has a Landing Site.");
     }
 
     for (const [assetId, choices] of Object.entries(assetChoices)) {
