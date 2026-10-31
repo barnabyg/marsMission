@@ -73,6 +73,18 @@ _Avoid_: Location, zone, region
 Observing Mars from orbit to reveal Landing Sites and lower their landing risk. It is an Activity, and one surveying Asset is enough.
 _Avoid_: Scan, reconnaissance
 
+**Orbital research**:
+An Activity for an orbiter: Ongoing Research into the atmosphere and climate of Mars, in place of a Survey. It pays no Research Grant.
+
+**Surface research**:
+An Activity for a lander: Ongoing Research into the rocks and weather around its Landing Site. It pays a small Research Grant.
+
+**Soil analysis**:
+An Activity for a rover: Ongoing Research that stays near the Landing Site and analyses soil samples. It earns less Science than a Long traverse and pays a Research Grant.
+
+**Long traverse**:
+An Activity for a rover: Ongoing Research that drives long distances around the Landing Site. It earns more Science than Soil analysis and pays no Research Grant.
+
 ## Modes
 
 **Planning Mode**:
