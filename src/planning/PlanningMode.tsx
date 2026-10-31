@@ -75,7 +75,7 @@ export function PlanningMode({
     ...mission,
     reliability,
   });
-  const plannedAssets = simulation.previewAssets(program, {
+  const plannedAssets = simulation.previewAssets({
     ...mission,
     assetChoices,
   });

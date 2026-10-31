@@ -257,6 +257,16 @@ describe("invalid data files", () => {
     expect(message).toContain("landingRisk");
   });
 
+  it("reject a Landing Site that isn't on the globe", () => {
+    const files = testCatalogueFiles();
+    const [site] = files.landingSites;
+    const message = errorFrom({
+      ...files,
+      landingSites: [{ ...site, latitude: 100 }],
+    });
+    expect(message).toContain("latitude");
+  });
+
   it("reject a surveyed landing risk higher than the landing risk", () => {
     const files = testCatalogueFiles();
     const [site] = files.landingSites;

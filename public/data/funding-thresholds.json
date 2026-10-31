@@ -1,4 +1,10 @@
 [
-  { "publicSupport": 250, "payoutMillions": 1000 },
-  { "publicSupport": 450, "payoutMillions": 1500 }
+  {
+    "publicSupport": 250,
+    "payoutMillions": 1000
+  },
+  {
+    "publicSupport": 425,
+    "payoutMillions": 1500
+  }
 ]

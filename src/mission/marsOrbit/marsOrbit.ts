@@ -51,21 +51,13 @@ const spinRadiansPerDay = 0.02;
 const descentDaysBefore = 5;
 const descentDaysAfter = 10;
 
-/** In degrees, north and east, as the map in public/art/mars.jpg has them. */
-const siteCoordinates: Partial<
-  Record<string, { latitude: number; longitude: number }>
-> = {
-  "Jezero Crater": { latitude: 18.4, longitude: 77.5 },
-  "Gale Crater": { latitude: -5.4, longitude: 137.8 },
-  "Meridiani Planum": { latitude: -2, longitude: -6 },
-  "Utopia Planitia": { latitude: 46.7, longitude: 117.5 },
-  "Valles Marineris": { latitude: -14, longitude: -59 },
-};
+type Sites = Timeline["landingSites"];
 
-export const knownSiteNames = Object.keys(siteCoordinates);
-
-function coordinatesOf(siteName: string) {
-  return siteCoordinates[siteName] ?? { latitude: 0, longitude: 0 };
+function coordinatesOf(sites: Sites, siteName: string) {
+  const site = sites.find(({ name }) => name === siteName);
+  // The Simulation lists every site it can name.
+  if (!site) throw new Error(`The Timeline has no Landing Site "${siteName}"`);
+  return site;
 }
 
 /** The day a Mission's lander reaches the surface, in one piece or not, or null if it doesn't. */
@@ -120,10 +112,16 @@ export function landedOn(
 }
 
 /** How far Mars has turned. In a Turn with a landing, it has the Landing Site facing the camera on the day. */
-export function globeSpin(mission: Mission | null, day: number): number {
+export function globeSpin(
+  sites: Sites,
+  mission: Mission | null,
+  day: number,
+): number {
   const landing = mission?.assets.find((asset) => landingDayOf(asset) !== null);
   const landingDay = landing ? (landingDayOf(landing) ?? 0) : 0;
-  const { longitude } = coordinatesOf(landing?.landingSiteName ?? "");
+  const longitude = landing?.landingSiteName
+    ? coordinatesOf(sites, landing.landingSiteName).longitude
+    : 0;
   return (
     -Math.PI / 2 -
     longitude * degreesToRadians +
@@ -136,11 +134,12 @@ export function globeSpin(mission: Mission | null, day: number): number {
  * little further north, which keeps Assets at the same Landing Site and their labels apart.
  */
 export function surfacePoint(
+  sites: Sites,
   siteName: string,
   spin: number,
   place: number,
 ): Point {
-  const { latitude, longitude } = coordinatesOf(siteName);
+  const { latitude, longitude } = coordinatesOf(sites, siteName);
   const north = (latitude + place * 4) * degreesToRadians;
   const east = longitude * degreesToRadians + spin;
   const across = Math.cos(north) * Math.cos(east);

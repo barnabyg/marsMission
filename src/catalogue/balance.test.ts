@@ -167,6 +167,42 @@ describe("the balance of Phase 3", () => {
     );
   });
 
+  it("still pays off a landing that succeeds on the retry after a crash", () => {
+    const first = succeeding.runTurn(succeeding.startProgram(1), orbiterPlan);
+    const crash = failing.runTurn(first.program, landerPlan);
+    expect(crash.summary.failure).not.toBeNull();
+    const retry = succeeding.runTurn(crash.program, landerPlan);
+    expect(retry.summary.fundingPayouts).toEqual([files.fundingThresholds[1]]);
+  });
+
+  it("doesn't reach the second Funding Threshold with one Milestone from the start", () => {
+    const { summary } = succeeding.runTurn(
+      succeeding.startProgram(1),
+      landerPlan,
+    );
+    expect(summary.fundingPayouts).toEqual([files.fundingThresholds[0]]);
+  });
+
+  it("doesn't let Reliability buy out a Survey: the best level on an unsurveyed site only matches none on a surveyed one", () => {
+    const { program } = succeeding.runTurn(start, orbiterPlan);
+    const unsurveyed = landingBand(start)?.reliabilityLevels.at(-1)?.riskBand;
+    expect(unsurveyed).toBe(landingBand(program)?.riskBand);
+  });
+
+  it("leaves no retry of a lander after the best Reliability on its landing", () => {
+    const plan: TurnPlan = {
+      mission: {
+        launchVehicleId: medium?.id ?? "",
+        assetIds: [landerId],
+        landingSiteId: "jezero-crater",
+        reliability: { "entry-descent-landing": "redundant" },
+      },
+    };
+    const { program } = failing.runTurn(failing.startProgram(1), plan);
+    expect(failing.validatePlan(program, landerPlan).problems).toHaveLength(1);
+    expect(failing.validatePlan(program, orbiterPlan).problems).toEqual([]);
+  });
+
   it("reaches the second Funding Threshold in either order", () => {
     const first = succeeding.runTurn(succeeding.startProgram(1), landerPlan);
     const second = succeeding.runTurn(first.program, orbiterPlan);
@@ -235,7 +271,7 @@ describe("the balance of Phase 3", () => {
   });
 
   it("makes Reliability for an Asset lower its risk, for a price, without being needed to play", () => {
-    const [asset] = real.previewAssets(start, {
+    const [asset] = real.previewAssets({
       launchVehicleId: medium?.id ?? "",
       assetIds: [orbiterId],
     });

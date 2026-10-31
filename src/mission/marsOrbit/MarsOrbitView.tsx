@@ -47,12 +47,13 @@ function scaled([x, y, z]: Point, factor: number): Point {
 
 /** Everything on or coming down to the surface on a given day, relative to the middle of Mars. */
 function surfaceMarkers(timeline: Timeline, day: number) {
-  const spin = globeSpin(timeline.mission, day);
+  const { landingSites } = timeline;
+  const spin = globeSpin(landingSites, timeline.mission, day);
   const placesTaken = new Map<string, number>();
   const landed = landedOn(timeline, day).map(({ name, siteName }) => {
     const place = placesTaken.get(siteName) ?? 0;
     placesTaken.set(siteName, place + 1);
-    const facing = surfacePoint(siteName, spin, place);
+    const facing = surfacePoint(landingSites, siteName, spin, place);
     return {
       text: `${name} at ${siteName}`,
       position: facing,
@@ -64,7 +65,7 @@ function surfaceMarkers(timeline: Timeline, day: number) {
   });
   const landings = landingMarkersOn(timeline.mission, day).map(
     ({ name, siteName, altitude, crashed }) => {
-      const facing = surfacePoint(siteName, spin, 0);
+      const facing = surfacePoint(landingSites, siteName, spin, 0);
       return {
         text: crashed
           ? `${name}: crashed at ${siteName}`
@@ -91,7 +92,13 @@ export function MarsOrbitScene({
   return (
     <group position={marsCentre}>
       <group rotation={[marsTiltRadians, 0, 0]}>
-        <mesh rotation={[0, globeSpin(timeline.mission, day), 0]}>
+        <mesh
+          rotation={[
+            0,
+            globeSpin(timeline.landingSites, timeline.mission, day),
+            0,
+          ]}
+        >
           <sphereGeometry args={[1, 96, 96]} />
           <meshStandardMaterial map={texture} roughness={1} metalness={0} />
         </mesh>

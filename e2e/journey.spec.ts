@@ -96,7 +96,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await expect(page.getByTestId("launch-window")).toHaveText("January 2031");
   await expect(page.getByTestId("money")).toHaveText("$2.3B");
   await expect(page.getByTestId("next-funding-threshold")).toHaveText(
-    "$1.5B at 450 (195 away)",
+    "$1.5B at 425 (170 away)",
   );
   await expect(page.getByTestId("operating-assets")).toContainText(
     "Pathfinder Orbiter",

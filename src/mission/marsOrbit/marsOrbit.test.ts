@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { parseCatalogue } from "../../catalogue/catalogue";
 import type { AssetAtMars, Timeline } from "../../simulation/simulation";
-import { realCatalogueFiles } from "../../testing/realCatalogue";
 import {
   globeSpin,
-  knownSiteNames,
   landedOn,
   landingMarkersOn,
   orbiterPosition,
@@ -161,17 +158,23 @@ describe("a landing in the Mars orbit view", () => {
 });
 
 describe("where things are on the globe", () => {
-  it("knows where every Landing Site in the data is", () => {
-    const sites = parseCatalogue(realCatalogueFiles()).landingSites;
-    expect(sites.length).toBeGreaterThan(0);
-    for (const { name } of sites) {
-      expect(knownSiteNames).toContain(name);
-    }
+  const sites = [
+    { name: "Jezero Crater", latitude: 18.4, longitude: 77.5 },
+    { name: "Gale Crater", latitude: -5.4, longitude: 137.8 },
+  ];
+
+  it("fails loudly on a Landing Site the Timeline doesn't list", () => {
+    expect(() => surfacePoint(sites, "Nowhere", 0, 0)).toThrow(/Nowhere/);
   });
 
   it("turns the Landing Site towards the camera on the day of the landing", () => {
     const flying = mission([lander({})]);
-    const [x, , z] = surfacePoint("Jezero Crater", globeSpin(flying, 205), 0);
+    const [x, , z] = surfacePoint(
+      sites,
+      "Jezero Crater",
+      globeSpin(sites, flying, 205),
+      0,
+    );
     expect(x).toBeCloseTo(0);
     expect(z).toBeGreaterThan(0.5);
   });
@@ -180,19 +183,28 @@ describe("where things are on the globe", () => {
     const crashing = mission([
       lander({ deliveredOnDay: null, lostOnDay: 205, crashed: true }),
     ]);
-    const [x] = surfacePoint("Jezero Crater", globeSpin(crashing, 205), 0);
+    const [x] = surfacePoint(
+      sites,
+      "Jezero Crater",
+      globeSpin(sites, crashing, 205),
+      0,
+    );
     expect(x).toBeCloseTo(0);
   });
 
   it("keeps turning slowly, with or without a landing", () => {
-    expect(globeSpin(null, 11)).toBeGreaterThan(globeSpin(null, 10));
+    expect(globeSpin(sites, null, 11)).toBeGreaterThan(
+      globeSpin(sites, null, 10),
+    );
     const flying = mission([lander({})]);
-    expect(globeSpin(flying, 206)).toBeGreaterThan(globeSpin(flying, 205));
+    expect(globeSpin(sites, flying, 206)).toBeGreaterThan(
+      globeSpin(sites, flying, 205),
+    );
   });
 
   it("puts a point on the surface, spacing out landers at the same Landing Site", () => {
-    const [x, y, z] = surfacePoint("Gale Crater", 1, 0);
+    const [x, y, z] = surfacePoint(sites, "Gale Crater", 1, 0);
     expect(Math.hypot(x, y, z)).toBeCloseTo(1);
-    expect(surfacePoint("Gale Crater", 1, 1)).not.toEqual([x, y, z]);
+    expect(surfacePoint(sites, "Gale Crater", 1, 1)).not.toEqual([x, y, z]);
   });
 });

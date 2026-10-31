@@ -253,6 +253,8 @@ export interface Timeline {
     /** The day a Mission Event failed and the journey stopped, if one did. */
     failedOnDay: number | null;
   } | null;
+  /** Where every Landing Site is, for showing Assets on the globe. */
+  landingSites: { name: string; latitude: number; longitude: number }[];
   /** Every Asset that operates at Mars during the Turn. */
   assetsAtMars: AssetAtMars[];
   entries: TimelineEntry[];

@@ -37,7 +37,7 @@ describe("choosing a Service Life", () => {
     const { simulation, program } = withLives(1000, 2000);
     const plan = orbiterWith(2000);
     expect(
-      simulation.previewAssets(program, plan.mission ?? orbiterWithout()),
+      simulation.previewAssets(plan.mission ?? orbiterWithout()),
     ).toMatchObject([
       {
         assetId: "test-orbiter",
@@ -162,7 +162,8 @@ describe("a surveying Asset's Service Life", () => {
         landingSites: [
           ...files.landingSites,
           ...[1, 2, 3].map((number) => ({
-            ...files.landingSites[0],
+            latitude: 0,
+            longitude: 0,
             id: `extra-${number}`,
             name: `Extra ${number}`,
             description: "Extra.",
