@@ -8,7 +8,7 @@
 - One Vitest file: `npx.cmd vitest run src/simulation/simulation.test.ts`, adding `-t "starting a Program"` to pick tests by name
 - Browser tests by name: `npx.cmd playwright test -g "explains a game term"`
 
-Even one browser test starts both test servers, including a production build, so it takes about 10 s. They use fixed ports, so run browser tests one at a time. "Port already used" means another run is still going on this machine.
+Even one browser test starts both test servers, including a production build, so it takes about 10 s. They use fixed ports, so run browser tests one at a time. "Port already used" means another run is still going on this machine. A second worktree can test at the same time by setting `E2E_PORT` to another port, which also takes the port below it.
 
 ## Agent skills
 

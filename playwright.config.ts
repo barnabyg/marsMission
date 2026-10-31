@@ -1,7 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const port = 5199;
-const productionPort = 5198;
+// Fixed by default. A second worktree testing at the same time sets E2E_PORT to keep clear of the first.
+const port = Number(process.env.E2E_PORT ?? 5199);
+const productionPort = port - 1;
 const productionOutDir = "node_modules/.cache/e2e-build";
 
 export const productionBaseURL = `http://localhost:${productionPort}`;
