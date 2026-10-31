@@ -21,7 +21,7 @@ export function watchForProblems(page: Page): string[] {
   return problems;
 }
 
-/** Returns any game term on screen that has no tooltip. Button labels are plain text, so they don't count. */
+/** Returns any game term on screen that has no tooltip. Button labels and a select's options are plain text, so they don't count. */
 export function termsWithoutTooltips(page: Page): Promise<string[]> {
   return page.evaluate((pattern) => {
     const walker = document.createTreeWalker(
@@ -33,7 +33,7 @@ export function termsWithoutTooltips(page: Page): Promise<string[]> {
       const { parentElement, textContent } = walker.currentNode;
       if (
         parentElement?.closest(
-          "[data-term], [role=tooltip], button, script, style",
+          "[data-term], [role=tooltip], button, option, script, style",
         )
       ) {
         continue;

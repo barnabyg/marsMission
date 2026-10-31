@@ -17,7 +17,11 @@ function somethingScrolls(page: Page): Promise<boolean> {
     return (
       scrollHeight > innerHeight ||
       scrollWidth > innerWidth ||
-      panels.some((panel) => panel.scrollHeight > panel.clientHeight)
+      panels.some(
+        (panel) =>
+          panel.scrollHeight > panel.clientHeight ||
+          panel.scrollWidth > panel.clientWidth,
+      )
     );
   });
 }

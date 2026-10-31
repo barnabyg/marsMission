@@ -287,6 +287,7 @@ export function resolveTurn(
       name: asset.name,
       kind: asset.kind,
       landingSiteName: rules.landingSiteById(asset.landingSiteId)?.name ?? null,
+      activityName: rules.activityNameOf(asset),
       fromDay,
       untilDay,
     }),

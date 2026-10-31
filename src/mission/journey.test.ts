@@ -68,12 +68,13 @@ describe("listing what's operating at Mars", () => {
           name: "Ending",
           kind: "orbiter",
           landingSiteName: null,
+          activityName: "Survey",
           fromDay: 0,
           untilDay: 300,
         },
       ],
     };
-    expect(assetsOperatingOn(timeline, 299)).toEqual(["Ending"]);
+    expect(assetsOperatingOn(timeline, 299)).toEqual(["Ending: Survey"]);
     expect(assetsOperatingOn(timeline, 300)).toEqual([]);
   });
 
@@ -84,6 +85,7 @@ describe("listing what's operating at Mars", () => {
           name: "Old",
           kind: "orbiter",
           landingSiteName: null,
+          activityName: "Survey",
           fromDay: 0,
           untilDay: null,
         },
@@ -91,15 +93,16 @@ describe("listing what's operating at Mars", () => {
           name: "New",
           kind: "lander",
           landingSiteName: "Alpha Plain",
+          activityName: "Nothing",
           fromDay: 205,
           untilDay: null,
         },
       ],
     };
-    expect(assetsOperatingOn(timeline, 204)).toEqual(["Old"]);
+    expect(assetsOperatingOn(timeline, 204)).toEqual(["Old: Survey"]);
     expect(assetsOperatingOn(timeline, 205)).toEqual([
-      "Old",
-      "New at Alpha Plain",
+      "Old: Survey",
+      "New at Alpha Plain: Nothing",
     ]);
   });
 });

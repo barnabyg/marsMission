@@ -2,6 +2,7 @@ import type { Catalogue } from "../catalogue/catalogue";
 import {
   addDays,
   daysUntilServiceEnds,
+  operatingKey,
   roll,
   type Asset,
   type LandingSite,
@@ -71,11 +72,19 @@ export function operateAssets(
       landingSiteId: asset.landsAtSite ? (flown.landingSite?.id ?? null) : null,
       serviceLifeDays: rules.serviceLifeFor(plan.mission, asset).days,
       reliabilityLevelId: rules.assetReliabilityFor(plan.mission, asset).id,
+      activityId: rules.activityFor(plan.mission, asset).id,
     },
     fromDay: rules.deliveryDay(asset),
   }));
   const inService = [
-    ...program.operatingAssets.map((asset) => ({ asset, fromDay: 0 })),
+    ...program.operatingAssets.map((asset) => ({
+      asset: {
+        ...asset,
+        activityId:
+          plan.operatingActivities?.[operatingKey(asset)] ?? asset.activityId,
+      },
+      fromDay: 0,
+    })),
     ...delivered,
   ].map(({ asset, fromDay }): AssetInService => {
     const endDay = daysUntilServiceEnds(program.date, asset);
@@ -126,7 +135,7 @@ export function operateAssets(
 }
 
 /**
- * Carries out the Turn's Survey, if a surveying Asset operates at Mars during it. Every known site
+ * Carries out the Turn's Survey, if an Asset operating at Mars has a survey Activity during it. Every known site
  * drops to its surveyed risk in one step, and the next site in the catalogue becomes known.
  */
 export function carryOutSurvey(
@@ -139,9 +148,7 @@ export function carryOutSurvey(
   const surveyDays = inService
     .filter(
       ({ asset, fromDay, untilDay }) =>
-        catalogue.assets.some(
-          ({ id, surveys }) => id === asset.assetId && surveys,
-        ) &&
+        rules.activityById(asset.activityId)?.effect.kind === "survey" &&
         (untilDay === null || untilDay > fromDay),
     )
     .map(({ fromDay }) => fromDay);

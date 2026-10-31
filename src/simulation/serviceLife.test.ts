@@ -93,6 +93,7 @@ describe("a Service Life running out", () => {
         name: "Test Orbiter",
         kind: "orbiter",
         landingSiteName: null,
+        activityName: "Survey",
         fromDay: 0,
         untilDay: 420,
       },

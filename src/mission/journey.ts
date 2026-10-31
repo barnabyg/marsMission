@@ -58,9 +58,12 @@ export function assetsOperatingOn(
   timeline: Pick<Timeline, "assetsAtMars">,
   day: number,
 ): string[] {
-  return assetsAtMarsOn(timeline, day).map((asset) =>
-    asset.landingSiteName
-      ? `${asset.name} at ${asset.landingSiteName}`
-      : asset.name,
+  return assetsAtMarsOn(timeline, day).map(
+    (asset) =>
+      `${
+        asset.landingSiteName
+          ? `${asset.name} at ${asset.landingSiteName}`
+          : asset.name
+      }: ${asset.activityName}`,
   );
 }

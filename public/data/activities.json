@@ -1,0 +1,14 @@
+[
+  {
+    "id": "survey",
+    "name": "Survey",
+    "description": "Observes Mars from orbit, which lowers the landing risk of the known Landing Sites and reveals a new one.",
+    "effect": { "kind": "survey" }
+  },
+  {
+    "id": "nothing",
+    "name": "Nothing",
+    "description": "Stays in place and does no work this Turn.",
+    "effect": { "kind": "nothing" }
+  }
+]

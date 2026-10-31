@@ -5,18 +5,22 @@ export interface PlannedMission {
   reliability?: Record<string, string>;
   /** Where the Mission's lander comes down. Only a Mission carrying a lander has one. */
   landingSiteId?: string;
-  /** The choices made for each Asset, by id. Anything left out gets the shortest Service Life and the cheapest Reliability. */
+  /** The choices made for each Asset, by id. Anything left out gets the shortest Service Life, the cheapest Reliability and the first Activity it lists. */
   assetChoices?: Record<string, AssetChoices>;
 }
 
 export interface AssetChoices {
   serviceLifeDays?: number;
   reliabilityLevelId?: string;
+  /** What it does from the day it is delivered, until the player changes it. */
+  activityId?: string;
 }
 
 export interface TurnPlan {
   /** The Turn's one Mission, or null to let the Turn pass without launching. */
   mission: PlannedMission | null;
+  /** New Activities for Assets already operating, by their `key`. Any left out keep the one they have. */
+  operatingActivities?: Record<string, string>;
 }
 
 export interface PlanCheck {
@@ -38,6 +42,15 @@ interface OperatingAsset {
   serviceLifeDays: number;
   /** The Reliability level bought for it, which lowers its chance of failing in service. */
   reliabilityLevelId: string;
+  /** What it does each Turn until the player changes it. */
+  activityId: string;
+}
+
+/** An Activity as Planning Mode offers it. */
+export interface PlannedActivity {
+  id: string;
+  name: string;
+  description: string;
 }
 
 type ProgramStatus =
@@ -81,6 +94,11 @@ export interface ProgramView {
     pointsAway: number;
   } | null;
   operatingAssets: (OperatingAsset & {
+    /** How a plan names this Asset to change its Activity. */
+    key: string;
+    activityName: string;
+    /** The Activities it can do, which is none if it has left the catalogue. */
+    activities: PlannedActivity[];
     landingSiteName: string | null;
     /** How many days of Service Life are left, which is 0 if it ends as the coming Turn starts. */
     daysLeft: number;
@@ -233,6 +251,7 @@ export interface AssetAtMars {
   kind: string;
   /** Where it is on the surface, or null if it's in orbit. */
   landingSiteName: string | null;
+  activityName: string;
   /** The day of the Turn it starts operating, which is 0 if it already was. */
   fromDay: number;
   /** The day of the Turn it stops operating, or null if it lasts beyond the Turn. */
@@ -273,6 +292,8 @@ export interface PlannedAsset {
   serviceLifeDays: number;
   serviceLifeOptions: { days: number; costMillions: number }[];
   reliabilityLevelId: string;
+  activityId: string;
+  activities: PlannedActivity[];
   /** The chance of failing in each Turn after it arrives, as a rough figure. */
   riskBand: string;
   reliabilityLevels: {

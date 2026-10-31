@@ -33,6 +33,21 @@ const launchVehiclesSchema = z.array(
   }),
 );
 
+const activitiesSchema = z
+  .array(
+    z.strictObject({
+      id,
+      name: z.string().min(1),
+      description: z.string().min(1),
+      // What an Asset doing this Activity brings about.
+      effect: z.discriminatedUnion("kind", [
+        z.strictObject({ kind: z.literal("nothing") }),
+        z.strictObject({ kind: z.literal("survey") }),
+      ]),
+    }),
+  )
+  .min(1);
+
 const assetsSchema = z.array(
   z.strictObject({
     id,
@@ -52,10 +67,10 @@ const assetsSchema = z.array(
       )
       .min(1),
     missionEvents: z.array(id),
+    // The Activities it can do. The first is what it does unless the player picks another.
+    activities: z.array(id).min(1),
     // Whether this Asset is a lander, so that a Mission carrying it must name a Landing Site.
     landsAtSite: z.boolean().optional(),
-    // Whether this Asset carries out a Survey in each Turn it operates at Mars.
-    surveys: z.boolean().optional(),
   }),
 );
 
@@ -136,6 +151,7 @@ const riskBandsSchema = z
 
 const schemas = {
   program: programSchema,
+  activities: activitiesSchema,
   launchVehicles: launchVehiclesSchema,
   assets: assetsSchema,
   landingSites: landingSitesSchema,
@@ -149,6 +165,7 @@ const schemas = {
 /** The data file behind each part of the catalogue, relative to the data folder. */
 export const catalogueFileNames = {
   program: "program.json",
+  activities: "activities.json",
   launchVehicles: "launch-vehicles.json",
   assets: "assets.json",
   landingSites: "landing-sites.json",
@@ -161,6 +178,7 @@ export const catalogueFileNames = {
 
 export interface Catalogue {
   program: z.output<typeof programSchema>;
+  activities: z.output<typeof activitiesSchema>;
   launchVehicles: z.output<typeof launchVehiclesSchema>;
   assets: z.output<typeof assetsSchema>;
   /** In the order a Survey reveals them. */
@@ -203,6 +221,7 @@ function crossCheck(catalogue: Catalogue): string[] {
   const problems: string[] = [];
   const {
     program,
+    activities,
     launchVehicles,
     assets,
     landingSites,
@@ -214,6 +233,7 @@ function crossCheck(catalogue: Catalogue): string[] {
   } = catalogue;
 
   const parts = [
+    [catalogueFileNames.activities, activities],
     [catalogueFileNames.launchVehicles, launchVehicles],
     [catalogueFileNames.assets, assets],
     [catalogueFileNames.landingSites, landingSites],
@@ -275,11 +295,32 @@ function crossCheck(catalogue: Catalogue): string[] {
       `${catalogueFileNames.landingSites}: there is a lander in ${catalogueFileNames.assets}, so at least one Landing Site must be known from the start`,
     );
   }
+  // An old save's Asset does nothing unless it can survey, so there must be an Activity to give it.
+  if (!activities.some(({ effect }) => effect.kind === "nothing")) {
+    problems.push(
+      `${catalogueFileNames.activities}: there must be at least one Activity with a "nothing" effect`,
+    );
+  }
   for (const asset of assets) {
-    if (asset.landsAtSite === true && asset.surveys === true) {
+    for (const duplicate of findDuplicates(asset.activities)) {
       problems.push(
-        `${catalogueFileNames.assets}: "${asset.id}" can't both land and survey, because a Survey is made from orbit`,
+        `${catalogueFileNames.assets}: "${asset.id}" lists the Activity "${duplicate}" more than once`,
       );
+    }
+    for (const activityId of asset.activities) {
+      const activity = activities.find(({ id }) => id === activityId);
+      if (!activity) {
+        problems.push(
+          `${catalogueFileNames.assets}: "${asset.id}" refers to the Activity "${activityId}", which isn't in ${catalogueFileNames.activities}`,
+        );
+      } else if (
+        asset.landsAtSite === true &&
+        activity.effect.kind === "survey"
+      ) {
+        problems.push(
+          `${catalogueFileNames.assets}: "${asset.id}" can't both land and survey, because a Survey is made from orbit`,
+        );
+      }
     }
   }
   for (const asset of assets) {
@@ -374,6 +415,12 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     files.program,
     problems,
   );
+  const activities = parsePart(
+    catalogueFileNames.activities,
+    schemas.activities,
+    files.activities,
+    problems,
+  );
   const launchVehicles = parsePart(
     catalogueFileNames.launchVehicles,
     schemas.launchVehicles,
@@ -429,6 +476,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
 
   if (
     !program ||
+    !activities ||
     !launchVehicles ||
     !assets ||
     !landingSites ||
@@ -443,6 +491,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
 
   const catalogue = {
     program,
+    activities,
     launchVehicles,
     assets,
     landingSites,

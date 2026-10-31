@@ -1,9 +1,17 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import { createRules, daysUntilServiceEnds, formatMoney, sum } from "./rules";
+import {
+  createRules,
+  daysUntilServiceEnds,
+  formatMoney,
+  operatingKey,
+  sum,
+  type Activity,
+} from "./rules";
 import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
 import { resolveTurn } from "./turnSteps";
 import type {
   PlanCheck,
+  PlannedActivity,
   PlannedAsset,
   PlannedMission,
   PlannedMissionEvent,
@@ -18,6 +26,7 @@ export { corruptSave, SaveError } from "./saveFormat";
 export type {
   AssetAtMars,
   AssetChoices,
+  PlannedActivity,
   PlannedAsset,
   Program,
   ProgramView,
@@ -49,9 +58,19 @@ export interface Simulation {
 
 const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
 
+const plannedActivity = ({
+  id,
+  name,
+  description,
+}: Activity): PlannedActivity => ({ id, name, description });
+
 export function createSimulation(catalogue: Catalogue): Simulation {
   const rules = createRules(catalogue);
   const {
+    activitiesOf,
+    activityById,
+    activityFor,
+    activityNameOf,
     failureProbability,
     assetReliabilityFor,
     inServiceFailureChance,
@@ -64,11 +83,49 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     riskBandFor,
   } = rules;
 
+  /** What's wrong with giving this Activity to an Asset that lists `activityIds`, if anything. */
+  function activityProblems(
+    assetName: string,
+    activityIds: string[],
+    activityId: string,
+  ): string[] {
+    const activity = activityById(activityId);
+    if (!activity) return [`There is no Activity called "${activityId}".`];
+    return activityIds.includes(activityId)
+      ? []
+      : [`${assetName} can't do the Activity "${activity.name}".`];
+  }
+
+  function operatingActivityProblems(
+    program: Program,
+    plan: TurnPlan,
+  ): string[] {
+    return Object.entries(plan.operatingActivities ?? {}).flatMap(
+      ([key, activityId]) => {
+        const asset = program.operatingAssets.find(
+          (candidate) => operatingKey(candidate) === key,
+        );
+        if (!asset) return [`There is no operating Asset called "${key}".`];
+        const design = catalogue.assets.find(({ id }) => id === asset.assetId);
+        return activityProblems(
+          asset.name,
+          design?.activities ?? [],
+          activityId,
+        );
+      },
+    );
+  }
+
   function checkPlan(program: Program, plan: TurnPlan): PlanCheck {
     if (program.status.kind !== "active") {
       return { ...noMission, problems: ["This Program has ended."] };
     }
-    if (!plan.mission) return { ...noMission, problems: [] };
+    if (!plan.mission) {
+      return {
+        ...noMission,
+        problems: operatingActivityProblems(program, plan),
+      };
+    }
 
     const {
       launchVehicleId,
@@ -77,7 +134,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       landingSiteId,
       assetChoices = {},
     } = plan.mission;
-    const problems: string[] = [];
+    const problems = operatingActivityProblems(program, plan);
     let costMillions = 0;
     let massTonnes = 0;
 
@@ -139,7 +196,12 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         continue;
       }
       const asset = catalogue.assets.find(({ id }) => id === assetId);
-      const { serviceLifeDays, reliabilityLevelId } = choices;
+      const { serviceLifeDays, reliabilityLevelId, activityId } = choices;
+      if (asset && activityId !== undefined) {
+        problems.push(
+          ...activityProblems(asset.name, asset.activities, activityId),
+        );
+      }
       if (
         reliabilityLevelId !== undefined &&
         !catalogue.reliabilityLevels.some(({ id }) => id === reliabilityLevelId)
@@ -242,6 +304,12 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           .map(({ id, name }) => ({ id, name })),
         operatingAssets: program.operatingAssets.map((asset) => ({
           ...asset,
+          key: operatingKey(asset),
+          activityName: activityNameOf(asset),
+          activities: catalogue.assets
+            .filter(({ id }) => id === asset.assetId)
+            .flatMap(activitiesOf)
+            .map(plannedActivity),
           daysLeft: Math.max(0, daysUntilServiceEnds(program.date, asset)),
           landingSiteName: landingSiteById(asset.landingSiteId)?.name ?? null,
         })),
@@ -310,6 +378,8 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           serviceLifeDays: serviceLifeFor(mission, asset).days,
           serviceLifeOptions: asset.serviceLifeOptions,
           reliabilityLevelId: assetReliabilityFor(mission, asset).id,
+          activityId: activityFor(mission, asset).id,
+          activities: activitiesOf(asset).map(plannedActivity),
           riskBand: riskBandFor(
             inServiceFailureChance(asset, assetReliabilityFor(mission, asset)),
           ),

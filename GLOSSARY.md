@@ -62,7 +62,7 @@ How long an Asset keeps operating once in place. Longer Service Life costs more.
 _Avoid_: Lifespan, durability
 
 **Activity**:
-The one task given to an Asset, or to all the Crew at one Landing Site, for a Turn, such as soil analysis, driving to a new site or nothing.
+The one task given to an Asset, or to all the Crew at one Landing Site, for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.
 _Avoid_: Task, job, assignment
 
 **Landing Site**:
@@ -70,13 +70,13 @@ A named location on Mars where a Mission can land, with its own landing risk and
 _Avoid_: Location, zone, region
 
 **Survey**:
-Observing Mars from orbit to reveal Landing Sites and lower their landing risk.
+Observing Mars from orbit to reveal Landing Sites and lower their landing risk. It is an Activity, and one surveying Asset is enough.
 _Avoid_: Scan, reconnaissance
 
 ## Modes
 
 **Planning Mode**:
-The first part of a Turn, in which the player chooses Missions, Assets, technology and Safety Margin and spends money. No game time passes in Planning Mode.
+The first part of a Turn, in which the player chooses Missions, Assets, Activities, technology and Safety Margin and spends money. No game time passes in Planning Mode.
 _Avoid_: Build mode, design mode
 
 **Mission Mode**:

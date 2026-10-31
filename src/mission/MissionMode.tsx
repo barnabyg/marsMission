@@ -137,7 +137,9 @@ export function MissionMode({
         <ul data-testid="operating-at-mars">
           {operatingAssets.length === 0 && <li>Nothing</li>}
           {operatingAssets.map((asset, index) => (
-            <li key={index}>{asset}</li>
+            <li key={index}>
+              <GameText>{asset}</GameText>
+            </li>
           ))}
         </ul>
       </aside>

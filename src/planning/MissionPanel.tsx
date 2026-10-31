@@ -9,11 +9,14 @@ import {
   type TurnPlan,
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
+import { ActivitySelect } from "./ActivitySelect";
 
 interface MissionPanelProps {
   simulation: Simulation;
   program: Program;
   view: ProgramView;
+  /** The new Activities chosen for Assets already operating, which either button sends. */
+  operatingActivities: Record<string, string>;
   onSubmit: (plan: TurnPlan) => void;
 }
 
@@ -22,6 +25,7 @@ export function MissionPanel({
   simulation,
   program,
   view,
+  operatingActivities,
   onSubmit,
 }: MissionPanelProps) {
   const [launchVehicleId, setLaunchVehicleId] = useState(
@@ -58,6 +62,7 @@ export function MissionPanel({
     assetChoices,
   });
   const plan: TurnPlan = {
+    operatingActivities,
     mission: {
       ...mission,
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
@@ -71,6 +76,7 @@ export function MissionPanel({
           {
             serviceLifeDays: asset.serviceLifeDays,
             reliabilityLevelId: asset.reliabilityLevelId,
+            activityId: asset.activityId,
           },
         ]),
       ),
@@ -215,7 +221,7 @@ export function MissionPanel({
       <button
         type="button"
         onClick={() => {
-          onSubmit({ mission: null });
+          onSubmit({ mission: null, operatingActivities });
         }}
       >
         End Turn without launching
@@ -255,6 +261,17 @@ function MissionAssetChoice({
       </label>
       {planned && (
         <>
+          <span>
+            <GameText>Activity</GameText>
+          </span>
+          <ActivitySelect
+            assetName={asset.name}
+            activityId={planned.activityId}
+            activities={planned.activities}
+            onChange={(activityId) => {
+              onChoicesChange({ activityId });
+            }}
+          />
           <span>
             <GameText>Service Life</GameText>
           </span>

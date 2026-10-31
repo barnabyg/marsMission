@@ -22,6 +22,20 @@ export function testCatalogueFiles(): CatalogueFiles {
       publicSupportDrainPercent: 15,
       cancellationLevel: 50,
     },
+    activities: [
+      {
+        id: "test-survey",
+        name: "Survey",
+        description: "Looks for sites.",
+        effect: { kind: "survey" },
+      },
+      {
+        id: "test-nothing",
+        name: "Nothing",
+        description: "Does no work.",
+        effect: { kind: "nothing" },
+      },
+    ],
     launchVehicles: [
       {
         id: "test-vehicle",
@@ -48,7 +62,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureChancePerTurn: 0,
         serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
-        surveys: true,
+        activities: ["test-survey", "test-nothing"],
       },
       {
         id: "gold-orbiter",
@@ -59,7 +73,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureChancePerTurn: 0,
         serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
-        surveys: true,
+        activities: ["test-survey", "test-nothing"],
       },
       {
         id: "test-relay",
@@ -70,6 +84,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureChancePerTurn: 0,
         serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
+        activities: ["test-nothing"],
       },
       {
         id: "test-lander",
@@ -80,6 +95,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureChancePerTurn: 0,
         serviceLifeOptions: longLife,
         missionEvents: ["test-landing"],
+        activities: ["test-nothing"],
         landsAtSite: true,
       },
     ],

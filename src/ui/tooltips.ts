@@ -30,13 +30,13 @@ export const tooltips = {
   "Service Life":
     "How long an Asset keeps operating once in place. Longer Service Life costs more.",
   Activity:
-    "The one task given to an Asset, or to all the Crew at one Landing Site, for a Turn, such as soil analysis, driving to a new site or nothing.",
+    "The one task given to an Asset, or to all the Crew at one Landing Site, for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.",
   "Landing Site":
     "A named location on Mars where a Mission can land, with its own landing risk and Science value. Apart from a couple of well-known sites, they become available only through a Survey.",
   Survey:
-    "Observing Mars from orbit to reveal Landing Sites and lower their landing risk.",
+    "Observing Mars from orbit to reveal Landing Sites and lower their landing risk. It is an Activity, and one surveying Asset is enough.",
   "Planning Mode":
-    "The first part of a Turn, in which the player chooses Missions, Assets, technology and Safety Margin and spends money. No game time passes in Planning Mode.",
+    "The first part of a Turn, in which the player chooses Missions, Assets, Activities, technology and Safety Margin and spends money. No game time passes in Planning Mode.",
   "Mission Mode":
     "The graphical second part of a Turn, in which the Turn's Mission and every operating Asset and Crew play out until the next Launch Window.",
   "Save Slot":

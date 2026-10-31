@@ -11,7 +11,7 @@ Phases are defined in the [Build order](#build-order). Phases 1, 2 and 3 are bui
 - **Since the Phase 2 playtest:** Save, Load and Retire Program dialogs in Planning Mode; text sized for 150% display scaling; Pause in Mission Mode; the events column in place of Phase 1's text screens.
 
 - **Phase 3:** a lander and entry/descent/landing; Landing Sites, each with a landing risk and a Science value earned by the first landing there; Missions carrying several Assets within a Launch Vehicle's mass limit, with a second, larger Launch Vehicle brought forward from Phase 6; partial Mission failure, where Assets already delivered are safe; automatic Surveys from orbit; a Service Life chosen for each Asset; Assets failing in service, with Reliability bought for each Asset; a second Funding Threshold; the Mars orbit view, with automatic view changes and smooth camera moves. Saves upgrade step by step from any earlier format.
-- **Since Phase 3:** End Turn in Mission Mode.
+- **Since Phase 3:** End Turn in Mission Mode; Activities, with Survey and Nothing as the first ones.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
@@ -47,7 +47,9 @@ Any rule in this document beyond these is planned, so its absence from the code 
 
 - Mars has named Landing Sites. Each has a landing risk and a Science value, earned by the first successful landing there. Resources such as water ice are left out until a rule uses them.
 - Apart from the two starting sites, Landing Sites become available only through a Survey from orbit. Surveying also lowers a site's landing risk.
-- For now, Surveying is automatic rather than an Activity. In each Turn a surveying Asset operates at Mars, every known site drops to its surveyed risk in one step, and the next site in the catalogue becomes known. A second surveying Asset doesn't speed this up.
+- Surveying is an Activity. In each Turn an Asset operates at Mars with Survey as its Activity, every known site drops to its surveyed risk in one step, and the next site in the catalogue becomes known. A second surveying Asset doesn't speed this up, and with none there is no Survey.
+- A newly chosen Asset starts on the first Activity it lists in the data files, so an orbiter surveys unless the player chooses otherwise. It starts on the day it is delivered, and an Asset that is lost never starts.
+- An Asset keeps its Activity from Turn to Turn until the player changes it, so a large Program doesn't need re-setting every Turn.
 
 ## Risk and Safety Margin
 

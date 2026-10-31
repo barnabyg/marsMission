@@ -23,6 +23,16 @@ describe("the real data files", () => {
     expect(() => parseCatalogue(realCatalogueFiles())).not.toThrow();
   });
 
+  it("start an orbiter on a Survey, with Nothing as its other choice", () => {
+    const { assets, activities } = parseCatalogue(realCatalogueFiles());
+    const orbiter = assets.find(({ kind }) => kind === "orbiter");
+    const effects = orbiter?.activities.map(
+      (activityId) =>
+        activities.find(({ id }) => id === activityId)?.effect.kind,
+    );
+    expect(effects).toEqual(["survey", "nothing"]);
+  });
+
   it("have a second Launch Vehicle with more capacity at a higher cost", () => {
     const [first, second] = realCatalogueFiles().launchVehicles;
     expect(second?.capacityTonnes).toBeGreaterThan(first?.capacityTonnes ?? 0);
@@ -241,9 +251,95 @@ describe("invalid data files", () => {
     const files = testCatalogueFiles();
     const message = errorFrom({
       ...files,
-      assets: files.assets.map((asset) => ({ ...asset, surveys: true })),
+      assets: files.assets.map((asset) => ({
+        ...asset,
+        activities: ["test-survey", "test-nothing"],
+      })),
     });
     expect(message).toContain("can't both land and survey");
+  });
+
+  it("reject an Asset with an Activity that isn't in the data files", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      assets: files.assets.map((asset) => ({
+        ...asset,
+        activities: ["juggling"],
+      })),
+    });
+    expect(message).toContain("assets.json");
+    expect(message).toContain('the Activity "juggling"');
+    expect(message).toContain("activities.json");
+  });
+
+  it("reject an Asset with no Activities", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      assets: files.assets.map((asset) => ({ ...asset, activities: [] })),
+    });
+    expect(message).toContain("assets.json");
+    expect(message).toContain("activities");
+  });
+
+  it("reject an Asset that lists an Activity twice", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      assets: files.assets.map((asset) => ({
+        ...asset,
+        activities: ["test-nothing", "test-nothing"],
+      })),
+    });
+    expect(message).toContain(
+      'lists the Activity "test-nothing" more than once',
+    );
+  });
+
+  it("reject an Activity whose id is used twice", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      activities: [...files.activities, ...files.activities],
+    });
+    expect(message).toContain("activities.json");
+    expect(message).toContain('"test-survey" is used more than once');
+  });
+
+  it("reject an Activity with an effect the game doesn't know", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      activities: [
+        ...files.activities,
+        {
+          id: "juggling",
+          name: "Juggling",
+          description: "Throws things.",
+          effect: { kind: "juggling" },
+        },
+      ],
+    });
+    expect(message).toContain("activities.json");
+    expect(message).toContain("effect");
+  });
+
+  it("reject data files with no Activity that does nothing", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      activities: files.activities.filter(
+        ({ effect }) => effect.kind !== "nothing",
+      ),
+      assets: files.assets.map((asset) => ({
+        ...asset,
+        activities: ["test-survey"],
+        landsAtSite: false,
+      })),
+    });
+    expect(message).toContain("activities.json");
+    expect(message).toContain('"nothing" effect');
   });
 
   it("reject a Landing Site with an invalid risk", () => {

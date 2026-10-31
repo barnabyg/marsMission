@@ -38,6 +38,10 @@ export function PlanningMode({
   const view = simulation.readProgram(program);
   const [openDialog, setOpenDialog] = useState<PlanningDialog | null>(null);
   const [savedToSlot, setSavedToSlot] = useState<number | null>(null);
+  // This state lasts one visit, because App gives each visit its own key, so a choice can't reach a later Turn or a Load.
+  const [operatingActivities, setOperatingActivities] = useState<
+    Record<string, string>
+  >({});
 
   function open(dialog: PlanningDialog) {
     setSavedToSlot(null);
@@ -148,6 +152,7 @@ export function PlanningMode({
           simulation={simulation}
           program={program}
           view={view}
+          operatingActivities={operatingActivities}
           onSubmit={onSubmit}
         />
 
@@ -169,7 +174,16 @@ export function PlanningMode({
             )}
           </section>
 
-          <OperatingPanel assets={view.operatingAssets} />
+          <OperatingPanel
+            assets={view.operatingAssets}
+            chosenActivities={operatingActivities}
+            onActivityChange={(key, activityId) => {
+              setOperatingActivities({
+                ...operatingActivities,
+                [key]: activityId,
+              });
+            }}
+          />
         </div>
       </div>
 
