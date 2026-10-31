@@ -15,6 +15,8 @@ export interface SceneLabel {
   position: Point;
   className?: string;
   testId?: string;
+  /** Which way out of the globe it faces, for a label on the surface, which hides on the far side. */
+  facing?: Point;
 }
 
 export const degreesToRadians = Math.PI / 180;

@@ -37,7 +37,10 @@ export function MissionMode({
     state.entriesHappened,
   );
 
-  const { view, chooseView } = useMissionView();
+  const { view, chooseView } = useMissionView(
+    timeline.entries,
+    state.entriesHappened,
+  );
 
   useEffect(() => {
     if (state.finished) onFinished();

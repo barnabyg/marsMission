@@ -2,6 +2,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo, useRef, type RefObject } from "react";
 import { BufferAttribute, BufferGeometry, Vector3 } from "three";
 import type { Timeline } from "../simulation/simulation";
+import { advanceMove, headFor, poseDuring, settledAt } from "./cameraMove";
 import {
   marsOrbitLabels,
   MarsOrbitScene,
@@ -23,10 +24,16 @@ interface MissionSceneProps {
   operatingAssetCount: number;
 }
 
-/** Where the one camera goes for each view. */
-const shots: Record<MissionViewId, CameraPose> = {
-  solarSystem: solarSystemShot,
-  marsOrbit: marsOrbitShot,
+/** Where the one camera goes for each view, and the labels that go with it. */
+const viewSettings: Record<
+  MissionViewId,
+  {
+    shot: CameraPose;
+    labels: (timeline: Timeline, day: number) => SceneLabel[];
+  }
+> = {
+  solarSystem: { shot: solarSystemShot, labels: solarSystemLabels },
+  marsOrbit: { shot: marsOrbitShot, labels: marsOrbitLabels },
 };
 
 function Stars() {
@@ -59,12 +66,24 @@ function Stars() {
   );
 }
 
-function CameraRig({ pose }: { pose: CameraPose }) {
-  useFrame(({ camera }) => {
-    camera.position.set(...pose.position);
-    camera.lookAt(...pose.target);
+/**
+ * Eases the camera to the view's shot. It counts real time, not game time, so that a move carries
+ * on at the same pace at every speed and while paused.
+ */
+function CameraRig({ shot }: { shot: CameraPose }) {
+  const move = useRef(settledAt(shot));
+  useFrame(({ camera, gl }, seconds) => {
+    if (move.current.to !== shot) move.current = headFor(move.current, shot);
+    move.current = advanceMove(move.current, seconds * 1000);
+    const { position, target } = poseDuring(move.current);
+    camera.position.set(...position);
+    camera.lookAt(...target);
     // The labels are placed from this camera in the same frame, so they mustn't wait for the render.
     camera.updateMatrixWorld();
+    // The browser tests can't see into the scene, so this is how they check a move is smooth.
+    gl.domElement.dataset.cameraPosition = position
+      .map((value) => value.toFixed(3))
+      .join(" ");
   });
   return null;
 }
@@ -78,8 +97,9 @@ function LabelTracker({
   layer: RefObject<HTMLDivElement | null>;
 }) {
   const projected = useMemo(() => new Vector3(), []);
+  const toCamera = useMemo(() => new Vector3(), []);
   useFrame(({ camera, size }) => {
-    labels.forEach(({ position }, index) => {
+    labels.forEach(({ position, facing }, index) => {
       const element = layer.current?.children[index];
       if (!(element instanceof HTMLElement)) return;
       projected.set(...position).project(camera);
@@ -87,7 +107,15 @@ function LabelTracker({
       const top = ((1 - projected.y) / 2) * size.height;
       element.style.transform = `translate(${left}px, ${top}px)`;
       // Beyond 1 is behind the camera, where the sums would otherwise put it back on screen.
-      element.style.visibility = projected.z > 1 ? "hidden" : "visible";
+      const behindCamera = projected.z > 1;
+      const onFarSide =
+        facing !== undefined &&
+        toCamera
+          .copy(camera.position)
+          .sub(projected.set(...position))
+          .dot(projected.set(...facing)) <= 0;
+      element.style.visibility =
+        behindCamera || onFarSide ? "hidden" : "visible";
     });
   });
   return null;
@@ -101,10 +129,8 @@ export default function MissionScene({
   operatingAssetCount,
 }: MissionSceneProps) {
   const labelLayer = useRef<HTMLDivElement>(null);
-  const labels =
-    view === "marsOrbit"
-      ? marsOrbitLabels(timeline, day)
-      : solarSystemLabels(timeline, day);
+  const { shot, labels: labelsOnDay } = viewSettings[view];
+  const labels = labelsOnDay(timeline, day);
 
   return (
     <div className="solar-system" data-testid="solar-system-view">
@@ -117,7 +143,7 @@ export default function MissionScene({
           operatingAssetCount={operatingAssetCount}
         />
         <MarsOrbitScene timeline={timeline} day={day} />
-        <CameraRig pose={shots[view]} />
+        <CameraRig shot={shot} />
         <LabelTracker labels={labels} layer={labelLayer} />
       </Canvas>
       <div ref={labelLayer}>

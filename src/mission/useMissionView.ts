@@ -1,5 +1,11 @@
 import { useState } from "react";
-import type { MissionViewId } from "./missionViews";
+import type { TimelineEntry } from "../simulation/simulation";
+import {
+  currentView,
+  startingChoice,
+  type MissionViewId,
+  type ViewChoice,
+} from "./missionViews";
 
 interface MissionView {
   view: MissionViewId;
@@ -7,7 +13,15 @@ interface MissionView {
 }
 
 /** Which view Mission Mode is showing. It stays out of playback and the Simulation, because it changes neither. */
-export function useMissionView(): MissionView {
-  const [view, chooseView] = useState<MissionViewId>("solarSystem");
-  return { view, chooseView };
+export function useMissionView(
+  entries: readonly TimelineEntry[],
+  entriesHappened: number,
+): MissionView {
+  const [choice, setChoice] = useState<ViewChoice>(startingChoice);
+  return {
+    view: currentView(entries, entriesHappened, choice),
+    chooseView: (view) => {
+      setChoice({ view, entriesHappened });
+    },
+  };
 }

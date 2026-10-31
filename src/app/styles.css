@@ -311,6 +311,14 @@ dialog p {
   visibility: hidden;
 }
 
+.surface-label span {
+  color: #ffe08a;
+}
+
+.crashed-label span {
+  color: #ff8a75;
+}
+
 .mission-side {
   z-index: 1;
   grid-row: 2;
