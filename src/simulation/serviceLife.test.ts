@@ -90,6 +90,7 @@ describe("a Service Life running out", () => {
     const second = simulation.runTurn(first.program, skipTurn);
     expect(second.timeline.assetsAtMars).toEqual([
       {
+        key: "test-orbiter:2029-06-19",
         name: "Test Orbiter",
         kind: "orbiter",
         landingSiteName: null,

@@ -323,11 +323,11 @@ test("a switch away holds until the next Mission Event with a view of its own", 
   await expect(current).toHaveText("Solar system");
 
   await pauseAtEvent(page, "Entry/descent/landing failed");
-  await expect(current).toHaveText("Mars orbit");
+  await expect(current).toHaveText("Surface");
   expect(problems).toEqual([]);
 });
 
-test("ends up on Mars orbit when several Mission Events pass at 10x", async ({
+test("ends up on the surface when several Mission Events pass at 10x", async ({
   page,
 }) => {
   // Over 5 s: plays out a whole Turn, which is what the test is about.
@@ -337,7 +337,7 @@ test("ends up on Mars orbit when several Mission Events pass at 10x", async ({
   await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await page.getByRole("button", { name: "10x" }).click();
-  await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
+  await expect(page.getByTestId("current-view")).toHaveText("Surface");
   await expect(page.getByTestId("turn-summary")).toBeVisible();
   expect(problems).toEqual([]);
 });
@@ -431,7 +431,10 @@ test("shows a lander coming down and then on the surface", async ({ page }) => {
   );
   await expect(page.getByTestId("mars-surface-asset")).toHaveCount(0);
 
+  // The landing takes the view to the surface, and the player goes back to look.
   await page.getByRole("button", { name: "1x" }).click();
+  await expect(page.getByTestId("current-view")).toHaveText("Surface");
+  await viewButton(page, "Mars orbit").click();
   await expect(page.getByTestId("mars-surface-asset")).toHaveText(
     "Prospector Lander at Jezero Crater",
   );
@@ -441,7 +444,7 @@ test("shows a lander coming down and then on the surface", async ({ page }) => {
   expect(problems).toEqual([]);
 });
 
-test("shows a crash in red, in the Mars orbit view it moved to", async ({
+test("shows a crash in red in the Mars orbit view, when the player goes there from the surface", async ({
   page,
 }) => {
   // Over 5 s: waits at 1x for the landing so the pause lands in time.
@@ -450,7 +453,8 @@ test("shows a crash in red, in the Mars orbit view it moved to", async ({
   await chooseAssets(page, ["Prospector Lander"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await pauseAtEvent(page, "Entry/descent/landing failed");
-  await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
+  await expect(page.getByTestId("current-view")).toHaveText("Surface");
+  await viewButton(page, "Mars orbit").click();
   const crash = page.getByTestId("mars-landing");
   await expect(crash).toHaveText("Prospector Lander: crashed at Jezero Crater");
   await expect(crash).toHaveClass(/crashed-label/);

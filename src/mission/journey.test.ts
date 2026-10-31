@@ -4,6 +4,7 @@ import { assetsOperatingOn, describeJourney } from "./journey";
 
 const orbiter = {
   name: "Orbiter",
+  kind: "orbiter",
   landingSiteName: null,
   deliveredOnDay: null,
   lostOnDay: null,
@@ -65,6 +66,7 @@ describe("listing what's operating at Mars", () => {
     const timeline = {
       assetsAtMars: [
         {
+          key: "ending",
           name: "Ending",
           kind: "orbiter",
           landingSiteName: null,
@@ -84,6 +86,7 @@ describe("listing what's operating at Mars", () => {
     const timeline = {
       assetsAtMars: [
         {
+          key: "old",
           name: "Old",
           kind: "orbiter",
           landingSiteName: null,
@@ -94,6 +97,7 @@ describe("listing what's operating at Mars", () => {
           untilDay: null,
         },
         {
+          key: "new",
           name: "New",
           kind: "lander",
           landingSiteName: "Alpha Plain",

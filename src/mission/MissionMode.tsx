@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useMemo } from "react";
 import { addDays, type Timeline } from "../simulation/simulation";
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
@@ -6,6 +6,11 @@ import { EventsColumn } from "./EventsColumn";
 import { missionViews, viewName } from "./missionViews";
 import { speeds } from "./playback";
 import { assetsOperatingOn, describeJourney } from "./journey";
+import {
+  landingSequenceOf,
+  sequenceNow,
+  sitesDuring,
+} from "./surface/sequence";
 import { sitesToShow } from "./surface/surface";
 import {
   SurfaceControls,
@@ -42,7 +47,12 @@ export function MissionMode({
     state.entriesHappened,
   );
 
-  const sites = sitesToShow(timeline, state.day);
+  const landingSequence = useMemo(
+    () => landingSequenceOf(timeline),
+    [timeline],
+  );
+  const sequence = sequenceNow(landingSequence, state);
+  const sites = sitesDuring(sitesToShow(timeline, state.day), sequence);
   const { view, chooseView, site, pickSite } = useMissionView(
     timeline.entries,
     state.entriesHappened,
@@ -65,6 +75,7 @@ export function MissionMode({
           day={state.day}
           view={view}
           site={site}
+          sequence={sequence}
           operatingAssetCount={operatingAssets.length}
         />
       </Suspense>
@@ -154,6 +165,7 @@ export function MissionMode({
           view={view}
           sites={sites}
           site={site}
+          sequence={sequence}
           onPickSite={pickSite}
         />
         <h2>Operating at Mars</h2>

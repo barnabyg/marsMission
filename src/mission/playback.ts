@@ -18,6 +18,10 @@ export interface PlaybackState {
   paused: boolean;
   /** How many of the timeline's entries have happened so far. */
   entriesHappened: number;
+  /** Real time spent playing, at whatever speed, leaving out pauses. It paces what mustn't flash by at 10x. */
+  playedMs: number;
+  /** The value of playedMs when each entry so far happened. */
+  entriesPlayedMs: readonly number[];
   finished: boolean;
 }
 
@@ -26,11 +30,24 @@ function atDay(
   timeline: PlaybackTimeline,
   day: number,
 ): PlaybackState {
+  const entriesHappened = timeline.entries.filter(
+    (entry) => entry.day <= day,
+  ).length;
+  const { entriesPlayedMs, playedMs } = state;
   return {
     ...state,
     day,
-    entriesHappened: timeline.entries.filter((entry) => entry.day <= day)
-      .length,
+    entriesHappened,
+    entriesPlayedMs:
+      entriesHappened === entriesPlayedMs.length
+        ? entriesPlayedMs
+        : [
+            ...entriesPlayedMs,
+            ...Array.from(
+              { length: entriesHappened - entriesPlayedMs.length },
+              () => playedMs,
+            ),
+          ],
     finished: day >= timeline.durationDays,
   };
 }
@@ -40,7 +57,15 @@ export function startPlayback(
   speed = 1,
 ): PlaybackState {
   return atDay(
-    { day: 0, speed, paused: false, entriesHappened: 0, finished: false },
+    {
+      day: 0,
+      speed,
+      paused: false,
+      entriesHappened: 0,
+      playedMs: 0,
+      entriesPlayedMs: [],
+      finished: false,
+    },
     timeline,
     0,
   );
@@ -68,8 +93,17 @@ export function advancePlayback(
   const daysPerMs =
     (timeline.durationDays / realMsPerTurn) * state.speed * timeScale;
   return atDay(
-    state,
+    { ...state, playedMs: state.playedMs + realMs },
     timeline,
     Math.min(state.day + realMs * daysPerMs, timeline.durationDays),
   );
+}
+
+/** How much real play has passed since an entry happened, or null if it hasn't yet. */
+export function msSinceEntry(
+  state: Pick<PlaybackState, "playedMs" | "entriesPlayedMs">,
+  entryIndex: number,
+): number | null {
+  const playedMs = state.entriesPlayedMs[entryIndex];
+  return playedMs === undefined ? null : state.playedMs - playedMs;
 }

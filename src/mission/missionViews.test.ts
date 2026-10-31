@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { TimelineEntry } from "../simulation/simulation";
 import {
   currentView,
+  landingSitePick,
   missionViews,
   startingChoice,
   viewAskedForBy,
@@ -50,15 +51,17 @@ describe("Mission Mode's views", () => {
 });
 
 describe("which view a timeline entry asks for", () => {
-  it.each(["mars-orbit-insertion", "entry-descent-landing"])(
-    "asks for Mars orbit at %s, whether it succeeds or fails",
-    (eventId) => {
-      expect(viewAskedForBy(missionEvent(eventId))).toBe("marsOrbit");
-      expect(viewAskedForBy(missionEvent(eventId, "failure"))).toBe(
-        "marsOrbit",
-      );
-    },
-  );
+  it("asks for Mars orbit at orbit insertion, whether it succeeds or fails", () => {
+    const eventId = "mars-orbit-insertion";
+    expect(viewAskedForBy(missionEvent(eventId))).toBe("marsOrbit");
+    expect(viewAskedForBy(missionEvent(eventId, "failure"))).toBe("marsOrbit");
+  });
+
+  it("asks for the surface at entry/descent/landing, whether it succeeds or fails", () => {
+    const eventId = "entry-descent-landing";
+    expect(viewAskedForBy(missionEvent(eventId))).toBe("surface");
+    expect(viewAskedForBy(missionEvent(eventId, "failure"))).toBe("surface");
+  });
 
   it.each(["launch", "mars-transfer-burn"])(
     "asks for nothing at %s, whether it succeeds or fails",
@@ -106,6 +109,7 @@ describe("the view showing at any moment", () => {
   it("moves when an entry with a view of its own happens", () => {
     expect(currentView(entries, 3, startingChoice)).toBe("marsOrbit");
     expect(currentView(entries, 4, startingChoice)).toBe("marsOrbit");
+    expect(currentView(entries, 5, startingChoice)).toBe("surface");
   });
 
   it("holds the player's switch until the next entry with a view of its own", () => {
@@ -115,7 +119,7 @@ describe("the view showing at any moment", () => {
     };
     expect(currentView(entries, 3, switchedBack)).toBe("solarSystem");
     expect(currentView(entries, 4, switchedBack)).toBe("solarSystem");
-    expect(currentView(entries, 5, switchedBack)).toBe("marsOrbit");
+    expect(currentView(entries, 5, switchedBack)).toBe("surface");
   });
 
   it("holds a switch made after the last such entry to the end of the Turn", () => {
@@ -131,10 +135,53 @@ describe("the view showing at any moment", () => {
     expect(currentView(entries, 2, switched)).toBe("marsOrbit");
   });
 
+  it("doesn't pull the player back after they switch away from a landing", () => {
+    const switchedAway: ViewChoice = { view: "marsOrbit", entriesHappened: 5 };
+    expect(currentView(entries, 5, switchedAway)).toBe("marsOrbit");
+    expect(currentView(entries, 6, switchedAway)).toBe("marsOrbit");
+  });
+
   it("depends only on how many entries have happened, so several in one frame give the same view", () => {
     const stepByStep = [1, 2, 3, 4, 5, 6].map((happened) =>
       currentView(entries, happened, startingChoice),
     );
     expect(stepByStep.at(-1)).toBe(currentView(entries, 6, startingChoice));
+  });
+});
+
+describe("the player's pick of Landing Site", () => {
+  const entries = [
+    missionEvent("launch"),
+    missionEvent("entry-descent-landing"),
+    milestone,
+  ];
+
+  it("holds as other entries pass", () => {
+    const pick = { siteName: "Alpha Plain", entriesHappened: 0 };
+    expect(landingSitePick(entries, 1, pick)).toBe("Alpha Plain");
+  });
+
+  it.each(["success", "failure"] as const)(
+    "gives way when a landing happens, so that the camera shows it, on a %s",
+    (outcome) => {
+      const pick = { siteName: "Alpha Plain", entriesHappened: 1 };
+      const landing = [
+        missionEvent("launch"),
+        missionEvent("entry-descent-landing", outcome),
+      ];
+      expect(landingSitePick(landing, 2, pick)).toBeNull();
+    },
+  );
+
+  it("holds if the player picks during the landing, so that they aren't pulled back", () => {
+    const pick = { siteName: "Alpha Plain", entriesHappened: 2 };
+    expect(landingSitePick(entries, 2, pick)).toBe("Alpha Plain");
+    expect(landingSitePick(entries, 3, pick)).toBe("Alpha Plain");
+  });
+
+  it("is nothing until one is made", () => {
+    expect(
+      landingSitePick(entries, 3, { siteName: null, entriesHappened: 0 }),
+    ).toBeNull();
   });
 });

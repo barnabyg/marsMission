@@ -98,6 +98,10 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
     "Lost with the Mission: Prospector Lander",
   );
   await expect(failed).toContainText("Still safe: Pathfinder Orbiter");
+  await expect(page.getByTestId("solar-system-view")).toHaveAttribute(
+    "data-sequence",
+    "crash",
+  );
   await expect(page.getByTestId("journey-progress")).toHaveText(
     "Pathfinder Orbiter: arrived at Mars. Prospector Lander: crashed at Jezero Crater",
   );

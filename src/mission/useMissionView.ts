@@ -2,9 +2,11 @@ import { useState } from "react";
 import type { TimelineEntry } from "../simulation/simulation";
 import {
   currentView,
+  landingSitePick,
   startingChoice,
   viewWithSites,
   type MissionViewId,
+  type SitePick,
   type ViewChoice,
 } from "./missionViews";
 import { siteShown } from "./surface/surface";
@@ -24,13 +26,18 @@ export function useMissionView(
   sites: readonly string[],
 ): MissionView {
   const [choice, setChoice] = useState<ViewChoice>(startingChoice);
-  const [pickedSite, pickSite] = useState<string | null>(null);
+  const [pick, setPick] = useState<SitePick>({
+    siteName: null,
+    entriesHappened: 0,
+  });
   return {
     view: viewWithSites(currentView(entries, entriesHappened, choice), sites),
     chooseView: (view) => {
       setChoice({ view, entriesHappened });
     },
-    site: siteShown(sites, pickedSite),
-    pickSite,
+    site: siteShown(sites, landingSitePick(entries, entriesHappened, pick)),
+    pickSite: (siteName) => {
+      setPick({ siteName, entriesHappened });
+    },
   };
 }

@@ -116,6 +116,42 @@ export async function holdTurnWhenShown(
   }, title ?? null);
 }
 
+/**
+ * Holds the Turn from inside the page once a landing or crash has played for this long, or just
+ * after it ends if no time is given. It resolves then, so start it before anything that sets the Turn going.
+ */
+export function holdSequence(page: Page, atMs?: number): Promise<void> {
+  return page.evaluate(
+    (wanted) =>
+      new Promise<void>((resolve) => {
+        let seen = false;
+        // The scene loads a moment after Mission Mode opens, and it goes when the Turn ends.
+        let loaded = false;
+        requestAnimationFrame(function check() {
+          const view = document.querySelector<HTMLElement>(
+            "[data-testid=solar-system-view]",
+          );
+          const playedMs = view?.dataset.sequenceMs;
+          seen ||= playedMs !== undefined;
+          loaded ||= view !== null;
+          const reached =
+            wanted === null
+              ? seen && playedMs === undefined
+              : Number(playedMs ?? -1) >= wanted;
+          if ((loaded && !view) || reached) {
+            [...document.querySelectorAll("button")]
+              .find((button) => button.textContent === "Pause")
+              ?.click();
+            resolve();
+          } else {
+            requestAnimationFrame(check);
+          }
+        });
+      }),
+    atMs ?? null,
+  );
+}
+
 /** Ticks exactly these Assets for the planned Mission. */
 export async function chooseAssets(page: Page, names: string[]): Promise<void> {
   const boxes = page.locator(".asset-choice");

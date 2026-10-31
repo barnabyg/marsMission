@@ -14,6 +14,7 @@ type Mission = NonNullable<Timeline["mission"]>;
 type MissionAsset = Mission["assets"][number];
 
 const asset = (overrides: Partial<AssetAtMars>): AssetAtMars => ({
+  key: "orbiter",
   name: "Orbiter",
   kind: "orbiter",
   landingSiteName: null,
@@ -27,6 +28,7 @@ const asset = (overrides: Partial<AssetAtMars>): AssetAtMars => ({
 
 const lander = (overrides: Partial<MissionAsset>): MissionAsset => ({
   name: "Lander",
+  kind: "lander",
   landingSiteName: "Jezero Crater",
   deliveredOnDay: 205,
   lostOnDay: null,

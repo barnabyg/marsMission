@@ -257,6 +257,7 @@ export interface TurnSummary {
 /** One Asset on this Turn's Mission and how its journey ended. */
 export interface MissionAsset {
   name: string;
+  kind: string;
   /** The Landing Site it is heading for, if it lands. */
   landingSiteName: string | null;
   /** The day it was delivered, if it was. */
@@ -269,6 +270,8 @@ export interface MissionAsset {
 
 /** An Asset operating at Mars at some point in a Turn. */
 export interface AssetAtMars {
+  /** Names this Asset and no other, and stays the same from Turn to Turn. */
+  key: string;
   name: string;
   kind: string;
   /** Where it is on the surface, or null if it's in orbit. */

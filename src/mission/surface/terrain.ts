@@ -15,11 +15,11 @@ export const horizonColor = [0.62, 0.37, 0.22] as const;
 const dustColor = [0.5, 0.2, 0.09] as const;
 const rockColor = [0.3, 0.12, 0.06] as const;
 
-/** Turns a Landing Site's name into a number (the FNV-1a hash). */
-function seedOf(siteName: string): number {
+/** Turns a name into a number (the FNV-1a hash). */
+export function hashOf(name: string): number {
   let hash = 0x811c9dc5;
-  for (let index = 0; index < siteName.length; index++) {
-    hash = Math.imul(hash ^ siteName.charCodeAt(index), 0x01000193);
+  for (let index = 0; index < name.length; index++) {
+    hash = Math.imul(hash ^ name.charCodeAt(index), 0x01000193);
   }
   return hash >>> 0;
 }
@@ -98,15 +98,26 @@ function heightOf(seed: number, craters: Crater[], x: number, z: number) {
   );
 }
 
+/** Each site's craters once worked out, as the rovers ask for the height of the ground every frame. */
+const cratersBySeed = new Map<number, Crater[]>();
+
+function knownCraters(seed: number): Crater[] {
+  const known = cratersBySeed.get(seed);
+  if (known) return known;
+  const craters = cratersOf(seed);
+  cratersBySeed.set(seed, craters);
+  return craters;
+}
+
 /** How high the ground is at a place in the shot. */
 export function groundHeight(siteName: string, x: number, z: number): number {
-  const seed = seedOf(siteName);
-  return heightOf(seed, cratersOf(seed), x, z);
+  const seed = hashOf(siteName);
+  return heightOf(seed, knownCraters(seed), x, z);
 }
 
 /** The arrays for a terrain mesh. Its light is worked into the colours, as a light in the shared scene would also fall on the other views. */
 export function buildTerrain(siteName: string) {
-  const seed = seedOf(siteName);
+  const seed = hashOf(siteName);
   const craters = cratersOf(seed);
   const across = segments + 1;
   const positions = new Float32Array(across * across * 3);

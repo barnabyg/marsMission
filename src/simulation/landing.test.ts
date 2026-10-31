@@ -176,6 +176,7 @@ describe("a successful landing", () => {
     ]);
     expect(timeline.assetsAtMars).toEqual([
       {
+        key: expect.stringMatching(/^test-lander:/) as string,
         name: "Test Lander",
         kind: "lander",
         landingSiteName: "Alpha Plain",

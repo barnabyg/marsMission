@@ -1,18 +1,26 @@
 import { describe, expect, it } from "vitest";
+import { parseCatalogue } from "../../catalogue/catalogue";
 import type { AssetAtMars, Timeline } from "../../simulation/simulation";
+import { realCatalogueFiles } from "../../testing/realCatalogue";
 import {
   describeSite,
+  landingShot,
   landingsOnTheirWay,
   placeOf,
   siteShown,
   sitesToShow,
+  spotOf,
   surfaceAssetsAt,
+  surfaceCentre,
+  surfaceShot,
 } from "./surface";
+import { groundHeight } from "./terrain";
 
 type Mission = NonNullable<Timeline["mission"]>;
 type MissionAsset = Mission["assets"][number];
 
 const asset = (overrides: Partial<AssetAtMars>): AssetAtMars => ({
+  key: "lander",
   name: "Lander",
   kind: "lander",
   landingSiteName: "Alpha Plain",
@@ -26,6 +34,7 @@ const asset = (overrides: Partial<AssetAtMars>): AssetAtMars => ({
 
 const onTheWay = (overrides: Partial<MissionAsset>): MissionAsset => ({
   name: "Newcomer",
+  kind: "lander",
   landingSiteName: "Beta Basin",
   deliveredOnDay: 205,
   lostOnDay: null,
@@ -137,6 +146,31 @@ describe("the Assets on show at a Landing Site", () => {
       places.slice(index + 1).forEach((other) => {
         expect(Math.hypot(one.x - other.x, one.z - other.z)).toBeGreaterThan(2);
       });
+    });
+  });
+});
+
+describe("where an Asset on show is on the ground", () => {
+  const spotAt = (overrides: Partial<AssetAtMars>, day: number) => {
+    const [shown] = surfaceAssetsAt(
+      { assetsAtMars: [asset({ surfaceMotion: "traverse", ...overrides })] },
+      day,
+      "Alpha Plain",
+    );
+    if (!shown) throw new Error("Expected it to be on show");
+    return spotOf(shown, day);
+  };
+
+  it("moves a rover on a Long traverse", () => {
+    const rover = { kind: "rover" };
+    expect(spotAt(rover, 500).x).not.toBeCloseTo(spotAt(rover, 300).x, 1);
+  });
+
+  it("keeps anything else at its place, whatever its Activity", () => {
+    expect(spotAt({}, 500)).toEqual({ ...placeOf(0), heading: 0 });
+    expect(spotAt({ kind: "habitat" }, 500)).toEqual({
+      ...placeOf(0),
+      heading: 0,
     });
   });
 });
@@ -321,6 +355,24 @@ describe("what the player reads about the Landing Site shown", () => {
     ]);
   });
 
+  it("says nothing is operating at the site of a crash from the day it happens", () => {
+    const crash = onTheWay({
+      deliveredOnDay: null,
+      lostOnDay: 205,
+      crashed: true,
+    });
+    const timeline = timelineOf([], [crash]);
+    expect(describeSite(timeline, 204, "Beta Basin")[0]).toBe(
+      "Nothing here yet",
+    );
+    expect(describeSite(timeline, 205, "Beta Basin")).toEqual([
+      "Nothing operating here",
+    ]);
+    expect(describeSite(timeline, 205, "Alpha Plain")).toEqual([
+      "Nothing here yet",
+    ]);
+  });
+
   it("adds what is on its way to what is already there", () => {
     const timeline = timelineOf(
       [asset({ name: "Old", landingSiteName: "Beta Basin" })],
@@ -337,5 +389,23 @@ describe("what the player reads about the Landing Site shown", () => {
     expect(describeSite(timeline, 10, "Alpha Plain")).toEqual([
       "Old (lander): Nothing",
     ]);
+  });
+});
+
+describe("the surface view's shots", () => {
+  const siteNames = parseCatalogue(realCatalogueFiles()).landingSites.map(
+    ({ name }) => name,
+  );
+
+  it.each([
+    ["usual", surfaceShot],
+    ["landing", landingShot],
+  ])("keep the %s camera above the ground at every Landing Site", (_, shot) => {
+    const [x, y, z] = shot.position;
+    for (const siteName of siteNames) {
+      expect(y).toBeGreaterThan(
+        groundHeight(siteName, x, z - surfaceCentre[2]) + 0.3,
+      );
+    }
   });
 });

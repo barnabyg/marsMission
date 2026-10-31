@@ -123,6 +123,24 @@ describe("a rover landing", () => {
     ]);
   });
 
+  it("tells the view what each Asset on the Mission is, even one that crashes", () => {
+    const { simulation, program } = setupCrash();
+    const { timeline } = simulation.runTurn(program, sendRover);
+    expect(timeline.mission?.assets).toMatchObject([
+      { name: "Test Rover", kind: "rover", crashed: true },
+    ]);
+  });
+
+  it("keeps an operating Asset's key from one Turn to the next", () => {
+    const { simulation, program } = setup();
+    const first = simulation.runTurn(program, sendRover);
+    const second = simulation.runTurn(first.program, { mission: null });
+    expect(first.timeline.assetsAtMars[0]?.key).toMatch(/^test-rover:/);
+    expect(second.timeline.assetsAtMars[0]?.key).toBe(
+      first.timeline.assetsAtMars[0]?.key,
+    );
+  });
+
   it("says how each Asset moves on the surface, which comes from its Activity", () => {
     const { simulation, program } = setup();
     const motionWith = (activityId: string) =>

@@ -73,13 +73,17 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
       eventEntries(page).getByRole("heading", { name }),
     ).toBeVisible();
   }
-  await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
+  await expect(page.getByTestId("current-view")).toHaveText("Surface");
   await expect(page.getByTestId("journey-progress")).toHaveText(
     "Trailblazer Rover: landed at Jezero Crater",
   );
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
     "Trailblazer Rover at Jezero Crater: Long traverse",
   );
+  await page
+    .getByRole("group", { name: "View" })
+    .getByRole("button", { name: "Mars orbit" })
+    .click();
   await page.getByRole("button", { name: "1x" }).click();
   await expect(page.getByTestId("mars-surface-asset")).toHaveText(
     "Trailblazer Rover at Jezero Crater",
@@ -145,6 +149,10 @@ test("lands a rover and a lander at one site, each with its own Activity", async
   ).toContainText(
     "The lander and the rover came through the atmosphere and touched down at Jezero Crater.",
   );
+  await page
+    .getByRole("group", { name: "View" })
+    .getByRole("button", { name: "Mars orbit" })
+    .click();
   await page.getByRole("button", { name: "1x" }).click();
   const landed = page.getByTestId("mars-surface-asset");
   await expect(landed).toHaveCount(2);
@@ -187,6 +195,10 @@ test("loses a rover and a lander together in one crash", async ({ page }) => {
   await expect(failed).toContainText(
     "Lost with the Mission: Prospector Lander, Trailblazer Rover.",
   );
+  await page
+    .getByRole("group", { name: "View" })
+    .getByRole("button", { name: "Mars orbit" })
+    .click();
   const crashes = page.getByTestId("mars-landing");
   await expect(crashes).toHaveText([
     "Prospector Lander: crashed at Jezero Crater",

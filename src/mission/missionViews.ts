@@ -20,7 +20,7 @@ export function viewName(view: MissionViewId): string {
 /** The Mission Events with a view of their own, whether they succeed or fail. */
 const viewsOfMissionEvents: Partial<Record<string, MissionViewId>> = {
   "mars-orbit-insertion": "marsOrbit",
-  "entry-descent-landing": "marsOrbit",
+  "entry-descent-landing": "surface",
 };
 
 /**
@@ -59,6 +59,24 @@ export function currentView(
     .map(viewAskedForBy)
     .findLast((view) => view !== null);
   return asked ?? choice.view;
+}
+
+/** The Landing Site the player last picked, and how many entries had happened when they did. */
+export interface SitePick {
+  siteName: string | null;
+  entriesHappened: number;
+}
+
+/** The player's pick, unless a landing has happened since, which the camera goes to instead. */
+export function landingSitePick(
+  entries: readonly TimelineEntry[],
+  entriesHappened: number,
+  pick: SitePick,
+): string | null {
+  const landedSince = entries
+    .slice(pick.entriesHappened, entriesHappened)
+    .some((entry) => viewAskedForBy(entry) === "surface");
+  return landedSince ? null : pick.siteName;
 }
 
 /**

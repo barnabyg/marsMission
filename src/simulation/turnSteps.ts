@@ -11,6 +11,7 @@ import {
   addDays,
   daysBetween,
   formatMoney,
+  operatingKey,
   roll,
   sum,
   type Asset,
@@ -333,6 +334,7 @@ export function resolveTurn(
     const delivered = flown.deliveredAssets.includes(asset);
     return {
       name: asset.name,
+      kind: asset.kind,
       landingSiteName: siteNameOf(asset),
       deliveredOnDay: delivered ? rules.deliveryDay(asset) : null,
       lostOnDay: delivered ? null : failedOnDay,
@@ -345,6 +347,7 @@ export function resolveTurn(
   });
   const assetsAtMars = operated.inService.map(
     ({ asset, fromDay, untilDay }): AssetAtMars => ({
+      key: operatingKey(asset),
       name: asset.name,
       kind: asset.kind,
       landingSiteName: rules.landingSiteById(asset.landingSiteId)?.name ?? null,

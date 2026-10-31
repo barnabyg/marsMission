@@ -11,7 +11,7 @@ Phases are defined in the [Build order](#build-order). Phases 1, 2 and 3 are bui
 - **Since the Phase 2 playtest:** Save, Load and Retire Program dialogs in Planning Mode; text sized for 150% display scaling; Pause in Mission Mode; the events column in place of Phase 1's text screens.
 
 - **Phase 3:** a lander and entry/descent/landing; Landing Sites, each with a landing risk and a Science value earned by the first landing there; Missions carrying several Assets within a Launch Vehicle's mass limit, with a second, larger Launch Vehicle brought forward from Phase 6; partial Mission failure, where Assets already delivered are safe; automatic Surveys from orbit; a Service Life chosen for each Asset; Assets failing in service, with Reliability bought for each Asset; a second Funding Threshold; the Mars orbit view, with automatic view changes and smooth camera moves. Saves upgrade step by step from any earlier format.
-- **Since Phase 3:** End Turn in Mission Mode; Activities, with Survey, research and Nothing as the first ones; Ongoing Research; Research Grants; a rover; Science Milestones and more Funding Thresholds; the surface view, chosen by hand, with generated terrain.
+- **Since Phase 3:** End Turn in Mission Mode; Activities, with Survey, research and Nothing as the first ones; Ongoing Research; Research Grants; a rover; Science Milestones and more Funding Thresholds; the surface view, with generated terrain, landing and crash sequences it moves to by itself, and rovers that move according to their Activity.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
@@ -84,6 +84,7 @@ Any rule in this document beyond these is planned, so its absence from the code 
   - Surface: a Landing Site, with landings, rovers and bases.
   - Spacecraft: a close-up of the Mission in transit, used when something happens on the way, such as a solar particle event or a mechanical failure.
 - The view switches automatically for Mission Events and Hazards, and the player can switch views at any time.
+- A landing or crash plays for a few seconds of real time, the same at every speed, and pausing holds it. It only displays what has already been worked out. After a crash, the view goes back to whichever Landing Site still has something to show, or else to Mars orbit.
 
 ## Art, sound and onboarding
 

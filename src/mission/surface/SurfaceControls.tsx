@@ -1,6 +1,7 @@
 import type { Timeline } from "../../simulation/simulation";
 import { GameText } from "../../ui/GameText";
 import type { MissionViewId } from "../missionViews";
+import { sequenceStatus, type SequenceNow } from "./sequence";
 import { describeSite } from "./surface";
 
 /** Ties the reason on screen to the disabled button it explains. */
@@ -12,6 +13,7 @@ interface SurfaceControlsProps {
   view: MissionViewId;
   sites: readonly string[];
   site: string | null;
+  sequence: SequenceNow | null;
   onPickSite: (siteName: string) => void;
 }
 
@@ -22,6 +24,7 @@ export function SurfaceControls({
   view,
   sites,
   site,
+  sequence,
   onPickSite,
 }: SurfaceControlsProps) {
   if (site === null) {
@@ -32,6 +35,7 @@ export function SurfaceControls({
     );
   }
   if (view !== "surface") return null;
+  const status = sequenceStatus(sequence, site);
   return (
     <>
       <h2>
@@ -59,7 +63,10 @@ export function SurfaceControls({
         </label>
       )}
       <ul data-testid="surface-status">
-        {describeSite(timeline, day, site).map((line) => (
+        {[
+          ...(status === null ? [] : [status]),
+          ...describeSite(timeline, day, site),
+        ].map((line) => (
           <li key={line}>
             <GameText>{line}</GameText>
           </li>
