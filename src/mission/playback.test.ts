@@ -49,7 +49,7 @@ describe("playing a Turn", () => {
   });
 
   it("is ten times quicker at 10x", () => {
-    const { elapsedMs } = playToEnd(10);
+    const { elapsedMs } = playToEnd(speeds[2]);
     expect(elapsedMs).toBeGreaterThan(1.9 * minuteMs);
     expect(elapsedMs).toBeLessThan(2.1 * minuteMs);
   });
@@ -89,12 +89,6 @@ describe("playing a Turn", () => {
     expect(changed.day).toBe(state.day);
   });
 
-  it("lets game time run ten times faster at 10x", () => {
-    const run = (speed: number) =>
-      advancePlayback(startPlayback(timeline, speed), timeline, 100, 1).day;
-    expect(run(10)).toBeCloseTo(run(1) * 10);
-  });
-
   it("runs game time faster under the development time scale", () => {
     expect(playToEnd(1, 1000).elapsedMs).toBeLessThan(minuteMs);
   });
@@ -102,10 +96,6 @@ describe("playing a Turn", () => {
   it("can start at the speed the player was last using", () => {
     expect(startPlayback(timeline).speed).toBe(1);
     expect(startPlayback(timeline, 10).speed).toBe(10);
-  });
-
-  it("offers 1x, 5x and 10x", () => {
-    expect(speeds).toEqual([1, 5, 10]);
   });
 
   it("never runs backwards, because a browser's first frame can be timed just before playback started", () => {

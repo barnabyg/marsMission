@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { tooltips, type Term } from "./tooltips";
+import { tooltips } from "./tooltips";
 
 const glossary = readFileSync("GLOSSARY.md", "utf8");
 
@@ -23,10 +23,6 @@ describe("tooltip content", () => {
     );
   });
 
-  it.each([...glossaryTerms.keys()])("has a tooltip for %s", (term) => {
-    expect(Object.keys(tooltips)).toContain(term);
-  });
-
   it("has no tooltip for a term the glossary doesn't define", () => {
     expect(
       Object.keys(tooltips).filter((term) => !glossaryTerms.has(term)),
@@ -34,11 +30,11 @@ describe("tooltip content", () => {
   });
 
   it.each([...glossaryTerms])(
-    "uses the glossary's wording for %s",
+    "has a tooltip in the glossary's wording for %s",
     (term, definition) => {
-      expect(tooltips[term as Term].startsWith(firstSentence(definition))).toBe(
-        true,
-      );
+      const tooltip = (tooltips as Record<string, string | undefined>)[term];
+      expect(tooltip, `no tooltip for ${term}`).toBeDefined();
+      expect(tooltip?.startsWith(firstSentence(definition))).toBe(true);
     },
   );
 });

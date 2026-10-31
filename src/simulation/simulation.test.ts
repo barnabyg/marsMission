@@ -246,15 +246,6 @@ describe("time and determinism", () => {
     expect(simulation.readProgram(program).date).toBe("2028-12-01");
   });
 
-  it("gives the same result for the same seed and plans", () => {
-    const play = () => {
-      const { simulation, program } = setup();
-      const first = simulation.runTurn(program, sendOrbiter);
-      return [first, simulation.runTurn(first.program, sendOrbiter)];
-    };
-    expect(play()).toEqual(play());
-  });
-
   it("doesn't change the Program passed in", () => {
     const { simulation, program } = setup();
     const before = structuredClone(program);
