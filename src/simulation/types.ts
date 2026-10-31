@@ -45,6 +45,10 @@ export interface Program {
   milestoneIds: string[];
   /** The Landing Sites where a lander has already landed. */
   landedSiteIds: string[];
+  /** The Landing Sites that can be chosen so far, in the order they became known. */
+  knownLandingSiteIds: string[];
+  /** The known Landing Sites at their lower, surveyed landing risk. */
+  surveyedLandingSiteIds: string[];
   /** The Public Support levels of the Funding Thresholds already paid. */
   fundingThresholdsPaid: number[];
   operatingAssets: OperatingAsset[];
@@ -86,6 +90,10 @@ export interface ProgramView {
     name: string;
     description: string;
     science: number;
+    /** Whether a Survey has lowered this site's landing risk. */
+    surveyed: boolean;
+    /** The site's landing risk with no Reliability, as a rough figure. */
+    riskBand: string;
     /** Whether a lander has landed here, so that landing again earns no Science. */
     landed: boolean;
   }[];
@@ -122,7 +130,15 @@ export interface FirstLandingEntry {
   description: string;
 }
 
+export interface SurveyEntry {
+  kind: "survey";
+  day: number;
+  title: string;
+  description: string;
+}
+
 export type TimelineEntry =
+  | SurveyEntry
   | MissionEventEntry
   | MilestoneEntry
   | FundingThresholdEntry
@@ -147,6 +163,11 @@ export interface TurnSummary {
   milestones: AwardedMilestone[];
   /** The Science from landing at a Landing Site for the first time, if a lander did. */
   firstLanding: { siteName: string; science: number } | null;
+  /** What this Turn's Survey found, if there was one and it changed anything. */
+  survey: {
+    siteNamesSurveyed: string[];
+    siteNameRevealed: string | null;
+  } | null;
   fundingPayouts: { publicSupport: number; payoutMillions: number }[];
   /** The Mission Event that ended this Turn's Mission and what that cost, if one failed. Assets delivered before it are safe. */
   failure: {

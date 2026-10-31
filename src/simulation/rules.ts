@@ -1,5 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import type { PlannedMission } from "./types";
+import type { PlannedMission, Program } from "./types";
 
 export type MissionEvent = Catalogue["missionEvents"][number];
 export type ReliabilityLevel = Catalogue["reliabilityLevels"][number];
@@ -71,8 +71,17 @@ export function createRules(catalogue: Catalogue) {
   }
 
   /** The Landing Sites that can be chosen so far. */
-  function knownLandingSites(): LandingSite[] {
-    return catalogue.landingSites.filter((site) => site.knownFromStart);
+  function knownLandingSites(program: Program): LandingSite[] {
+    return program.knownLandingSiteIds.flatMap((id) =>
+      catalogue.landingSites.filter((site) => site.id === id),
+    );
+  }
+
+  /** A site's landing risk for this Program, which a Survey lowers. */
+  function landingRisk(program: Program, site: LandingSite): number {
+    return program.surveyedLandingSiteIds.includes(site.id)
+      ? site.surveyedLandingRisk
+      : site.landingRisk;
   }
 
   function landingSiteById(id: string | null | undefined) {
@@ -83,14 +92,15 @@ export function createRules(catalogue: Catalogue) {
   function failureProbability(
     event: MissionEvent,
     level: ReliabilityLevel,
+    program: Program,
     mission: PlannedMission | null,
   ): number {
-    const base =
-      event.failureProbability === "landingSite"
-        ? // Planning Mode always names a site. A plan that doesn't is refused, so this is never rolled.
-          (landingSiteById(mission?.landingSiteId)?.landingRisk ?? 1)
-        : event.failureProbability;
-    return base * level.failureMultiplier;
+    if (event.failureProbability !== "landingSite") {
+      return event.failureProbability * level.failureMultiplier;
+    }
+    const site = landingSiteById(mission?.landingSiteId);
+    // Planning Mode always names a site. A plan that doesn't is refused, so this 1 is never rolled.
+    return (site ? landingRisk(program, site) : 1) * level.failureMultiplier;
   }
 
   /** The day an Asset is delivered, which is when its last Mission Event happens. */
@@ -136,6 +146,7 @@ export function createRules(catalogue: Catalogue) {
     dayOf,
     deliveryDay,
     knownLandingSites,
+    landingRisk,
     landingSiteById,
     reliabilityLevelFor,
     failureProbability,

@@ -44,7 +44,11 @@ describe("Milestones", () => {
   it("appears on the timeline after the arrival that earned it", () => {
     const { simulation, program } = setup();
     const { timeline } = simulation.runTurn(program, sendOrbiter);
-    expect(timeline.entries.map((entry) => [entry.title, entry.day])).toEqual([
+    expect(
+      timeline.entries
+        .filter((entry) => entry.kind !== "survey")
+        .map((entry) => [entry.title, entry.day]),
+    ).toEqual([
       ["Test launch", 0],
       ["Test burn", 1],
       ["Test arrival", 200],

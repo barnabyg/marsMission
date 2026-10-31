@@ -7,7 +7,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
-import { crashSeed, landingSeed, orbiterSafeSeed } from "./seeds";
+import { crashSeed, landingSeed, orbiterSafeSeed, successSeed } from "./seeds";
 
 async function planLanding(page: Page, seed: number): Promise<void> {
   await page.goto(`/?seed=${seed}`);
@@ -98,6 +98,45 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
   await expect(summary).not.toContainText("Pathfinder Orbiter");
   await expect(page.getByTestId("turn-summary")).toContainText(
     "First orbiter at Mars",
+  );
+  expect(problems).toEqual([]);
+});
+
+test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site when planning a landing", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Prospector Lander"]);
+  await expect(landingRiskBand(page)).toHaveText("Over 30%");
+  const sites = page.getByLabel("Landing Site").getByRole("option");
+  await expect(sites).toHaveCount(2);
+  await expect(page.getByTestId("landing-site-details")).toContainText(
+    "Not surveyed",
+  );
+
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await pauseAtEvent(page, "Survey from orbit");
+  const survey = eventEntries(page).filter({ hasText: "Survey from orbit" });
+  await expect(survey).toContainText("29 June 2029");
+  await expect(survey).toContainText(
+    "A new Landing Site is known: Meridiani Planum",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await page.getByRole("button", { name: "10x" }).click();
+  await expect(page.getByTestId("summary-survey")).toContainText(
+    "Meridiani Planum",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  await chooseAssets(page, ["Prospector Lander"]);
+  await expect(landingRiskBand(page)).toHaveText("~10%");
+  await expect(sites).toHaveCount(3);
+  await expect(sites.last()).toContainText("Meridiani Planum");
+  await expect(page.getByTestId("landing-site-details")).toContainText(
+    "Surveyed.",
   );
   expect(problems).toEqual([]);
 });

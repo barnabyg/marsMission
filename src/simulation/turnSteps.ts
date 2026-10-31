@@ -15,6 +15,7 @@ import type {
   FundingThresholdEntry,
   MilestoneEntry,
   MissionAsset,
+  SurveyEntry,
   MissionEventEntry,
   Program,
   TurnPlan,
@@ -74,6 +75,7 @@ function flyMission(
       rules.failureProbability(
         event,
         rules.reliabilityLevelFor(mission, event.id),
+        program,
         mission,
       ),
   );
@@ -181,6 +183,72 @@ function creditFirstLanding(
   };
 }
 
+/**
+ * Carries out the Turn's Survey, if a surveying Asset operates at Mars during it. Every known site
+ * drops to its surveyed risk in one step, and the next site in the catalogue becomes known.
+ */
+function carryOutSurvey(
+  catalogue: Catalogue,
+  rules: Rules,
+  program: Program,
+  flown: MissionOutcome,
+) {
+  const surveying = (assetId: string) =>
+    catalogue.assets.some((asset) => asset.id === assetId && asset.surveys);
+  const alreadyOperating = program.operatingAssets.some(({ assetId }) =>
+    surveying(assetId),
+  );
+  const arrivalDays = flown.deliveredAssets
+    .filter((asset) => asset.surveys)
+    .map(rules.deliveryDay);
+  const unchanged = {
+    knownLandingSiteIds: program.knownLandingSiteIds,
+    surveyedLandingSiteIds: program.surveyedLandingSiteIds,
+    entry: null,
+    summary: null,
+  };
+  if (!alreadyOperating && arrivalDays.length === 0) return unchanged;
+
+  const newlySurveyed = program.knownLandingSiteIds.filter(
+    (id) => !program.surveyedLandingSiteIds.includes(id),
+  );
+  const revealed = catalogue.landingSites.find(
+    (site) => !program.knownLandingSiteIds.includes(site.id),
+  );
+  if (newlySurveyed.length === 0 && !revealed) return unchanged;
+
+  const knownLandingSiteIds = [
+    ...program.knownLandingSiteIds,
+    ...(revealed ? [revealed.id] : []),
+  ];
+  const namesSurveyed = newlySurveyed.flatMap((id) =>
+    catalogue.landingSites
+      .filter((site) => site.id === id)
+      .map(({ name }) => name),
+  );
+  const findings = [
+    ...(namesSurveyed.length > 0
+      ? [`Lower landing risk at ${namesSurveyed.join(", ")}.`]
+      : []),
+    ...(revealed ? [`A new Landing Site is known: ${revealed.name}.`] : []),
+  ];
+  const entry: SurveyEntry = {
+    kind: "survey",
+    day: alreadyOperating ? 0 : Math.min(...arrivalDays),
+    title: "Survey from orbit",
+    description: findings.join(" "),
+  };
+  return {
+    knownLandingSiteIds,
+    surveyedLandingSiteIds: knownLandingSiteIds,
+    entry,
+    summary: {
+      siteNamesSurveyed: namesSurveyed,
+      siteNameRevealed: revealed?.name ?? null,
+    },
+  };
+}
+
 /** Pays each Funding Threshold reached for the first time, on the day of the last award that could have reached it. */
 function payFundingThresholds(
   catalogue: Catalogue,
@@ -244,6 +312,7 @@ export function resolveTurn(
     flown.deliveredAssets,
   );
   const firstLanding = creditFirstLanding(rules, program, flown);
+  const survey = carryOutSurvey(catalogue, rules, program, flown);
   const scienceGained =
     milestones.science + (firstLanding ? firstLanding.site.science : 0);
   const publicSupportBeforeDrain =
@@ -305,6 +374,8 @@ export function resolveTurn(
         ...program.milestoneIds,
         ...milestones.awarded.map(({ id }) => id),
       ],
+      knownLandingSiteIds: survey.knownLandingSiteIds,
+      surveyedLandingSiteIds: survey.surveyedLandingSiteIds,
       landedSiteIds: firstLanding
         ? [...program.landedSiteIds, firstLanding.site.id]
         : program.landedSiteIds,
@@ -349,6 +420,7 @@ export function resolveTurn(
         ...flown.entries,
         ...milestones.entries,
         ...(firstLanding ? [firstLanding.entry] : []),
+        ...(survey.entry ? [survey.entry] : []),
         ...funding.entries,
       ].sort((first, second) => first.day - second.day),
     },
@@ -372,6 +444,7 @@ export function resolveTurn(
         siteName: firstLanding.site.name,
         science: firstLanding.site.science,
       },
+      survey: survey.summary,
       fundingPayouts: funding.payouts,
       failure: flown.failedEvent
         ? {

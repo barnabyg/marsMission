@@ -237,14 +237,15 @@ export function PlanningMode({
                 >
                   {view.landingSites.map((site) => (
                     <option key={site.id} value={site.id}>
-                      {site.name}
+                      {site.name} ({site.surveyed ? "surveyed, " : ""}
+                      {site.riskBand})
                     </option>
                   ))}
                 </select>
               </label>
               <p data-testid="landing-site-details">
                 <GameText>
-                  {`${landingSite.description} ${
+                  {`${landingSite.surveyed ? "Surveyed. " : "Not surveyed. "}${landingSite.description} ${
                     landingSite.landed
                       ? "Already landed at, so landing again earns no Science."
                       : `The first landing here earns ${landingSite.science} Science.`

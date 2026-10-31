@@ -54,6 +54,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await pauseAtEvent(page, "Funding Threshold reached: 250 Public Support");
   await expect(eventEntries(page).getByRole("heading")).toHaveText([
     "Funding Threshold reached: 250 Public Support",
+    "Survey from orbit",
     "First orbiter at Mars",
     "Mars orbit insertion",
     "Mars transfer burn",

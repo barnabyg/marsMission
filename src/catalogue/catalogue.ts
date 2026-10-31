@@ -43,6 +43,8 @@ const assetsSchema = z.array(
     missionEvents: z.array(id),
     // Whether this Asset is a lander, so that a Mission carrying it must name a Landing Site.
     landsAtSite: z.boolean().optional(),
+    // Whether this Asset carries out a Survey in each Turn it operates at Mars.
+    surveys: z.boolean().optional(),
   }),
 );
 
@@ -258,6 +260,13 @@ function crossCheck(catalogue: Catalogue): string[] {
     problems.push(
       `${catalogueFileNames.landingSites}: there is a lander in ${catalogueFileNames.assets}, so at least one Landing Site must be known from the start`,
     );
+  }
+  for (const asset of assets) {
+    if (asset.landsAtSite === true && asset.surveys === true) {
+      problems.push(
+        `${catalogueFileNames.assets}: "${asset.id}" can't both land and survey, because a Survey is made from orbit`,
+      );
+    }
   }
   for (const site of landingSites) {
     if (site.surveyedLandingRisk > site.landingRisk) {

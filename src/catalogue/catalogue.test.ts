@@ -237,6 +237,15 @@ describe("invalid data files", () => {
     expect(message).toContain("capacityTonnes");
   });
 
+  it("reject an Asset that both lands and surveys", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      assets: files.assets.map((asset) => ({ ...asset, surveys: true })),
+    });
+    expect(message).toContain("can't both land and survey");
+  });
+
   it("reject a Landing Site with an invalid risk", () => {
     const files = testCatalogueFiles();
     const [site] = files.landingSites;

@@ -22,5 +22,7 @@ export function soundFor(entry: TimelineEntry): SoundName | null {
       ? "failure"
       : (successSounds[entry.eventId] ?? null);
   }
-  return entry.kind === "firstLanding" ? null : entry.kind;
+  return entry.kind === "firstLanding" || entry.kind === "survey"
+    ? null
+    : entry.kind;
 }

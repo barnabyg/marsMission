@@ -5,7 +5,8 @@
     "kind": "orbiter",
     "costMillions": 700,
     "missionEvents": ["mars-orbit-insertion"],
-    "massTonnes": 2.5
+    "massTonnes": 2.5,
+    "surveys": true
   },
   {
     "id": "prospector-lander",

@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { parseCatalogue } from "../catalogue/catalogue";
 import { createSimulation, type TurnPlan } from "./simulation";
 import { testCatalogueFiles } from "./testCatalogue";
-import { setup } from "./testHelpers";
+import { safeLandingFiles } from "./testHelpers";
+
+function setup() {
+  const simulation = createSimulation(parseCatalogue(safeLandingFiles()));
+  return { simulation, program: simulation.startProgram(42) };
+}
 
 const orbiterAndLander = {
   launchVehicleId: "test-heavy",

@@ -62,7 +62,13 @@ const format2 = format1.extend({
   ),
 });
 
-const newestFormat = format2;
+/** Adds Survey progress. A save from before Surveys has only the sites known from the start, none of them surveyed. */
+const format3 = format2.extend({
+  knownLandingSiteIds: z.array(z.string()),
+  surveyedLandingSiteIds: z.array(z.string()),
+});
+
+const newestFormat = format3;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -75,6 +81,19 @@ const formats: readonly SaveFormat[] = [
         ...asset,
         landingSiteId: null,
       })),
+    }),
+  },
+  {
+    schema: format2,
+    upgrade: (
+      old: z.output<typeof format2>,
+      { landingSites }: Catalogue,
+    ): z.output<typeof format3> => ({
+      ...old,
+      knownLandingSiteIds: landingSites
+        .filter((site) => site.knownFromStart)
+        .map((site) => site.id),
+      surveyedLandingSiteIds: [],
     }),
   },
   { schema: newestFormat },

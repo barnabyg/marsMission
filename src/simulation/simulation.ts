@@ -49,6 +49,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
   const {
     failureProbability,
     knownLandingSites,
+    landingRisk,
     landingSiteById,
     missionEventsFor,
     reliabilityLevelFor,
@@ -111,7 +112,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           "A Mission carrying a lander must choose a Landing Site.",
         );
       } else if (
-        !knownLandingSites().some((site) => site.id === landingSiteId)
+        !knownLandingSites(program).some((site) => site.id === landingSiteId)
       ) {
         problems.push(
           `There is no known Landing Site called "${landingSiteId}".`,
@@ -160,6 +161,10 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         science: 0,
         milestoneIds: [],
         landedSiteIds: [],
+        knownLandingSiteIds: catalogue.landingSites
+          .filter((site) => site.knownFromStart)
+          .map((site) => site.id),
+        surveyedLandingSiteIds: [],
         fundingThresholdsPaid: [],
         operatingAssets: [],
         status: { kind: "active" },
@@ -196,15 +201,15 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           ...asset,
           landingSiteName: landingSiteById(asset.landingSiteId)?.name ?? null,
         })),
-        landingSites: knownLandingSites().map(
-          ({ id, name, description, science }) => ({
-            id,
-            name,
-            description,
-            science,
-            landed: program.landedSiteIds.includes(id),
-          }),
-        ),
+        landingSites: knownLandingSites(program).map((site) => ({
+          id: site.id,
+          name: site.name,
+          description: site.description,
+          science: site.science,
+          surveyed: program.surveyedLandingSiteIds.includes(site.id),
+          riskBand: riskBandFor(landingRisk(program, site)),
+          landed: program.landedSiteIds.includes(site.id),
+        })),
         launchVehicles: catalogue.launchVehicles.map(
           ({ id, name, costMillions, capacityTonnes }) => ({
             id,
@@ -228,20 +233,24 @@ export function createSimulation(catalogue: Catalogue): Simulation {
 
     validatePlan: checkPlan,
 
-    previewMission(_program, mission) {
+    previewMission(program, mission) {
       return missionEventsFor(mission.launchVehicleId, mission.assetIds).map(
         (event) => {
           const chosen = reliabilityLevelFor(mission, event.id);
           return {
             eventId: event.id,
             name: event.name,
-            riskBand: riskBandFor(failureProbability(event, chosen, mission)),
+            riskBand: riskBandFor(
+              failureProbability(event, chosen, program, mission),
+            ),
             reliabilityLevelId: chosen.id,
             reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
               id: level.id,
               name: level.name,
               costMillions: level.costMillions,
-              riskBand: riskBandFor(failureProbability(event, level, mission)),
+              riskBand: riskBandFor(
+                failureProbability(event, level, program, mission),
+              ),
             })),
           };
         },

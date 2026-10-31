@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { parseCatalogue } from "../catalogue/catalogue";
 import { createSimulation, type TurnPlan } from "./simulation";
 import { testCatalogueFiles } from "./testCatalogue";
-import { sendLander, sendOrbiter, setup } from "./testHelpers";
+import { safeLandingFiles, sendLander, sendOrbiter } from "./testHelpers";
+
+function setup() {
+  const simulation = createSimulation(parseCatalogue(safeLandingFiles()));
+  return { simulation, program: simulation.startProgram(42) };
+}
 
 /** Sets the landing risk of the two sites known from the start. */
 function withRisks(alpha: number, beta: number) {
