@@ -35,7 +35,7 @@ async function launchFirstMission(page: Page, seed: number): Promise<void> {
 test("switches to the Mars orbit view and back during a Turn, at any speed and while paused", async ({
   page,
 }) => {
-  // Over 5 s: switches view at each speed in turn, through to the end of the Turn.
+  // Over 5 s: switches view at 5x, while paused and at 10x, through to the end of the Turn.
   const problems = watchForProblems(page);
   await launchFirstMission(page, successSeed);
   const current = page.getByTestId("current-view");
@@ -128,7 +128,7 @@ test("shows an orbiter going round Mars from the day it arrives, only in the Mar
 });
 
 test("never shows an orbiter whose Mission failed", async ({ page }) => {
-  // Over 5 s: checks the view for the whole of the rest of the Turn.
+  // Over 5 s: waits at 1x for the failure so the pause lands in time, then checks the view for the rest of the Turn.
   const problems = watchForProblems(page);
   await launchFirstMission(page, seedFailingAt("Mars orbit insertion"));
   await viewButton(page, "Mars orbit").click();
@@ -277,7 +277,7 @@ for (const failedEvent of ["Launch", "Mars transfer burn"]) {
   test(`stays on the solar system when ${failedEvent} fails`, async ({
     page,
   }) => {
-    // Over 5 s: waits at 1x for the failure so the pause lands in time, then plays out the Turn.
+    // Over 5 s: for a later Mission Event, waits at 1x for the failure so the pause lands in time, then plays out the Turn.
     await launchFirstMission(page, seedFailingAt(failedEvent));
     await pauseAtEvent(page, `${failedEvent} failed`);
     await expect(page.getByTestId("current-view")).toHaveText("Solar system");

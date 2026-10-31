@@ -118,7 +118,7 @@ for (const { missionEvent, before } of [
   test(`plays a Mission that fails at ${missionEvent} through to the next Turn`, async ({
     page,
   }) => {
-    // Over 5 s: waits at 1x for the failure so the pause lands before the Turn ends, then plays on to the next Turn.
+    // Over 5 s: for a later Mission Event, waits at 1x for the failure so the pause lands before the Turn ends, then plays on to the next Turn.
     const problems = watchForProblems(page);
     await page.goto(`/?seed=${seedFailingAt(missionEvent)}`);
     await page.getByRole("button", { name: "Launch Mission" }).click();
@@ -256,6 +256,7 @@ test("pauses Mission Mode and resumes from exactly where it stopped, without car
 test("keeps the events column beside the solar system view, scrolling by itself if it fills", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the Funding Threshold so the pause lands in time, with enough entries to fill the column.
   await page.goto(`/?seed=${successSeed}`);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await pauseAtEvent(page, "Launch");
@@ -271,7 +272,7 @@ test("keeps the events column beside the solar system view, scrolling by itself 
   );
   expect((columnBox?.x ?? 0) + (columnBox?.width ?? 0)).toBeCloseTo(3840);
 
-  await page.getByRole("button", { name: "5x" }).click();
+  await page.getByRole("button", { name: "1x" }).click();
   await pauseAtEvent(page, "Funding Threshold reached: 250 Public Support");
   await page.setViewportSize({ width: 2560, height: 400 });
   const entries = page.getByTestId("event-entries");
