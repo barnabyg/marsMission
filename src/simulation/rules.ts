@@ -134,9 +134,19 @@ export function createRules(catalogue: Catalogue) {
     return activity;
   }
 
+  /** The Catalogue's first Activity of doing nothing. */
+  function nothingActivity(): Activity {
+    const activity = catalogue.activities.find(
+      ({ effect }) => effect.kind === "nothing",
+    );
+    // The Catalogue guarantees at least one.
+    if (!activity) throw new Error("The Catalogue has no nothing Activity");
+    return activity;
+  }
+
   /** An operating Asset's Activity as the player reads it. If a save holds one that has left the catalogue, the Asset does nothing. */
   function activityNameOf(asset: { activityId: string }): string {
-    return activityById(asset.activityId)?.name ?? "Nothing";
+    return (activityById(asset.activityId) ?? nothingActivity()).name;
   }
 
   /** How an operating Asset gets about on the surface, which only research sets. */

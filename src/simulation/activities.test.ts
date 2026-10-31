@@ -402,6 +402,32 @@ describe("upgrading a save from before Activities", () => {
     expect(assets[0]?.activities).toEqual([]);
   });
 
+  it("names an Activity that has left the catalogue as the data files name doing nothing", () => {
+    const files = testCatalogueFiles();
+    const simulation = createSimulation(
+      parseCatalogue({
+        ...files,
+        activities: files.activities.map((activity) =>
+          activity.effect.kind === "nothing"
+            ? { ...activity, name: "Idle" }
+            : activity,
+        ),
+      }),
+    );
+    const { program } = simulation.runTurn(
+      simulation.startProgram(42),
+      sendOrbiter,
+    );
+    const gone = {
+      ...program,
+      operatingAssets: program.operatingAssets.map((asset) => ({
+        ...asset,
+        activityId: "gone",
+      })),
+    };
+    expect(operating(simulation, gone)[0]?.activityName).toBe("Idle");
+  });
+
   it("uses the Nothing the Asset itself lists, if the Catalogue has several", () => {
     const files = testCatalogueFiles();
     const simulation = createSimulation(
