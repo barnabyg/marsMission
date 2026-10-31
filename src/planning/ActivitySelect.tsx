@@ -1,4 +1,5 @@
 import type { PlannedActivity } from "../simulation/simulation";
+import { termFor } from "../ui/tooltips";
 
 interface ActivitySelectProps {
   assetName: string;
@@ -14,10 +15,13 @@ export function ActivitySelect({
   activities,
   onChange,
 }: ActivitySelectProps) {
+  const chosen = activities.find(({ id }) => id === activityId);
   return (
     <select
       aria-label={`Activity for ${assetName}`}
-      title={activities.find(({ id }) => id === activityId)?.description}
+      // An option can't hold a tooltip, so a game term chosen here has it on the whole choice.
+      data-term={chosen && termFor(chosen.name)}
+      title={chosen?.description}
       value={activityId}
       onChange={(event) => {
         onChange(event.target.value);

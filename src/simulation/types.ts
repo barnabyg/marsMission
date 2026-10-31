@@ -124,6 +124,8 @@ export interface ProgramView {
     massTonnes: number;
     landsAtSite: boolean;
   }[];
+  /** Whether a Survey would still lower a landing risk or reveal a Landing Site. */
+  somethingLeftToSurvey: boolean;
   /** The Landing Sites the player can choose. */
   landingSites: {
     id: string;

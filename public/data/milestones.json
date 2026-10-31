@@ -30,51 +30,51 @@
     "publicSupport": 100
   },
   {
-    "id": "science-500",
-    "name": "500 Science earned",
-    "description": "The Program has earned 500 Science, and its first results are in the news as well as the journals.",
+    "id": "science-700",
+    "name": "700 Science earned",
+    "description": "The Program has earned 700 Science, and its first results are in the news as well as the journals.",
     "trigger": {
-      "totalScience": 500
+      "totalScience": 700
     },
     "science": 20,
     "publicSupport": 100
   },
   {
-    "id": "science-1000",
-    "name": "1000 Science earned",
-    "description": "The Program has earned 1000 Science, and schools and museums everywhere are teaching what it found.",
+    "id": "science-1200",
+    "name": "1200 Science earned",
+    "description": "The Program has earned 1200 Science, and schools and museums everywhere are teaching what it found.",
     "trigger": {
-      "totalScience": 1000
+      "totalScience": 1200
     },
     "science": 30,
     "publicSupport": 200
   },
   {
-    "id": "science-1500",
-    "name": "1500 Science earned",
-    "description": "The Program has earned 1500 Science, and it has changed what people think they know about Mars.",
+    "id": "science-1800",
+    "name": "1800 Science earned",
+    "description": "The Program has earned 1800 Science, and it has changed what people think they know about Mars.",
     "trigger": {
-      "totalScience": 1500
+      "totalScience": 1800
     },
     "science": 40,
     "publicSupport": 300
   },
   {
-    "id": "science-2000",
-    "name": "2000 Science earned",
-    "description": "The Program has earned 2000 Science, and its discoveries are now the reason people give for going to Mars.",
+    "id": "science-2400",
+    "name": "2400 Science earned",
+    "description": "The Program has earned 2400 Science, and its discoveries are now the reason people give for going to Mars.",
     "trigger": {
-      "totalScience": 2000
+      "totalScience": 2400
     },
     "science": 50,
     "publicSupport": 350
   },
   {
-    "id": "science-2250",
-    "name": "2250 Science earned",
-    "description": "The Program has earned 2250 Science, and the world thinks of Mars as a place people have come to understand.",
+    "id": "science-3000",
+    "name": "3000 Science earned",
+    "description": "The Program has earned 3000 Science, and the world thinks of Mars as a place people have come to understand.",
     "trigger": {
-      "totalScience": 2250
+      "totalScience": 3000
     },
     "science": 60,
     "publicSupport": 400

@@ -4,14 +4,16 @@ The game rules settled so far, grouped by area. Most describe the finished game,
 
 ## Status
 
-Phases are defined in the [Build order](#build-order). Phases 1, 2 and 3 are built:
+Phases are defined in the [Build order](#build-order). Phases 1, 2, 3 and 4 are built:
 
 - **Phase 1:** Turns running from one Launch Window to the next, with at most one Mission each; Assets that stay operating at Mars; Mission Events listed from what a Mission carries; Planning Mode with one Launch Vehicle and one orbiter; Mission Mode with the solar system view, speed controls and text screens; Science, Milestones, Funding Thresholds, the Public Support drain and Cancellation Level; retiring a Program and the Program summary; tooltips.
 - **Phase 2:** Mission Event failure with Risk Bands; Reliability; the fixed random seed; automatic saves and manual save slots; the first sound effects.
 - **Since the Phase 2 playtest:** Save, Load and Retire Program dialogs in Planning Mode; text sized for 150% display scaling; Pause in Mission Mode; the events column in place of Phase 1's text screens.
 
 - **Phase 3:** a lander and entry/descent/landing; Landing Sites, each with a landing risk and a Science value earned by the first landing there; Missions carrying several Assets within a Launch Vehicle's mass limit, with a second, larger Launch Vehicle brought forward from Phase 6; partial Mission failure, where Assets already delivered are safe; automatic Surveys from orbit; a Service Life chosen for each Asset; Assets failing in service, with Reliability bought for each Asset; a second Funding Threshold; the Mars orbit view, with automatic view changes and smooth camera moves. Saves upgrade step by step from any earlier format.
-- **Since Phase 3:** End Turn in Mission Mode; Activities, with Survey, research and Nothing as the first ones; Ongoing Research; Research Grants; a rover; Science Milestones and more Funding Thresholds; the surface view, with generated terrain, landing and crash sequences it moves to by itself, and rovers that move according to their Activity.
+- **Since the Phase 3 playtest:** End Turn in Mission Mode.
+
+- **Phase 4:** Activities, with Survey, research and Nothing as the first ones; Ongoing Research, which also adds a little Public Support; Research Grants, which take over from Funding Thresholds as the main income of a Program that keeps Assets at Mars; a rover, choosing between Science and money; Science Milestones and more Funding Thresholds; the surface view, with generated terrain, landing and crash sequences it moves to by itself, and rovers that move according to their Activity; automated balance runs, and the numbers tuned with them, including longer Service Lives.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
@@ -137,7 +139,7 @@ The work is split into phases, each ending in a game the player can play and com
 
 ## Starting conditions
 
-- The Program starts at the late-2028 Launch Window. Its starting money and Public Support, in [public/data/program.json](../public/data/program.json), are set so that a first orbiter reaches the first Funding Threshold, and so that the player can afford an orbiter or a lander and a retry if it fails, with a little left for Reliability. A first orbiter followed by a first landing, in either order, reaches the second Funding Threshold. Later Funding Thresholds come from the Science Milestones in [public/data/milestones.json](../public/data/milestones.json).
+- The Program starts at the late-2028 Launch Window. Its starting money and Public Support, in [public/data/program.json](../public/data/program.json), are set so that a first orbiter reaches the first Funding Threshold, and so that the player can afford an orbiter or a lander and a retry if it fails, with a little left for Reliability. A first orbiter followed by a first landing, in either order, reaches the second Funding Threshold. So does a first rover by itself, with its own Milestone, but it costs too much to leave a retry, which makes one on the first Turn a gamble. Later Funding Thresholds come from the Science Milestones in [public/data/milestones.json](../public/data/milestones.json).
 - Two well-known Landing Sites (for example Jezero and Gale) are available from the start, at high landing risk because they haven't been surveyed. The first Turn is a choice between surveying first and landing straight away.
 - No difficulty levels in the first version.
 

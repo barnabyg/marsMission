@@ -137,6 +137,63 @@ describe("every strategy on the real data files", () => {
     expect(known.at(-1)).toBeGreaterThan(known[0] ?? 0);
   });
 
+  it("keeps an orbiter on Survey while a site is left to reveal, and stops after one if told to", () => {
+    const certainly = simulationOf(certain);
+    const named = (wanted: string) => {
+      const strategy = strategies.find(({ name }) => name === wanted);
+      if (!strategy) throw new Error(`Expected the strategy ${wanted}`);
+      return strategy;
+    };
+    const secondTurn = (strategy: Strategy) => {
+      const start = certainly.startProgram(1);
+      const { program } = certainly.runTurn(
+        start,
+        strategy.plan(
+          certainly.readProgram(start),
+          planningTools(certainly, start),
+        ),
+      );
+      return strategy.plan(
+        certainly.readProgram(program),
+        planningTools(certainly, program),
+      );
+    };
+    expect(
+      Object.values(
+        secondTurn(named("steady: Soil analysis")).operatingActivities ?? {},
+      ),
+    ).toEqual([]);
+    expect(
+      Object.values(
+        secondTurn(named("steady: Survey once")).operatingActivities ?? {},
+      ),
+    ).toEqual(["orbital-research"]);
+  });
+
+  it("keeps money back for a retry until Research Grants would pay for one", () => {
+    const steady = strategies.find(
+      ({ name }) => name === "steady: Soil analysis",
+    );
+    if (!steady) throw new Error("Expected the steady strategy");
+    const certainly = simulationOf(certain);
+    let program = certainly.startProgram(1);
+    const carried: (string | undefined)[] = [];
+    for (let turn = 0; turn < 3; turn++) {
+      const plan = steady.plan(
+        certainly.readProgram(program),
+        planningTools(certainly, program),
+      );
+      carried.push(plan.mission?.assetIds[0]);
+      program = certainly.runTurn(program, plan).program;
+    }
+    // On Turn 2 a rover would leave too little to try again, and on Turn 3 the money has come in.
+    expect(carried).toEqual([
+      "pathfinder-orbiter",
+      "prospector-lander",
+      "trailblazer-rover",
+    ]);
+  });
+
   it("gives an orbiter research once nothing is left to Survey", () => {
     const surveyFirst = strategies.find(({ name }) => name === "survey first");
     if (!surveyFirst) throw new Error("Expected the survey first strategy");
@@ -351,14 +408,56 @@ describe("the report", () => {
       }),
     };
     const text = balanceReport(certain, 2, [landOnce]);
-    // 2300 - 1100 + 1000 from the first Funding Threshold + a Research Grant of 22, with
-    // 570 of 780 days at 60 Science a Turn being 44 Science, plus 150 and 120 for the landing.
-    // (100 + 250 for the landing + 6 of research) less 15% is 302 Public Support.
+    // 2300 - 1100 + 1000 from the first Funding Threshold + a Research Grant of 37, with
+    // 570 of 780 days at 100 Science a Turn being 73 Science, plus 150 and 120 for the landing.
+    // (100 + 250 for the landing + 7 of research) less 15% is 303 Public Support.
     expect(turnRow(text, 1)).toEqual(
-      "1 100.0 2222 314 302 1.0 1100 1000 22 97.8 2.2".split(" "),
+      "1 100.0 2237 343 303 1.0 1100 1000 37 96.4 3.6".split(" "),
     );
     expect(text).toMatch(/^250 +1000 +100\.0 +1\.0$/m);
     expect(text).toMatch(/^425 +1500 +0\.0 +-$/m);
     expect(text).toContain("Surface research");
+  });
+
+  it("says when Research Grants take over, and when they never do", () => {
+    expect(report).toContain(
+      "Research Grants pass Funding Thresholds: each Turn never, in total never",
+    );
+    const keepsARover: Strategy = {
+      name: "test: one rover",
+      description: "Lands one rover on the first Turn and keeps it at work.",
+      plan: (view) => ({
+        mission:
+          view.turnNumber === 1
+            ? {
+                launchVehicleId: "meridian-medium",
+                assetIds: ["trailblazer-rover"],
+                landingSiteId: "jezero-crater",
+                assetChoices: {
+                  "trailblazer-rover": {
+                    serviceLifeDays: 2800,
+                    activityId: "soil-analysis",
+                  },
+                },
+              }
+            : null,
+      }),
+    };
+    expect(balanceReport(certain, 2, [keepsARover])).toMatch(
+      /Research Grants pass Funding Thresholds: each Turn from Turn \d+ on, in total by Turn \d+/,
+    );
+  });
+
+  it("says who is cancelled with an Asset still operating", () => {
+    expect(report).toContain(", 0.0% with an Asset still operating");
+  });
+
+  it("shows how Programs end up after their first Mission", () => {
+    const text = balanceReport(certain, 2, [
+      strategies.find(({ name }) => name === "steady: Soil analysis") ??
+        launchNothing,
+    ]);
+    expect(text).toMatch(/First Mission worked \(100\.0%\): ends with \$\d+M/);
+    expect(text).not.toContain("First Mission failed (");
   });
 });

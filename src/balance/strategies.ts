@@ -16,6 +16,8 @@ export interface PlanningTools {
   ): ReturnType<Simulation["previewMission"]>;
   /** What's wrong with a plan for this Turn, which is nothing if it can be submitted. */
   problemsWith(plan: TurnPlan): string[];
+  /** What a plan for this Turn costs. */
+  costOf(plan: TurnPlan): number;
 }
 
 /** One way of playing the game. It sees what a player sees, so it can't know the seed or what will happen. */
@@ -25,24 +27,34 @@ export interface Strategy {
   plan(view: ProgramView, tools: PlanningTools): TurnPlan;
 }
 
+type Aim = "science" | "grants";
+
 /** A strategy that launches one Mission with one Asset on every Turn that it can, up to any limit of Assets. */
 interface Campaign {
   /** The kinds of Asset to try sending this Turn, best first. */
   order(view: ProgramView): string[];
-  /** What Assets on the surface and orbiters doing research aim for. */
-  aim: "science" | "grants";
+  /** What Assets on the surface and orbiters doing research aim for, which can change as the Program goes on. */
+  aim: Aim | ((view: ProgramView) => Aim);
   /** Whether an Asset that can Survey does that first, while there is something left to Survey. */
   surveysFirst: boolean;
+  /** Stops Surveying sooner than when nothing is left to Survey, once this is no longer true. */
+  surveysWhile?: (view: ProgramView) => boolean;
   /** Whether a lander only goes to a site that a Survey has made safer. */
   onlySurveyedSites: boolean;
-  /** Buys the longest Service Life it can afford, rather than the shortest. */
-  longestServiceLife?: boolean;
-  /** Buys the best Reliability for the Asset it can afford, rather than none. */
-  assetReliability?: boolean;
+  /** Buys the longest Service Life it can afford, rather than the shortest, on every Asset or these kinds. */
+  longestServiceLife?: boolean | string[];
+  /** Buys Reliability for the Asset: the best it can afford, or only the cheapest level there is above none. */
+  assetReliability?: "best" | "cheapest";
+  /** Buys that Reliability only for these kinds of Asset, rather than for every Asset. */
+  assetReliabilityFor?: string[];
   /** Buys the best Reliability on every Mission Event it can afford, rather than none. */
   missionEventReliability?: boolean;
   /** Launches only while fewer than this many Assets are operating. */
   assetLimit?: number;
+  /** Keeps this much for a retry whenever an Asset is already operating, until Research Grants would pay for one. */
+  reserveMillions?: number;
+  /** Launches nothing after this Turn. */
+  lastLaunchTurn?: number;
 }
 
 // The views don't say which Activity is a Survey, because Planning Mode only needs its name.
@@ -51,10 +63,6 @@ const surveyActivityId = "survey";
 const canSurvey = (activities: PlannedActivity[]) =>
   activities.some(({ id }) => id === surveyActivityId);
 
-/** A Survey covers every known site and reveals another, so once all are surveyed there is no site left to reveal. */
-const somethingLeftToSurvey = (view: ProgramView) =>
-  view.landingSites.some(({ surveyed }) => !surveyed);
-
 const surveyorInService = (view: ProgramView) =>
   view.operatingAssets.some(
     ({ activities, daysLeft }) => daysLeft > 0 && canSurvey(activities),
@@ -62,13 +70,21 @@ const surveyorInService = (view: ProgramView) =>
 
 /** An orbiter to Survey whenever none is at work and sites are left, and otherwise these kinds. */
 const surveyThenLand = (surfaceKinds: string[]) => (view: ProgramView) =>
-  !surveyorInService(view) && somethingLeftToSurvey(view)
+  !surveyorInService(view) && view.somethingLeftToSurvey
     ? ["orbiter", ...surfaceKinds]
     : surfaceKinds;
 
+const aimOf = ({ aim }: Campaign, view: ProgramView): Aim =>
+  typeof aim === "function" ? aim(view) : aim;
+
+const wantsSurvey = (view: ProgramView, campaign: Campaign) =>
+  campaign.surveysFirst &&
+  view.somethingLeftToSurvey &&
+  (campaign.surveysWhile?.(view) ?? true);
+
 function researchActivity(
   activities: PlannedActivity[],
-  aim: Campaign["aim"],
+  aim: Aim,
 ): PlannedActivity | undefined {
   const score = ({ earnsPerTurn }: PlannedActivity) =>
     aim === "grants"
@@ -94,15 +110,14 @@ function operatingActivities(view: ProgramView, campaign: Campaign) {
     daysLeft,
   } of view.operatingAssets) {
     const surveys: boolean =
-      campaign.surveysFirst &&
       !surveying &&
       daysLeft > 0 &&
-      somethingLeftToSurvey(view) &&
+      wantsSurvey(view, campaign) &&
       canSurvey(activities);
     surveying ||= surveys;
     const wanted = surveys
       ? surveyActivityId
-      : researchActivity(activities, campaign.aim)?.id;
+      : researchActivity(activities, aimOf(campaign, view))?.id;
     if (wanted !== undefined && wanted !== activityId) changes[key] = wanted;
   }
   return { changes, surveying };
@@ -146,27 +161,36 @@ function missionsFor(
   if (!planned) return [];
 
   const surveys =
-    campaign.surveysFirst &&
-    !surveying &&
-    somethingLeftToSurvey(view) &&
-    canSurvey(planned.activities);
+    !surveying && wantsSurvey(view, campaign) && canSurvey(planned.activities);
   const activityId = surveys
     ? surveyActivityId
-    : (researchActivity(planned.activities, campaign.aim)?.id ??
+    : (researchActivity(planned.activities, aimOf(campaign, view))?.id ??
       planned.activityId);
-  const serviceLives = campaign.longestServiceLife
-    ? planned.serviceLifeOptions
-        .map(({ days }) => days)
-        .toSorted((first, second) => second - first)
-    : [planned.serviceLifeDays];
-  const buysReliability =
-    campaign.assetReliability === true ||
-    campaign.missionEventReliability === true;
-  const levels = buysReliability
-    ? planned.reliabilityLevels
-        .toSorted((first, second) => second.costMillions - first.costMillions)
-        .map(({ id }) => id)
-    : [planned.reliabilityLevelId];
+  // Short of money for a retry, a longer Service Life is the first thing to give up.
+  const canSpareMoney =
+    view.moneyMillions >= 2 * (campaign.reserveMillions ?? 0);
+  const serviceLives =
+    (campaign.longestServiceLife === true ||
+      (Array.isArray(campaign.longestServiceLife) &&
+        campaign.longestServiceLife.includes(kind))) &&
+    canSpareMoney
+      ? planned.serviceLifeOptions
+          .map(({ days }) => days)
+          .toSorted((first, second) => second - first)
+      : [planned.serviceLifeDays];
+  const dearestFirst = planned.reliabilityLevels
+    .toSorted((first, second) => second.costMillions - first.costMillions)
+    .map(({ id }) => id);
+  const assetLevels =
+    campaign.assetReliabilityFor?.includes(kind) === false
+      ? undefined
+      : campaign.assetReliability;
+  const levels =
+    assetLevels === "cheapest"
+      ? dearestFirst.slice(-2)
+      : assetLevels === "best" || campaign.missionEventReliability === true
+        ? dearestFirst
+        : [planned.reliabilityLevelId];
   const events = tools.previewMission(mission);
 
   return serviceLives.flatMap((serviceLifeDays) =>
@@ -183,12 +207,31 @@ function missionsFor(
         [asset.id]: {
           activityId,
           serviceLifeDays,
-          ...(campaign.assetReliability ? { reliabilityLevelId: level } : {}),
+          ...(assetLevels ? { reliabilityLevelId: level } : {}),
         },
       },
     })),
   );
 }
+
+/** The Research Grants the Assets operating now would pay over a whole Turn. */
+const grantsPerTurn = (view: ProgramView) =>
+  view.operatingAssets
+    .filter(({ daysLeft }) => daysLeft > 0)
+    .reduce(
+      (total, { activityId, activities }) =>
+        total +
+        (activities.find(({ id }) => id === activityId)?.earnsPerTurn
+          ?.researchGrantMillions ?? 0),
+      0,
+    );
+
+/** Money to keep back for a retry: none once Research Grants would soon pay for one, or if it couldn't be afforded anyway. */
+const reserveNow = (view: ProgramView, { reserveMillions = 0 }: Campaign) =>
+  grantsPerTurn(view) < reserveMillions / 2 &&
+  view.moneyMillions >= 2 * reserveMillions
+    ? reserveMillions
+    : 0;
 
 function campaign(
   name: string,
@@ -203,7 +246,10 @@ function campaign(
       const inService = view.operatingAssets.filter(
         ({ daysLeft }) => daysLeft > 0,
       ).length;
-      if (inService < (chosen.assetLimit ?? Infinity)) {
+      const launching =
+        inService < (chosen.assetLimit ?? Infinity) &&
+        view.turnNumber <= (chosen.lastLaunchTurn ?? Infinity);
+      if (launching) {
         for (const kind of chosen.order(view)) {
           for (const mission of missionsFor(
             kind,
@@ -213,7 +259,13 @@ function campaign(
             surveying,
           )) {
             const plan = { mission, operatingActivities: changes };
-            if (tools.problemsWith(plan).length === 0) return plan;
+            const reserve = inService > 0 ? reserveNow(view, chosen) : 0;
+            if (
+              tools.problemsWith(plan).length === 0 &&
+              view.moneyMillions - tools.costOf(plan) >= reserve
+            ) {
+              return plan;
+            }
           }
         }
       }
@@ -232,6 +284,35 @@ const surveyingLanders: Campaign = {
 const surveyingRovers: Campaign = {
   ...surveyingLanders,
   order: surveyThenLand(["rover", "lander"]),
+};
+
+/** An orbiter's first Survey, while none has been done and none is under way. */
+const orbiterForFirstSurvey = (view: ProgramView) =>
+  !surveyorInService(view) &&
+  view.landingSites.every(({ surveyed }) => !surveyed)
+    ? ["orbiter"]
+    : [];
+
+/** This kind of Asset until something has landed, then an orbiter for its Milestone and Surveys, then the same as the others. */
+const landThenOrbiter = (kind: string) => (view: ProgramView) => {
+  if (!view.landingSites.some(({ landed }) => landed)) return [kind];
+  return view.milestones.some(({ id }) => id === "first-orbiter-at-mars")
+    ? ["rover", "lander"]
+    : ["orbiter"];
+};
+
+/**
+ * Plays as a careful player would: one orbiter to Survey, then rovers, keeping money back for a retry and
+ * launching only to keep a few Assets operating. The strategies built on it differ from it in one choice.
+ */
+const steadyRovers: Campaign = {
+  order: (view) => [...orbiterForFirstSurvey(view), "rover", "lander"],
+  aim: "grants",
+  surveysFirst: true,
+  onlySurveyedSites: true,
+  longestServiceLife: ["rover"],
+  assetLimit: 3,
+  reserveMillions: 1000,
 };
 
 /** Every strategy the report covers. Add one here and it needs nothing else. */
@@ -276,7 +357,7 @@ export const strategies: Strategy[] = [
   campaign(
     "Asset Reliability",
     "Survey first, buying the best Reliability for each Asset that it can afford.",
-    { ...surveyingLanders, assetReliability: true },
+    { ...surveyingLanders, assetReliability: "best" },
   ),
   campaign(
     "Mission Event Reliability",
@@ -313,5 +394,102 @@ export const strategies: Strategy[] = [
     "keep two Assets",
     "Survey first with the longest Service Life, launching only to keep two Assets operating, to see what Ongoing Research sustains.",
     { ...surveyingLanders, longestServiceLife: true, assetLimit: 2 },
+  ),
+  campaign(
+    "stop after Turn 4",
+    "Survey first with rovers on Research Grants, then launches nothing after Turn 4, to see that a Program with nothing left fades.",
+    { ...surveyingRovers, aim: "grants", lastLaunchTurn: 4 },
+  ),
+  campaign(
+    "steady: Soil analysis",
+    "One orbiter, then rovers on Soil analysis with the longest Service Life, keeping three Assets and some money back.",
+    steadyRovers,
+  ),
+  campaign("steady: Long traverse", "The same, with rovers on Long traverse.", {
+    ...steadyRovers,
+    aim: "science",
+  }),
+  campaign(
+    "steady: Soil, traverse when rich",
+    "The same, with rovers on Soil analysis until money passes the cost of several rovers, then on Long traverse.",
+    {
+      ...steadyRovers,
+      aim: (view) => (view.moneyMillions >= 5000 ? "science" : "grants"),
+    },
+  ),
+  campaign(
+    "steady: shortest Service Life",
+    "As steady: Soil analysis, with the shortest Service Life.",
+    { ...steadyRovers, longestServiceLife: false },
+  ),
+  campaign(
+    "steady: longest on everything",
+    "As steady: Soil analysis, also buying the longest Service Life for orbiters and landers.",
+    { ...steadyRovers, longestServiceLife: true },
+  ),
+  campaign(
+    "steady: shortest, Tested",
+    "As steady: shortest Service Life, buying the cheapest Reliability for each Asset.",
+    {
+      ...steadyRovers,
+      longestServiceLife: false,
+      assetReliability: "cheapest",
+    },
+  ),
+  campaign(
+    "steady: Tested rovers",
+    "As steady: Soil analysis, buying the cheapest Reliability for each rover.",
+    {
+      ...steadyRovers,
+      assetReliability: "cheapest",
+      assetReliabilityFor: ["rover"],
+    },
+  ),
+  campaign(
+    "steady: best on rovers",
+    "As steady: Soil analysis, buying the best Reliability for each rover that it can afford.",
+    {
+      ...steadyRovers,
+      assetReliability: "best",
+      assetReliabilityFor: ["rover"],
+    },
+  ),
+  campaign(
+    "steady: Tested everything",
+    "As steady: Soil analysis, buying the cheapest Reliability for every Asset, including the orbiter and any lander.",
+    { ...steadyRovers, assetReliability: "cheapest" },
+  ),
+  campaign(
+    "steady: land straight away",
+    "As steady: Soil analysis, but with no orbiter: a lander goes to an unsurveyed site on the first Turn, then rovers.",
+    {
+      ...steadyRovers,
+      order: landThenOrbiter("lander"),
+      onlySurveyedSites: false,
+    },
+  ),
+  campaign(
+    "steady: rover straight away",
+    "As steady: Soil analysis, but with no orbiter: a rover goes to an unsurveyed site on the first Turn.",
+    {
+      ...steadyRovers,
+      order: landThenOrbiter("rover"),
+      onlySurveyedSites: false,
+      reserveMillions: 0,
+    },
+  ),
+  campaign(
+    "steady: rover at once",
+    "As steady: Soil analysis, but keeping no money back, so the first landing is a rover.",
+    { ...steadyRovers, reserveMillions: 0 },
+  ),
+  campaign(
+    "steady: Survey once",
+    "As steady: Soil analysis, but the orbiter changes to research after its first Survey.",
+    {
+      ...steadyRovers,
+      surveysWhile: (view) =>
+        view.landingSites.every(({ surveyed }) => !surveyed),
+    },
   ),
 ];

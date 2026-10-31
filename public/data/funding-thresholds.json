@@ -8,15 +8,15 @@
     "payoutMillions": 1500
   },
   {
-    "publicSupport": 600,
+    "publicSupport": 630,
     "payoutMillions": 2000
   },
   {
-    "publicSupport": 750,
-    "payoutMillions": 2500
+    "publicSupport": 800,
+    "payoutMillions": 2000
   },
   {
-    "publicSupport": 900,
-    "payoutMillions": 3000
+    "publicSupport": 950,
+    "payoutMillions": 2500
   }
 ]

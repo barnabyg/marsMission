@@ -11,8 +11,8 @@
     "description": "Studies the atmosphere and climate of Mars from orbit, in place of a Survey.",
     "effect": {
       "kind": "research",
-      "sciencePerTurn": 40,
-      "publicSupportPerTurn": 5,
+      "sciencePerTurn": 80,
+      "publicSupportPerTurn": 6,
       "researchKind": "orbital-research",
       "surfaceMotion": "nearby"
     }
@@ -23,8 +23,8 @@
     "description": "Studies the rocks and weather around the Landing Site.",
     "effect": {
       "kind": "research",
-      "sciencePerTurn": 60,
-      "publicSupportPerTurn": 8,
+      "sciencePerTurn": 100,
+      "publicSupportPerTurn": 9,
       "researchKind": "surface-research",
       "surfaceMotion": "nearby"
     }
@@ -35,8 +35,8 @@
     "description": "Stays near the Landing Site and analyses soil samples, which pays a Research Grant.",
     "effect": {
       "kind": "research",
-      "sciencePerTurn": 70,
-      "publicSupportPerTurn": 8,
+      "sciencePerTurn": 80,
+      "publicSupportPerTurn": 9,
       "researchKind": "soil-analysis",
       "surfaceMotion": "nearby"
     }
@@ -47,7 +47,7 @@
     "description": "Drives long distances around the Landing Site and finds more, but pays no Research Grant. The other Landing Sites are too far away to reach.",
     "effect": {
       "kind": "research",
-      "sciencePerTurn": 110,
+      "sciencePerTurn": 160,
       "publicSupportPerTurn": 14,
       "researchKind": "long-traverse",
       "surfaceMotion": "traverse"

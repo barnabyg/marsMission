@@ -56,7 +56,7 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   const activity = page.getByLabel("Activity for Trailblazer Rover");
   await expect(activity).toHaveValue("soil-analysis");
   await expect(page.getByTestId("research-earnings")).toHaveText(
-    "Ongoing Research for a whole Turn: Soil analysis earns 70 Science and 8 Public Support, and pays a $42M Research Grant. Long traverse earns 110 Science and 14 Public Support.",
+    "Ongoing Research for a whole Turn: Soil analysis earns 80 Science and 9 Public Support, and pays a $800M Research Grant. Long traverse earns 160 Science and 14 Public Support.",
   );
   await activity.selectOption("long-traverse");
   expect(await termsWithoutTooltips(page)).toEqual([]);
@@ -93,7 +93,7 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   await page.getByRole("button", { name: "End Turn", exact: true }).click();
   // It lands on day 215, so 565 of the Turn's 780 days earn their share, rounded up.
   await expect(page.getByTestId("summary-ongoing-research")).toContainText(
-    "Trailblazer Rover, Long traverse: 80 Science and 11 Public Support over 565 days",
+    "Trailblazer Rover, Long traverse: 116 Science and 11 Public Support over 565 days",
   );
   await expect(page.getByTestId("summary-research-grants")).toHaveCount(0);
   const summary = page.getByTestId("turn-summary");
@@ -105,10 +105,10 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Continue" }).click();
 
-  // 120 for the site, 150 and 60 for the Milestones, and the 80.
-  await expect(page.getByTestId("science")).toHaveText("410");
+  // 120 for the site, 150 and 60 for the Milestones, and the 116.
+  await expect(page.getByTestId("science")).toHaveText("446");
   await expect(page.getByTestId("operating-assets")).toContainText(
-    "Trailblazer Rover at Jezero Crater: 135 days of Service Life left",
+    "Trailblazer Rover at Jezero Crater: 735 days of Service Life left",
   );
   await expect(
     page

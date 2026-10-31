@@ -60,9 +60,9 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
   await playToNextTurn(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
   // 150 for the Milestone, 120 for the site, and what Surface research earned in the days left.
-  await expect(page.getByTestId("science")).toHaveText("314");
+  await expect(page.getByTestId("science")).toHaveText("343");
   await expect(page.getByTestId("operating-assets")).toContainText(
-    "Prospector Lander at Jezero Crater: 35 days of Service Life left",
+    "Prospector Lander at Jezero Crater: 735 days of Service Life left",
   );
   await chooseAssets(page, ["Prospector Lander"]);
   await expect(page.getByTestId("landing-site-details")).toContainText(
@@ -250,19 +250,18 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   await page.goto(`/?seed=${orbiterLastsSeed}`);
   const life = page.getByLabel("Service Life for Pathfinder Orbiter");
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
-  await life.selectOption("1700");
+  await life.selectOption("2100");
   await expect(page.getByTestId("mission-cost")).toHaveText("$1.15B");
-  await life.selectOption("900");
+  await life.selectOption("1300");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await playToNextTurn(page);
   await expect(page.getByTestId("operating-assets")).toContainText(
-    "Pathfinder Orbiter: 330 days of Service Life left",
+    "Pathfinder Orbiter: 730 days of Service Life left",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  // At the 10x carried over, the Service Life ends about 0.5 s into this Turn.
   await holdTurnWhenShown(page);
   await page
     .getByRole("button", { name: "End Turn without launching" })
@@ -272,7 +271,8 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   );
   const ended = "Pathfinder Orbiter: Service Life ended";
   await holdTurnWhenShown(page, ended);
-  await page.getByRole("button", { name: "10x" }).click();
+  // At 10x the Turn could finish in the same frame, with so little of it left.
+  await page.getByRole("button", { name: "1x" }).click();
   await expect(eventEntries(page).first().getByRole("heading")).toHaveText(
     ended,
   );

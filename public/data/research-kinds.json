@@ -12,7 +12,7 @@
   {
     "id": "soil-analysis",
     "name": "Soil analysis",
-    "grantMillionsPerScience": 0.6
+    "grantMillionsPerScience": 10
   },
   {
     "id": "long-traverse",

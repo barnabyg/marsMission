@@ -319,6 +319,9 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           daysLeft: Math.max(0, daysUntilServiceEnds(program.date, asset)),
           landingSiteName: landingSiteById(asset.landingSiteId)?.name ?? null,
         })),
+        somethingLeftToSurvey: catalogue.landingSites.some(
+          ({ id }) => !program.surveyedLandingSiteIds.includes(id),
+        ),
         landingSites: knownLandingSites(program).map((site) => ({
           id: site.id,
           name: site.name,

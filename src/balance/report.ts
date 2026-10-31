@@ -121,14 +121,50 @@ function turnTable(plays: Play[]): string[] {
   );
 }
 
+/** When Research Grants take over from Funding Thresholds as a strategy's main income, going by its Turn table's means. */
+function mainIncome(plays: Play[]): string {
+  const perTurn: { thresholds: number; grants: number }[] = [];
+  for (let index = 0; index < turnHorizon; index++) {
+    const turns = plays.flatMap((play) => play[index] ?? []);
+    if (turns.length === 0) break;
+    perTurn.push({
+      thresholds: mean(turns.map((turn) => turn.thresholdMillions)),
+      grants: mean(turns.map((turn) => turn.researchGrantMillions)),
+    });
+  }
+  const fromIndex =
+    perTurn.findLastIndex(
+      ({ thresholds, grants }) => thresholds > 0 && thresholds >= grants,
+    ) + 1;
+  const anyGrants = perTurn.some(({ grants }) => grants > 0);
+  let thresholdsSoFar = 0;
+  let grantsSoFar = 0;
+  const inTotalIndex = perTurn.findIndex(({ thresholds, grants }) => {
+    thresholdsSoFar += thresholds;
+    grantsSoFar += grants;
+    return grantsSoFar > thresholdsSoFar;
+  });
+  const each =
+    anyGrants && fromIndex < perTurn.length
+      ? `from Turn ${fromIndex + 1} on`
+      : "never";
+  const total = inTotalIndex < 0 ? "never" : `by Turn ${inTotalIndex + 1}`;
+  return `Research Grants pass Funding Thresholds: each Turn ${each}, in total ${total}`;
+}
+
 function cancellations(plays: Play[]): string[] {
   const turnsCancelled = plays.flatMap((play) =>
     play.at(-1)?.cancelled ? [play.length] : [],
   );
+  const withAssets = plays.filter((play) => {
+    const last = play.at(-1);
+    return last?.cancelled === true && last.assetsOperating > 0;
+  });
   const lines = [
     `Cancelled: ${percent(turnsCancelled.length, plays.length)}% of Programs` +
       (turnsCancelled.length > 0
-        ? `, on Turn ${tenth(mean(turnsCancelled))} on average`
+        ? `, on Turn ${tenth(mean(turnsCancelled))} on average, ` +
+          `${percent(withAssets.length, plays.length)}% with an Asset still operating`
         : ""),
   ];
   for (let turn = 1; turn <= turnHorizon; turn++) {
@@ -190,6 +226,24 @@ function firstMissions(plays: Play[]): string[] {
         ]
       : []),
   ];
+}
+
+/** How Programs end up after their first Mission worked or failed, which shows what a gamble on that Mission pays. */
+function afterFirstMission(plays: Play[]): string[] {
+  const outcome = (label: string, failed: boolean) => {
+    const group = plays.filter(
+      (play) => play.find((turn) => turn.launched)?.missionFailed === failed,
+    );
+    if (group.length === 0) return [];
+    const last = group.flatMap((play) => play.at(-1) ?? []);
+    const cancelled = last.filter((turn) => turn.cancelled);
+    return [
+      `  First Mission ${label} (${percent(group.length, plays.length)}%): ends with ` +
+        `$${whole(mean(last.map((turn) => turn.moneyMillions)))}M and ${whole(mean(last.map((turn) => turn.science)))} Science, ` +
+        `${percent(cancelled.length, group.length)}% cancelled`,
+    ];
+  };
+  return [...outcome("worked", false), ...outcome("failed", true)];
 }
 
 function researchScience(plays: Play[]): string {
@@ -256,11 +310,14 @@ export function balanceReport(
       "",
       ...turnTable(plays),
       "",
+      mainIncome(plays),
+      "",
       ...cancellations(plays),
       "",
       ...fundingThresholds(plays, catalogue.fundingThresholds),
       "",
       ...firstMissions(plays),
+      ...afterFirstMission(plays),
       "",
       researchScience(plays),
     );

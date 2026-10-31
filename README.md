@@ -12,7 +12,7 @@ You need [Node.js](https://nodejs.org/) 24 or later. From the repository root, r
 
 You can also double-click `run.bat`. It installs what's needed, builds the game and opens it in your browser. The game is designed for a 4K desktop, at 100% or 150% display scaling.
 
-To try the latest phase, follow the [Phase 3 playtest guide](docs/playtest/phase-3.md). The [Phase 1](docs/playtest/phase-1.md) and [Phase 2](docs/playtest/phase-2.md) guides are kept as records of those phases, so some controls have changed since they were written: saving, loading and retiring are now buttons with dialogs, Mission Mode lists what happens in an events column, and Assets are chosen with tick boxes.
+To try the latest phase, follow the [Phase 4 playtest guide](docs/playtest/phase-4.md). The [Phase 1](docs/playtest/phase-1.md), [Phase 2](docs/playtest/phase-2.md) and [Phase 3](docs/playtest/phase-3.md) guides are kept as records of those phases, so some controls and numbers have changed since they were written: saving, loading and retiring are now buttons with dialogs, Mission Mode lists what happens in an events column, Assets are chosen with tick boxes, and Service Life, Science and money are as tuned for Phase 4.
 
 ## Develop
 
@@ -67,12 +67,13 @@ It plays every strategy in `src/balance/strategies.ts` against the real data fil
 The report starts with a summary with one row per strategy, of means per Program. Each strategy then has its own section:
 
 - **Turn table:** one row per Turn. Everything except `Active%` is a mean over the Programs that played that Turn, at its end, so later rows only show the survivors and can rise when weaker Programs are cancelled. `Active%` is the share of all Programs still going. `Thresh$M` and `Grants$M` are that Turn's income from Funding Thresholds and Research Grants, `Thresh%` and `Grant%` are their shares of it, and `Spent$M` is the cost of Missions.
-- **Cancelled:** how many Programs were cancelled, and a histogram of the Turns on which that happened.
+- **Research Grants pass Funding Thresholds:** the Turn from which Research Grants pay more than Funding Thresholds in every Turn, and the Turn by which they have paid more in total, going by the Turn table's means. Either can be "never".
+- **Cancelled:** how many Programs were cancelled, how many of those still had an Asset operating, and a histogram of the Turns on which that happened.
 - **Funding Threshold table:** the share of Programs that reached each one, and on what Turn on average.
-- **First Mission failed:** how often the first Mission failed, how often the Program could launch again on the next Turn, and whether two failures in a row cancelled it.
+- **First Mission failed:** how often the first Mission failed, how often the Program could launch again on the next Turn, and whether two failures in a row cancelled it. Then how Programs ended up, in money, Science and cancellations, according to whether that first Mission worked or failed, which shows what a gamble pays.
 - **Science per Program:** what Ongoing Research earned, by Activity.
 
-Strategies are simple on purpose. Each launches whenever it can afford to, so a difference between two of them is only a rough guide to what a thoughtful player would find.
+Strategies are simple on purpose, so a difference between two of them is only a rough guide to what a thoughtful player would find. Most launch whenever they can afford to, and run out of money. The ones named `steady:` play more carefully, keeping money back for a retry and keeping a few Assets at work, and each differs from `steady: Soil analysis` in one choice, so compare them with it to judge that choice.
 
 To add a strategy, add an object to the `strategies` list, with no other change. Its `plan(view, tools)` sees what a player sees: the `ProgramView`, the previews and `tools.problemsWith(plan)`. It returns a `TurnPlan`, which must pass validation, so it has to cope with shortages of money and with what's on offer changing. The `campaign` helper in the same file covers the common case.
 

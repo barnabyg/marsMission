@@ -22,6 +22,19 @@ const previewLanding = (
     })
     .find(({ eventId }) => eventId === "test-landing")?.riskBand;
 
+describe("whether anything is left to Survey", () => {
+  it("is true until every Landing Site has been revealed and surveyed", () => {
+    const { simulation, program } = withFailures({});
+    expect(simulation.readProgram(program).somethingLeftToSurvey).toBe(true);
+    let current = simulation.runTurn(program, sendOrbiter).program;
+    const total = testCatalogueFiles().landingSites.length;
+    for (let turn = 0; turn < total; turn++) {
+      current = simulation.runTurn(current, skipTurn).program;
+    }
+    expect(simulation.readProgram(current).somethingLeftToSurvey).toBe(false);
+  });
+});
+
 const knownSites = (simulation: Simulation, program: Program) =>
   simulation.readProgram(program).landingSites.map(({ id }) => id);
 

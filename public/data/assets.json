@@ -9,11 +9,11 @@
     "activities": ["survey", "orbital-research", "nothing"],
     "serviceLifeOptions": [
       {
-        "days": 900,
+        "days": 1300,
         "costMillions": 0
       },
       {
-        "days": 1700,
+        "days": 2100,
         "costMillions": 150
       }
     ],
@@ -30,11 +30,11 @@
     "massTonnes": 3,
     "serviceLifeOptions": [
       {
-        "days": 600,
+        "days": 1300,
         "costMillions": 0
       },
       {
-        "days": 1500,
+        "days": 2100,
         "costMillions": 100
       }
     ],
@@ -51,12 +51,12 @@
     "massTonnes": 3.5,
     "serviceLifeOptions": [
       {
-        "days": 700,
+        "days": 1300,
         "costMillions": 0
       },
       {
-        "days": 1600,
-        "costMillions": 150
+        "days": 2800,
+        "costMillions": 300
       }
     ],
     "failureChancePerTurn": 0.14

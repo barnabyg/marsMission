@@ -134,7 +134,7 @@ for (const size of screenSizes) {
       await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
       await expect(page.getByTestId("research-earnings")).toContainText(
-        "Surface research earns 60 Science and 8 Public Support, and pays a $30M Research Grant.",
+        "Surface research earns 100 Science and 9 Public Support, and pays a $50M Research Grant.",
       );
       expect(await somethingScrolls(page)).toBe(false);
       await expect(
