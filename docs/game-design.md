@@ -11,6 +11,7 @@ Phases are defined in the [Build order](#build-order). Phases 1, 2 and 3 are bui
 - **Since the Phase 2 playtest:** Save, Load and Retire Program dialogs in Planning Mode; text sized for 150% display scaling; Pause in Mission Mode; the events column in place of Phase 1's text screens.
 
 - **Phase 3:** a lander and entry/descent/landing; Landing Sites, each with a landing risk and a Science value earned by the first landing there; Missions carrying several Assets within a Launch Vehicle's mass limit, with a second, larger Launch Vehicle brought forward from Phase 6; partial Mission failure, where Assets already delivered are safe; automatic Surveys from orbit; a Service Life chosen for each Asset; Assets failing in service, with Reliability bought for each Asset; a second Funding Threshold; the Mars orbit view, with automatic view changes and smooth camera moves. Saves upgrade step by step from any earlier format.
+- **Since Phase 3:** End Turn in Mission Mode.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
@@ -28,6 +29,7 @@ Any rule in this document beyond these is planned, so its absence from the code 
 - In Planning Mode the player gives each Asset one Activity for the Turn. Crew at one Landing Site share one Activity.
 - Each Turn begins at a Launch Window (roughly every 26 months) and consists of Planning Mode followed by Mission Mode.
 - No game time passes in Planning Mode. Mission Mode runs from one Launch Window to the next, showing every Mission in flight and every operating Asset together. Mission Events don't hold game time; Decision Points pause play.
+- The player can end a Turn early from Mission Mode, on any Turn, which skips to the Turn summary. It only skips the viewing: the rest of the Turn still happens, with the same outcome. Once Decision Points exist, End Turn must stop at the next one rather than skip it.
 - Missions can overlap Turns. For example, a Crewed Mission that stays on the surface for a long time lasts about 2.5 years, so the next Turn's Planning Mode happens while Crew are still at Mars.
 - Doing everything in a single Mission ("one jump") is possible but very expensive and risky. Building up Assets over several Turns is the intended cheaper path.
 - Robotic and Crewed Missions are both available. Crewed Missions cost much more and earn more Public Support.

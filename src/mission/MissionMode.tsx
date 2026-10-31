@@ -121,6 +121,13 @@ export function MissionMode({
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          title="Skip to the Turn summary. The rest of the Turn still happens."
+          onClick={onFinished}
+        >
+          End Turn
+        </button>
       </header>
       <aside className="mission-side">
         <p data-testid="journey-progress">
