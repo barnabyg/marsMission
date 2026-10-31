@@ -102,11 +102,11 @@ Everything the player buys to reduce risk. It comes in three kinds (Reliability,
 _Avoid_: Safety budget, safety level
 
 **Risk Band**:
-A rough failure figure shown for a Mission Event in Planning Mode, such as "~5%", in place of its exact failure probability.
+A rough failure figure shown for a Mission Event or an Asset in Planning Mode, such as "~5%", in place of its exact failure probability.
 _Avoid_: Risk level, risk rating
 
 **Reliability**:
-Safety Margin that lowers a Mission Event's failure probability, such as testing or redundancy.
+Safety Margin that lowers the chance of a Mission Event or an Asset failing, such as testing or redundancy.
 _Avoid_: Quality
 
 **Contingency**:
