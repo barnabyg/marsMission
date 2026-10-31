@@ -12,7 +12,8 @@
     "effect": {
       "kind": "research",
       "sciencePerTurn": 40,
-      "publicSupportPerTurn": 5
+      "publicSupportPerTurn": 5,
+      "researchKind": "orbital-research"
     }
   },
   {
@@ -22,7 +23,8 @@
     "effect": {
       "kind": "research",
       "sciencePerTurn": 60,
-      "publicSupportPerTurn": 8
+      "publicSupportPerTurn": 8,
+      "researchKind": "surface-research"
     }
   },
   {

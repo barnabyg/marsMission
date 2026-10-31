@@ -136,7 +136,7 @@ Science earned at a steady rate for as long as an Asset or Crew is actively doin
 _Avoid_: Passive science, income
 
 **Research Grant**:
-Money paid at the start of a Turn for certain Science earned in the previous Turn. Only some research qualifies, and early-game research pays little or nothing; it is the main income late in a Program.
+Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none. It is the main income late in a Program.
 _Avoid_: Science income, science payment
 
 **Public Support**:

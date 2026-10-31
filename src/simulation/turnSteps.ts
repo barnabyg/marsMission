@@ -272,7 +272,8 @@ export function resolveTurn(
   const moneyEndMillions =
     program.moneyMillions -
     costMillions +
-    sum(funding.payouts.map(({ payoutMillions }) => payoutMillions));
+    sum(funding.payouts.map(({ payoutMillions }) => payoutMillions)) +
+    research.researchGrantMillions;
   const assetNames = flown.assets.map((asset) => asset.name);
   const failedOnDay = flown.failedEvent ? rules.dayOf(flown.failedEvent) : null;
   const siteNameOf = (asset: Asset) =>
@@ -388,6 +389,8 @@ export function resolveTurn(
         .map(({ asset }) => asset.name),
       survey: survey.summary,
       fundingPayouts: funding.payouts,
+      researchGrants: research.researchGrants,
+      researchGrantMillions: research.researchGrantMillions,
       failure: flown.failedEvent
         ? {
             missionEventName: flown.failedEvent.name,

@@ -49,6 +49,7 @@ function oneSciencePerDay(): CatalogueFiles {
               kind: "research",
               sciencePerTurn: 780,
               publicSupportPerTurn: 0,
+              researchKind: "test-unpaid",
             },
           }
         : activity,

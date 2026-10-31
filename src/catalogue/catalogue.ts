@@ -48,11 +48,21 @@ const activitiesSchema = z
           kind: z.literal("research"),
           sciencePerTurn: z.number().int().positive(),
           publicSupportPerTurn: z.number().int().nonnegative(),
+          researchKind: id,
         }),
       ]),
     }),
   )
   .min(1);
+
+const researchKindsSchema = z.array(
+  z.strictObject({
+    id,
+    name: z.string().min(1),
+    // The Research Grant for each point of Science its Ongoing Research earns. Each Asset's grant for a Turn rounds to whole millions.
+    grantMillionsPerScience: z.number().nonnegative(),
+  }),
+);
 
 const assetsSchema = z.array(
   z.strictObject({
@@ -158,6 +168,7 @@ const riskBandsSchema = z
 const schemas = {
   program: programSchema,
   activities: activitiesSchema,
+  researchKinds: researchKindsSchema,
   launchVehicles: launchVehiclesSchema,
   assets: assetsSchema,
   landingSites: landingSitesSchema,
@@ -172,6 +183,7 @@ const schemas = {
 export const catalogueFileNames = {
   program: "program.json",
   activities: "activities.json",
+  researchKinds: "research-kinds.json",
   launchVehicles: "launch-vehicles.json",
   assets: "assets.json",
   landingSites: "landing-sites.json",
@@ -185,6 +197,7 @@ export const catalogueFileNames = {
 export interface Catalogue {
   program: z.output<typeof programSchema>;
   activities: z.output<typeof activitiesSchema>;
+  researchKinds: z.output<typeof researchKindsSchema>;
   launchVehicles: z.output<typeof launchVehiclesSchema>;
   assets: z.output<typeof assetsSchema>;
   /** In the order a Survey reveals them. */
@@ -228,6 +241,7 @@ function crossCheck(catalogue: Catalogue): string[] {
   const {
     program,
     activities,
+    researchKinds,
     launchVehicles,
     assets,
     landingSites,
@@ -240,6 +254,7 @@ function crossCheck(catalogue: Catalogue): string[] {
 
   const parts = [
     [catalogueFileNames.activities, activities],
+    [catalogueFileNames.researchKinds, researchKinds],
     [catalogueFileNames.launchVehicles, launchVehicles],
     [catalogueFileNames.assets, assets],
     [catalogueFileNames.landingSites, landingSites],
@@ -306,6 +321,16 @@ function crossCheck(catalogue: Catalogue): string[] {
     problems.push(
       `${catalogueFileNames.activities}: there must be at least one Activity with a "nothing" effect`,
     );
+  }
+  for (const { id: activityId, effect } of activities) {
+    if (
+      effect.kind === "research" &&
+      !researchKinds.some(({ id }) => id === effect.researchKind)
+    ) {
+      problems.push(
+        `${catalogueFileNames.activities}: "${activityId}" refers to the kind of research "${effect.researchKind}", which isn't in ${catalogueFileNames.researchKinds}`,
+      );
+    }
   }
   for (const asset of assets) {
     for (const duplicate of findDuplicates(asset.activities)) {
@@ -427,6 +452,12 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     files.activities,
     problems,
   );
+  const researchKinds = parsePart(
+    catalogueFileNames.researchKinds,
+    schemas.researchKinds,
+    files.researchKinds,
+    problems,
+  );
   const launchVehicles = parsePart(
     catalogueFileNames.launchVehicles,
     schemas.launchVehicles,
@@ -483,6 +514,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
   if (
     !program ||
     !activities ||
+    !researchKinds ||
     !launchVehicles ||
     !assets ||
     !landingSites ||
@@ -498,6 +530,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
   const catalogue = {
     program,
     activities,
+    researchKinds,
     launchVehicles,
     assets,
     landingSites,

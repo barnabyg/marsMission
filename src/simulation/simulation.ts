@@ -59,13 +59,6 @@ export interface Simulation {
 
 const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
 
-const plannedActivity = (activity: Activity): PlannedActivity => ({
-  id: activity.id,
-  name: activity.name,
-  description: activity.description,
-  earnsPerTurn: earningsPerTurn(activity),
-});
-
 export function createSimulation(catalogue: Catalogue): Simulation {
   const rules = createRules(catalogue);
   const {
@@ -84,6 +77,13 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     reliabilityLevelFor,
     riskBandFor,
   } = rules;
+
+  const plannedActivity = (activity: Activity): PlannedActivity => ({
+    id: activity.id,
+    name: activity.name,
+    description: activity.description,
+    earnsPerTurn: earningsPerTurn(catalogue, activity),
+  });
 
   /** What's wrong with giving this Activity to an Asset that lists `activityIds`, if anything. */
   function activityProblems(

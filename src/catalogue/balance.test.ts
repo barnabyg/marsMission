@@ -292,6 +292,28 @@ describe("the balance of Phase 3", () => {
   });
 });
 
+describe("Research Grants in the real data files", () => {
+  const paidPerTurn = (assetId: string) =>
+    succeeding
+      .previewAssets({ ...mission, assetIds: [assetId] })[0]
+      ?.activities.flatMap(
+        ({ earnsPerTurn }) => earnsPerTurn?.researchGrantMillions ?? [],
+      );
+
+  it("pay nothing for an orbiter's research", () => {
+    expect(paidPerTurn("pathfinder-orbiter")).toEqual([0]);
+  });
+
+  it("pay a lander's research a small part of what the lander costs", () => {
+    const [paid] = paidPerTurn("prospector-lander") ?? [];
+    expect(paid).toBeGreaterThan(0);
+    expect(paid).toBeLessThan(
+      (files.assets.find(({ id }) => id === "prospector-lander")
+        ?.costMillions ?? 0) / 10,
+    );
+  });
+});
+
 describe("the known seeds in the Phase 3 playtest guide", () => {
   const guide = readFileSync("docs/playtest/phase-3.md", "utf8");
   const real = createSimulation(parseCatalogue(realCatalogueFiles()));
@@ -324,8 +346,8 @@ describe("the known seeds in the Phase 3 playtest guide", () => {
       failure: null,
       assetsEnded: ["Pathfinder Orbiter"],
       assetsFailed: [],
-      moneyEndMillions: 2700,
-      // Including what the lander earns by starting on research, which the guide was written before.
+      // Including what the lander earns by starting on research, and the Research Grant that pays, which the guide was written before.
+      moneyEndMillions: 2722,
       publicSupportEnd: 434,
       scienceGained: 314,
     });

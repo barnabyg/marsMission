@@ -358,6 +358,7 @@ describe("invalid data files", () => {
             kind: "research",
             sciencePerTurn: 10,
             publicSupportPerTurn: 1,
+            researchKind: "test-unpaid",
             ...rates,
           },
         },
@@ -365,6 +366,58 @@ describe("invalid data files", () => {
     });
     expect(message).toContain("activities.json");
     expect(message).toContain(field);
+  });
+
+  it.each([
+    ["a missing kind of research", undefined, "researchKind"],
+    ["an unknown kind of research", "no-such-kind", '"no-such-kind"'],
+  ])("reject a research Activity with %s", (_, researchKind, expected) => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      activities: [
+        ...files.activities,
+        {
+          id: "bad-research",
+          name: "Bad research",
+          description: "Has the wrong kind.",
+          effect: {
+            kind: "research",
+            sciencePerTurn: 10,
+            publicSupportPerTurn: 1,
+            researchKind,
+          },
+        },
+      ],
+    });
+    expect(message).toContain("activities.json");
+    expect(message).toContain(expected);
+  });
+
+  it.each([
+    ["negative", -0.5],
+    ["missing", undefined],
+    ["not a number", "1"],
+  ])("reject a Research Grant rate that is %s", (_, rate) => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      researchKinds: [
+        { id: "bad-kind", name: "Bad", grantMillionsPerScience: rate },
+      ],
+    });
+    expect(message).toContain("research-kinds.json");
+    expect(message).toContain("grantMillionsPerScience");
+  });
+
+  it("reject two kinds of research with the same id", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      researchKinds: [...files.researchKinds, ...files.researchKinds],
+    });
+    expect(message).toContain("research-kinds.json");
+    expect(message).toContain("more than once");
   });
 
   it("reject data files with no Activity that does nothing", () => {

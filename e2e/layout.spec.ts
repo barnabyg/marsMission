@@ -65,10 +65,19 @@ async function openBusyProgram(page: Page): Promise<void> {
           science: 800,
           milestoneIds: extraMilestones.map(({ id }) => id),
           fundingThresholdsPaid: [250],
+          // The last is a lander, so that the Operating at Mars panel shows a Research Grant too.
           operatingAssets: Array.from({ length: 8 }, (_, index) => ({
-            assetId: "pathfinder-orbiter",
-            name: "Pathfinder Orbiter",
-            kind: "orbiter",
+            ...(index < 7
+              ? {
+                  assetId: "pathfinder-orbiter",
+                  name: "Pathfinder Orbiter",
+                  kind: "orbiter",
+                }
+              : {
+                  assetId: "prospector-lander",
+                  name: "Prospector Lander",
+                  kind: "lander",
+                }),
             arrivedOn: `203${index}-08-01`,
           })),
           status: { kind: "active" },
@@ -111,7 +120,7 @@ for (const size of screenSizes) {
       await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
       await expect(page.getByTestId("research-earnings")).toContainText(
-        "Surface research",
+        "Surface research earns 60 Science and 8 Public Support, and pays a $30M Research Grant.",
       );
       expect(await somethingScrolls(page)).toBe(false);
       await expect(
@@ -135,6 +144,22 @@ for (const size of screenSizes) {
       await expect(assets).toHaveCount(8);
       await expect(milestones.last()).toBeInViewport({ ratio: 1 });
       await expect(assets.last()).toBeInViewport({ ratio: 1 });
+    });
+
+    test("Planning Mode fits on one screen with a busy Program and a lander on the Mission", async ({
+      page,
+    }) => {
+      await openBusyProgram(page);
+      await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
+      await expect(
+        page
+          .locator(".panel", { hasText: "Operating at Mars" })
+          .getByTestId("research-earnings"),
+      ).toContainText("Research Grant");
+      expect(await somethingScrolls(page)).toBe(false);
+      await expect(
+        page.getByRole("button", { name: "Launch Mission" }),
+      ).toBeInViewport({ ratio: 1 });
     });
 
     test("Mission Mode's controls fit on one line", async ({ page }) => {

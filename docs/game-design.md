@@ -11,7 +11,7 @@ Phases are defined in the [Build order](#build-order). Phases 1, 2 and 3 are bui
 - **Since the Phase 2 playtest:** Save, Load and Retire Program dialogs in Planning Mode; text sized for 150% display scaling; Pause in Mission Mode; the events column in place of Phase 1's text screens.
 
 - **Phase 3:** a lander and entry/descent/landing; Landing Sites, each with a landing risk and a Science value earned by the first landing there; Missions carrying several Assets within a Launch Vehicle's mass limit, with a second, larger Launch Vehicle brought forward from Phase 6; partial Mission failure, where Assets already delivered are safe; automatic Surveys from orbit; a Service Life chosen for each Asset; Assets failing in service, with Reliability bought for each Asset; a second Funding Threshold; the Mars orbit view, with automatic view changes and smooth camera moves. Saves upgrade step by step from any earlier format.
-- **Since Phase 3:** End Turn in Mission Mode; Activities, with Survey, research and Nothing as the first ones; Ongoing Research.
+- **Since Phase 3:** End Turn in Mission Mode; Activities, with Survey, research and Nothing as the first ones; Ongoing Research; Research Grants.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
@@ -117,7 +117,7 @@ The work is split into phases, each ending in a game the player can play and com
   - Ongoing Research: a steady rate earned only while an Asset or Crew is actively doing the work, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time.
 - An Asset earns its share of a whole Turn's Ongoing Research for the days it does the Activity, from the day it arrives until it fails or its Service Life ends. Its Science and Public Support are each rounded up for that Asset and Turn, so a short stint still earns something. An orbiter chooses between this and a Survey.
 - Science already earned is never taken away.
-- Some Science pays a Research Grant at the start of the next Turn. Only certain research qualifies, at a rate set for each kind, and early-game research pays little or nothing. Late in a Program, Research Grants are the main income and Public Support matters less. Like a rover mission, public excitement peaks early and fades while the Science carries on.
+- Some Science pays a Research Grant at the start of the next Turn. Only Ongoing Research qualifies, at a rate set for each kind of research, and early-game research pays little or nothing. Science from Milestones and first landings pays none. No game time passes between the end of a Turn and the next Planning Mode, so the money is added when the Turn resolves, including for a Turn that ends in cancellation. Each Asset's grant for a Turn rounds to whole millions, so one under $0.5M pays nothing. Late in a Program, Research Grants are the main income and Public Support matters less. Like a rover mission, public excitement peaks early and fades while the Science carries on.
 
 ## Public Support and money
 

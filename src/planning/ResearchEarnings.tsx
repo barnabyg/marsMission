@@ -1,7 +1,7 @@
-import type { PlannedActivity } from "../simulation/simulation";
+import { formatMoney, type PlannedActivity } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 
-/** What each research Activity on offer earns, once each however many Assets can do it. */
+/** What each research Activity on offer earns and any Research Grant it pays, once each however many Assets can do it. */
 export function ResearchEarnings({
   activities,
 }: {
@@ -16,6 +16,10 @@ export function ResearchEarnings({
               `${name} earns ${earnsPerTurn.science} Science${
                 earnsPerTurn.publicSupport > 0
                   ? ` and ${earnsPerTurn.publicSupport} Public Support`
+                  : ""
+              }${
+                earnsPerTurn.researchGrantMillions > 0
+                  ? `, and pays a ${formatMoney(earnsPerTurn.researchGrantMillions)} Research Grant`
                   : ""
               }.`,
             ] as const,

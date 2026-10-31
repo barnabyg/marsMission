@@ -44,8 +44,25 @@ export function testCatalogueFiles(): CatalogueFiles {
           kind: "research",
           sciencePerTurn: 78,
           publicSupportPerTurn: 39,
+          researchKind: "test-unpaid",
         },
       },
+      {
+        id: "test-paid-research",
+        name: "Paid research",
+        description: "Earns Science that pays a Research Grant.",
+        // No Asset lists it. The tests of Research Grants give it to the Assets.
+        effect: {
+          kind: "research",
+          sciencePerTurn: 78,
+          publicSupportPerTurn: 0,
+          researchKind: "test-paid",
+        },
+      },
+    ],
+    researchKinds: [
+      { id: "test-unpaid", name: "Unpaid", grantMillionsPerScience: 0 },
+      { id: "test-paid", name: "Paid", grantMillionsPerScience: 0.5 },
     ],
     launchVehicles: [
       {

@@ -163,7 +163,11 @@ describe("a successful landing", () => {
             id: "test-research",
             name: "Test research",
             description: "Earns Science and Public Support.",
-            earnsPerTurn: { science: 78, publicSupport: 39 },
+            earnsPerTurn: {
+              science: 78,
+              publicSupport: 39,
+              researchGrantMillions: 0,
+            },
           },
         ],
         daysLeft: 49_425,

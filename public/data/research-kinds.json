@@ -1,0 +1,12 @@
+[
+  {
+    "id": "orbital-research",
+    "name": "Orbital research",
+    "grantMillionsPerScience": 0
+  },
+  {
+    "id": "surface-research",
+    "name": "Surface research",
+    "grantMillionsPerScience": 0.5
+  }
+]

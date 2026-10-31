@@ -52,7 +52,12 @@ export interface PlannedActivity {
   name: string;
   description: string;
   /** What it earns over a whole Turn in service if it's research, or null if it isn't. */
-  earnsPerTurn: { science: number; publicSupport: number } | null;
+  earnsPerTurn: {
+    science: number;
+    publicSupport: number;
+    /** The Research Grant it pays for that Science. Zero if it pays none. */
+    researchGrantMillions: number;
+  } | null;
 }
 
 type ProgramStatus =
@@ -236,6 +241,9 @@ export interface TurnSummary {
     siteNameRevealed: string | null;
   } | null;
   fundingPayouts: { publicSupport: number; payoutMillions: number }[];
+  /** What each Asset's Ongoing Research paid in Research Grants, leaving out any that came to nothing. moneyEndMillions includes it. */
+  researchGrants: { name: string; millions: number }[];
+  researchGrantMillions: number;
   /** The Mission Event that ended this Turn's Mission and what that cost, if one failed. Assets delivered before it are safe. */
   failure: {
     missionEventName: string;

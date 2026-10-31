@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
-import { termsWithoutTooltips, watchForProblems } from "./helpers";
-import { orbiterLastsSeed, successSeed } from "./seeds";
+import {
+  chooseAssets,
+  termsWithoutTooltips,
+  watchForProblems,
+} from "./helpers";
+import { landingSeed, orbiterLastsSeed, successSeed } from "./seeds";
 
 test("sets a research Activity, sees what it earns, and sees the Science in the Turn summary", async ({
   page,
@@ -28,6 +32,8 @@ test("sets a research Activity, sees what it earns, and sees the Science in the 
     "Pathfinder Orbiter, Orbital research: 30 Science and 4 Public Support over 570 days",
   );
   await expect(page.getByTestId("summary-survey")).toHaveCount(0);
+  // Orbital research has a zero rate, so it pays no Research Grant.
+  await expect(page.getByTestId("summary-research-grants")).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Continue" }).click();
 
@@ -76,8 +82,47 @@ test("a lander starts on research, shown beside an orbiter's choices when both a
     "surface-research",
   );
   await expect(page.getByTestId("research-earnings")).toHaveText(
-    "Ongoing Research for a whole Turn: Orbital research earns 40 Science and 5 Public Support. Surface research earns 60 Science and 8 Public Support.",
+    "Ongoing Research for a whole Turn: Orbital research earns 40 Science and 5 Public Support. Surface research earns 60 Science and 8 Public Support, and pays a $30M Research Grant.",
   );
+  expect(problems).toEqual([]);
+});
+
+test("sees which research pays a Research Grant, then sees it paid and the money rise on the next Turn", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${landingSeed}`);
+  await chooseAssets(page, ["Prospector Lander"]);
+  await expect(page.getByTestId("research-earnings")).toHaveText(
+    "Ongoing Research for a whole Turn: Surface research earns 60 Science and 8 Public Support, and pays a $30M Research Grant.",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await expect(page.getByTestId("money")).toHaveText("$2.3B");
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+
+  // The days left after landing earn 44 Science, which pays half of that in millions.
+  await expect(page.getByTestId("summary-ongoing-research")).toContainText(
+    "Prospector Lander, Surface research: 44 Science",
+  );
+  const grants = page.getByTestId("summary-research-grants");
+  await expect(grants.getByRole("heading")).toHaveText(
+    "Research Grants for this Turn: $22M",
+  );
+  await expect(grants.getByRole("listitem")).toHaveText(
+    "Prospector Lander: $22M",
+  );
+  // Listed apart from the Funding Threshold that the same Turn reaches.
+  await expect(page.getByTestId("summary-funding-payouts")).toContainText(
+    "250 Public Support: $1B",
+  );
+  await expect(grants).not.toContainText("$1B");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  // $2.3B less the $1.1B Mission, plus the $1B payout and the $22M Research Grant.
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
+  await expect(page.getByTestId("money")).toHaveText("$2.222B");
   expect(problems).toEqual([]);
 });
 

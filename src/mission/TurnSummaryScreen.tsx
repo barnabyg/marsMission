@@ -144,6 +144,23 @@ export function TurnSummaryScreen({
           </ul>
         </section>
       )}
+      {summary.researchGrants.length > 0 && (
+        <section data-testid="summary-research-grants">
+          <h2>
+            <GameText>
+              {`Research Grants for this Turn: ${formatMoney(summary.researchGrantMillions)}`}
+            </GameText>
+          </h2>
+          <ul>
+            {summary.researchGrants.map(({ name, millions }, index) => (
+              // Two copies of an Asset can each be paid the same amount, so the position tells them apart.
+              <li key={`${name}-${index}`}>
+                <GameText>{`${name}: ${formatMoney(millions)}`}</GameText>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <table>
         <tbody>
           <tr>
