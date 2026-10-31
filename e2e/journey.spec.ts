@@ -3,6 +3,7 @@ import { tooltips } from "../src/ui/tooltips";
 import { productionBaseURL } from "../playwright.config";
 import {
   cancelledAfterOneTurn,
+  chooseAssets,
   eventEntries,
   overrideProgramData,
   pauseAtEvent,
@@ -301,6 +302,7 @@ test("lists the planned Mission's Mission Events with rough risk bands, which ch
           name: "Flyby Probe",
           kind: "orbiter",
           costMillions: 100,
+          massTonnes: 1,
           missionEvents: [],
         },
       ],
@@ -318,7 +320,7 @@ test("lists the planned Mission's Mission Events with rough risk bands, which ch
   }
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByLabel("Asset").selectOption("test-probe");
+  await chooseAssets(page, ["Flyby Probe"]);
   await expect(events).toHaveCount(2);
   await expect(page.getByTestId("mission-events")).not.toContainText(
     "Mars orbit insertion",

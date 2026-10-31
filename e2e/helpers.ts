@@ -89,6 +89,18 @@ export async function pauseAtEvent(page: Page, title: string): Promise<void> {
   await page.getByRole("button", { name: "Pause" }).click();
 }
 
+/** Ticks exactly these Assets for the planned Mission. */
+export async function chooseAssets(page: Page, names: string[]): Promise<void> {
+  const boxes = page.locator(".asset-choices label");
+  await expect(boxes.first()).toBeVisible();
+  for (const box of await boxes.all()) {
+    const text = (await box.textContent()) ?? "";
+    await box
+      .getByRole("checkbox")
+      .setChecked(names.some((name) => text.includes(name)));
+  }
+}
+
 /** Plays out the rest of a Turn in Mission Mode at top speed, and continues past its Turn summary. */
 export async function playToNextTurn(page: Page): Promise<void> {
   const fastest = page.getByRole("button", { name: "10x" });

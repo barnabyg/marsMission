@@ -28,6 +28,7 @@ const launchVehiclesSchema = z.array(
     id,
     name: z.string().min(1),
     costMillions: money,
+    capacityTonnes: z.number().positive(),
     missionEvents: z.array(id),
   }),
 );
@@ -38,6 +39,7 @@ const assetsSchema = z.array(
     name: z.string().min(1),
     kind: id,
     costMillions: money,
+    massTonnes: z.number().positive(),
     missionEvents: z.array(id),
     // Whether this Asset is a lander, so that a Mission carrying it must name a Landing Site.
     landsAtSite: z.boolean().optional(),

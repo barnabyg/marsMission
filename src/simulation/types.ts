@@ -14,6 +14,9 @@ export interface TurnPlan {
 
 export interface PlanCheck {
   costMillions: number;
+  /** What the Mission's Assets weigh, against what its Launch Vehicle can carry. */
+  massTonnes: number;
+  capacityTonnes: number;
   problems: string[];
 }
 
@@ -63,12 +66,18 @@ export interface ProgramView {
     pointsAway: number;
   } | null;
   operatingAssets: (OperatingAsset & { landingSiteName: string | null })[];
-  launchVehicles: { id: string; name: string; costMillions: number }[];
+  launchVehicles: {
+    id: string;
+    name: string;
+    costMillions: number;
+    capacityTonnes: number;
+  }[];
   assets: {
     id: string;
     name: string;
     kind: string;
     costMillions: number;
+    massTonnes: number;
     landsAtSite: boolean;
   }[];
   /** The Landing Sites the player can choose. */
@@ -139,7 +148,7 @@ export interface TurnSummary {
   /** The Science from landing at a Landing Site for the first time, if a lander did. */
   firstLanding: { siteName: string; science: number } | null;
   fundingPayouts: { publicSupport: number; payoutMillions: number }[];
-  /** The Mission Event that ended this Turn's Mission and what that cost, if one failed. */
+  /** The Mission Event that ended this Turn's Mission and what that cost, if one failed. Assets delivered before it are safe. */
   failure: {
     missionEventName: string;
     assetsLost: string[];

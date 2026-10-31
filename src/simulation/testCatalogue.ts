@@ -21,6 +21,14 @@ export function testCatalogueFiles(): CatalogueFiles {
         id: "test-vehicle",
         name: "Test Vehicle",
         costMillions: 100,
+        capacityTonnes: 5,
+        missionEvents: ["test-launch", "test-burn"],
+      },
+      {
+        id: "test-heavy",
+        name: "Test Heavy",
+        costMillions: 300,
+        capacityTonnes: 10,
         missionEvents: ["test-launch", "test-burn"],
       },
     ],
@@ -30,6 +38,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         name: "Test Orbiter",
         kind: "orbiter",
         costMillions: 400,
+        massTonnes: 2,
         missionEvents: ["test-arrival"],
       },
       {
@@ -37,6 +46,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         name: "Gold Orbiter",
         kind: "orbiter",
         costMillions: 5000,
+        massTonnes: 1,
         missionEvents: ["test-arrival"],
       },
       {
@@ -44,6 +54,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         name: "Test Relay",
         kind: "relay",
         costMillions: 100,
+        massTonnes: 2,
         missionEvents: ["test-arrival"],
       },
       {
@@ -51,6 +62,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         name: "Test Lander",
         kind: "lander",
         costMillions: 300,
+        massTonnes: 3,
         missionEvents: ["test-landing"],
         landsAtSite: true,
       },

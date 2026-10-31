@@ -4,7 +4,8 @@
     "name": "Pathfinder Orbiter",
     "kind": "orbiter",
     "costMillions": 700,
-    "missionEvents": ["mars-orbit-insertion"]
+    "missionEvents": ["mars-orbit-insertion"],
+    "massTonnes": 2.5
   },
   {
     "id": "prospector-lander",
@@ -12,6 +13,7 @@
     "kind": "lander",
     "costMillions": 800,
     "missionEvents": ["entry-descent-landing"],
-    "landsAtSite": true
+    "landsAtSite": true,
+    "massTonnes": 3
   }
 ]

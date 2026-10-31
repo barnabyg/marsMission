@@ -20,6 +20,7 @@ describe("starting a Program", () => {
     const view = simulation.readProgram(program);
     expect(view.launchVehicles.map((vehicle) => vehicle.id)).toEqual([
       "test-vehicle",
+      "test-heavy",
     ]);
     expect(view.assets.map((asset) => asset.id)).toEqual([
       "test-orbiter",
@@ -35,6 +36,8 @@ describe("validating a plan", () => {
     const { simulation, program } = setup();
     expect(simulation.validatePlan(program, sendOrbiter)).toEqual({
       costMillions: 500,
+      massTonnes: 2,
+      capacityTonnes: 5,
       problems: [],
     });
   });
@@ -201,7 +204,7 @@ describe("a Turn without a Mission", () => {
 
   it("is a valid plan even with no money", () => {
     const { simulation, program } = setup();
-    expect(simulation.validatePlan(program, skipTurn)).toEqual({
+    expect(simulation.validatePlan(program, skipTurn)).toMatchObject({
       costMillions: 0,
       problems: [],
     });

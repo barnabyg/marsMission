@@ -160,7 +160,7 @@ describe("Reliability", () => {
         program,
         planWith({ "test-launch": "tested", "test-burn": "redundant" }),
       ),
-    ).toEqual({ costMillions: 750, problems: [] });
+    ).toMatchObject({ costMillions: 750, problems: [] });
   });
 
   it("spends the money", () => {

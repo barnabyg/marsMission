@@ -37,7 +37,9 @@ export function PlanningMode({
   const [launchVehicleId, setLaunchVehicleId] = useState(
     view.launchVehicles[0]?.id ?? "",
   );
-  const [assetId, setAssetId] = useState(view.assets[0]?.id ?? "");
+  const [assetIds, setAssetIds] = useState(
+    view.assets.slice(0, 1).map((asset) => asset.id),
+  );
   const [reliability, setReliability] = useState<Record<string, string>>({});
   const [chosenSiteId, setChosenSiteId] = useState(
     view.landingSites[0]?.id ?? "",
@@ -55,14 +57,14 @@ export function PlanningMode({
   }
 
   const carriesLander = view.assets.some(
-    (asset) => asset.id === assetId && asset.landsAtSite,
+    (asset) => assetIds.includes(asset.id) && asset.landsAtSite,
   );
   const landingSite = carriesLander
     ? view.landingSites.find((site) => site.id === chosenSiteId)
     : undefined;
   const mission = {
     launchVehicleId,
-    assetIds: [assetId],
+    assetIds,
     ...(landingSite && { landingSiteId: landingSite.id }),
   };
   const plannedEvents = simulation.previewMission(program, {
@@ -78,7 +80,8 @@ export function PlanningMode({
       ),
     },
   };
-  const { costMillions, problems } = simulation.validatePlan(program, plan);
+  const { costMillions, massTonnes, capacityTonnes, problems } =
+    simulation.validatePlan(program, plan);
 
   return (
     <main className="planning">
@@ -192,28 +195,34 @@ export function PlanningMode({
             >
               {view.launchVehicles.map((vehicle) => (
                 <option key={vehicle.id} value={vehicle.id}>
-                  {vehicle.name} ({formatMoney(vehicle.costMillions)})
+                  {vehicle.name} ({formatMoney(vehicle.costMillions)},{" "}
+                  {vehicle.capacityTonnes} t)
                 </option>
               ))}
             </select>
           </label>
-          <label>
-            <span>
-              <GameText>Asset</GameText>
-            </span>
-            <select
-              value={assetId}
-              onChange={(event) => {
-                setAssetId(event.target.value);
-              }}
-            >
-              {view.assets.map((asset) => (
-                <option key={asset.id} value={asset.id}>
-                  {asset.name} ({formatMoney(asset.costMillions)})
-                </option>
-              ))}
-            </select>
-          </label>
+          <fieldset className="asset-choices">
+            <legend>
+              <GameText>Assets</GameText>
+            </legend>
+            {view.assets.map((asset) => (
+              <label key={asset.id}>
+                <input
+                  type="checkbox"
+                  checked={assetIds.includes(asset.id)}
+                  onChange={(event) => {
+                    setAssetIds(
+                      event.target.checked
+                        ? [...assetIds, asset.id]
+                        : assetIds.filter((id) => id !== asset.id),
+                    );
+                  }}
+                />
+                {asset.name} ({formatMoney(asset.costMillions)},{" "}
+                {asset.massTonnes} t)
+              </label>
+            ))}
+          </fieldset>
           {landingSite && (
             <>
               <label>
@@ -278,6 +287,10 @@ export function PlanningMode({
             Total cost:{" "}
             <strong data-testid="mission-cost">
               {formatMoney(costMillions)}
+            </strong>
+            {" · "}Mass:{" "}
+            <strong data-testid="mission-mass">
+              {massTonnes} of {capacityTonnes} tonnes
             </strong>
           </p>
           {problems.map((problem) => (

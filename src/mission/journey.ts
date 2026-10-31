@@ -1,4 +1,4 @@
-import type { Timeline } from "../simulation/simulation";
+import type { AssetAtMars, Timeline } from "../simulation/simulation";
 import { journeyProgress } from "./solarSystem/orbits";
 
 function describeAsset(
@@ -42,13 +42,22 @@ export function describeJourney(
   return settled.join(". ");
 }
 
+/** The Assets operating at Mars on a given day. */
+export function assetsAtMarsOn(
+  timeline: Pick<Timeline, "assetsAtMars">,
+  day: number,
+): AssetAtMars[] {
+  return timeline.assetsAtMars.filter((asset) => day >= asset.fromDay);
+}
+
 /** What the "Operating at Mars" list shows on a given day. */
-export function assetsOperatingOn(timeline: Timeline, day: number): string[] {
-  return timeline.assetsAtMars
-    .filter((asset) => day >= asset.fromDay)
-    .map((asset) =>
-      asset.landingSiteName
-        ? `${asset.name} at ${asset.landingSiteName}`
-        : asset.name,
-    );
+export function assetsOperatingOn(
+  timeline: Pick<Timeline, "assetsAtMars">,
+  day: number,
+): string[] {
+  return assetsAtMarsOn(timeline, day).map((asset) =>
+    asset.landingSiteName
+      ? `${asset.name} at ${asset.landingSiteName}`
+      : asset.name,
+  );
 }

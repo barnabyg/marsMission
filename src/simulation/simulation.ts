@@ -15,6 +15,7 @@ import type {
 export { addDays, formatMoney } from "./rules";
 export { corruptSave, SaveError } from "./saveFormat";
 export type {
+  AssetAtMars,
   Program,
   ProgramView,
   Timeline,
@@ -41,6 +42,8 @@ export interface Simulation {
   retireProgram(program: Program): Program;
 }
 
+const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
+
 export function createSimulation(catalogue: Catalogue): Simulation {
   const rules = createRules(catalogue);
   const {
@@ -54,9 +57,9 @@ export function createSimulation(catalogue: Catalogue): Simulation {
 
   function checkPlan(program: Program, plan: TurnPlan): PlanCheck {
     if (program.status.kind !== "active") {
-      return { costMillions: 0, problems: ["This Program has ended."] };
+      return { ...noMission, problems: ["This Program has ended."] };
     }
-    if (!plan.mission) return { costMillions: 0, problems: [] };
+    if (!plan.mission) return { ...noMission, problems: [] };
 
     const {
       launchVehicleId,
@@ -66,6 +69,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     } = plan.mission;
     const problems: string[] = [];
     let costMillions = 0;
+    let massTonnes = 0;
 
     const vehicle = catalogue.launchVehicles.find(
       (candidate) => candidate.id === launchVehicleId,
@@ -77,12 +81,25 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     if (assetIds.length === 0) {
       problems.push("A Mission must carry at least one Asset.");
     }
+    if (new Set(assetIds).size < assetIds.length) {
+      problems.push("A Mission can't carry the same Asset twice.");
+    }
     for (const assetId of assetIds) {
       const asset = catalogue.assets.find(
         (candidate) => candidate.id === assetId,
       );
-      if (asset) costMillions += asset.costMillions;
-      else problems.push(`There is no Asset called "${assetId}".`);
+      if (asset) {
+        costMillions += asset.costMillions;
+        massTonnes += asset.massTonnes;
+      } else problems.push(`There is no Asset called "${assetId}".`);
+    }
+    // Masses like 0.1 and 0.2 don't add up exactly, and a Mission at exactly its capacity must fit.
+    massTonnes = Math.round(massTonnes * 1000) / 1000;
+    const capacityTonnes = vehicle?.capacityTonnes ?? 0;
+    if (vehicle && massTonnes > capacityTonnes) {
+      problems.push(
+        `This Mission weighs ${massTonnes} tonnes, but its Launch Vehicle can only carry ${capacityTonnes} tonnes.`,
+      );
     }
 
     const carriesLander = catalogue.assets.some(
@@ -124,7 +141,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         `This Mission costs ${formatMoney(costMillions)}, but the Program only has ${formatMoney(program.moneyMillions)}.`,
       );
     }
-    return { costMillions, problems };
+    return { costMillions, massTonnes, capacityTonnes, problems };
   }
 
   return {
@@ -189,14 +206,20 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           }),
         ),
         launchVehicles: catalogue.launchVehicles.map(
-          ({ id, name, costMillions }) => ({ id, name, costMillions }),
+          ({ id, name, costMillions, capacityTonnes }) => ({
+            id,
+            name,
+            costMillions,
+            capacityTonnes,
+          }),
         ),
         assets: catalogue.assets.map(
-          ({ id, name, kind, costMillions, landsAtSite }) => ({
+          ({ id, name, kind, costMillions, massTonnes, landsAtSite }) => ({
             id,
             name,
             kind,
             costMillions,
+            massTonnes,
             landsAtSite: landsAtSite === true,
           }),
         ),

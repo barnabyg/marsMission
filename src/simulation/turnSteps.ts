@@ -78,7 +78,19 @@ function flyMission(
       ),
   );
   const failedEvent = plannedEvents[failedIndex];
-  const assetNames = assets.map((asset) => asset.name);
+  // An Asset is delivered when its last Mission Event succeeds, so anything delivered before a failure is safe.
+  const deliveredAssets = failedEvent
+    ? assets.filter(
+        (asset) => rules.deliveryDay(asset) < rules.dayOf(failedEvent),
+      )
+    : assets;
+  const lostNames = assets
+    .filter((asset) => !deliveredAssets.includes(asset))
+    .map((asset) => asset.name);
+  const safe =
+    deliveredAssets.length > 0
+      ? ` Still safe: ${deliveredAssets.map((asset) => asset.name).join(", ")}.`
+      : "";
   const publicSupportLost = failedEvent
     ? Math.min(failedEvent.publicSupportLoss, program.publicSupport)
     : 0;
@@ -92,7 +104,7 @@ function flyMission(
             day: rules.dayOf(event),
             eventId: event.id,
             title: `${event.name} failed`,
-            description: `${withSite(event.failureDescription)} Lost with the Mission: ${assetNames.join(", ")}. It costs ${publicSupportLost} Public Support.`,
+            description: `${withSite(event.failureDescription)} Lost with the Mission: ${lostNames.join(", ")}.${safe} It costs ${publicSupportLost} Public Support.`,
             outcome: "failure",
           }
         : {
@@ -110,7 +122,7 @@ function flyMission(
     assets,
     entries,
     failedEvent,
-    deliveredAssets: failedEvent ? [] : assets,
+    deliveredAssets,
     publicSupportLost,
     landingSite,
   };
@@ -262,7 +274,8 @@ export function resolveTurn(
       crashed:
         !delivered &&
         asset.landsAtSite === true &&
-        flown.failedEvent?.failureProbability === "landingSite",
+        flown.failedEvent !== undefined &&
+        asset.missionEvents.includes(flown.failedEvent.id),
     };
   });
   const assetsAtMars: AssetAtMars[] = [
@@ -363,7 +376,9 @@ export function resolveTurn(
       failure: flown.failedEvent
         ? {
             missionEventName: flown.failedEvent.name,
-            assetsLost: assetNames,
+            assetsLost: flown.assets
+              .filter((asset) => !flown.deliveredAssets.includes(asset))
+              .map((asset) => asset.name),
             publicSupportLost: flown.publicSupportLost,
           }
         : null,

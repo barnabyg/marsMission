@@ -43,6 +43,7 @@ describe("a Mission Event failing", () => {
             id: "test-vehicle",
             name: "Test Vehicle",
             costMillions: 100,
+            capacityTonnes: 10,
             missionEvents: ["test-burn", "test-launch"],
           },
         ],

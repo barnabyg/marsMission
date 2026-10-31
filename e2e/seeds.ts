@@ -45,6 +45,21 @@ export const landingSeed = seedWhere(null, firstLanding);
 /** A seed whose first Mission crashes at the first known Landing Site. */
 export const crashSeed = seedWhere("Entry/descent/landing", firstLanding);
 
+/** What the tests launch to carry an orbiter and a lander together. */
+const orbiterAndLander: TurnPlan = {
+  mission: {
+    launchVehicleId: "meridian-heavy",
+    assetIds: ["pathfinder-orbiter", "prospector-lander"],
+    landingSiteId: "jezero-crater",
+  },
+};
+
+/** A seed where an orbiter and lander launched together get as far as the lander crashing. */
+export const orbiterSafeSeed = seedWhere(
+  "Entry/descent/landing",
+  orbiterAndLander,
+);
+
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);
 

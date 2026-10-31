@@ -23,6 +23,12 @@ describe("the real data files", () => {
     expect(() => parseCatalogue(realCatalogueFiles())).not.toThrow();
   });
 
+  it("have a second Launch Vehicle with more capacity at a higher cost", () => {
+    const [first, second] = realCatalogueFiles().launchVehicles;
+    expect(second?.capacityTonnes).toBeGreaterThan(first?.capacityTonnes ?? 0);
+    expect(second?.costMillions).toBeGreaterThan(first?.costMillions ?? 0);
+  });
+
   it("cancel a Program that only skips Turns", () => {
     const simulation = createSimulation(parseCatalogue(realCatalogueFiles()));
     let program = simulation.startProgram(1);
@@ -206,6 +212,29 @@ describe("invalid data files", () => {
   ])("reject Reliability levels when %s", (_, reliabilityLevels) => {
     const message = errorFrom({ ...testCatalogueFiles(), reliabilityLevels });
     expect(message).toContain("reliability-levels.json");
+  });
+
+  it("reject an Asset with no mass", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      assets: files.assets.map((asset) => ({ ...asset, massTonnes: 0 })),
+    });
+    expect(message).toContain("assets.json");
+    expect(message).toContain("massTonnes");
+  });
+
+  it("reject a Launch Vehicle with no capacity", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      launchVehicles: files.launchVehicles.map((vehicle) => ({
+        ...vehicle,
+        capacityTonnes: -1,
+      })),
+    });
+    expect(message).toContain("launch-vehicles.json");
+    expect(message).toContain("capacityTonnes");
   });
 
   it("reject a Landing Site with an invalid risk", () => {
