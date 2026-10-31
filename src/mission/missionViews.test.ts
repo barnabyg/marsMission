@@ -6,6 +6,7 @@ import {
   startingChoice,
   viewAskedForBy,
   viewName,
+  viewWithSites,
   type ViewChoice,
 } from "./missionViews";
 
@@ -36,6 +37,7 @@ describe("Mission Mode's views", () => {
     expect(missionViews.map(({ id }) => id)).toEqual([
       "solarSystem",
       "marsOrbit",
+      "surface",
     ]);
     expect(startingChoice.view).toBe("solarSystem");
   });
@@ -43,6 +45,7 @@ describe("Mission Mode's views", () => {
   it("names each view for the player", () => {
     expect(viewName("solarSystem")).toBe("Solar system");
     expect(viewName("marsOrbit")).toBe("Mars orbit");
+    expect(viewName("surface")).toBe("Surface");
   });
 });
 
@@ -67,6 +70,21 @@ describe("which view a timeline entry asks for", () => {
 
   it("asks for nothing at anything that isn't a Mission Event", () => {
     expect(viewAskedForBy(milestone)).toBeNull();
+  });
+});
+
+describe("the surface view with no Landing Site left to show", () => {
+  it("hands over to Mars orbit", () => {
+    expect(viewWithSites("surface", [])).toBe("marsOrbit");
+  });
+
+  it("stays on the surface while there is a site", () => {
+    expect(viewWithSites("surface", ["Alpha Plain"])).toBe("surface");
+  });
+
+  it("leaves the other views alone", () => {
+    expect(viewWithSites("solarSystem", [])).toBe("solarSystem");
+    expect(viewWithSites("marsOrbit", [])).toBe("marsOrbit");
   });
 });
 

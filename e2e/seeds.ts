@@ -50,6 +50,15 @@ export const landingSeed = seedWhere(null, firstLanding);
 /** A seed whose first Mission crashes at the first known Landing Site. */
 export const crashSeed = seedWhere("Entry/descent/landing", firstLanding);
 
+/** A seed whose first Mission loses its lander before it has left Earth. */
+export const landerLostAtLaunchSeed = seedWhere("Launch", firstLanding);
+
+/** A seed whose first Mission loses its lander on the way to Mars. */
+export const landerLostOnTheWaySeed = seedWhere(
+  "Mars transfer burn",
+  firstLanding,
+);
+
 /** What the tests launch to carry an orbiter and a lander together. */
 const orbiterAndLander: TurnPlan = {
   mission: {

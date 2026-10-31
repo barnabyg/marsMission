@@ -355,6 +355,27 @@ dialog p {
   color: #ff8a75;
 }
 
+/* The sky behind these is bright, so they need a backing to be read against it. */
+.on-surface span {
+  padding: 0.1rem 0.5rem;
+  border-radius: 0.3rem;
+  background: rgb(10 12 20 / 75%);
+}
+
+.lander-label span {
+  color: #ffd46b;
+}
+
+.rover-label span {
+  color: #6fe6d4;
+}
+
+.surface-site-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 .mission-side {
   z-index: 1;
   grid-row: 2;
@@ -397,8 +418,11 @@ dialog p {
 
 .mission-bar p {
   margin: 0;
+  /* Room for the longest date, so that the controls don't move as the days pass. */
+  min-width: 10em;
   font-size: 1.3rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .mission-bar progress {

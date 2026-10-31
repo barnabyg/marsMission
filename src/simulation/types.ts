@@ -274,6 +274,10 @@ export interface AssetAtMars {
   /** Where it is on the surface, or null if it's in orbit. */
   landingSiteName: string | null;
   activityName: string;
+  /** How it gets about on the surface while doing its Activity. */
+  surfaceMotion: "traverse" | "nearby" | "still";
+  /** The day of the Turn it arrived, which is negative if that was in an earlier Turn. */
+  arrivedOnDay: number;
   /** The day of the Turn it starts operating, which is 0 if it already was. */
   fromDay: number;
   /** The day of the Turn it stops operating, or null if it lasts beyond the Turn. */

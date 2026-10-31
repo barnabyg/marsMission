@@ -11,6 +11,11 @@ import {
 import type { MissionViewId } from "./missionViews";
 import type { CameraPose, SceneLabel } from "./sceneParts";
 import {
+  surfaceLabels,
+  SurfaceScene,
+  surfaceShot,
+} from "./surface/SurfaceView";
+import {
   solarSystemLabels,
   SolarSystemScene,
   solarSystemShot,
@@ -20,6 +25,8 @@ interface MissionSceneProps {
   timeline: Timeline;
   day: number;
   view: MissionViewId;
+  /** The Landing Site the surface view shows, or null if there is none to show. */
+  site: string | null;
   /** How many Assets are operating at Mars right now. */
   operatingAssetCount: number;
 }
@@ -29,11 +36,16 @@ const viewSettings: Record<
   MissionViewId,
   {
     shot: CameraPose;
-    labels: (timeline: Timeline, day: number) => SceneLabel[];
+    labels: (
+      timeline: Timeline,
+      day: number,
+      site: string | null,
+    ) => SceneLabel[];
   }
 > = {
   solarSystem: { shot: solarSystemShot, labels: solarSystemLabels },
   marsOrbit: { shot: marsOrbitShot, labels: marsOrbitLabels },
+  surface: { shot: surfaceShot, labels: surfaceLabels },
 };
 
 function Stars() {
@@ -126,11 +138,12 @@ export default function MissionScene({
   timeline,
   day,
   view,
+  site,
   operatingAssetCount,
 }: MissionSceneProps) {
   const labelLayer = useRef<HTMLDivElement>(null);
   const { shot, labels: labelsOnDay } = viewSettings[view];
-  const labels = labelsOnDay(timeline, day);
+  const labels = labelsOnDay(timeline, day, site);
 
   return (
     <div className="solar-system" data-testid="solar-system-view">
@@ -143,6 +156,9 @@ export default function MissionScene({
           operatingAssetCount={operatingAssetCount}
         />
         <MarsOrbitScene timeline={timeline} day={day} />
+        {site !== null && (
+          <SurfaceScene timeline={timeline} day={day} siteName={site} />
+        )}
         <CameraRig shot={shot} />
         <LabelTracker labels={labels} layer={labelLayer} />
       </Canvas>

@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
   eventEntries,
+  holdTurnWhenShown,
   pauseAtEvent,
   termsWithoutTooltips,
   watchForProblems,
@@ -14,7 +15,10 @@ import {
   successSeed,
 } from "./seeds";
 
-function viewButton(page: Page, name: "Solar system" | "Mars orbit") {
+function viewButton(
+  page: Page,
+  name: "Solar system" | "Mars orbit" | "Surface",
+) {
   return page
     .getByRole("group", { name: "View" })
     .getByRole("button", { name });
@@ -456,6 +460,41 @@ test("shows a crash in red, in the Mars orbit view it moved to", async ({
   expect(problems).toEqual([]);
 });
 
+test("keeps the controls still as the date changes, even in a window too small for them all", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto(`/?seed=${successSeed}`);
+  await holdTurnWhenShown(page);
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
+  const places = await page.evaluate(
+    () =>
+      new Promise<number[]>((resolve) => {
+        const seen = new Set<number>();
+        requestAnimationFrame(function sample() {
+          const buttons = [...document.querySelectorAll("button")];
+          const fastest = buttons.find(
+            ({ textContent }) => textContent === "10x",
+          );
+          if (!fastest) {
+            resolve([...seen]);
+            return;
+          }
+          seen.add(fastest.getBoundingClientRect().x);
+          requestAnimationFrame(sample);
+        });
+        // Every month of the Turn goes past, up to its summary, where the buttons have gone.
+        [...document.querySelectorAll("button")]
+          .find(({ textContent }) => textContent === "5x")
+          ?.click();
+      }),
+  );
+  expect(places).toHaveLength(1);
+});
+
 for (const size of [
   { width: 2560, height: 1440 },
   { width: 3840, height: 2160 },
@@ -471,6 +510,7 @@ for (const size of [
       page.getByRole("heading", { name: "Mission Mode" }),
       viewButton(page, "Solar system"),
       viewButton(page, "Mars orbit"),
+      viewButton(page, "Surface"),
       page.getByRole("button", { name: "10x" }),
     ]) {
       const box = await control.boundingBox();

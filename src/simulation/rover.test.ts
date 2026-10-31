@@ -108,6 +108,37 @@ describe("a rover landing", () => {
     ]);
   });
 
+  it("says when each Asset arrived, as a day of the Turn that is negative for an earlier Turn", () => {
+    const { simulation, program } = setup();
+    const first = simulation.runTurn(program, sendRover);
+    expect(first.timeline.assetsAtMars[0]).toMatchObject({
+      fromDay: 205,
+      arrivedOnDay: 205,
+    });
+    const second = simulation.runTurn(first.program, sendLander);
+    // The Turn is 780 days, so the rover came down 575 days before this one started.
+    expect(second.timeline.assetsAtMars).toMatchObject([
+      { name: "Test Rover", fromDay: 0, arrivedOnDay: -575 },
+      { name: "Test Lander", fromDay: 205, arrivedOnDay: 205 },
+    ]);
+  });
+
+  it("says how each Asset moves on the surface, which comes from its Activity", () => {
+    const { simulation, program } = setup();
+    const motionWith = (activityId: string) =>
+      simulation.runTurn(program, {
+        mission: {
+          launchVehicleId: "test-vehicle",
+          assetIds: ["test-rover"],
+          landingSiteId: "alpha-plain",
+          assetChoices: { "test-rover": { activityId } },
+        },
+      }).timeline.assetsAtMars[0]?.surfaceMotion;
+    expect(motionWith("test-soil")).toBe("nearby");
+    expect(motionWith("test-traverse")).toBe("traverse");
+    expect(motionWith("test-nothing")).toBe("still");
+  });
+
   it("earns no second First landing for a lander that follows, nor the site's Science", () => {
     const { simulation, program } = setup();
     const first = simulation.runTurn(program, sendRover);

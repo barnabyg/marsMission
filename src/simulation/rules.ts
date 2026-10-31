@@ -45,7 +45,7 @@ export function roll(seed: number, turnNumber: number, key: string): number {
 }
 
 /** How many days after the first date the second is. */
-function daysBetween(from: string, to: string): number {
+export function daysBetween(from: string, to: string): number {
   return (
     (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) /
     millisecondsPerDay
@@ -139,6 +139,14 @@ export function createRules(catalogue: Catalogue) {
     return activityById(asset.activityId)?.name ?? "Nothing";
   }
 
+  /** How an operating Asset gets about on the surface, which only research sets. */
+  function surfaceMotionOf(asset: {
+    activityId: string;
+  }): "traverse" | "nearby" | "still" {
+    const effect = activityById(asset.activityId)?.effect;
+    return effect?.kind === "research" ? effect.surfaceMotion : "still";
+  }
+
   /** The one calculation behind both an Asset's roll in service and the risk band Planning Mode shows. */
   function inServiceFailureChance(
     asset: Asset,
@@ -228,6 +236,7 @@ export function createRules(catalogue: Catalogue) {
     activitiesOf,
     activityFor,
     activityNameOf,
+    surfaceMotionOf,
     inServiceFailureChance,
     knownLandingSites,
     landingRisk,

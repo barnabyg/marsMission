@@ -8,6 +8,7 @@ import type { TimelineEntry } from "../simulation/simulation";
 export const missionViews = [
   { id: "solarSystem", name: "Solar system" },
   { id: "marsOrbit", name: "Mars orbit" },
+  { id: "surface", name: "Surface" },
 ] as const;
 
 export type MissionViewId = (typeof missionViews)[number]["id"];
@@ -58,4 +59,16 @@ export function currentView(
     .map(viewAskedForBy)
     .findLast((view) => view !== null);
   return asked ?? choice.view;
+}
+
+/**
+ * Hands over to Mars orbit when the surface view has no Landing Site left to show, such as when the
+ * only landing on its way is lost. A landing is on its way from the start of a Turn and its Assets
+ * operate from the day it's delivered, so once a Turn has lost its last site it never gets one back.
+ */
+export function viewWithSites(
+  view: MissionViewId,
+  sites: readonly string[],
+): MissionViewId {
+  return view === "surface" && sites.length === 0 ? "marsOrbit" : view;
 }

@@ -180,6 +180,8 @@ describe("a successful landing", () => {
         kind: "lander",
         landingSiteName: "Alpha Plain",
         activityName: "Nothing",
+        surfaceMotion: "still",
+        arrivedOnDay: 205,
         fromDay: 205,
         untilDay: null,
       },

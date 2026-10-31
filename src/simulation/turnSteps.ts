@@ -9,6 +9,7 @@ import {
 } from "./scienceMilestones";
 import {
   addDays,
+  daysBetween,
   formatMoney,
   roll,
   sum,
@@ -348,6 +349,8 @@ export function resolveTurn(
       kind: asset.kind,
       landingSiteName: rules.landingSiteById(asset.landingSiteId)?.name ?? null,
       activityName: rules.activityNameOf(asset),
+      surfaceMotion: rules.surfaceMotionOf(asset),
+      arrivedOnDay: daysBetween(program.date, asset.arrivedOn),
       fromDay,
       untilDay,
     }),

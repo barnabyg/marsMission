@@ -18,6 +18,8 @@ const asset = (overrides: Partial<AssetAtMars>): AssetAtMars => ({
   kind: "orbiter",
   landingSiteName: null,
   activityName: "Survey",
+  surfaceMotion: "still",
+  arrivedOnDay: -100,
   fromDay: 0,
   untilDay: null,
   ...overrides,

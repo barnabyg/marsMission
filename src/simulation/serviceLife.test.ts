@@ -94,6 +94,8 @@ describe("a Service Life running out", () => {
         kind: "orbiter",
         landingSiteName: null,
         activityName: "Survey",
+        surfaceMotion: "still",
+        arrivedOnDay: -580,
         fromDay: 0,
         untilDay: 420,
       },
