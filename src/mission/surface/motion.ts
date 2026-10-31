@@ -1,5 +1,5 @@
 import type { AssetAtMars } from "../../simulation/simulation";
-import { hashOf } from "./terrain";
+import { hashOf } from "./shaping";
 
 /** What decides how a rover moves. */
 export type RoverAtWork = Pick<

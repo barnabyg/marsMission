@@ -272,6 +272,9 @@ export interface MissionAsset {
   crashed: boolean;
 }
 
+/** How an Asset gets about on the surface while doing its Activity. */
+export type SurfaceMotion = "traverse" | "nearby" | "still";
+
 /** An Asset operating at Mars at some point in a Turn. */
 export interface AssetAtMars {
   /** Names this Asset and no other, and stays the same from Turn to Turn. */
@@ -281,8 +284,7 @@ export interface AssetAtMars {
   /** Where it is on the surface, or null if it's in orbit. */
   landingSiteName: string | null;
   activityName: string;
-  /** How it gets about on the surface while doing its Activity. */
-  surfaceMotion: "traverse" | "nearby" | "still";
+  surfaceMotion: SurfaceMotion;
   /** The day of the Turn it arrived, which is negative if that was in an earlier Turn. */
   arrivedOnDay: number;
   /** The day of the Turn it starts operating, which is 0 if it already was. */

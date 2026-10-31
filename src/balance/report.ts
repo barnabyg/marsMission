@@ -2,6 +2,7 @@ import { parseCatalogue, type CatalogueFiles } from "../catalogue/catalogue";
 import { createSimulation } from "../simulation/simulation";
 import { playProgram, type TurnRecord } from "./playProgram";
 import { strategies as allStrategies, type Strategy } from "./strategies";
+import { sum } from "./sum";
 
 /** How many Turns each Program plays at most. */
 const turnHorizon = 20;
@@ -9,8 +10,6 @@ const barWidth = 40;
 
 type Play = TurnRecord[];
 
-const sum = (values: number[]) =>
-  values.reduce((total, value) => total + value, 0);
 const mean = (values: number[]) =>
   values.length > 0 ? sum(values) / values.length : 0;
 const percent = (part: number, whole: number) =>

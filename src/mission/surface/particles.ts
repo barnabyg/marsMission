@@ -1,4 +1,5 @@
 import { fallAt, impactMs, sequenceMs, touchdownMs } from "./sequence";
+import { smooth } from "./shaping";
 
 /** Fixed, so that a sequence costs the same at every moment on a machine drawing 4K by software. */
 export const plumeCount = 120;
@@ -42,11 +43,6 @@ const shares = Float32Array.from({ length: 1024 }, (_, index) => {
 /** The same share for the same particle and purpose. */
 function shareFor(particle: number, purpose: number): number {
   return shares[(particle * 7 + purpose * 131) & 1023] ?? 0;
-}
-
-function smooth(value: number): number {
-  const clamped = Math.min(Math.max(value, 0), 1);
-  return clamped * clamped * (3 - 2 * clamped);
 }
 
 function put(

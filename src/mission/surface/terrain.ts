@@ -1,3 +1,5 @@
+import { hashOf, smooth } from "./shaping";
+
 /** Terrain for a Landing Site, worked out from its name alone, so that a site looks the same every time. */
 
 /** How far the terrain goes from the middle of the shot, in the scene's units. */
@@ -15,26 +17,12 @@ export const horizonColor = [0.62, 0.37, 0.22] as const;
 const dustColor = [0.5, 0.2, 0.09] as const;
 const rockColor = [0.3, 0.12, 0.06] as const;
 
-/** Turns a name into a number (the FNV-1a hash). */
-export function hashOf(name: string): number {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < name.length; index++) {
-    hash = Math.imul(hash ^ name.charCodeAt(index), 0x01000193);
-  }
-  return hash >>> 0;
-}
-
 /** A value from 0 to 1 that depends only on the seed and a place on a grid. */
 function latticeValue(seed: number, x: number, z: number): number {
   let hash = seed ^ Math.imul(x, 0x27d4eb2d) ^ Math.imul(z, 0x165667b1);
   hash = Math.imul(hash ^ (hash >>> 15), 0x85ebca6b);
   hash = Math.imul(hash ^ (hash >>> 13), 0xc2b2ae35);
   return ((hash ^ (hash >>> 16)) >>> 0) / 2 ** 32;
-}
-
-function smooth(value: number): number {
-  const clamped = Math.min(Math.max(value, 0), 1);
-  return clamped * clamped * (3 - 2 * clamped);
 }
 
 /** Smooth noise from about 0 to 1, with features about 1 unit apart. */

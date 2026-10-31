@@ -1,5 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import type { PlannedMission, Program } from "./types";
+import type { PlannedMission, Program, SurfaceMotion } from "./types";
 
 export type MissionEvent = Catalogue["missionEvents"][number];
 export type ReliabilityLevel = Catalogue["reliabilityLevels"][number];
@@ -150,9 +150,7 @@ export function createRules(catalogue: Catalogue) {
   }
 
   /** How an operating Asset gets about on the surface, which only research sets. */
-  function surfaceMotionOf(asset: {
-    activityId: string;
-  }): "traverse" | "nearby" | "still" {
+  function surfaceMotionOf(asset: { activityId: string }): SurfaceMotion {
     const effect = activityById(asset.activityId)?.effect;
     return effect?.kind === "research" ? effect.surfaceMotion : "still";
   }

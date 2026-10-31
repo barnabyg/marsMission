@@ -1,7 +1,5 @@
 import type { ProgramView, TurnSummary } from "../simulation/simulation";
-
-const sum = (values: number[]) =>
-  values.reduce((total, value) => total + value, 0);
+import { sum } from "./sum";
 
 /** Anything impossible about one Turn, read from the Program before it, its summary and the Program after it. */
 export function invalidStates(
