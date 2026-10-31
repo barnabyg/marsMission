@@ -6,6 +6,26 @@
     "effect": { "kind": "survey" }
   },
   {
+    "id": "orbital-research",
+    "name": "Orbital research",
+    "description": "Studies the atmosphere and climate of Mars from orbit, in place of a Survey.",
+    "effect": {
+      "kind": "research",
+      "sciencePerTurn": 40,
+      "publicSupportPerTurn": 5
+    }
+  },
+  {
+    "id": "surface-research",
+    "name": "Surface research",
+    "description": "Studies the rocks and weather around the Landing Site.",
+    "effect": {
+      "kind": "research",
+      "sciencePerTurn": 60,
+      "publicSupportPerTurn": 8
+    }
+  },
+  {
     "id": "nothing",
     "name": "Nothing",
     "description": "Stays in place and does no work this Turn.",

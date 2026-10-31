@@ -157,6 +157,13 @@ describe("a successful landing", () => {
             id: "test-nothing",
             name: "Nothing",
             description: "Does no work.",
+            earnsPerTurn: null,
+          },
+          {
+            id: "test-research",
+            name: "Test research",
+            description: "Earns Science and Public Support.",
+            earnsPerTurn: { science: 78, publicSupport: 39 },
           },
         ],
         daysLeft: 49_425,

@@ -62,7 +62,7 @@ export const tooltips = {
   Milestone:
     "A one-off achievement, such as the first orbiter at Mars or returning a sample to Earth. It awards Science and Public Support.",
   "Ongoing Research":
-    "Science earned at a steady rate for as long as an Asset or Crew is actively doing it, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time.",
+    "Science earned at a steady rate for as long as an Asset or Crew is actively doing it, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time. It also adds a small, steady amount of Public Support.",
   "Research Grant":
     "Money paid at the start of a Turn for certain Science earned in the previous Turn. Only some research qualifies, and early-game research pays little or nothing.",
   "Public Support":

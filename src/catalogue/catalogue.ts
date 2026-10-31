@@ -43,6 +43,12 @@ const activitiesSchema = z
       effect: z.discriminatedUnion("kind", [
         z.strictObject({ kind: z.literal("nothing") }),
         z.strictObject({ kind: z.literal("survey") }),
+        // For a whole Turn in service. An Asset in service for part of a Turn earns its share.
+        z.strictObject({
+          kind: z.literal("research"),
+          sciencePerTurn: z.number().int().positive(),
+          publicSupportPerTurn: z.number().int().nonnegative(),
+        }),
       ]),
     }),
   )

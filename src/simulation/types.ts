@@ -51,6 +51,8 @@ export interface PlannedActivity {
   id: string;
   name: string;
   description: string;
+  /** What it earns over a whole Turn in service if it's research, or null if it isn't. */
+  earnsPerTurn: { science: number; publicSupport: number } | null;
 }
 
 type ProgramStatus =
@@ -199,6 +201,16 @@ interface AwardedMilestone {
   publicSupport: number;
 }
 
+/** What one Asset earned by doing research during a Turn. */
+export interface OngoingResearchEarned {
+  assetName: string;
+  activityName: string;
+  science: number;
+  publicSupport: number;
+  /** How many days of the Turn it was in service. */
+  days: number;
+}
+
 /** What changed over a Turn. */
 export interface TurnSummary {
   missionCostMillions: number;
@@ -212,6 +224,8 @@ export interface TurnSummary {
   milestones: AwardedMilestone[];
   /** The Science from landing at a Landing Site for the first time, if a lander did. */
   firstLanding: { siteName: string; science: number } | null;
+  /** What each Asset doing research earned, which scienceGained and publicSupportGained include. */
+  ongoingResearch: OngoingResearchEarned[];
   /** The Assets whose Service Life ended this Turn. */
   assetsEnded: string[];
   /** The Assets that failed in service this Turn, before their Service Life ended. */

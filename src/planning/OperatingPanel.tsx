@@ -1,6 +1,7 @@
 import type { ProgramView } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
+import { ResearchEarnings } from "./ResearchEarnings";
 
 interface OperatingPanelProps {
   assets: ProgramView["operatingAssets"];
@@ -27,6 +28,9 @@ export function OperatingPanel({
               Each Asset keeps its Activity until you change it.
             </GameText>
           </p>
+          <ResearchEarnings
+            activities={assets.flatMap(({ activities }) => activities)}
+          />
           <ul className="operating-assets" data-testid="operating-assets">
             {assets.map((asset) => (
               <li key={asset.key}>

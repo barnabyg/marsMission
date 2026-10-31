@@ -41,10 +41,14 @@ describe("choosing an Activity for an Asset on a Mission", () => {
     expect(orbiter?.activities.map(({ name }) => name)).toEqual([
       "Survey",
       "Nothing",
+      "Test research",
     ]);
     expect(orbiter?.activities[0]?.description).toBe("Looks for sites.");
     expect(lander?.activityId).toBe("test-nothing");
-    expect(lander?.activities.map(({ name }) => name)).toEqual(["Nothing"]);
+    expect(lander?.activities.map(({ name }) => name)).toEqual([
+      "Nothing",
+      "Test research",
+    ]);
   });
 
   it("shows the Activity chosen", () => {
@@ -210,6 +214,7 @@ describe("the Activity of an Asset already operating", () => {
     expect(orbiter?.activities.map(({ id }) => id)).toEqual([
       "test-survey",
       "test-nothing",
+      "test-research",
     ]);
   });
 

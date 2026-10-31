@@ -23,14 +23,18 @@ describe("the real data files", () => {
     expect(() => parseCatalogue(realCatalogueFiles())).not.toThrow();
   });
 
-  it("start an orbiter on a Survey, with Nothing as its other choice", () => {
+  it.each([
+    ["orbiter", ["survey", "research", "nothing"]],
+    ["lander", ["research", "nothing"]],
+  ])("give a %s these choices, starting on the first", (kind, expected) => {
     const { assets, activities } = parseCatalogue(realCatalogueFiles());
-    const orbiter = assets.find(({ kind }) => kind === "orbiter");
-    const effects = orbiter?.activities.map(
-      (activityId) =>
-        activities.find(({ id }) => id === activityId)?.effect.kind,
-    );
-    expect(effects).toEqual(["survey", "nothing"]);
+    const effects = assets
+      .find((asset) => asset.kind === kind)
+      ?.activities.map(
+        (activityId) =>
+          activities.find(({ id }) => id === activityId)?.effect.kind,
+      );
+    expect(effects).toEqual(expected);
   });
 
   it("have a second Launch Vehicle with more capacity at a higher cost", () => {
@@ -323,6 +327,44 @@ describe("invalid data files", () => {
     });
     expect(message).toContain("activities.json");
     expect(message).toContain("effect");
+  });
+
+  it.each([
+    ["a negative Science rate", { sciencePerTurn: -1 }, "sciencePerTurn"],
+    ["a Science rate of zero", { sciencePerTurn: 0 }, "sciencePerTurn"],
+    ["a fractional Science rate", { sciencePerTurn: 1.5 }, "sciencePerTurn"],
+    ["a missing Science rate", { sciencePerTurn: undefined }, "sciencePerTurn"],
+    [
+      "a negative Public Support rate",
+      { publicSupportPerTurn: -1 },
+      "publicSupportPerTurn",
+    ],
+    [
+      "a fractional Public Support rate",
+      { publicSupportPerTurn: 0.5 },
+      "publicSupportPerTurn",
+    ],
+  ])("reject a research Activity with %s", (_, rates, field) => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      activities: [
+        ...files.activities,
+        {
+          id: "bad-research",
+          name: "Bad research",
+          description: "Earns the wrong amount.",
+          effect: {
+            kind: "research",
+            sciencePerTurn: 10,
+            publicSupportPerTurn: 1,
+            ...rates,
+          },
+        },
+      ],
+    });
+    expect(message).toContain("activities.json");
+    expect(message).toContain(field);
   });
 
   it("reject data files with no Activity that does nothing", () => {

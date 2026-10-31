@@ -6,7 +6,7 @@
     "costMillions": 700,
     "missionEvents": ["mars-orbit-insertion"],
     "massTonnes": 2.5,
-    "activities": ["survey", "nothing"],
+    "activities": ["survey", "orbital-research", "nothing"],
     "serviceLifeOptions": [
       {
         "days": 900,
@@ -26,7 +26,7 @@
     "costMillions": 800,
     "missionEvents": ["entry-descent-landing"],
     "landsAtSite": true,
-    "activities": ["nothing"],
+    "activities": ["surface-research", "nothing"],
     "massTonnes": 3,
     "serviceLifeOptions": [
       {

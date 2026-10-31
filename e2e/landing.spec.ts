@@ -53,13 +53,14 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
     "Prospector Lander: landed at Jezero Crater",
   );
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
-    "Prospector Lander at Jezero Crater: Nothing",
+    "Prospector Lander at Jezero Crater: Surface research",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await playToNextTurn(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
-  await expect(page.getByTestId("science")).toHaveText("270");
+  // 150 for the Milestone, 120 for the site, and what Surface research earned in the days left.
+  await expect(page.getByTestId("science")).toHaveText("314");
   await expect(page.getByTestId("operating-assets")).toContainText(
     "Prospector Lander at Jezero Crater: 35 days of Service Life left",
   );
@@ -162,7 +163,11 @@ test("turns Surveying off, sees no Survey that Turn, keeps that through a reload
   await page.goto(`/?seed=${orbiterLastsSeed}`);
   const activity = page.getByLabel("Activity for Pathfinder Orbiter");
   await expect(activity).toHaveValue("survey");
-  await expect(activity.getByRole("option")).toHaveText(["Survey", "Nothing"]);
+  await expect(activity.getByRole("option")).toHaveText([
+    "Survey",
+    "Orbital research",
+    "Nothing",
+  ]);
   await activity.selectOption("nothing");
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Launch Mission" }).click();

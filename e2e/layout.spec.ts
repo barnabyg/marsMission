@@ -110,6 +110,9 @@ for (const size of screenSizes) {
       await page.goto(`/?seed=${successSeed}`);
       await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
+      await expect(page.getByTestId("research-earnings")).toContainText(
+        "Surface research",
+      );
       expect(await somethingScrolls(page)).toBe(false);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
@@ -120,6 +123,8 @@ for (const size of screenSizes) {
       page,
     }) => {
       await openBusyProgram(page);
+      // One in the Operating at Mars panel, and one for the orbiter the Mission starts with.
+      await expect(page.getByTestId("research-earnings")).toHaveCount(2);
       expect(await somethingScrolls(page)).toBe(false);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),

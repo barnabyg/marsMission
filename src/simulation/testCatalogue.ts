@@ -35,6 +35,17 @@ export function testCatalogueFiles(): CatalogueFiles {
         description: "Does no work.",
         effect: { kind: "nothing" },
       },
+      {
+        id: "test-research",
+        name: "Test research",
+        description: "Earns Science and Public Support.",
+        // A tenth of a Science and a twentieth of a Public Support point a day, over the 780-day Turn.
+        effect: {
+          kind: "research",
+          sciencePerTurn: 78,
+          publicSupportPerTurn: 39,
+        },
+      },
     ],
     launchVehicles: [
       {
@@ -62,7 +73,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureChancePerTurn: 0,
         serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
-        activities: ["test-survey", "test-nothing"],
+        activities: ["test-survey", "test-nothing", "test-research"],
       },
       {
         id: "gold-orbiter",
@@ -95,7 +106,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureChancePerTurn: 0,
         serviceLifeOptions: longLife,
         missionEvents: ["test-landing"],
-        activities: ["test-nothing"],
+        activities: ["test-nothing", "test-research"],
         landsAtSite: true,
       },
     ],

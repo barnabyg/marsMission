@@ -325,8 +325,9 @@ describe("the known seeds in the Phase 3 playtest guide", () => {
       assetsEnded: ["Pathfinder Orbiter"],
       assetsFailed: [],
       moneyEndMillions: 2700,
-      publicSupportEnd: 429,
-      scienceGained: 270,
+      // Including what the lander earns by starting on research, which the guide was written before.
+      publicSupportEnd: 434,
+      scienceGained: 314,
     });
     expect(second.summary.survey?.siteNameRevealed).toBe("Utopia Planitia");
   });

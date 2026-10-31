@@ -17,7 +17,7 @@ import type {
 } from "./types";
 
 /** One Asset's time at Mars during this Turn. */
-interface AssetInService {
+export interface AssetInService {
   asset: Program["operatingAssets"][number];
   /** The day of the Turn it starts operating, which is 0 if it already was. */
   fromDay: number;

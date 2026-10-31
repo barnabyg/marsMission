@@ -7,6 +7,7 @@ import {
   sum,
   type Activity,
 } from "./rules";
+import { earningsPerTurn } from "./ongoingResearch";
 import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
 import { resolveTurn } from "./turnSteps";
 import type {
@@ -58,11 +59,12 @@ export interface Simulation {
 
 const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
 
-const plannedActivity = ({
-  id,
-  name,
-  description,
-}: Activity): PlannedActivity => ({ id, name, description });
+const plannedActivity = (activity: Activity): PlannedActivity => ({
+  id: activity.id,
+  name: activity.name,
+  description: activity.description,
+  earnsPerTurn: earningsPerTurn(activity),
+});
 
 export function createSimulation(catalogue: Catalogue): Simulation {
   const rules = createRules(catalogue);

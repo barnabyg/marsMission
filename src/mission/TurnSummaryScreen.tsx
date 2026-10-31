@@ -69,6 +69,28 @@ export function TurnSummaryScreen({
           </GameText>
         </p>
       )}
+      {summary.ongoingResearch.length > 0 && (
+        <section data-testid="summary-ongoing-research">
+          <h2>
+            <GameText>Ongoing Research</GameText>
+          </h2>
+          <ul>
+            {summary.ongoingResearch.map(
+              (
+                { assetName, activityName, science, publicSupport, days },
+                index,
+              ) => (
+                // Two copies of an Asset can each earn the same amount, so the position tells them apart.
+                <li key={`${assetName}-${index}`}>
+                  <GameText>
+                    {`${assetName}, ${activityName}: ${science} Science and ${publicSupport} Public Support over ${days} ${days === 1 ? "day" : "days"}`}
+                  </GameText>
+                </li>
+              ),
+            )}
+          </ul>
+        </section>
+      )}
       {summary.assetsFailed.length > 0 && (
         <p className="problem" data-testid="summary-assets-failed">
           <GameText>
@@ -153,7 +175,7 @@ export function TurnSummaryScreen({
           </tr>
           <tr>
             <th scope="row">
-              <GameText>Gained from Milestones</GameText>
+              <GameText>Gained from Milestones and Ongoing Research</GameText>
             </th>
             <td>{summary.publicSupportGained}</td>
           </tr>

@@ -10,6 +10,7 @@ import {
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
+import { ResearchEarnings } from "./ResearchEarnings";
 
 interface MissionPanelProps {
   simulation: Simulation;
@@ -134,6 +135,9 @@ export function MissionPanel({
           />
         ))}
       </fieldset>
+      <ResearchEarnings
+        activities={plannedAssets.flatMap(({ activities }) => activities)}
+      />
       {landingSite && (
         <>
           <label>

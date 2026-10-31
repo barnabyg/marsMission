@@ -1,5 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { carryOutSurvey, operateAssets } from "./assetsInService";
+import { carryOutOngoingResearch } from "./ongoingResearch";
 import {
   addDays,
   formatMoney,
@@ -248,10 +249,18 @@ export function resolveTurn(
   const firstLanding = creditFirstLanding(rules, program, flown);
   const operated = operateAssets(catalogue, rules, program, plan, flown);
   const survey = carryOutSurvey(catalogue, rules, program, operated.inService);
+  const research = carryOutOngoingResearch(
+    catalogue,
+    rules,
+    operated.inService,
+  );
   const scienceGained =
-    milestones.science + (firstLanding ? firstLanding.site.science : 0);
+    milestones.science +
+    (firstLanding ? firstLanding.site.science : 0) +
+    research.science;
+  const publicSupportGained = milestones.publicSupport + research.publicSupport;
   const publicSupportBeforeDrain =
-    program.publicSupport - flown.publicSupportLost + milestones.publicSupport;
+    program.publicSupport - flown.publicSupportLost + publicSupportGained;
   const funding = payFundingThresholds(
     catalogue,
     program,
@@ -356,7 +365,7 @@ export function resolveTurn(
       moneyEndMillions,
       scienceGained,
       publicSupportStart: program.publicSupport,
-      publicSupportGained: milestones.publicSupport,
+      publicSupportGained,
       publicSupportDrained: publicSupportBeforeDrain - faded.end,
       publicSupportEnd: faded.end,
       milestones: milestones.awarded.map(
@@ -370,6 +379,7 @@ export function resolveTurn(
         siteName: firstLanding.site.name,
         science: firstLanding.site.science,
       },
+      ongoingResearch: research.earned,
       assetsEnded: operated.inService
         .filter(({ untilDay, failed }) => untilDay !== null && !failed)
         .map(({ asset }) => asset.name),
