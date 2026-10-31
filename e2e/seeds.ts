@@ -64,6 +64,9 @@ export const orbiterSafeSeed = seedWhere(
   orbiterAndLander,
 );
 
+/** A seed where an orbiter and lander launched together both arrive. */
+export const orbiterAndLanderSeed = seedWhere(null, orbiterAndLander);
+
 /** A seed where the first orbiter arrives, and what happens to it during the next Turn is as asked. */
 function seedWhereOrbiter(nextTurn: (summary: TurnSummary) => boolean): number {
   for (let seed = 1; seed < 100_000; seed++) {

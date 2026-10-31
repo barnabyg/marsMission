@@ -3,6 +3,7 @@ import { storageKeyFor } from "../src/save/saveStore";
 import { tooltips } from "../src/ui/tooltips";
 import {
   cancelledAfterOneTurn,
+  chooseAssets,
   eventEntries,
   openLoadDialog,
   openSaveDialog,
@@ -11,7 +12,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
-import { seedFailingAt, successSeed } from "./seeds";
+import { orbiterAndLanderSeed, seedFailingAt, successSeed } from "./seeds";
 
 test("keeps a Program between sessions: launches, reaches the next Turn, reloads and continues", async ({
   page,
@@ -163,6 +164,52 @@ test("saves to a slot, moves on a Turn, loads the slot and sees the earlier stat
   await expect(page.getByTestId("public-support")).toHaveText("100");
   await expect(page.getByTestId("science")).toHaveText("0");
   await expect(page.getByTestId("operating-assets")).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test("keeps Survey progress, sites landed at and time left through saving to a slot and reloading", async ({
+  page,
+}) => {
+  // Over 5 s: plays a whole Turn before saving.
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${orbiterAndLanderSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
+  await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
+  // Not the shortest option, which is what an upgraded save gets.
+  await page
+    .getByLabel("Service Life for Prospector Lander")
+    .selectOption("1500");
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await playToNextTurn(page);
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
+
+  await openSaveDialog(page);
+  await page
+    .getByTestId("save-slot-1")
+    .getByRole("button", { name: "Save here" })
+    .click();
+  await page.reload();
+  await page
+    .getByTestId("save-slot-1")
+    .getByRole("button", { name: "Load" })
+    .click();
+  await page.getByRole("button", { name: "Yes, load it" }).click();
+
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
+  const operating = page.getByTestId("operating-assets");
+  await expect(operating).toContainText(
+    "Pathfinder Orbiter: 330 days of Service Life left",
+  );
+  await expect(operating).toContainText(
+    "Prospector Lander at Jezero Crater: 935 days of Service Life left",
+  );
+  await chooseAssets(page, ["Prospector Lander"]);
+  const sites = page.getByLabel("Landing Site").getByRole("option");
+  await expect(sites).toHaveCount(3);
+  await expect(sites.last()).toContainText("Meridiani Planum");
+  const details = page.getByTestId("landing-site-details");
+  await expect(details).toContainText("Surveyed.");
+  await expect(details).toContainText("landing again earns no Science");
   expect(problems).toEqual([]);
 });
 
@@ -452,7 +499,8 @@ test("loads a save made before the Save and Load dialogs existed", async ({
   await page.getByRole("button", { name: "Yes, load it" }).click();
   await expect(page.getByTestId("turn-number")).toHaveText("3");
   await expect(page.getByTestId("public-support")).toHaveText("227");
+  // The upgrade gives it the shortest Service Life, counted from its arrival.
   await expect(page.getByTestId("operating-assets")).toContainText(
-    "Pathfinder Orbiter",
+    "Pathfinder Orbiter: 380 days of Service Life left",
   );
 });
