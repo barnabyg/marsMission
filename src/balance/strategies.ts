@@ -30,7 +30,7 @@ export interface Strategy {
 type Aim = "science" | "grants";
 
 /** A strategy that launches one Mission with one Asset on every Turn that it can, up to any limit of Assets. */
-interface Campaign {
+interface PlayStyle {
   /** The kinds of Asset to try sending this Turn, best first. */
   order(view: ProgramView): string[];
   /** What Assets on the surface and orbiters doing research aim for, which can change as the Program goes on. */
@@ -74,13 +74,13 @@ const surveyThenLand = (surfaceKinds: string[]) => (view: ProgramView) =>
     ? ["orbiter", ...surfaceKinds]
     : surfaceKinds;
 
-const aimOf = ({ aim }: Campaign, view: ProgramView): Aim =>
+const aimOf = ({ aim }: PlayStyle, view: ProgramView): Aim =>
   typeof aim === "function" ? aim(view) : aim;
 
-const wantsSurvey = (view: ProgramView, campaign: Campaign) =>
-  campaign.surveysFirst &&
+const wantsSurvey = (view: ProgramView, playStyle: PlayStyle) =>
+  playStyle.surveysFirst &&
   view.somethingLeftToSurvey &&
-  (campaign.surveysWhile?.(view) ?? true);
+  (playStyle.surveysWhile?.(view) ?? true);
 
 function researchActivity(
   activities: PlannedActivity[],
@@ -100,7 +100,7 @@ function researchActivity(
 }
 
 /** New Activities for the Assets operating, and whether one of them is surveying this Turn. */
-function operatingActivities(view: ProgramView, campaign: Campaign) {
+function operatingActivities(view: ProgramView, playStyle: PlayStyle) {
   let surveying = false;
   const changes: Record<string, string> = {};
   for (const {
@@ -110,21 +110,21 @@ function operatingActivities(view: ProgramView, campaign: Campaign) {
     daysLeft,
   } of view.operatingAssets) {
     const survey: PlannedActivity | undefined =
-      !surveying && daysLeft > 0 && wantsSurvey(view, campaign)
+      !surveying && daysLeft > 0 && wantsSurvey(view, playStyle)
         ? surveyActivity(activities)
         : undefined;
     surveying ||= survey !== undefined;
     const wanted =
-      survey?.id ?? researchActivity(activities, aimOf(campaign, view))?.id;
+      survey?.id ?? researchActivity(activities, aimOf(playStyle, view))?.id;
     if (wanted !== undefined && wanted !== activityId) changes[key] = wanted;
   }
   return { changes, surveying };
 }
 
 /** The site to land at: a new one before one already landed at, a surveyed one before a riskier one, then the most Science. */
-function landingSiteFor(view: ProgramView, campaign: Campaign) {
+function landingSiteFor(view: ProgramView, playStyle: PlayStyle) {
   return view.landingSites
-    .filter(({ surveyed }) => surveyed || !campaign.onlySurveyedSites)
+    .filter(({ surveyed }) => surveyed || !playStyle.onlySurveyedSites)
     .toSorted(
       (first, second) =>
         Number(first.landed) - Number(second.landed) ||
@@ -133,12 +133,12 @@ function landingSiteFor(view: ProgramView, campaign: Campaign) {
     )[0];
 }
 
-/** Ways of sending an Asset of this kind this Turn, from what the Campaign wants most down to the cheapest. */
+/** Ways of sending an Asset of this kind this Turn, from what the PlayStyle wants most down to the cheapest. */
 function missionsFor(
   kind: string,
   view: ProgramView,
   tools: PlanningTools,
-  campaign: Campaign,
+  playStyle: PlayStyle,
   surveying: boolean,
 ): PlannedMission[] {
   const asset = view.assets.find((candidate) => candidate.kind === kind);
@@ -147,7 +147,7 @@ function missionsFor(
     .filter(({ capacityTonnes }) => capacityTonnes >= asset.massTonnes)
     .toSorted((first, second) => first.costMillions - second.costMillions)[0];
   if (!vehicle) return [];
-  const site = asset.landsAtSite ? landingSiteFor(view, campaign) : undefined;
+  const site = asset.landsAtSite ? landingSiteFor(view, playStyle) : undefined;
   if (asset.landsAtSite && !site) return [];
 
   const mission: PlannedMission = {
@@ -159,20 +159,20 @@ function missionsFor(
   if (!planned) return [];
 
   const survey =
-    !surveying && wantsSurvey(view, campaign)
+    !surveying && wantsSurvey(view, playStyle)
       ? surveyActivity(planned.activities)
       : undefined;
   const activityId =
     survey?.id ??
-    researchActivity(planned.activities, aimOf(campaign, view))?.id ??
+    researchActivity(planned.activities, aimOf(playStyle, view))?.id ??
     planned.activityId;
   // Short of money for a retry, a longer Service Life is the first thing to give up.
   const canSpareMoney =
-    view.moneyMillions >= 2 * (campaign.reserveMillions ?? 0);
+    view.moneyMillions >= 2 * (playStyle.reserveMillions ?? 0);
   const serviceLives =
-    (campaign.longestServiceLife === true ||
-      (Array.isArray(campaign.longestServiceLife) &&
-        campaign.longestServiceLife.includes(kind))) &&
+    (playStyle.longestServiceLife === true ||
+      (Array.isArray(playStyle.longestServiceLife) &&
+        playStyle.longestServiceLife.includes(kind))) &&
     canSpareMoney
       ? planned.serviceLifeOptions
           .map(({ days }) => days)
@@ -182,13 +182,13 @@ function missionsFor(
     .toSorted((first, second) => second.costMillions - first.costMillions)
     .map(({ id }) => id);
   const assetLevels =
-    campaign.assetReliabilityFor?.includes(kind) === false
+    playStyle.assetReliabilityFor?.includes(kind) === false
       ? undefined
-      : campaign.assetReliability;
+      : playStyle.assetReliability;
   const levels =
     assetLevels === "cheapest"
       ? dearestFirst.slice(-2)
-      : assetLevels === "best" || campaign.missionEventReliability === true
+      : assetLevels === "best" || playStyle.missionEventReliability === true
         ? dearestFirst
         : [planned.reliabilityLevelId];
   const events = tools.previewMission(mission);
@@ -196,7 +196,7 @@ function missionsFor(
   return serviceLives.flatMap((serviceLifeDays) =>
     levels.map((level) => ({
       ...mission,
-      ...(campaign.missionEventReliability
+      ...(playStyle.missionEventReliability
         ? {
             reliability: Object.fromEntries(
               events.map(({ eventId }) => [eventId, level]),
@@ -227,16 +227,16 @@ const grantsPerTurn = (view: ProgramView) =>
     );
 
 /** Money to keep back for a retry: none once Research Grants would soon pay for one, or if it couldn't be afforded anyway. */
-const reserveNow = (view: ProgramView, { reserveMillions = 0 }: Campaign) =>
+const reserveNow = (view: ProgramView, { reserveMillions = 0 }: PlayStyle) =>
   grantsPerTurn(view) < reserveMillions / 2 &&
   view.moneyMillions >= 2 * reserveMillions
     ? reserveMillions
     : 0;
 
-function campaign(
+function playStyle(
   name: string,
   description: string,
-  chosen: Campaign,
+  chosen: PlayStyle,
 ): Strategy {
   return {
     name,
@@ -274,14 +274,14 @@ function campaign(
   };
 }
 
-const surveyingLanders: Campaign = {
+const surveyingLanders: PlayStyle = {
   order: surveyThenLand(["lander"]),
   aim: "science",
   surveysFirst: true,
   onlySurveyedSites: true,
 };
 
-const surveyingRovers: Campaign = {
+const surveyingRovers: PlayStyle = {
   ...surveyingLanders,
   order: surveyThenLand(["rover", "lander"]),
 };
@@ -305,7 +305,7 @@ const landThenOrbiter = (kind: string) => (view: ProgramView) => {
  * Plays as a careful player would: one orbiter to Survey, then rovers, keeping money back for a retry and
  * launching only to keep a few Assets operating. The strategies built on it differ from it in one choice.
  */
-const steadyRovers: Campaign = {
+const steadyRovers: PlayStyle = {
   order: (view) => [...orbiterForFirstSurvey(view), "rover", "lander"],
   aim: "grants",
   surveysFirst: true,
@@ -322,12 +322,12 @@ export const strategies: Strategy[] = [
     description: "Never launches, so shows how fast Public Support fades.",
     plan: () => ({ mission: null }),
   },
-  campaign(
+  playStyle(
     "survey first",
     "An orbiter that Surveys while there is anything left to Survey, otherwise landers at surveyed sites.",
     surveyingLanders,
   ),
-  campaign(
+  playStyle(
     "land straight away",
     "Landers at unsurveyed sites until one lands, and then the same as survey first.",
     {
@@ -339,32 +339,32 @@ export const strategies: Strategy[] = [
           : ["lander", "orbiter"],
     },
   ),
-  campaign(
+  playStyle(
     "favour Science",
     "Survey first with rovers when it can afford them, on the Activity that earns the most Science.",
     surveyingRovers,
   ),
-  campaign(
+  playStyle(
     "favour Research Grants",
     "Survey first with rovers when it can afford them, on the Activity that pays the most Research Grant.",
     { ...surveyingRovers, aim: "grants" },
   ),
-  campaign(
+  playStyle(
     "longer Service Life",
     "Survey first, buying the longest Service Life it can afford.",
     { ...surveyingLanders, longestServiceLife: true },
   ),
-  campaign(
+  playStyle(
     "Asset Reliability",
     "Survey first, buying the best Reliability for each Asset that it can afford.",
     { ...surveyingLanders, assetReliability: "best" },
   ),
-  campaign(
+  playStyle(
     "Mission Event Reliability",
     "Survey first, buying the best Reliability on every Mission Event that it can afford.",
     { ...surveyingLanders, missionEventReliability: true },
   ),
-  campaign(
+  playStyle(
     "research orbiter, then land",
     "One orbiter on research that never Surveys, then landers at unsurveyed sites.",
     {
@@ -375,7 +375,7 @@ export const strategies: Strategy[] = [
         view.milestones.length === 0 ? ["orbiter", "lander"] : ["lander"],
     },
   ),
-  campaign(
+  playStyle(
     "orbiters: research only",
     "Keeps two orbiters on research and never lands.",
     {
@@ -385,31 +385,35 @@ export const strategies: Strategy[] = [
       assetLimit: 2,
     },
   ),
-  campaign(
+  playStyle(
     "orbiters: Survey first",
     "Keeps two orbiters and never lands. One Surveys until nothing is left to Survey, and the rest do research.",
     { ...surveyingLanders, order: () => ["orbiter"], assetLimit: 2 },
   ),
-  campaign(
+  playStyle(
     "keep two Assets",
     "Survey first with the longest Service Life, launching only to keep two Assets operating, to see what Ongoing Research sustains.",
     { ...surveyingLanders, longestServiceLife: true, assetLimit: 2 },
   ),
-  campaign(
+  playStyle(
     "stop after Turn 4",
     "Survey first with rovers on Research Grants, then launches nothing after Turn 4, to see that a Program with nothing left fades.",
     { ...surveyingRovers, aim: "grants", lastLaunchTurn: 4 },
   ),
-  campaign(
+  playStyle(
     "steady: Soil analysis",
     "One orbiter, then rovers on Soil analysis with the longest Service Life, keeping three Assets and some money back.",
     steadyRovers,
   ),
-  campaign("steady: Long traverse", "The same, with rovers on Long traverse.", {
-    ...steadyRovers,
-    aim: "science",
-  }),
-  campaign(
+  playStyle(
+    "steady: Long traverse",
+    "The same, with rovers on Long traverse.",
+    {
+      ...steadyRovers,
+      aim: "science",
+    },
+  ),
+  playStyle(
     "steady: Soil, traverse when rich",
     "The same, with rovers on Soil analysis until money passes the cost of several rovers, then on Long traverse.",
     {
@@ -417,17 +421,17 @@ export const strategies: Strategy[] = [
       aim: (view) => (view.moneyMillions >= 5000 ? "science" : "grants"),
     },
   ),
-  campaign(
+  playStyle(
     "steady: shortest Service Life",
     "As steady: Soil analysis, with the shortest Service Life.",
     { ...steadyRovers, longestServiceLife: false },
   ),
-  campaign(
+  playStyle(
     "steady: longest on everything",
     "As steady: Soil analysis, also buying the longest Service Life for orbiters and landers.",
     { ...steadyRovers, longestServiceLife: true },
   ),
-  campaign(
+  playStyle(
     "steady: shortest, Tested",
     "As steady: shortest Service Life, buying the cheapest Reliability for each Asset.",
     {
@@ -436,7 +440,7 @@ export const strategies: Strategy[] = [
       assetReliability: "cheapest",
     },
   ),
-  campaign(
+  playStyle(
     "steady: Tested rovers",
     "As steady: Soil analysis, buying the cheapest Reliability for each rover.",
     {
@@ -445,7 +449,7 @@ export const strategies: Strategy[] = [
       assetReliabilityFor: ["rover"],
     },
   ),
-  campaign(
+  playStyle(
     "steady: best on rovers",
     "As steady: Soil analysis, buying the best Reliability for each rover that it can afford.",
     {
@@ -454,12 +458,12 @@ export const strategies: Strategy[] = [
       assetReliabilityFor: ["rover"],
     },
   ),
-  campaign(
+  playStyle(
     "steady: Tested everything",
     "As steady: Soil analysis, buying the cheapest Reliability for every Asset, including the orbiter and any lander.",
     { ...steadyRovers, assetReliability: "cheapest" },
   ),
-  campaign(
+  playStyle(
     "steady: land straight away",
     "As steady: Soil analysis, but with no orbiter: a lander goes to an unsurveyed site on the first Turn, then rovers.",
     {
@@ -468,7 +472,7 @@ export const strategies: Strategy[] = [
       onlySurveyedSites: false,
     },
   ),
-  campaign(
+  playStyle(
     "steady: rover straight away",
     "As steady: Soil analysis, but with no orbiter: a rover goes to an unsurveyed site on the first Turn.",
     {
@@ -478,12 +482,12 @@ export const strategies: Strategy[] = [
       reserveMillions: 0,
     },
   ),
-  campaign(
+  playStyle(
     "steady: rover at once",
     "As steady: Soil analysis, but keeping no money back, so the first landing is a rover.",
     { ...steadyRovers, reserveMillions: 0 },
   ),
-  campaign(
+  playStyle(
     "steady: Survey once",
     "As steady: Soil analysis, but the orbiter changes to research after its first Survey.",
     {

@@ -75,7 +75,7 @@ The report starts with a summary with one row per strategy, of means per Program
 
 Strategies are simple on purpose, so a difference between two of them is only a rough guide to what a thoughtful player would find. Most launch whenever they can afford to, and run out of money. The ones named `steady:` play more carefully, keeping money back for a retry and keeping a few Assets at work, and each differs from `steady: Soil analysis` in one choice, so compare them with it to judge that choice.
 
-To add a strategy, add an object to the `strategies` list, with no other change. Its `plan(view, tools)` sees what a player sees: the `ProgramView`, the previews and `tools.problemsWith(plan)`. It returns a `TurnPlan`, which must pass validation, so it has to cope with shortages of money and with what's on offer changing. The `campaign` helper in the same file covers the common case.
+To add a strategy, add an object to the `strategies` list, with no other change. Its `plan(view, tools)` sees what a player sees: the `ProgramView`, the previews and `tools.problemsWith(plan)`. It returns a `TurnPlan`, which must pass validation, so it has to cope with shortages of money and with what's on offer changing. The `playStyle` helper in the same file covers the common case.
 
 ### Verification
 
