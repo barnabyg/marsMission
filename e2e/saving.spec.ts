@@ -118,6 +118,7 @@ for (const [name, contents, message] of [
 test("saves to a slot, moves on a Turn, loads the slot and sees the earlier state", async ({
   page,
 }) => {
+  // Over 5 s: plays a whole Turn between saving and loading.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
 

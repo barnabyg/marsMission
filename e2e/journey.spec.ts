@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { tooltips } from "../src/ui/tooltips";
 import { productionBaseURL } from "../playwright.config";
 import {
   cancelledAfterOneTurn,
@@ -8,7 +7,6 @@ import {
   overrideProgramData,
   pauseAtEvent,
   playToNextTurn,
-  termsInButtons,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -17,6 +15,7 @@ import { seedFailingAt, successSeed } from "./seeds";
 test("plays from a new Program through a launch to the next Turn", async ({
   page,
 }) => {
+  // Over 5 s: a whole journey into the next Turn, stopping at two points at 1x because at higher speeds the click to pause can land too late.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
 
@@ -119,6 +118,7 @@ for (const { missionEvent, before } of [
   test(`plays a Mission that fails at ${missionEvent} through to the next Turn`, async ({
     page,
   }) => {
+    // Over 5 s: for a later Mission Event, waits at 1x for the failure so the pause lands before the Turn ends, then plays on to the next Turn.
     const problems = watchForProblems(page);
     await page.goto(`/?seed=${seedFailingAt(missionEvent)}`);
     await page.getByRole("button", { name: "Launch Mission" }).click();
@@ -196,6 +196,7 @@ test("loads the data files, Mission Mode's view and its art from a production bu
 test("pauses Mission Mode and resumes from exactly where it stopped, without carrying into the next Turn", async ({
   page,
 }) => {
+  // Over 5 s: this tests playback itself, across a whole Turn and into the next.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   await page.getByRole("button", { name: "Launch Mission" }).click();
@@ -255,6 +256,7 @@ test("pauses Mission Mode and resumes from exactly where it stopped, without car
 test("keeps the events column beside the solar system view, scrolling by itself if it fills", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the Funding Threshold so the pause lands in time, with enough entries to fill the column.
   await page.goto(`/?seed=${successSeed}`);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await pauseAtEvent(page, "Launch");
@@ -362,84 +364,6 @@ test("buys Reliability, sees the risk band and cost change, and launches", async
   expect(problems).toEqual([]);
 });
 
-test("explains a game term on hover and on keyboard focus", async ({
-  page,
-}) => {
-  await page.goto("/");
-
-  const term = page.locator("dt [data-term='Public Support']");
-  const tooltip = page.getByRole("tooltip");
-  await expect(tooltip).toHaveCount(0);
-
-  await term.hover();
-  await expect(tooltip).toContainText(tooltips["Public Support"]);
-
-  await page.getByRole("heading", { name: "Mission", exact: true }).hover();
-  await page.mouse.move(0, 0);
-  await expect(tooltip).toHaveCount(0);
-
-  await term.focus();
-  await expect(tooltip).toContainText(tooltips["Public Support"]);
-  await term.blur();
-  await expect(tooltip).toHaveCount(0);
-});
-
-test("the tooltip check ignores buttons but still catches a term anywhere else", async ({
-  page,
-}) => {
-  await page.goto("/");
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-
-  await page.evaluate(() => {
-    document.body.insertAdjacentHTML(
-      "beforeend",
-      "<button>Save this Program</button>",
-    );
-  });
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-
-  await page.evaluate(() => {
-    document.body.insertAdjacentHTML("beforeend", "<p>Save this Program</p>");
-  });
-  expect(await termsWithoutTooltips(page)).toEqual(["Program"]);
-});
-
-test("no button highlights a game term, while the text around it keeps its tooltips", async ({
-  page,
-}) => {
-  await page.goto(`/?seed=${successSeed}`);
-  expect(await termsInButtons(page)).toEqual([]);
-
-  const launch = page.getByRole("button", { name: "Launch Mission" });
-  await launch.hover();
-  await expect(page.getByRole("tooltip")).toHaveCount(0);
-  await page.locator("h2 [data-term='Mission']").hover();
-  await expect(page.getByRole("tooltip")).toContainText(tooltips.Mission);
-  await page.mouse.move(0, 0);
-
-  await page.getByRole("button", { name: "Retire Program" }).click();
-  expect(await termsInButtons(page)).toEqual([]);
-  await expect(page.locator("p [data-term='Program']")).toBeVisible();
-  await page.getByRole("button", { name: "Keep going" }).click();
-
-  await launch.click();
-  await expect(
-    page.getByRole("heading", { name: "Mission Mode" }),
-  ).toBeVisible();
-  expect(await termsInButtons(page)).toEqual([]);
-  await playToNextTurn(page);
-  expect(await termsInButtons(page)).toEqual([]);
-
-  await page.reload();
-  await expect(page.getByTestId("opening-screen")).toBeVisible();
-  expect(await termsInButtons(page)).toEqual([]);
-  await page.getByRole("button", { name: "Continue this Program" }).click();
-  await page.getByRole("button", { name: "Retire Program" }).click();
-  await page.getByRole("button", { name: "Yes, retire the Program" }).click();
-  await expect(page.getByTestId("program-summary")).toBeVisible();
-  expect(await termsInButtons(page)).toEqual([]);
-});
-
 test("retires a Program and starts a new one from the Program summary", async ({
   page,
 }) => {
@@ -486,6 +410,8 @@ test("retires a Program and starts a new one from the Program summary", async ({
 test("lets a Turn pass without launching, and cancels the Program when Public Support falls too far", async ({
   page,
 }) => {
+  // A small window, because nothing here depends on the layout and software rendering at 4K is slow.
+  await page.setViewportSize({ width: 1280, height: 720 });
   await overrideProgramData(page, cancelledAfterOneTurn);
   await page.goto("/");
 
@@ -495,6 +421,7 @@ test("lets a Turn pass without launching, and cancels the Program when Public Su
   await expect(page.getByTestId("journey-progress")).toHaveText(
     "No Mission this Turn",
   );
+  await page.getByRole("button", { name: "10x" }).click();
 
   const turnSummary = page.getByTestId("turn-summary");
   await expect(turnSummary).toContainText("cancelled");

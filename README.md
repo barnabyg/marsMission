@@ -16,15 +16,30 @@ To try the latest phase, follow the [Phase 3 playtest guide](docs/playtest/phase
 
 ## Develop
 
-The Simulation (`src/simulation`) holds all the rules and knows nothing about the browser. The Catalogue (`src/catalogue`) loads and validates the data files in `public/data`. The Save Store (`src/save`) keeps what the Simulation saves in the browser. Everything else displays what the Simulation produces.
+The Simulation holds all the rules and knows nothing about the browser. Everything else loads its data, saves its state or displays what it produces.
 
-A typical feature touches these folders, in order:
+| Folder           | What it holds                                                                                                                                         |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app`        | The App component that moves between screens and connects them to the Simulation, all styles (`styles.css`), and start-up                             |
+| `src/catalogue`  | The Catalogue: parses and validates the data files in `public/data`, which `src/app` fetches                                                          |
+| `src/mission`    | Mission Mode and the Turn summary: playback, sounds, and the views, each in its own subfolder, which `MissionMode.tsx` and `MissionScene.tsx` connect |
+| `src/planning`   | Planning Mode and the Program summary screen                                                                                                          |
+| `src/save`       | The Save Store, which keeps what the Simulation saves in the browser, and the screens for saving: the opening screen and Save Slots                   |
+| `src/simulation` | The Simulation: all the rules, with most of the tests, plus the small test catalogue and helpers those tests share                                    |
+| `src/testing`    | Test support that reads the real data files with Node, which is kept out of `src/simulation` because that folder has no Node types                    |
+| `src/ui`         | Shared UI: dialogs (`Dialog.tsx`), tooltips (`tooltips.ts`, `GameText.tsx`, `TooltipLayer.tsx`) and date formatting                                   |
+
+Test fixtures go in `src/simulation/testCatalogue.ts` and `testHelpers.ts` for rule tests, which use round numbers so that balance changes don't break them. Use `src/testing/realCatalogue.ts` for tests of the game's actual balance.
+
+A feature with new content touches these folders, in order:
 
 1. `public/data`: the new content
-2. `src/catalogue`: validating it
-3. `src/simulation`: the rules, with most of the tests
+2. `src/catalogue`: validating it, and `src/simulation/testCatalogue.ts` for a new Catalogue field
+3. `src/simulation`: the rules, and a new format in `saveFormat.ts` for a new saved field
 4. `src/planning` or `src/mission`: displaying it, with styles and wiring in `src/app`, plus `src/ui/tooltips.ts` and `GLOSSARY.md` for a new game term
 5. `e2e`: a browser test of the journey
+
+A ticket that only changes a screen or dialog starts from its component in `src/planning`, `src/mission` or `src/save`, and usually also touches `src/ui`, `src/app/styles.css` and the `e2e` file for that subject.
 
 | Command                | What it does                                  |
 | ---------------------- | --------------------------------------------- |

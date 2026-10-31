@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
   eventEntries,
+  holdTurnWhenShown,
   pauseAtEvent,
   playToNextTurn,
   termsWithoutTooltips,
@@ -31,6 +32,7 @@ function landingRiskBand(page: Page) {
 test("plans a landing, plays it through and reaches the next Turn", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the landing so the pause lands in time, then plays on to the next Turn.
   const problems = watchForProblems(page);
   await planLanding(page, landingSeed);
 
@@ -69,6 +71,7 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
 test("refuses a too-heavy Mission, then launches an orbiter and a lander together", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the landing so the pause lands in time, then plays out the Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
@@ -112,6 +115,7 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
 test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site when planning a landing", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the Survey so the pause lands in time, then plays out the Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
@@ -151,6 +155,7 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
 test("offers a Service Life for each chosen Asset, which changes the cost, and sees one end during a Turn", async ({
   page,
 }) => {
+  // Over 5 s: plays two Turns, because a Service Life can only run out in the Turn after the launch.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterLastsSeed}`);
   const life = page.getByLabel("Service Life for Pathfinder Orbiter");
@@ -167,13 +172,20 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
+  // At the 10x carried over, the Service Life ends about 0.5 s into this Turn.
+  await holdTurnWhenShown(page);
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
     "Pathfinder Orbiter",
   );
-  await pauseAtEvent(page, "Pathfinder Orbiter: Service Life ended");
+  const ended = "Pathfinder Orbiter: Service Life ended";
+  await holdTurnWhenShown(page, ended);
+  await page.getByRole("button", { name: "10x" }).click();
+  await expect(eventEntries(page).first().getByRole("heading")).toHaveText(
+    ended,
+  );
   await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
   await expect(eventEntries(page).first()).toContainText(
     "costs no Public Support",
@@ -192,6 +204,7 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
 test("buys Reliability for an Asset, then sees one fail in service with a known seed", async ({
   page,
 }) => {
+  // Over 5 s: plays two Turns, because an Asset can only fail in service in the Turn after the launch.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterFailsInServiceSeed}`);
 
@@ -209,12 +222,16 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
 
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await playToNextTurn(page);
+  // At the 10x carried over, the whole of this Turn takes about a second.
+  await holdTurnWhenShown(page, "Pathfinder Orbiter failed");
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
 
-  await pauseAtEvent(page, "Pathfinder Orbiter failed");
   const failed = eventEntries(page).first();
+  await expect(failed.getByRole("heading")).toHaveText(
+    "Pathfinder Orbiter failed",
+  );
   await expect(failed).toHaveClass(/failed/);
   await expect(failed).toContainText("costs no Public Support");
   await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
@@ -231,6 +248,7 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
 test("reports a failed landing as a crash at the Landing Site", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the landing so the pause lands in time, then plays out the Turn.
   const problems = watchForProblems(page);
   await planLanding(page, crashSeed);
   await page.getByRole("button", { name: "Launch Mission" }).click();
