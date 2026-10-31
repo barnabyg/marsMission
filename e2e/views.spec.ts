@@ -127,7 +127,7 @@ test("never shows an orbiter whose Mission failed", async ({ page }) => {
 
   await pauseAtEvent(page, "Mars orbit insertion failed");
   await expect(orbiterLabels(page)).toHaveCount(0);
-  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing yet");
+  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
 
   await page.getByRole("button", { name: "5x" }).click();
   await expect
