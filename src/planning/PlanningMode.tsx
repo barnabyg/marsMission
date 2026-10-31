@@ -176,6 +176,7 @@ export function PlanningMode({
 
           <OperatingPanel
             assets={view.operatingAssets}
+            somethingLeftToSurvey={view.somethingLeftToSurvey}
             chosenActivities={operatingActivities}
             onActivityChange={(key, activityId) => {
               setOperatingActivities({

@@ -10,7 +10,11 @@ import {
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
-import { ResearchEarnings } from "./ResearchEarnings";
+import {
+  isSurveying,
+  NothingLeftToSurvey,
+  ResearchEarnings,
+} from "./ResearchEarnings";
 
 interface MissionPanelProps {
   simulation: Simulation;
@@ -138,6 +142,10 @@ export function MissionPanel({
       <ResearchEarnings
         activities={plannedAssets.flatMap(({ activities }) => activities)}
       />
+      {!view.somethingLeftToSurvey &&
+        plannedAssets.some(({ activityId, activities }) =>
+          isSurveying(activityId, activities),
+        ) && <NothingLeftToSurvey />}
       {landingSite && (
         <>
           <label>

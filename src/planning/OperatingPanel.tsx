@@ -1,10 +1,15 @@
 import type { ProgramView } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
-import { ResearchEarnings } from "./ResearchEarnings";
+import {
+  isSurveying,
+  NothingLeftToSurvey,
+  ResearchEarnings,
+} from "./ResearchEarnings";
 
 interface OperatingPanelProps {
   assets: ProgramView["operatingAssets"];
+  somethingLeftToSurvey: boolean;
   /** The new Activities chosen this Turn, by each Asset's key. */
   chosenActivities: Record<string, string>;
   onActivityChange: (key: string, activityId: string) => void;
@@ -13,6 +18,7 @@ interface OperatingPanelProps {
 /** The Assets already at Mars, each with what is left of its Service Life and the choice of its Activity. */
 export function OperatingPanel({
   assets,
+  somethingLeftToSurvey,
   chosenActivities,
   onActivityChange,
 }: OperatingPanelProps) {
@@ -31,6 +37,10 @@ export function OperatingPanel({
           <ResearchEarnings
             activities={assets.flatMap(({ activities }) => activities)}
           />
+          {!somethingLeftToSurvey &&
+            assets.some(({ key, activityId, activities }) =>
+              isSurveying(chosenActivities[key] ?? activityId, activities),
+            ) && <NothingLeftToSurvey />}
           <ul className="operating-assets" data-testid="operating-assets">
             {assets.map((asset) => (
               <li key={asset.key}>

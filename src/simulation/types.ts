@@ -51,6 +51,8 @@ export interface PlannedActivity {
   id: string;
   name: string;
   description: string;
+  /** Whether doing this is a Survey. */
+  surveys: boolean;
   /** What it earns over a whole Turn in service if it's research, or null if it isn't. */
   earnsPerTurn: {
     science: number;

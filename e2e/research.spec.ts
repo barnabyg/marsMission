@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
+import { realCatalogueFiles } from "../src/testing/realCatalogue";
 import {
   chooseAssets,
   termsWithoutTooltips,
@@ -124,6 +125,101 @@ test("sees which research pays a Research Grant, then sees it paid and the money
   await expect(page.getByTestId("turn-number")).toHaveText("2");
   await expect(page.getByTestId("money")).toHaveText("$2.237B");
   expect(problems).toEqual([]);
+});
+
+test("says when an Asset is set to Survey and nothing is left to Survey", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  const siteIds = realCatalogueFiles().landingSites.map(({ id }) => id);
+  await page.addInitScript(
+    ([key, value]) => {
+      localStorage.setItem(key, value);
+    },
+    [
+      storageKeyFor("automatic"),
+      JSON.stringify({
+        formatVersion: 6,
+        program: {
+          seed: successSeed,
+          turnNumber: 6,
+          date: "2040-01-01",
+          moneyMillions: 5000,
+          publicSupport: 500,
+          science: 800,
+          milestoneIds: [],
+          landedSiteIds: [],
+          knownLandingSiteIds: siteIds,
+          surveyedLandingSiteIds: siteIds,
+          fundingThresholdsPaid: [],
+          operatingAssets: [
+            {
+              assetId: "pathfinder-orbiter",
+              name: "Pathfinder Orbiter",
+              kind: "orbiter",
+              landingSiteId: null,
+              activityId: "survey",
+              arrivedOn: "2038-01-01",
+              serviceLifeDays: 9000,
+              reliabilityLevelId: "none",
+            },
+          ],
+          status: { kind: "active" },
+        },
+      }),
+    ] as const,
+  );
+  await page.goto("/");
+  await page.getByRole("button", { name: "Continue this Program" }).click();
+
+  const note = page.getByTestId("nothing-left-to-survey");
+  const operatingPanel = page.locator(".panel", {
+    hasText: "Operating at Mars",
+  });
+  const missionPanel = page.locator(".panel", { hasText: "Launch Vehicle" });
+  const noteText =
+    "Nothing is left to Survey, so an Asset set to Survey does nothing.";
+  // The Mission starts with an orbiter, which starts on Survey too.
+  await expect(note).toHaveCount(2);
+  await expect(operatingPanel.getByTestId("nothing-left-to-survey")).toHaveText(
+    noteText,
+  );
+  await expect(missionPanel.getByTestId("nothing-left-to-survey")).toHaveText(
+    noteText,
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  // Each goes when its Asset is given something else to do.
+  await operatingPanel
+    .getByLabel("Activity for Pathfinder Orbiter")
+    .selectOption("orbital-research");
+  await expect(
+    operatingPanel.getByTestId("nothing-left-to-survey"),
+  ).toHaveCount(0);
+  await expect(note).toHaveCount(1);
+  await missionPanel
+    .getByLabel("Activity for Pathfinder Orbiter")
+    .selectOption("orbital-research");
+  await expect(note).toHaveCount(0);
+
+  // And comes back with it, or goes if the Asset leaves the Mission.
+  await missionPanel
+    .getByLabel("Activity for Pathfinder Orbiter")
+    .selectOption("survey");
+  await expect(note).toHaveCount(1);
+  await chooseAssets(page, ["Prospector Lander"]);
+  await expect(note).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test("with something left to Survey, an Asset set to Survey has no such note", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  await expect(page.getByLabel("Activity for Pathfinder Orbiter")).toHaveValue(
+    "survey",
+  );
+  await expect(page.getByTestId("nothing-left-to-survey")).toHaveCount(0);
 });
 
 test("a lander from an old save carries on with Nothing, and can then be set to research", async ({

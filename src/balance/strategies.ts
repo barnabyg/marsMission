@@ -57,11 +57,11 @@ interface Campaign {
   lastLaunchTurn?: number;
 }
 
-// The views don't say which Activity is a Survey, because Planning Mode only needs its name.
-const surveyActivityId = "survey";
+const surveyActivity = (activities: PlannedActivity[]) =>
+  activities.find(({ surveys }) => surveys);
 
 const canSurvey = (activities: PlannedActivity[]) =>
-  activities.some(({ id }) => id === surveyActivityId);
+  surveyActivity(activities) !== undefined;
 
 const surveyorInService = (view: ProgramView) =>
   view.operatingAssets.some(
@@ -109,15 +109,13 @@ function operatingActivities(view: ProgramView, campaign: Campaign) {
     activities,
     daysLeft,
   } of view.operatingAssets) {
-    const surveys: boolean =
-      !surveying &&
-      daysLeft > 0 &&
-      wantsSurvey(view, campaign) &&
-      canSurvey(activities);
-    surveying ||= surveys;
-    const wanted = surveys
-      ? surveyActivityId
-      : researchActivity(activities, aimOf(campaign, view))?.id;
+    const survey: PlannedActivity | undefined =
+      !surveying && daysLeft > 0 && wantsSurvey(view, campaign)
+        ? surveyActivity(activities)
+        : undefined;
+    surveying ||= survey !== undefined;
+    const wanted =
+      survey?.id ?? researchActivity(activities, aimOf(campaign, view))?.id;
     if (wanted !== undefined && wanted !== activityId) changes[key] = wanted;
   }
   return { changes, surveying };
@@ -160,12 +158,14 @@ function missionsFor(
   const planned = tools.previewAssets(mission)[0];
   if (!planned) return [];
 
-  const surveys =
-    !surveying && wantsSurvey(view, campaign) && canSurvey(planned.activities);
-  const activityId = surveys
-    ? surveyActivityId
-    : (researchActivity(planned.activities, aimOf(campaign, view))?.id ??
-      planned.activityId);
+  const survey =
+    !surveying && wantsSurvey(view, campaign)
+      ? surveyActivity(planned.activities)
+      : undefined;
+  const activityId =
+    survey?.id ??
+    researchActivity(planned.activities, aimOf(campaign, view))?.id ??
+    planned.activityId;
   // Short of money for a retry, a longer Service Life is the first thing to give up.
   const canSpareMoney =
     view.moneyMillions >= 2 * (campaign.reserveMillions ?? 0);

@@ -82,6 +82,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     id: activity.id,
     name: activity.name,
     description: activity.description,
+    surveys: activity.effect.kind === "survey",
     earnsPerTurn: earningsPerTurn(catalogue, activity),
   });
 

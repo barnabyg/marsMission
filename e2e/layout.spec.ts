@@ -41,10 +41,18 @@ const allAssets = [
   "Trailblazer Rover",
 ];
 
-const realMilestones = realCatalogueFiles().milestones;
+const realFiles = realCatalogueFiles();
+const realMilestones = realFiles.milestones;
+const allLandingSiteIds = realFiles.landingSites.map(({ id }) => id);
 
-/** Opens Planning Mode with every Milestone earned and several operating Assets listed. */
-async function openBusyProgram(page: Page): Promise<void> {
+/**
+ * Opens Planning Mode with every Milestone earned and several operating Assets listed, and if asked,
+ * with nothing left to Survey, which adds a note to each panel with an Asset set to Survey.
+ */
+async function openBusyProgram(
+  page: Page,
+  { allSurveyed = false } = {},
+): Promise<void> {
   await page.addInitScript(
     ([key, value]) => {
       localStorage.setItem(key, value);
@@ -62,8 +70,10 @@ async function openBusyProgram(page: Page): Promise<void> {
           science: 800,
           milestoneIds: realMilestones.map(({ id }) => id),
           landedSiteIds: ["jezero-crater"],
-          knownLandingSiteIds: ["jezero-crater", "gale-crater"],
-          surveyedLandingSiteIds: [],
+          knownLandingSiteIds: allSurveyed
+            ? allLandingSiteIds
+            : ["jezero-crater", "gale-crater"],
+          surveyedLandingSiteIds: allSurveyed ? allLandingSiteIds : [],
           fundingThresholdsPaid: [250],
           // A lander and a rover at a Landing Site too, whose rows are the longest and whose research lengthens the panel's text.
           operatingAssets: Array.from({ length: 8 }, (_, index) => ({
@@ -204,6 +214,21 @@ for (const size of screenSizes) {
       await expect(
         page.getByTestId("operating-assets").getByRole("listitem").last(),
       ).toContainText("Trailblazer Rover at Jezero Crater");
+      expect(await somethingScrolls(page)).toBe(false);
+      for (const name of ["Launch Mission", "End Turn without launching"]) {
+        await expect(page.getByRole("button", { name })).toBeInViewport({
+          ratio: 1,
+        });
+      }
+    });
+
+    test("Planning Mode fits on one screen with notes that nothing is left to Survey", async ({
+      page,
+    }) => {
+      await openBusyProgram(page, { allSurveyed: true });
+      await chooseAssets(page, allAssets);
+      await expect(page.getByTestId("nothing-left-to-survey")).toHaveCount(2);
+      await expect(page.getByTestId("landing-site-details")).toBeVisible();
       expect(await somethingScrolls(page)).toBe(false);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({

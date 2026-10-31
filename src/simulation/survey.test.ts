@@ -33,6 +33,20 @@ describe("whether anything is left to Survey", () => {
     }
     expect(simulation.readProgram(current).somethingLeftToSurvey).toBe(false);
   });
+
+  it("says which of an Asset's Activities is a Survey, operating or on a Mission", () => {
+    const { simulation, program } = withFailures({});
+    const surveys = (activities: { id: string; surveys: boolean }[] = []) =>
+      activities.filter((activity) => activity.surveys).map(({ id }) => id);
+    const planned = simulation.previewAssets({
+      launchVehicleId: "test-vehicle",
+      assetIds: ["test-orbiter"],
+    });
+    expect(surveys(planned[0]?.activities)).toEqual(["test-survey"]);
+    const { program: next } = simulation.runTurn(program, sendOrbiter);
+    const { operatingAssets } = simulation.readProgram(next);
+    expect(surveys(operatingAssets[0]?.activities)).toEqual(["test-survey"]);
+  });
 });
 
 const knownSites = (simulation: Simulation, program: Program) =>
