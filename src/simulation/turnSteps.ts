@@ -4,19 +4,23 @@ import {
   formatMoney,
   missionEventRoll,
   sum,
+  type Asset,
+  type LandingSite,
   type MissionEvent,
   type Rules,
 } from "./rules";
 import type {
+  AssetAtMars,
+  FirstLandingEntry,
   FundingThresholdEntry,
   MilestoneEntry,
+  MissionAsset,
   MissionEventEntry,
   Program,
   TurnPlan,
   TurnResult,
 } from "./types";
 
-type Asset = Catalogue["assets"][number];
 type Milestone = Catalogue["milestones"][number];
 type FundingThreshold = Catalogue["fundingThresholds"][number];
 
@@ -29,6 +33,7 @@ interface MissionOutcome {
   failedEvent: MissionEvent | undefined;
   deliveredAssets: Asset[];
   publicSupportLost: number;
+  landingSite: LandingSite | undefined;
 }
 
 interface MilestoneAwards {
@@ -57,6 +62,9 @@ function flyMission(
   const assets = (mission?.assetIds ?? []).flatMap((assetId) =>
     catalogue.assets.filter((candidate) => candidate.id === assetId),
   );
+  const landingSite = rules.landingSiteById(mission?.landingSiteId);
+  const withSite = (text: string) =>
+    text.replaceAll("{site}", landingSite?.name ?? "");
   const plannedEvents = mission
     ? rules.missionEventsFor(mission.launchVehicleId, mission.assetIds)
     : [];
@@ -66,6 +74,7 @@ function flyMission(
       rules.failureProbability(
         event,
         rules.reliabilityLevelFor(mission, event.id),
+        mission,
       ),
   );
   const failedEvent = plannedEvents[failedIndex];
@@ -83,7 +92,7 @@ function flyMission(
             day: rules.dayOf(event),
             eventId: event.id,
             title: `${event.name} failed`,
-            description: `${event.failureDescription} Lost with the Mission: ${assetNames.join(", ")}. It costs ${publicSupportLost} Public Support.`,
+            description: `${withSite(event.failureDescription)} Lost with the Mission: ${assetNames.join(", ")}. It costs ${publicSupportLost} Public Support.`,
             outcome: "failure",
           }
         : {
@@ -91,7 +100,7 @@ function flyMission(
             day: rules.dayOf(event),
             eventId: event.id,
             title: event.name,
-            description: event.description,
+            description: withSite(event.description),
             outcome: "success",
           },
     );
@@ -103,16 +112,24 @@ function flyMission(
     failedEvent,
     deliveredAssets: failedEvent ? [] : assets,
     publicSupportLost,
+    landingSite,
   };
 }
 
 /** Awards each Milestone that an Asset delivered this Turn has earned for the first time. */
 function awardMilestones(
   catalogue: Catalogue,
+  rules: Rules,
   program: Program,
   deliveredAssets: Asset[],
 ): MilestoneAwards {
   const arrivingKinds = deliveredAssets.map((asset) => asset.kind);
+  const dayEarned = ({ trigger }: Milestone) =>
+    Math.min(
+      ...deliveredAssets
+        .filter((asset) => asset.kind === trigger.assetKindArrives)
+        .map(rules.deliveryDay),
+    );
   const awarded = catalogue.milestones.filter(
     ({ id, trigger }) =>
       !program.milestoneIds.includes(id) &&
@@ -122,7 +139,7 @@ function awardMilestones(
     awarded,
     entries: awarded.map((milestone): MilestoneEntry => ({
       kind: "milestone",
-      day: catalogue.program.transferDays,
+      day: dayEarned(milestone),
       milestoneId: milestone.id,
       title: milestone.name,
       description: `${milestone.description} It awards ${milestone.science} Science and ${milestone.publicSupport} Public Support.`,
@@ -132,12 +149,37 @@ function awardMilestones(
   };
 }
 
-/** Pays each Funding Threshold reached for the first time. */
+/** The Science for landing at a Landing Site for the first time, if a lander did. */
+function creditFirstLanding(
+  rules: Rules,
+  program: Program,
+  flown: MissionOutcome,
+): { site: LandingSite; entry: FirstLandingEntry } | null {
+  const lander = flown.deliveredAssets.find((asset) => asset.landsAtSite);
+  const site = flown.landingSite;
+  if (!lander || !site || program.landedSiteIds.includes(site.id)) return null;
+  return {
+    site,
+    entry: {
+      kind: "firstLanding",
+      day: rules.deliveryDay(lander),
+      title: `First landing at ${site.name}`,
+      description: `${site.description} It earns ${site.science} Science.`,
+    },
+  };
+}
+
+/** Pays each Funding Threshold reached for the first time, on the day of the last award that could have reached it. */
 function payFundingThresholds(
   catalogue: Catalogue,
   program: Program,
   publicSupport: number,
+  awards: MilestoneEntry[],
 ): FundingOutcome {
+  const day = Math.max(
+    catalogue.program.transferDays,
+    ...awards.map((award) => award.day),
+  );
   const payouts = catalogue.fundingThresholds.filter(
     (threshold) =>
       threshold.publicSupport <= publicSupport &&
@@ -148,7 +190,7 @@ function payFundingThresholds(
     entries: payouts.map(
       ({ publicSupport: level, payoutMillions }): FundingThresholdEntry => ({
         kind: "fundingThreshold",
-        day: catalogue.program.transferDays,
+        day,
         title: `Funding Threshold reached: ${level} Public Support`,
         description: `The Program's backers pay out ${formatMoney(payoutMillions)}.`,
       }),
@@ -183,13 +225,22 @@ export function resolveTurn(
   const { launchWindowIntervalDays, transferDays } = catalogue.program;
 
   const flown = flyMission(catalogue, rules, program, plan);
-  const milestones = awardMilestones(catalogue, program, flown.deliveredAssets);
+  const milestones = awardMilestones(
+    catalogue,
+    rules,
+    program,
+    flown.deliveredAssets,
+  );
+  const firstLanding = creditFirstLanding(rules, program, flown);
+  const scienceGained =
+    milestones.science + (firstLanding ? firstLanding.site.science : 0);
   const publicSupportBeforeDrain =
     program.publicSupport - flown.publicSupportLost + milestones.publicSupport;
   const funding = payFundingThresholds(
     catalogue,
     program,
     publicSupportBeforeDrain,
+    milestones.entries,
   );
   const faded = fadePublicSupport(catalogue, publicSupportBeforeDrain);
 
@@ -198,7 +249,36 @@ export function resolveTurn(
     costMillions +
     sum(funding.payouts.map(({ payoutMillions }) => payoutMillions));
   const assetNames = flown.assets.map((asset) => asset.name);
-  const arrivedOn = addDays(program.date, transferDays);
+  const failedOnDay = flown.failedEvent ? rules.dayOf(flown.failedEvent) : null;
+  const siteNameOf = (asset: Asset) =>
+    asset.landsAtSite ? (flown.landingSite?.name ?? null) : null;
+  const missionAssets = flown.assets.map((asset): MissionAsset => {
+    const delivered = flown.deliveredAssets.includes(asset);
+    return {
+      name: asset.name,
+      landingSiteName: siteNameOf(asset),
+      deliveredOnDay: delivered ? rules.deliveryDay(asset) : null,
+      lostOnDay: delivered ? null : failedOnDay,
+      crashed:
+        !delivered &&
+        asset.landsAtSite === true &&
+        flown.failedEvent?.failureProbability === "landingSite",
+    };
+  });
+  const assetsAtMars: AssetAtMars[] = [
+    ...program.operatingAssets.map((asset) => ({
+      name: asset.name,
+      kind: asset.kind,
+      landingSiteName: rules.landingSiteById(asset.landingSiteId)?.name ?? null,
+      fromDay: 0,
+    })),
+    ...flown.deliveredAssets.map((asset) => ({
+      name: asset.name,
+      kind: asset.kind,
+      landingSiteName: siteNameOf(asset),
+      fromDay: rules.deliveryDay(asset),
+    })),
+  ];
 
   return {
     program: {
@@ -207,11 +287,14 @@ export function resolveTurn(
       date: addDays(program.date, launchWindowIntervalDays),
       moneyMillions: moneyEndMillions,
       publicSupport: faded.end,
-      science: program.science + milestones.science,
+      science: program.science + scienceGained,
       milestoneIds: [
         ...program.milestoneIds,
         ...milestones.awarded.map(({ id }) => id),
       ],
+      landedSiteIds: firstLanding
+        ? [...program.landedSiteIds, firstLanding.site.id]
+        : program.landedSiteIds,
       fundingThresholdsPaid: [
         ...program.fundingThresholdsPaid,
         ...funding.payouts.map(({ publicSupport }) => publicSupport),
@@ -222,7 +305,10 @@ export function resolveTurn(
           assetId: asset.id,
           name: asset.name,
           kind: asset.kind,
-          arrivedOn,
+          arrivedOn: addDays(program.date, rules.deliveryDay(asset)),
+          landingSiteId: asset.landsAtSite
+            ? (flown.landingSite?.id ?? null)
+            : null,
         })),
       ],
       status:
@@ -240,16 +326,16 @@ export function resolveTurn(
               arrivalDay: transferDays,
               launchVehicleName: flown.vehicleName,
               assetNames,
-              failedOnDay: flown.failedEvent
-                ? rules.dayOf(flown.failedEvent)
-                : null,
+              assets: missionAssets,
+              failedOnDay,
             }
           : null,
-      operatingAssetNames: program.operatingAssets.map((asset) => asset.name),
+      assetsAtMars,
       // The sort is stable, so an award stays after the arrival that earned it.
       entries: [
         ...flown.entries,
         ...milestones.entries,
+        ...(firstLanding ? [firstLanding.entry] : []),
         ...funding.entries,
       ].sort((first, second) => first.day - second.day),
     },
@@ -257,7 +343,7 @@ export function resolveTurn(
       missionCostMillions: costMillions,
       moneyStartMillions: program.moneyMillions,
       moneyEndMillions,
-      scienceGained: milestones.science,
+      scienceGained,
       publicSupportStart: program.publicSupport,
       publicSupportGained: milestones.publicSupport,
       publicSupportDrained: publicSupportBeforeDrain - faded.end,
@@ -269,6 +355,10 @@ export function resolveTurn(
           publicSupport,
         }),
       ),
+      firstLanding: firstLanding && {
+        siteName: firstLanding.site.name,
+        science: firstLanding.site.science,
+      },
       fundingPayouts: funding.payouts,
       failure: flown.failedEvent
         ? {

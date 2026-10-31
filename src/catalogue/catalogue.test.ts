@@ -208,6 +208,63 @@ describe("invalid data files", () => {
     expect(message).toContain("reliability-levels.json");
   });
 
+  it("reject a Landing Site with an invalid risk", () => {
+    const files = testCatalogueFiles();
+    const [site] = files.landingSites;
+    const message = errorFrom({
+      ...files,
+      landingSites: [{ ...site, landingRisk: 2 }],
+    });
+    expect(message).toContain("landing-sites.json");
+    expect(message).toContain("landingRisk");
+  });
+
+  it("reject a surveyed landing risk higher than the landing risk", () => {
+    const files = testCatalogueFiles();
+    const [site] = files.landingSites;
+    const message = errorFrom({
+      ...files,
+      landingSites: [{ ...site, landingRisk: 0.1, surveyedLandingRisk: 0.2 }],
+    });
+    expect(message).toContain("surveyedLandingRisk");
+  });
+
+  it("reject a lander when no Landing Site is known from the start", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      landingSites: files.landingSites.map((site) => ({
+        ...site,
+        knownFromStart: false,
+      })),
+    });
+    expect(message).toContain("known from the start");
+  });
+
+  it("reject a Mission Event that needs a Landing Site on an Asset that doesn't land", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      assets: files.assets.map((asset) => ({
+        ...asset,
+        landsAtSite: false,
+      })),
+    });
+    expect(message).toContain("landsAtSite");
+  });
+
+  it("reject a Mission Event that needs a Landing Site on a Launch Vehicle", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      launchVehicles: files.launchVehicles.map((vehicle) => ({
+        ...vehicle,
+        missionEvents: [...vehicle.missionEvents, "test-landing"],
+      })),
+    });
+    expect(message).toContain("launch-vehicles.json");
+  });
+
   it("reject a date that isn't a real date", () => {
     const files = testCatalogueFiles();
     const message = errorFrom({

@@ -51,8 +51,34 @@ const format1 = z.strictObject({
   status: programStatus,
 });
 
+/** Adds the sites landed at and where each Asset is. Everything saved before this was in orbit. */
+const format2 = format1.extend({
+  landedSiteIds: z.array(z.string()),
+  operatingAssets: z.array(
+    z.strictObject({
+      ...format1.shape.operatingAssets.element.shape,
+      landingSiteId: z.string().nullable(),
+    }),
+  ),
+});
+
+const newestFormat = format2;
+
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
-const formats: readonly SaveFormat[] = [{ schema: format1 }];
+const formats: readonly SaveFormat[] = [
+  {
+    schema: format1,
+    upgrade: (old: z.output<typeof format1>): z.output<typeof format2> => ({
+      ...old,
+      landedSiteIds: [],
+      operatingAssets: old.operatingAssets.map((asset) => ({
+        ...asset,
+        landingSiteId: null,
+      })),
+    }),
+  },
+  { schema: newestFormat },
+];
 
 export const corruptSave = "This save is corrupt, so it can't be loaded.";
 
@@ -89,7 +115,11 @@ export function restoreThroughFormats(
 }
 
 export function restoreProgram(saved: unknown, catalogue: Catalogue): Program {
-  const program = restoreThroughFormats(saved, catalogue, formats) as Program;
+  const restored = newestFormat.safeParse(
+    restoreThroughFormats(saved, catalogue, formats),
+  );
+  if (!restored.success) throw new SaveError(corruptSave);
+  const program: Program = restored.data;
   if (program.status.kind !== "active") {
     throw new SaveError("This Program has ended, so it can't be continued.");
   }

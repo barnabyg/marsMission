@@ -30,9 +30,9 @@ describe("saving and restoring a Program", () => {
     );
   }
 
-  it("carries a format version from the first release", () => {
+  it("carries a format version newer than the first release", () => {
     const { simulation, program } = setup();
-    expect(simulation.saveProgram(program).formatVersion).toBe(1);
+    expect(simulation.saveProgram(program).formatVersion).toBeGreaterThan(1);
   });
 
   it("restores a save made by the first release, whatever later versions do", () => {
@@ -123,8 +123,8 @@ describe("saving and restoring a Program", () => {
 
   it("names the format version even when a future format has a different shape", () => {
     const { simulation } = setup();
-    expect(() => simulation.restoreProgram({ formatVersion: 2 })).toThrow(
-      /format 2/,
+    expect(() => simulation.restoreProgram({ formatVersion: 999 })).toThrow(
+      /format 999/,
     );
   });
 

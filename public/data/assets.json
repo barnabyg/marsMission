@@ -5,5 +5,13 @@
     "kind": "orbiter",
     "costMillions": 700,
     "missionEvents": ["mars-orbit-insertion"]
+  },
+  {
+    "id": "prospector-lander",
+    "name": "Prospector Lander",
+    "kind": "lander",
+    "costMillions": 800,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true
   }
 ]

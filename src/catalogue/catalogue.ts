@@ -39,6 +39,21 @@ const assetsSchema = z.array(
     kind: id,
     costMillions: money,
     missionEvents: z.array(id),
+    // Whether this Asset is a lander, so that a Mission carrying it must name a Landing Site.
+    landsAtSite: z.boolean().optional(),
+  }),
+);
+
+const landingSitesSchema = z.array(
+  z.strictObject({
+    id,
+    name: z.string().min(1),
+    description: z.string().min(1),
+    landingRisk: z.number().min(0).max(1),
+    surveyedLandingRisk: z.number().min(0).max(1),
+    // Earned by the first successful landing at this site.
+    science: z.number().int().nonnegative(),
+    knownFromStart: z.boolean(),
   }),
 );
 
@@ -46,13 +61,18 @@ const missionEventsSchema = z.array(
   z.strictObject({
     id,
     name: z.string().min(1),
+    // {site} in either description stands for the Mission's Landing Site.
     description: z.string().min(1),
     failureDescription: z.string().min(1),
     timing: z.strictObject({
       from: z.enum(["launch", "arrival"]),
       days: z.number().int().nonnegative(),
     }),
-    failureProbability: z.number().min(0).max(1),
+    // "landingSite" means the risk of the Mission's Landing Site.
+    failureProbability: z.union([
+      z.number().min(0).max(1),
+      z.literal("landingSite"),
+    ]),
     publicSupportLoss: z.number().int().nonnegative(),
   }),
 );
@@ -100,6 +120,7 @@ const schemas = {
   program: programSchema,
   launchVehicles: launchVehiclesSchema,
   assets: assetsSchema,
+  landingSites: landingSitesSchema,
   missionEvents: missionEventsSchema,
   milestones: milestonesSchema,
   fundingThresholds: fundingThresholdsSchema,
@@ -112,6 +133,7 @@ export const catalogueFileNames = {
   program: "program.json",
   launchVehicles: "launch-vehicles.json",
   assets: "assets.json",
+  landingSites: "landing-sites.json",
   missionEvents: "mission-events.json",
   milestones: "milestones.json",
   fundingThresholds: "funding-thresholds.json",
@@ -123,6 +145,8 @@ export interface Catalogue {
   program: z.output<typeof programSchema>;
   launchVehicles: z.output<typeof launchVehiclesSchema>;
   assets: z.output<typeof assetsSchema>;
+  /** In the order a Survey reveals them. */
+  landingSites: z.output<typeof landingSitesSchema>;
   missionEvents: z.output<typeof missionEventsSchema>;
   milestones: z.output<typeof milestonesSchema>;
   fundingThresholds: z.output<typeof fundingThresholdsSchema>;
@@ -163,6 +187,7 @@ function crossCheck(catalogue: Catalogue): string[] {
     program,
     launchVehicles,
     assets,
+    landingSites,
     missionEvents,
     milestones,
     fundingThresholds,
@@ -173,6 +198,7 @@ function crossCheck(catalogue: Catalogue): string[] {
   const parts = [
     [catalogueFileNames.launchVehicles, launchVehicles],
     [catalogueFileNames.assets, assets],
+    [catalogueFileNames.landingSites, landingSites],
     [catalogueFileNames.missionEvents, missionEvents],
     [catalogueFileNames.milestones, milestones],
     [catalogueFileNames.reliabilityLevels, reliabilityLevels],
@@ -197,6 +223,45 @@ function crossCheck(catalogue: Catalogue): string[] {
           );
         }
       }
+    }
+  }
+
+  const landingSiteEvents = new Set(
+    missionEvents
+      .filter((event) => event.failureProbability === "landingSite")
+      .map((event) => event.id),
+  );
+  for (const vehicle of launchVehicles) {
+    for (const eventId of vehicle.missionEvents) {
+      if (landingSiteEvents.has(eventId)) {
+        problems.push(
+          `${catalogueFileNames.launchVehicles}: "${vehicle.id}" can't use the Mission Event "${eventId}", which needs a Landing Site`,
+        );
+      }
+    }
+  }
+  for (const asset of assets) {
+    for (const eventId of asset.missionEvents) {
+      if (landingSiteEvents.has(eventId) && asset.landsAtSite !== true) {
+        problems.push(
+          `${catalogueFileNames.assets}: "${asset.id}" uses the Mission Event "${eventId}", which needs a Landing Site, so it must set landsAtSite`,
+        );
+      }
+    }
+  }
+  if (
+    assets.some((asset) => asset.landsAtSite === true) &&
+    !landingSites.some((site) => site.knownFromStart)
+  ) {
+    problems.push(
+      `${catalogueFileNames.landingSites}: there is a lander in ${catalogueFileNames.assets}, so at least one Landing Site must be known from the start`,
+    );
+  }
+  for (const site of landingSites) {
+    if (site.surveyedLandingRisk > site.landingRisk) {
+      problems.push(
+        `${catalogueFileNames.landingSites}: "${site.id}" has a surveyedLandingRisk higher than its landingRisk`,
+      );
     }
   }
 
@@ -280,6 +345,12 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     files.assets,
     problems,
   );
+  const landingSites = parsePart(
+    catalogueFileNames.landingSites,
+    schemas.landingSites,
+    files.landingSites,
+    problems,
+  );
   const missionEvents = parsePart(
     catalogueFileNames.missionEvents,
     schemas.missionEvents,
@@ -319,6 +390,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     !program ||
     !launchVehicles ||
     !assets ||
+    !landingSites ||
     !missionEvents ||
     !milestones ||
     !fundingThresholds ||
@@ -332,6 +404,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     program,
     launchVehicles,
     assets,
+    landingSites,
     missionEvents,
     milestones,
     fundingThresholds,

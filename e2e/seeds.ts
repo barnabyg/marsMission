@@ -1,5 +1,5 @@
 import { parseCatalogue } from "../src/catalogue/catalogue";
-import { createSimulation } from "../src/simulation/simulation";
+import { createSimulation, type TurnPlan } from "../src/simulation/simulation";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
 
 const catalogue = parseCatalogue(realCatalogueFiles());
@@ -17,18 +17,33 @@ const firstPlan = {
  * Finds a seed from the real data files instead of pinning a number, so tuning a failure
  * probability can't quietly change what these tests are exercising.
  */
-function seedWhere(failedEvent: string | null): number {
+function seedWhere(
+  failedEvent: string | null,
+  plan: TurnPlan = firstPlan,
+): number {
   for (let seed = 1; seed < 100_000; seed++) {
-    const { summary } = simulation.runTurn(
-      simulation.startProgram(seed),
-      firstPlan,
-    );
+    const { summary } = simulation.runTurn(simulation.startProgram(seed), plan);
     if ((summary.failure?.missionEventName ?? null) === failedEvent) {
       return seed;
     }
   }
   throw new Error(`No seed gives the first Mission the outcome ${failedEvent}`);
 }
+
+/** What the tests launch to land at the first known Landing Site. */
+const firstLanding: TurnPlan = {
+  mission: {
+    launchVehicleId: catalogue.launchVehicles[0]?.id ?? "",
+    assetIds: ["prospector-lander"],
+    landingSiteId: "jezero-crater",
+  },
+};
+
+/** A seed whose first Mission lands at the first known Landing Site. */
+export const landingSeed = seedWhere(null, firstLanding);
+
+/** A seed whose first Mission crashes at the first known Landing Site. */
+export const crashSeed = seedWhere("Entry/descent/landing", firstLanding);
 
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);

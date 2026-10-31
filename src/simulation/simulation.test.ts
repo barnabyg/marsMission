@@ -25,6 +25,7 @@ describe("starting a Program", () => {
       "test-orbiter",
       "gold-orbiter",
       "test-relay",
+      "test-lander",
     ]);
   });
 });
@@ -131,7 +132,7 @@ describe("running a Turn with a Mission", () => {
     const { timeline } = simulation.runTurn(program, sendOrbiter);
     expect(timeline.startDate).toBe("2028-12-01");
     expect(timeline.durationDays).toBe(780);
-    expect(timeline.mission).toEqual({
+    expect(timeline.mission).toMatchObject({
       launchDay: 0,
       arrivalDay: 200,
       launchVehicleName: "Test Vehicle",
@@ -143,16 +144,24 @@ describe("running a Turn with a Mission", () => {
   it("tells Mission Mode which Assets were already operating when the Turn began", () => {
     const { simulation, program } = setup();
     const first = simulation.runTurn(program, sendOrbiter);
-    expect(first.timeline.operatingAssetNames).toEqual([]);
+    const before = first.timeline.assetsAtMars;
+    expect(before.map(({ name, fromDay }) => [name, fromDay])).toEqual([
+      ["Test Orbiter", 200],
+    ]);
     const second = simulation.runTurn(first.program, sendOrbiter);
-    expect(second.timeline.operatingAssetNames).toEqual(["Test Orbiter"]);
+    expect(
+      second.timeline.assetsAtMars.map(({ name, fromDay }) => [name, fromDay]),
+    ).toEqual([
+      ["Test Orbiter", 0],
+      ["Test Orbiter", 200],
+    ]);
   });
 
   it("leaves the orbiter operating at Mars in later Turns", () => {
     const { simulation, program } = setup();
     const first = simulation.runTurn(program, sendOrbiter).program;
     const second = simulation.runTurn(first, sendOrbiter).program;
-    expect(simulation.readProgram(second).operatingAssets).toEqual([
+    expect(simulation.readProgram(second).operatingAssets).toMatchObject([
       {
         assetId: "test-orbiter",
         name: "Test Orbiter",

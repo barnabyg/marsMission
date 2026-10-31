@@ -4,7 +4,7 @@ import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { EventsColumn } from "./EventsColumn";
 import { speeds } from "./playback";
-import { journeyHasFailed, journeyProgress } from "./solarSystem/orbits";
+import { assetsOperatingOn, describeJourney } from "./journey";
 import { usePlayback } from "./usePlayback";
 import { useSounds } from "./useSounds";
 
@@ -41,13 +41,7 @@ export function MissionMode({
 
   const turnProgress = (state.day / timeline.durationDays) * 100;
 
-  const { mission } = timeline;
-  const progress = mission ? journeyProgress(mission, state.day) : 0;
-  const failed = mission ? journeyHasFailed(mission, state.day) : false;
-  const operatingAssets =
-    mission?.failedOnDay === null && progress >= 1
-      ? [...timeline.operatingAssetNames, ...mission.assetNames]
-      : timeline.operatingAssetNames;
+  const operatingAssets = assetsOperatingOn(timeline, state.day);
 
   return (
     <main className="mission">
@@ -105,21 +99,13 @@ export function MissionMode({
       </header>
       <aside className="mission-side">
         <p data-testid="journey-progress">
-          <GameText>
-            {!mission
-              ? "No Mission this Turn"
-              : failed
-                ? `${mission.assetNames.join(", ")}: lost, and will not reach Mars`
-                : progress < 1
-                  ? `${mission.assetNames.join(", ")}: ${Math.round(progress * 100)}% of the way to Mars`
-                  : `${mission.assetNames.join(", ")}: arrived at Mars`}
-          </GameText>
+          <GameText>{describeJourney(timeline.mission, state.day)}</GameText>
         </p>
         <h2>Operating at Mars</h2>
         <ul data-testid="operating-at-mars">
           {operatingAssets.length === 0 && <li>Nothing yet</li>}
-          {operatingAssets.map((name, index) => (
-            <li key={index}>{name}</li>
+          {operatingAssets.map((asset, index) => (
+            <li key={index}>{asset}</li>
           ))}
         </ul>
       </aside>

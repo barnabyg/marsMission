@@ -39,6 +39,9 @@ export function PlanningMode({
   );
   const [assetId, setAssetId] = useState(view.assets[0]?.id ?? "");
   const [reliability, setReliability] = useState<Record<string, string>>({});
+  const [chosenSiteId, setChosenSiteId] = useState(
+    view.landingSites[0]?.id ?? "",
+  );
   const [openDialog, setOpenDialog] = useState<PlanningDialog | null>(null);
   const [savedToSlot, setSavedToSlot] = useState<number | null>(null);
 
@@ -51,15 +54,24 @@ export function PlanningMode({
     setOpenDialog(null);
   }
 
-  const plannedEvents = simulation.previewMission({
+  const carriesLander = view.assets.some(
+    (asset) => asset.id === assetId && asset.landsAtSite,
+  );
+  const landingSite = carriesLander
+    ? view.landingSites.find((site) => site.id === chosenSiteId)
+    : undefined;
+  const mission = {
     launchVehicleId,
     assetIds: [assetId],
+    ...(landingSite && { landingSiteId: landingSite.id }),
+  };
+  const plannedEvents = simulation.previewMission(program, {
+    ...mission,
     reliability,
   });
   const plan: TurnPlan = {
     mission: {
-      launchVehicleId,
-      assetIds: [assetId],
+      ...mission,
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
       reliability: Object.fromEntries(
         plannedEvents.map((event) => [event.eventId, event.reliabilityLevelId]),
@@ -202,6 +214,36 @@ export function PlanningMode({
               ))}
             </select>
           </label>
+          {landingSite && (
+            <>
+              <label>
+                <span>
+                  <GameText>Landing Site</GameText>
+                </span>
+                <select
+                  value={landingSite.id}
+                  onChange={(event) => {
+                    setChosenSiteId(event.target.value);
+                  }}
+                >
+                  {view.landingSites.map((site) => (
+                    <option key={site.id} value={site.id}>
+                      {site.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p data-testid="landing-site-details">
+                <GameText>
+                  {`${landingSite.description} ${
+                    landingSite.landed
+                      ? "Already landed at, so landing again earns no Science."
+                      : `The first landing here earns ${landingSite.science} Science.`
+                  }`}
+                </GameText>
+              </p>
+            </>
+          )}
           <h3>
             <GameText>Mission Events, Risk Bands and Reliability</GameText>
           </h3>
@@ -289,7 +331,9 @@ export function PlanningMode({
               <ul data-testid="operating-assets">
                 {view.operatingAssets.map((asset) => (
                   <li key={`${asset.assetId}-${asset.arrivedOn}`}>
-                    {asset.name}
+                    {asset.landingSiteName
+                      ? `${asset.name} at ${asset.landingSiteName}`
+                      : asset.name}
                   </li>
                 ))}
               </ul>

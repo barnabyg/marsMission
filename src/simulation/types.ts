@@ -3,6 +3,8 @@ export interface PlannedMission {
   assetIds: string[];
   /** The Reliability level bought for each Mission Event, by id. Any left out get the cheapest level. */
   reliability?: Record<string, string>;
+  /** Where the Mission's lander comes down. Only a Mission carrying a lander has one. */
+  landingSiteId?: string;
 }
 
 export interface TurnPlan {
@@ -20,6 +22,8 @@ interface OperatingAsset {
   name: string;
   kind: string;
   arrivedOn: string;
+  /** Where it is on the surface, or null if it's in orbit. */
+  landingSiteId: string | null;
 }
 
 type ProgramStatus =
@@ -36,6 +40,8 @@ export interface Program {
   publicSupport: number;
   science: number;
   milestoneIds: string[];
+  /** The Landing Sites where a lander has already landed. */
+  landedSiteIds: string[];
   /** The Public Support levels of the Funding Thresholds already paid. */
   fundingThresholdsPaid: number[];
   operatingAssets: OperatingAsset[];
@@ -56,9 +62,24 @@ export interface ProgramView {
     payoutMillions: number;
     pointsAway: number;
   } | null;
-  operatingAssets: OperatingAsset[];
+  operatingAssets: (OperatingAsset & { landingSiteName: string | null })[];
   launchVehicles: { id: string; name: string; costMillions: number }[];
-  assets: { id: string; name: string; kind: string; costMillions: number }[];
+  assets: {
+    id: string;
+    name: string;
+    kind: string;
+    costMillions: number;
+    landsAtSite: boolean;
+  }[];
+  /** The Landing Sites the player can choose. */
+  landingSites: {
+    id: string;
+    name: string;
+    description: string;
+    science: number;
+    /** Whether a lander has landed here, so that landing again earns no Science. */
+    landed: boolean;
+  }[];
 }
 
 export interface MissionEventEntry {
@@ -85,8 +106,18 @@ export interface FundingThresholdEntry {
   description: string;
 }
 
+export interface FirstLandingEntry {
+  kind: "firstLanding";
+  day: number;
+  title: string;
+  description: string;
+}
+
 export type TimelineEntry =
-  MissionEventEntry | MilestoneEntry | FundingThresholdEntry;
+  | MissionEventEntry
+  | MilestoneEntry
+  | FundingThresholdEntry
+  | FirstLandingEntry;
 
 interface AwardedMilestone {
   name: string;
@@ -105,6 +136,8 @@ export interface TurnSummary {
   publicSupportDrained: number;
   publicSupportEnd: number;
   milestones: AwardedMilestone[];
+  /** The Science from landing at a Landing Site for the first time, if a lander did. */
+  firstLanding: { siteName: string; science: number } | null;
   fundingPayouts: { publicSupport: number; payoutMillions: number }[];
   /** The Mission Event that ended this Turn's Mission and what that cost, if one failed. */
   failure: {
@@ -114,6 +147,29 @@ export interface TurnSummary {
   } | null;
   /** Why the Program was cancelled at the end of this Turn, if it was. */
   cancellationReason: string | null;
+}
+
+/** One Asset on this Turn's Mission and how its journey ended. */
+export interface MissionAsset {
+  name: string;
+  /** The Landing Site it is heading for, if it's a lander. */
+  landingSiteName: string | null;
+  /** The day it was delivered, if it was. */
+  deliveredOnDay: number | null;
+  /** The day it was lost, if it was. */
+  lostOnDay: number | null;
+  /** Whether it was lost by crashing at its Landing Site. */
+  crashed: boolean;
+}
+
+/** An Asset operating at Mars at some point in a Turn. */
+export interface AssetAtMars {
+  name: string;
+  kind: string;
+  /** Where it is on the surface, or null if it's in orbit. */
+  landingSiteName: string | null;
+  /** The day of the Turn it starts operating, which is 0 if it already was. */
+  fromDay: number;
 }
 
 /** What happened in a Turn, for Mission Mode to display. */
@@ -126,11 +182,12 @@ export interface Timeline {
     arrivalDay: number;
     launchVehicleName: string;
     assetNames: string[];
+    assets: MissionAsset[];
     /** The day a Mission Event failed and the journey stopped, if one did. */
     failedOnDay: number | null;
   } | null;
-  /** The Assets already operating at Mars when the Turn began. */
-  operatingAssetNames: string[];
+  /** Every Asset that operates at Mars during the Turn. */
+  assetsAtMars: AssetAtMars[];
   entries: TimelineEntry[];
 }
 

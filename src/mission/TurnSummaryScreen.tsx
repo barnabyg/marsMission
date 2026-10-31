@@ -62,6 +62,13 @@ export function TurnSummaryScreen({
           </ul>
         </section>
       )}
+      {summary.firstLanding && (
+        <p data-testid="summary-first-landing">
+          <GameText>
+            {`First landing at ${summary.firstLanding.siteName}: ${summary.firstLanding.science} Science`}
+          </GameText>
+        </p>
+      )}
       {summary.fundingPayouts.length > 0 && (
         <section data-testid="summary-funding-payouts">
           <h2>

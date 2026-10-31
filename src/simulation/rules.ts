@@ -3,6 +3,8 @@ import type { PlannedMission } from "./types";
 
 export type MissionEvent = Catalogue["missionEvents"][number];
 export type ReliabilityLevel = Catalogue["reliabilityLevels"][number];
+export type Asset = Catalogue["assets"][number];
+export type LandingSite = Catalogue["landingSites"][number];
 
 const millisecondsPerDay = 86_400_000;
 
@@ -68,12 +70,37 @@ export function createRules(catalogue: Catalogue) {
     return level;
   }
 
+  /** The Landing Sites that can be chosen so far. */
+  function knownLandingSites(): LandingSite[] {
+    return catalogue.landingSites.filter((site) => site.knownFromStart);
+  }
+
+  function landingSiteById(id: string | null | undefined) {
+    return catalogue.landingSites.find((site) => site.id === id);
+  }
+
   /** The one calculation behind both a Mission Event's roll and the risk band Planning Mode shows. */
   function failureProbability(
     event: MissionEvent,
     level: ReliabilityLevel,
+    mission: PlannedMission | null,
   ): number {
-    return event.failureProbability * level.failureMultiplier;
+    const base =
+      event.failureProbability === "landingSite"
+        ? // Planning Mode always names a site. A plan that doesn't is refused, so this is never rolled.
+          (landingSiteById(mission?.landingSiteId)?.landingRisk ?? 1)
+        : event.failureProbability;
+    return base * level.failureMultiplier;
+  }
+
+  /** The day an Asset is delivered, which is when its last Mission Event happens. */
+  function deliveryDay(asset: Asset): number {
+    const days = asset.missionEvents.flatMap((eventId) =>
+      catalogue.missionEvents
+        .filter((event) => event.id === eventId)
+        .map(dayOf),
+    );
+    return Math.max(catalogue.program.transferDays, ...days);
   }
 
   function riskBandFor(probability: number): string {
@@ -107,6 +134,9 @@ export function createRules(catalogue: Catalogue) {
 
   return {
     dayOf,
+    deliveryDay,
+    knownLandingSites,
+    landingSiteById,
     reliabilityLevelFor,
     failureProbability,
     riskBandFor,
