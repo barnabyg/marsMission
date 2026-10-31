@@ -52,6 +52,7 @@ test("the tooltip check ignores buttons but still catches a term anywhere else",
 test("no button highlights a game term, while the text around it keeps its tooltips", async ({
   page,
 }) => {
+  // Over 5 s: visits every screen that has buttons, which includes playing a whole Turn and reloading.
   await page.goto(`/?seed=${successSeed}`);
   expect(await termsInButtons(page)).toEqual([]);
 

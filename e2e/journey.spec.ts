@@ -15,6 +15,7 @@ import { seedFailingAt, successSeed } from "./seeds";
 test("plays from a new Program through a launch to the next Turn", async ({
   page,
 }) => {
+  // Over 5 s: a whole journey into the next Turn, stopping at two points at 1x because at higher speeds the click to pause can land too late.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
 
@@ -117,6 +118,7 @@ for (const { missionEvent, before } of [
   test(`plays a Mission that fails at ${missionEvent} through to the next Turn`, async ({
     page,
   }) => {
+    // Over 5 s: waits at 1x for the failure so the pause lands before the Turn ends, then plays on to the next Turn.
     const problems = watchForProblems(page);
     await page.goto(`/?seed=${seedFailingAt(missionEvent)}`);
     await page.getByRole("button", { name: "Launch Mission" }).click();
@@ -194,6 +196,7 @@ test("loads the data files, Mission Mode's view and its art from a production bu
 test("pauses Mission Mode and resumes from exactly where it stopped, without carrying into the next Turn", async ({
   page,
 }) => {
+  // Over 5 s: this tests playback itself, across a whole Turn and into the next.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   await page.getByRole("button", { name: "Launch Mission" }).click();
@@ -268,7 +271,7 @@ test("keeps the events column beside the solar system view, scrolling by itself 
   );
   expect((columnBox?.x ?? 0) + (columnBox?.width ?? 0)).toBeCloseTo(3840);
 
-  await page.getByRole("button", { name: "1x" }).click();
+  await page.getByRole("button", { name: "5x" }).click();
   await pauseAtEvent(page, "Funding Threshold reached: 250 Public Support");
   await page.setViewportSize({ width: 2560, height: 400 });
   const entries = page.getByTestId("event-entries");
@@ -406,6 +409,8 @@ test("retires a Program and starts a new one from the Program summary", async ({
 test("lets a Turn pass without launching, and cancels the Program when Public Support falls too far", async ({
   page,
 }) => {
+  // A small window, because nothing here depends on the layout and software rendering at 4K is slow.
+  await page.setViewportSize({ width: 1280, height: 720 });
   await overrideProgramData(page, cancelledAfterOneTurn);
   await page.goto("/");
 
@@ -415,6 +420,7 @@ test("lets a Turn pass without launching, and cancels the Program when Public Su
   await expect(page.getByTestId("journey-progress")).toHaveText(
     "No Mission this Turn",
   );
+  await page.getByRole("button", { name: "10x" }).click();
 
   const turnSummary = page.getByTestId("turn-summary");
   await expect(turnSummary).toContainText("cancelled");

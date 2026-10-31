@@ -35,6 +35,7 @@ async function launchFirstMission(page: Page, seed: number): Promise<void> {
 test("switches to the Mars orbit view and back during a Turn, at any speed and while paused", async ({
   page,
 }) => {
+  // Over 5 s: switches view at each speed in turn, through to the end of the Turn.
   const problems = watchForProblems(page);
   await launchFirstMission(page, successSeed);
   const current = page.getByTestId("current-view");
@@ -90,6 +91,7 @@ test("switches to the Mars orbit view and back during a Turn, at any speed and w
 test("shows an orbiter going round Mars from the day it arrives, only in the Mars orbit view", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the arrival so the pause lands in time, then plays into the next Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   // The shortest Service Life ends under a second into next Turn at 10x, which can be before the view switches.
@@ -126,6 +128,7 @@ test("shows an orbiter going round Mars from the day it arrives, only in the Mar
 });
 
 test("never shows an orbiter whose Mission failed", async ({ page }) => {
+  // Over 5 s: checks the view for the whole of the rest of the Turn.
   const problems = watchForProblems(page);
   await launchFirstMission(page, seedFailingAt("Mars orbit insertion"));
   await viewButton(page, "Mars orbit").click();
@@ -168,6 +171,7 @@ async function summaryAfterFirstTurn(
 }
 
 test("gives the same results whichever view is showing", async ({ page }) => {
+  // Over 5 s: plays the same Turn twice to compare them.
   const untouched = await summaryAfterFirstTurn(page, successSeed, false);
   await page.evaluate(() => {
     localStorage.clear();
@@ -228,6 +232,7 @@ function longestStep(positions: string[]): number {
 test("moves the view to Mars orbit on arrival, and leaves it where the player then puts it", async ({
   page,
 }) => {
+  // Over 5 s: stops at two points at 1x, then checks the view for the rest of the Turn.
   const problems = watchForProblems(page);
   await launchFirstMission(page, successSeed);
   const current = page.getByTestId("current-view");
@@ -260,6 +265,7 @@ test("moves the view to Mars orbit on arrival, and leaves it where the player th
 test("moves the view to Mars orbit when orbit insertion fails", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the failure so the pause lands in time.
   const problems = watchForProblems(page);
   await launchFirstMission(page, seedFailingAt("Mars orbit insertion"));
   await pauseAtEvent(page, "Mars orbit insertion failed");
@@ -271,6 +277,7 @@ for (const failedEvent of ["Launch", "Mars transfer burn"]) {
   test(`stays on the solar system when ${failedEvent} fails`, async ({
     page,
   }) => {
+    // Over 5 s: waits at 1x for the failure so the pause lands in time, then plays out the Turn.
     await launchFirstMission(page, seedFailingAt(failedEvent));
     await pauseAtEvent(page, `${failedEvent} failed`);
     await expect(page.getByTestId("current-view")).toHaveText("Solar system");
@@ -282,6 +289,7 @@ for (const failedEvent of ["Launch", "Mars transfer burn"]) {
 test("a switch away holds until the next Mission Event with a view of its own", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x between two Mission Events, which is what the switch has to hold across.
   const problems = watchForProblems(page);
   // Spaced out, because in real data these two are too close together to stop between at this test speed.
   await page.route("**/data/mission-events.json", async (route) => {
@@ -316,6 +324,7 @@ test("a switch away holds until the next Mission Event with a view of its own", 
 test("ends up on Mars orbit when several Mission Events pass at 10x", async ({
   page,
 }) => {
+  // Over 5 s: plays out a whole Turn, which is what the test is about.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
@@ -330,6 +339,7 @@ test("ends up on Mars orbit when several Mission Events pass at 10x", async ({
 test("moves the camera smoothly while paused, and can be turned back partway", async ({
   page,
 }) => {
+  // Over 5 s: camera moves take real time at any speed, and this makes several.
   const problems = watchForProblems(page);
   await launchFirstMission(page, successSeed);
   await pauseAtEvent(page, "Launch");
@@ -377,6 +387,7 @@ test("moves the camera smoothly while paused, and can be turned back partway", a
 });
 
 test("shows a lander coming down and then on the surface", async ({ page }) => {
+  // Over 5 s: waits for the landing in real time, because it can't be reached any quicker without skipping the marker.
   const problems = watchForProblems(page);
   // A small window, so that frames are quick enough not to skip past the landing at this test speed.
   await page.setViewportSize({ width: 1280, height: 720 });
@@ -427,6 +438,7 @@ test("shows a lander coming down and then on the surface", async ({ page }) => {
 test("shows a crash in red, in the Mars orbit view it moved to", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the landing so the pause lands in time.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${crashSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);

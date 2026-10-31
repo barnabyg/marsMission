@@ -37,6 +37,7 @@ for (const speed of ["1x", "10x"]) {
   test(`plays each sound with what is on screen at ${speed}`, async ({
     page,
   }) => {
+    // Over 5 s: the 1x case watches a whole Turn on purpose, because sounds have to match the screen at both speeds.
     await listenForSounds(page);
     const problems = watchForProblems(page);
     await page.goto(`/?seed=${successSeed}`);
@@ -110,6 +111,7 @@ test("remembers the mute setting after the browser closes", async ({
 });
 
 test("keeps playing when the sound files can't be loaded", async ({ page }) => {
+  // Over 5 s: watches a whole Turn, to show that missing sounds never stop it.
   await page.route("**/sounds/*", (route) => route.abort());
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));

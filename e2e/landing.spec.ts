@@ -31,6 +31,7 @@ function landingRiskBand(page: Page) {
 test("plans a landing, plays it through and reaches the next Turn", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the landing so the pause lands in time, then plays on to the next Turn.
   const problems = watchForProblems(page);
   await planLanding(page, landingSeed);
 
@@ -69,6 +70,7 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
 test("refuses a too-heavy Mission, then launches an orbiter and a lander together", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the landing so the pause lands in time, then plays out the Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
@@ -112,6 +114,7 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
 test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site when planning a landing", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the Survey so the pause lands in time, then plays out the Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
@@ -151,6 +154,7 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
 test("offers a Service Life for each chosen Asset, which changes the cost, and sees one end during a Turn", async ({
   page,
 }) => {
+  // Over 5 s: plays two Turns, because a Service Life can only run out in the Turn after the launch.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterLastsSeed}`);
   const life = page.getByLabel("Service Life for Pathfinder Orbiter");
@@ -192,6 +196,7 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
 test("buys Reliability for an Asset, then sees one fail in service with a known seed", async ({
   page,
 }) => {
+  // Over 5 s: plays two Turns, because an Asset can only fail in service in the Turn after the launch.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterFailsInServiceSeed}`);
 
@@ -231,6 +236,7 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
 test("reports a failed landing as a crash at the Landing Site", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the landing so the pause lands in time, then plays out the Turn.
   const problems = watchForProblems(page);
   await planLanding(page, crashSeed);
   await page.getByRole("button", { name: "Launch Mission" }).click();
