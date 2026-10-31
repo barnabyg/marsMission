@@ -173,3 +173,31 @@ export async function playToNextTurn(page: Page): Promise<void> {
   await fastest.click({ timeout: 2000 }).catch(() => undefined);
   await summary.getByRole("button", { name: "Continue" }).click();
 }
+
+export function viewButton(
+  page: Page,
+  name: "Solar system" | "Mars orbit" | "Surface",
+) {
+  return page
+    .getByRole("group", { name: "View" })
+    .getByRole("button", { name });
+}
+
+export function surfaceAssets(page: Page) {
+  return page.getByTestId("surface-asset");
+}
+
+export function orbiterLabels(page: Page) {
+  return page.getByTestId("mars-orbit-asset");
+}
+
+export async function launchFirstMission(
+  page: Page,
+  seed: number,
+): Promise<void> {
+  await page.goto(`/?seed=${seed}`);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(
+    page.getByTestId("solar-system-view").locator("canvas"),
+  ).toBeVisible();
+}
