@@ -306,6 +306,11 @@ dialog p {
   color: #ffd9bd;
 }
 
+/* Until the scene has placed it, a label would otherwise show in the corner. */
+.view-label {
+  visibility: hidden;
+}
+
 .mission-side {
   z-index: 1;
   grid-row: 2;

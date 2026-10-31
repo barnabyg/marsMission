@@ -1,17 +1,18 @@
-import { Canvas, useFrame } from "@react-three/fiber";
-import { useMemo, useRef, type RefObject } from "react";
+import { useMemo } from "react";
 import {
   AdditiveBlending,
-  BufferAttribute,
-  BufferGeometry,
   CanvasTexture,
   CatmullRomCurve3,
-  SRGBColorSpace,
-  TextureLoader,
   TubeGeometry,
   Vector3,
 } from "three";
 import { addDays, type Timeline } from "../../simulation/simulation";
+import {
+  degreesToRadians,
+  useTexture,
+  type CameraPose,
+  type SceneLabel,
+} from "../sceneParts";
 import {
   journeyHasFailed,
   orbits,
@@ -23,29 +24,22 @@ import {
 
 type Journey = NonNullable<Timeline["mission"]>;
 
-interface SolarSystemViewProps {
+interface SolarSystemSceneProps {
   timeline: Timeline;
   day: number;
   /** How many Assets are operating at Mars right now. */
   operatingAssetCount: number;
 }
 
+export const solarSystemShot: CameraPose = {
+  position: [0, 3.5, 2.1],
+  target: [0, 0, 0],
+};
+
 // Planets are drawn far larger than life, so that they can be seen at this scale.
 const sunRadius = 0.13;
 const planetRadii: Record<Planet, number> = { earth: 0.09, mars: 0.075 };
 const assetOrbitRadius = 0.125;
-const degreesToRadians = Math.PI / 180;
-
-function useTexture(fileName: string) {
-  return useMemo(() => {
-    const texture = new TextureLoader().load(
-      `${import.meta.env.BASE_URL}art/${fileName}`,
-    );
-    texture.colorSpace = SRGBColorSpace;
-    texture.anisotropy = 16;
-    return texture;
-  }, [fileName]);
-}
 
 function Sun() {
   const glow = useMemo(() => {
@@ -206,144 +200,78 @@ function OperatingAssetMarkers({
   );
 }
 
-function Stars() {
-  const geometry = useMemo(() => {
-    // A fixed sequence rather than Math.random, so the sky looks the same every Turn.
-    const positions = new Float32Array(3000 * 3);
-    let value = 12345;
-    const next = () => {
-      value = (value * 16807) % 2147483647;
-      return value / 2147483647;
-    };
-    for (let index = 0; index < positions.length; index += 3) {
-      const longitude = next() * Math.PI * 2;
-      const height = next() * 2 - 1;
-      const across = Math.sqrt(1 - height * height);
-      positions[index] = 40 * across * Math.cos(longitude);
-      positions[index + 1] = 40 * height;
-      positions[index + 2] = 40 * across * Math.sin(longitude);
-    }
-    return new BufferGeometry().setAttribute(
-      "position",
-      new BufferAttribute(positions, 3),
-    );
-  }, []);
-
-  return (
-    <points geometry={geometry}>
-      <pointsMaterial color="#c9d4ff" size={2.2} sizeAttenuation={false} />
-    </points>
-  );
-}
-
-interface LabelTarget {
-  element: RefObject<HTMLDivElement | null>;
-  position: Vector3;
-}
-
-function placeLabel(element: HTMLDivElement | null, left: number, top: number) {
-  if (element) element.style.transform = `translate(${left}px, ${top}px)`;
-}
-
-/** Keeps the HTML labels above their objects, which stops them being blurred or thin at 4K. */
-function LabelTracker({ targets }: { targets: LabelTarget[] }) {
-  const projected = useMemo(() => new Vector3(), []);
-  useFrame(({ camera, size }) => {
-    for (const { element, position } of targets) {
-      projected.copy(position).project(camera);
-      const left = ((projected.x + 1) / 2) * size.width;
-      const top = ((1 - projected.y) / 2) * size.height;
-      placeLabel(element.current, left, top);
-    }
-  });
-  return null;
-}
-
-export default function SolarSystemView({
+export function SolarSystemScene({
   timeline,
   day,
   operatingAssetCount,
-}: SolarSystemViewProps) {
+}: SolarSystemSceneProps) {
+  const date = addDays(timeline.startDate, Math.floor(day));
+  const { mission, startDate } = timeline;
+  const failed = mission !== null && journeyHasFailed(mission, day);
+  const inTransit = mission !== null && !failed && day < mission.arrivalDay;
+
+  return (
+    <>
+      <Sun />
+      <OrbitRing planet="earth" color="#5f8fd0" />
+      <OrbitRing planet="mars" color="#c9744a" />
+      <PlanetGlobe
+        planet="earth"
+        fileName="earth.jpg"
+        date={date}
+        day={day}
+        tiltDegrees={23.4}
+      />
+      <PlanetGlobe
+        planet="mars"
+        fileName="mars.jpg"
+        date={date}
+        day={day}
+        tiltDegrees={25.2}
+      />
+      {mission && <Route mission={mission} startDate={startDate} />}
+      {mission && (inTransit || failed) && (
+        <Spacecraft
+          mission={mission}
+          startDate={startDate}
+          day={day}
+          lost={failed}
+        />
+      )}
+      <OperatingAssetMarkers
+        date={date}
+        day={day}
+        count={operatingAssetCount}
+      />
+    </>
+  );
+}
+
+export function solarSystemLabels(
+  timeline: Timeline,
+  day: number,
+): SceneLabel[] {
   const date = addDays(timeline.startDate, Math.floor(day));
   const earth = planetPosition("earth", date);
   const mars = planetPosition("mars", date);
   const { mission, startDate } = timeline;
-  const spacecraft = mission
-    ? spacecraftPosition(startDate, mission, day)
-    : { x: 0, z: 0 };
-  const failed = mission !== null && journeyHasFailed(mission, day);
-  const inTransit = mission !== null && !failed && day < mission.arrivalDay;
-
-  const earthLabel = useRef<HTMLDivElement>(null);
-  const marsLabel = useRef<HTMLDivElement>(null);
-  const spacecraftLabel = useRef<HTMLDivElement>(null);
-
-  const labelTargets: LabelTarget[] = [
+  const labels: SceneLabel[] = [
     {
-      element: earthLabel,
-      position: new Vector3(earth.x, 0, earth.z - planetRadii.earth - 0.02),
+      text: "Earth",
+      position: [earth.x, 0, earth.z - planetRadii.earth - 0.02],
     },
     {
-      element: marsLabel,
-      position: new Vector3(mars.x, 0, mars.z - planetRadii.mars - 0.02),
-    },
-    {
-      element: spacecraftLabel,
-      position: new Vector3(spacecraft.x, 0, spacecraft.z - 0.04),
+      text: "Mars",
+      position: [mars.x, 0, mars.z - planetRadii.mars - 0.02],
     },
   ];
-
-  return (
-    <div className="solar-system" data-testid="solar-system-view">
-      <Canvas camera={{ position: [0, 3.5, 2.1], fov: 45 }}>
-        <color attach="background" args={["#05060c"]} />
-        <Stars />
-        <Sun />
-        <OrbitRing planet="earth" color="#5f8fd0" />
-        <OrbitRing planet="mars" color="#c9744a" />
-        <PlanetGlobe
-          planet="earth"
-          fileName="earth.jpg"
-          date={date}
-          day={day}
-          tiltDegrees={23.4}
-        />
-        <PlanetGlobe
-          planet="mars"
-          fileName="mars.jpg"
-          date={date}
-          day={day}
-          tiltDegrees={25.2}
-        />
-        {mission && <Route mission={mission} startDate={startDate} />}
-        {mission && (inTransit || failed) && (
-          <Spacecraft
-            mission={mission}
-            startDate={startDate}
-            day={day}
-            lost={failed}
-          />
-        )}
-        <OperatingAssetMarkers
-          date={date}
-          day={day}
-          count={operatingAssetCount}
-        />
-        <LabelTracker targets={labelTargets} />
-      </Canvas>
-      <div ref={earthLabel} className="view-label">
-        <span>Earth</span>
-      </div>
-      <div ref={marsLabel} className="view-label">
-        <span>Mars</span>
-      </div>
-      <div
-        ref={spacecraftLabel}
-        className="view-label spacecraft-label"
-        hidden={!inTransit}
-      >
-        <span>{mission?.assetNames.join(", ")}</span>
-      </div>
-    </div>
-  );
+  if (mission && !journeyHasFailed(mission, day) && day < mission.arrivalDay) {
+    const spacecraft = spacecraftPosition(startDate, mission, day);
+    labels.push({
+      text: mission.assetNames.join(", "),
+      position: [spacecraft.x, 0, spacecraft.z - 0.04],
+      className: "spacecraft-label",
+    });
+  }
+  return labels;
 }
