@@ -30,7 +30,7 @@ export const marsOrbitShot: CameraPose = {
 };
 
 const markerRadius = 0.035;
-const landerColor = "#ffe08a";
+const surfaceColor = "#ffe08a";
 const crashedColor = "#ff5a44";
 
 function fromMarsCentre([x, y, z]: Point): Point {
@@ -50,29 +50,42 @@ function surfaceMarkers(timeline: Timeline, day: number) {
   const { landingSites } = timeline;
   const spin = globeSpin(landingSites, timeline.mission, day);
   const placesTaken = new Map<string, number>();
-  const landed = landedOn(timeline, day).map(({ name, siteName }) => {
+  const nextPlace = (siteName: string) => {
     const place = placesTaken.get(siteName) ?? 0;
     placesTaken.set(siteName, place + 1);
-    const facing = surfacePoint(landingSites, siteName, spin, place);
+    return place;
+  };
+  const landed = landedOn(timeline, day).map(({ name, siteName }) => {
+    const facing = surfacePoint(
+      landingSites,
+      siteName,
+      spin,
+      nextPlace(siteName),
+    );
     return {
       text: `${name} at ${siteName}`,
       position: facing,
       facing,
-      color: landerColor,
+      color: surfaceColor,
       testId: "mars-surface-asset",
       className: "surface-label",
     };
   });
   const landings = landingMarkersOn(timeline.mission, day).map(
     ({ name, siteName, altitude, crashed }) => {
-      const facing = surfacePoint(landingSites, siteName, spin, 0);
+      const facing = surfacePoint(
+        landingSites,
+        siteName,
+        spin,
+        nextPlace(siteName),
+      );
       return {
         text: crashed
           ? `${name}: crashed at ${siteName}`
           : `${name}: landing at ${siteName}`,
         position: scaled(facing, 1 + (orbitRadius - 1) * altitude),
         facing,
-        color: crashed ? crashedColor : landerColor,
+        color: crashed ? crashedColor : surfaceColor,
         testId: "mars-landing",
         className: crashed ? "crashed-label" : "surface-label",
       };

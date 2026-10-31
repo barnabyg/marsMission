@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { SRGBColorSpace, TextureLoader } from "three";
 
 export type Point = readonly [x: number, y: number, z: number];
@@ -30,4 +30,14 @@ export function useTexture(fileName: string) {
     texture.anisotropy = 16;
     return texture;
   }, [fileName]);
+}
+
+/** Frees a geometry made in a component when it's replaced or no longer needed. */
+export function useDisposal(geometry: { dispose: () => void }) {
+  useEffect(
+    () => () => {
+      geometry.dispose();
+    },
+    [geometry],
+  );
 }

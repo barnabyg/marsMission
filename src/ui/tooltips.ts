@@ -30,13 +30,21 @@ export const tooltips = {
   "Service Life":
     "How long an Asset keeps operating once in place. Longer Service Life costs more.",
   Activity:
-    "The one task given to an Asset, or to all the Crew at one Landing Site, for a Turn, such as soil analysis, driving to a new site or nothing.",
+    "The one task given to an Asset, or to all the Crew at one Landing Site, for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.",
   "Landing Site":
     "A named location on Mars where a Mission can land, with its own landing risk and Science value. Apart from a couple of well-known sites, they become available only through a Survey.",
   Survey:
-    "Observing Mars from orbit to reveal Landing Sites and lower their landing risk.",
+    "Observing Mars from orbit to reveal Landing Sites and lower their landing risk. It is an Activity, and one surveying Asset is enough.",
+  "Orbital research":
+    "An Activity for an orbiter: Ongoing Research into the atmosphere and climate of Mars, in place of a Survey. It pays no Research Grant.",
+  "Surface research":
+    "An Activity for a lander: Ongoing Research into the rocks and weather around its Landing Site. It pays a small Research Grant.",
+  "Soil analysis":
+    "An Activity for a rover: Ongoing Research that stays near the Landing Site and analyses soil samples. It earns less Science than a Long traverse and pays a Research Grant.",
+  "Long traverse":
+    "An Activity for a rover: Ongoing Research that drives long distances around the Landing Site. It earns more Science than Soil analysis and pays no Research Grant.",
   "Planning Mode":
-    "The first part of a Turn, in which the player chooses Missions, Assets, technology and Safety Margin and spends money. No game time passes in Planning Mode.",
+    "The first part of a Turn, in which the player chooses Missions, Assets, Activities, technology and Safety Margin and spends money. No game time passes in Planning Mode.",
   "Mission Mode":
     "The graphical second part of a Turn, in which the Turn's Mission and every operating Asset and Crew play out until the next Launch Window.",
   "Save Slot":
@@ -60,13 +68,13 @@ export const tooltips = {
   Science:
     "The Program's score. It comes from Milestones and Ongoing Research, and is weighted heavily towards activity at Mars itself.",
   Milestone:
-    "A one-off achievement, such as the first orbiter at Mars or returning a sample to Earth. It awards Science and Public Support.",
+    "A one-off achievement, such as the first orbiter at Mars, reaching a total of Science, or returning a sample to Earth. It awards Science and Public Support.",
   "Ongoing Research":
-    "Science earned at a steady rate for as long as an Asset or Crew is actively doing it, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time.",
+    "Science earned at a steady rate for as long as an Asset or Crew is actively doing it, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time. It also adds a small, steady amount of Public Support.",
   "Research Grant":
-    "Money paid at the start of a Turn for certain Science earned in the previous Turn. Only some research qualifies, and early-game research pays little or nothing.",
+    "Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none.",
   "Public Support":
-    "Points of public and political backing. Milestones add them, setbacks remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.",
+    "Points of public and political backing. Milestones and Ongoing Research add them, setbacks remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.",
   "Funding Threshold":
     "One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached. Reaching it again later pays nothing.",
   "Cancellation Level":

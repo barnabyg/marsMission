@@ -4,14 +4,16 @@ The game rules settled so far, grouped by area. Most describe the finished game,
 
 ## Status
 
-Phases are defined in the [Build order](#build-order). Phases 1, 2 and 3 are built:
+Phases are defined in the [Build order](#build-order). Phases 1, 2, 3 and 4 are built:
 
 - **Phase 1:** Turns running from one Launch Window to the next, with at most one Mission each; Assets that stay operating at Mars; Mission Events listed from what a Mission carries; Planning Mode with one Launch Vehicle and one orbiter; Mission Mode with the solar system view, speed controls and text screens; Science, Milestones, Funding Thresholds, the Public Support drain and Cancellation Level; retiring a Program and the Program summary; tooltips.
 - **Phase 2:** Mission Event failure with Risk Bands; Reliability; the fixed random seed; automatic saves and manual save slots; the first sound effects.
 - **Since the Phase 2 playtest:** Save, Load and Retire Program dialogs in Planning Mode; text sized for 150% display scaling; Pause in Mission Mode; the events column in place of Phase 1's text screens.
 
 - **Phase 3:** a lander and entry/descent/landing; Landing Sites, each with a landing risk and a Science value earned by the first landing there; Missions carrying several Assets within a Launch Vehicle's mass limit, with a second, larger Launch Vehicle brought forward from Phase 6; partial Mission failure, where Assets already delivered are safe; automatic Surveys from orbit; a Service Life chosen for each Asset; Assets failing in service, with Reliability bought for each Asset; a second Funding Threshold; the Mars orbit view, with automatic view changes and smooth camera moves. Saves upgrade step by step from any earlier format.
-- **Since Phase 3:** End Turn in Mission Mode.
+- **Since the Phase 3 playtest:** End Turn in Mission Mode.
+
+- **Phase 4:** Activities, with Survey, research and Nothing as the first ones; Ongoing Research, which also adds a little Public Support; Research Grants, which take over from Funding Thresholds as the main income of a Program that keeps Assets at Mars; a rover, choosing between Science and money; Science Milestones and more Funding Thresholds; the surface view, with generated terrain, landing and crash sequences it moves to by itself, and rovers that move according to their Activity; automated balance runs, and the numbers tuned with them, including longer Service Lives.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
@@ -47,13 +49,17 @@ Any rule in this document beyond these is planned, so its absence from the code 
 
 - Mars has named Landing Sites. Each has a landing risk and a Science value, earned by the first successful landing there. Resources such as water ice are left out until a rule uses them.
 - Apart from the two starting sites, Landing Sites become available only through a Survey from orbit. Surveying also lowers a site's landing risk.
-- For now, Surveying is automatic rather than an Activity. In each Turn a surveying Asset operates at Mars, every known site drops to its surveyed risk in one step, and the next site in the catalogue becomes known. A second surveying Asset doesn't speed this up.
+- Surveying is an Activity. In each Turn an Asset operates at Mars with Survey as its Activity, every known site drops to its surveyed risk in one step, and the next site in the catalogue becomes known. A second surveying Asset doesn't speed this up, and with none there is no Survey.
+- A newly chosen Asset starts on the first Activity it lists in the data files, so an orbiter surveys, and a lander or a rover does research, unless the player chooses otherwise. It starts on the day it is delivered, and an Asset that is lost never starts.
+- A rover lands at a Landing Site just as a lander does, and stays around it. The named sites are thousands of kilometres apart, and earning first-landing Science by driving would undercut landers. Its Activities are a choice between Science and money: soil analysis earns less Science and pays a Research Grant, and a long traverse earns more Science and pays none.
+- A rover and a lander can share a Mission. They go through one entry/descent/landing together, at one Landing Site, each with its own Activity, and a crash loses both. Whichever lands first earns First landing on Mars, and the first rover also has a Milestone of its own.
+- An Asset keeps its Activity from Turn to Turn until the player changes it, so a large Program doesn't need re-setting every Turn.
 
 ## Risk and Safety Margin
 
 - Each Mission is a sequence of Mission Events, and each Event has a failure probability.
 - An Asset is delivered when its last Mission Event succeeds. When a Mission Event fails, Assets already delivered are safe and everything else is lost. A lander alone goes straight to entry/descent/landing, so carrying an orbiter as well is cheaper than two Missions but exposes the lander to orbit insertion.
-- The game builds the list of Mission Events automatically from what the Mission carries. A lander adds entry/descent/landing, and orbital refuelling adds a rendezvous. The player then buys Safety Margin against that list.
+- The game builds the list of Mission Events automatically from what the Mission carries. A lander or a rover adds entry/descent/landing, and orbital refuelling adds a rendezvous. The player then buys Safety Margin against that list.
 - Safety Margin comes in three kinds:
   - Reliability (testing, redundancy) lowers an Event's failure probability.
   - Contingency (escape module, abort fuel) changes the outcome when an Event fails. Decision Points are often where a Contingency is used.
@@ -80,6 +86,7 @@ Any rule in this document beyond these is planned, so its absence from the code 
   - Surface: a Landing Site, with landings, rovers and bases.
   - Spacecraft: a close-up of the Mission in transit, used when something happens on the way, such as a solar particle event or a mechanical failure.
 - The view switches automatically for Mission Events and Hazards, and the player can switch views at any time.
+- A landing or crash plays for a few seconds of real time, the same at every speed, and pausing holds it. It only displays what has already been worked out. After a crash, the view goes back to whichever Landing Site still has something to show, or else to Mars orbit.
 
 ## Art, sound and onboarding
 
@@ -111,16 +118,19 @@ The work is split into phases, each ending in a game the player can play and com
 
 - Science is the score. It is weighted heavily towards activity at Mars itself, for example 100 for an orbiter surveying landing sites and 1000 for returning samples to Earth.
 - Science comes from two sources:
-  - Milestones: one-off achievements, such as returning a sample.
+  - Milestones: one-off achievements, such as returning a sample, or reaching a total of Science.
   - Ongoing Research: a steady rate earned only while an Asset or Crew is actively doing the work, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time.
+- An Asset earns its share of a whole Turn's Ongoing Research for the days it does the Activity, from the day it arrives until it fails or its Service Life ends. Its Science and Public Support are each rounded up for that Asset and Turn, so a short stint still earns something. An orbiter chooses between this and a Survey.
 - Science already earned is never taken away.
-- Some Science pays a Research Grant at the start of the next Turn. Only certain research qualifies, at a rate set for each kind, and early-game research pays little or nothing. Late in a Program, Research Grants are the main income and Public Support matters less. Like a rover mission, public excitement peaks early and fades while the Science carries on.
+- Some Science pays a Research Grant at the start of the next Turn. Only Ongoing Research qualifies, at a rate set for each kind of research, and early-game research pays little or nothing. Science from Milestones and first landings pays none. No game time passes between the end of a Turn and the next Planning Mode, so the money is added when the Turn resolves, including for a Turn that ends in cancellation. Each Asset's grant for a Turn rounds to whole millions, so one under $0.5M pays nothing. Late in a Program, Research Grants are the main income and Public Support matters less. Like a rover mission, public excitement peaks early and fades while the Science carries on.
 
 ## Public Support and money
 
 - Milestones award Public Support points.
+- Science Milestones reward a productive Program for its results. Each is awarded once, on the first day the Program's total Science reaches its level, and if a Program is already past it, on the first day of the Turn. Science comes in on the day of an arrival, a first landing or an award, and builds up evenly over each Asset's days of Ongoing Research, reaching exactly what that Asset earns for the Turn. Anything reached only as the Turn ends counts on its last day. The Science from one of these awards counts towards the next from the day it's awarded. A Turn that ends in cancellation still awards them, and their Public Support can prevent it, as with any Milestone.
 - When Public Support reaches a Funding Threshold, it pays a fixed sum. For example, 100 points plus 200 for putting an orbiter at Mars would cross a 250-point threshold, which might pay $1 billion.
 - Each Funding Threshold pays only the first time it is reached. Falling below and climbing back pays nothing.
+- A Funding Threshold is reached if Public Support is at or above it once the Turn's gains and losses are all in, before the drain. Its entry in the events column is on the day Public Support got there for the last time in the Turn, so never before the award that took it there. A Program saved already above one pays it on the first day of its next Turn, unless a failed Mission takes it back below for good.
 - There is no regular Appropriation. Running out of money through poor management is a way for the player to fail.
 - There is no separate bankruptcy rule. A player with no money lets Turns pass without launching, and Public Support drains until the Program is cancelled, unless what they've built keeps it going. Cancellation is the only way to lose.
 - Funding Thresholds are a fixed, limited list, mainly an early and mid-game boost.
@@ -129,7 +139,7 @@ The work is split into phases, each ending in a game the player can play and com
 
 ## Starting conditions
 
-- The Program starts at the late-2028 Launch Window. Its starting money and Public Support, in [public/data/program.json](../public/data/program.json), are set so that a first orbiter reaches the first Funding Threshold, and so that the player can afford an orbiter or a lander and a retry if it fails, with a little left for Reliability. A first orbiter followed by a first landing, in either order, reaches the second Funding Threshold.
+- The Program starts at the late-2028 Launch Window. Its starting money and Public Support, in [public/data/program.json](../public/data/program.json), are set so that a first orbiter reaches the first Funding Threshold, and so that the player can afford an orbiter or a lander and a retry if it fails, with a little left for Reliability. A first orbiter followed by a first landing, in either order, reaches the second Funding Threshold. So does a first rover by itself, with its own Milestone, but it costs too much to leave a retry, which makes one on the first Turn a gamble. Later Funding Thresholds come from the Science Milestones in [public/data/milestones.json](../public/data/milestones.json).
 - Two well-known Landing Sites (for example Jezero and Gale) are available from the start, at high landing risk because they haven't been surveyed. The first Turn is a choice between surveying first and landing straight away.
 - No difficulty levels in the first version.
 

@@ -102,7 +102,35 @@ const format5 = format4.extend({
   ),
 });
 
-const newestFormat = format5;
+/** Adds each Asset's Activity. A save from before it gets Survey if the Asset can survey, which it was already doing, and otherwise Nothing. */
+const format6 = format5.extend({
+  operatingAssets: z.array(
+    z.strictObject({
+      ...format5.shape.operatingAssets.element.shape,
+      activityId: z.string(),
+    }),
+  ),
+});
+
+function activityBeforeActivities(
+  { assetId, kind }: { assetId: string; kind: string },
+  { assets, activities }: Catalogue,
+): string {
+  const asset =
+    assets.find(({ id }) => id === assetId) ??
+    assets.find((candidate) => candidate.kind === kind);
+  const listed = (asset?.activities ?? []).flatMap((id) =>
+    activities.filter((activity) => activity.id === id),
+  );
+  const activity =
+    listed.find(({ effect }) => effect.kind === "survey") ??
+    listed.find(({ effect }) => effect.kind === "nothing") ??
+    activities.find(({ effect }) => effect.kind === "nothing");
+  if (!activity) throw new SaveError(corruptSave);
+  return activity.id;
+}
+
+const newestFormat = format6;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -159,6 +187,19 @@ const formats: readonly SaveFormat[] = [
         })),
       };
     },
+  },
+  {
+    schema: format5,
+    upgrade: (
+      old: z.output<typeof format5>,
+      catalogue: Catalogue,
+    ): z.output<typeof format6> => ({
+      ...old,
+      operatingAssets: old.operatingAssets.map((asset) => ({
+        ...asset,
+        activityId: activityBeforeActivities(asset, catalogue),
+      })),
+    }),
   },
   { schema: newestFormat },
 ];

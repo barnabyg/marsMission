@@ -4,6 +4,7 @@ import { assetsOperatingOn, describeJourney } from "./journey";
 
 const orbiter = {
   name: "Orbiter",
+  kind: "orbiter",
   landingSiteName: null,
   deliveredOnDay: null,
   lostOnDay: null,
@@ -65,15 +66,19 @@ describe("listing what's operating at Mars", () => {
     const timeline = {
       assetsAtMars: [
         {
+          key: "ending",
           name: "Ending",
           kind: "orbiter",
           landingSiteName: null,
+          activityName: "Survey",
+          surfaceMotion: "still" as const,
+          arrivedOnDay: -100,
           fromDay: 0,
           untilDay: 300,
         },
       ],
     };
-    expect(assetsOperatingOn(timeline, 299)).toEqual(["Ending"]);
+    expect(assetsOperatingOn(timeline, 299)).toEqual(["Ending: Survey"]);
     expect(assetsOperatingOn(timeline, 300)).toEqual([]);
   });
 
@@ -81,25 +86,33 @@ describe("listing what's operating at Mars", () => {
     const timeline = {
       assetsAtMars: [
         {
+          key: "old",
           name: "Old",
           kind: "orbiter",
           landingSiteName: null,
+          activityName: "Survey",
+          surfaceMotion: "still" as const,
+          arrivedOnDay: -100,
           fromDay: 0,
           untilDay: null,
         },
         {
+          key: "new",
           name: "New",
           kind: "lander",
           landingSiteName: "Alpha Plain",
+          activityName: "Nothing",
+          surfaceMotion: "still" as const,
+          arrivedOnDay: -100,
           fromDay: 205,
           untilDay: null,
         },
       ],
     };
-    expect(assetsOperatingOn(timeline, 204)).toEqual(["Old"]);
+    expect(assetsOperatingOn(timeline, 204)).toEqual(["Old: Survey"]);
     expect(assetsOperatingOn(timeline, 205)).toEqual([
-      "Old",
-      "New at Alpha Plain",
+      "Old: Survey",
+      "New at Alpha Plain: Nothing",
     ]);
   });
 });

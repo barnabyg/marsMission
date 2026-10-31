@@ -1,5 +1,5 @@
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useMemo, useRef, type RefObject } from "react";
+import { useMemo, useRef, useState, type RefObject } from "react";
 import { BufferAttribute, BufferGeometry, Vector3 } from "three";
 import type { Timeline } from "../simulation/simulation";
 import { advanceMove, headFor, poseDuring, settledAt } from "./cameraMove";
@@ -10,6 +10,9 @@ import {
 } from "./marsOrbit/MarsOrbitView";
 import type { MissionViewId } from "./missionViews";
 import type { CameraPose, SceneLabel } from "./sceneParts";
+import { sequenceRunning, type SequenceNow } from "./surface/sequence";
+import { landingShot, surfaceShot } from "./surface/surface";
+import { surfaceLabels, SurfaceScene } from "./surface/SurfaceView";
 import {
   solarSystemLabels,
   SolarSystemScene,
@@ -20,6 +23,10 @@ interface MissionSceneProps {
   timeline: Timeline;
   day: number;
   view: MissionViewId;
+  /** The Landing Site the surface view shows, or null if there is none to show. */
+  site: string | null;
+  /** The Turn's landing or crash, once it has started. */
+  sequence: SequenceNow | null;
   /** How many Assets are operating at Mars right now. */
   operatingAssetCount: number;
 }
@@ -29,11 +36,17 @@ const viewSettings: Record<
   MissionViewId,
   {
     shot: CameraPose;
-    labels: (timeline: Timeline, day: number) => SceneLabel[];
+    labels: (
+      timeline: Timeline,
+      day: number,
+      site: string | null,
+      sequence: SequenceNow | null,
+    ) => SceneLabel[];
   }
 > = {
   solarSystem: { shot: solarSystemShot, labels: solarSystemLabels },
   marsOrbit: { shot: marsOrbitShot, labels: marsOrbitLabels },
+  surface: { shot: surfaceShot, labels: surfaceLabels },
 };
 
 function Stars() {
@@ -126,14 +139,33 @@ export default function MissionScene({
   timeline,
   day,
   view,
+  site,
+  sequence,
   operatingAssetCount,
 }: MissionSceneProps) {
   const labelLayer = useRef<HTMLDivElement>(null);
   const { shot, labels: labelsOnDay } = viewSettings[view];
-  const labels = labelsOnDay(timeline, day);
+  const labels = labelsOnDay(timeline, day, site, sequence);
+  const running = sequenceRunning(sequence);
+  const showingSequence =
+    view === "surface" && running && sequence.sequence.siteName === site;
+
+  // Once the last site goes, the land stays for the camera to move away from, with nothing on it operating.
+  const [lastSite, setLastSite] = useState(site);
+  if (site !== null && site !== lastSite) setLastSite(site);
 
   return (
-    <div className="solar-system" data-testid="solar-system-view">
+    <div
+      className="solar-system"
+      data-testid="solar-system-view"
+      // The browser tests can't see into the scene, so this is how they follow a sequence.
+      data-sequence={
+        running ? (sequence.sequence.crashed ? "crash" : "landing") : undefined
+      }
+      data-sequence-ms={
+        running ? Math.floor(sequence.elapsedMs / 100) * 100 : undefined
+      }
+    >
       <Canvas camera={{ position: [...solarSystemShot.position], fov: 45 }}>
         <color attach="background" args={["#05060c"]} />
         <Stars />
@@ -143,7 +175,15 @@ export default function MissionScene({
           operatingAssetCount={operatingAssetCount}
         />
         <MarsOrbitScene timeline={timeline} day={day} />
-        <CameraRig shot={shot} />
+        {lastSite !== null && (
+          <SurfaceScene
+            timeline={timeline}
+            day={day}
+            siteName={lastSite}
+            sequence={sequence}
+          />
+        )}
+        <CameraRig shot={showingSequence ? landingShot : shot} />
         <LabelTracker labels={labels} layer={labelLayer} />
       </Canvas>
       <div ref={labelLayer}>

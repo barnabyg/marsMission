@@ -83,7 +83,8 @@ button.primary {
 .planning-side {
   min-height: 0;
   display: grid;
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  /* Operating at Mars gets the room it needs first, because its rows are taller than the Milestones list's. */
+  grid-template-rows: minmax(0, 1fr) minmax(0, auto);
   gap: 1.5rem;
 }
 
@@ -181,15 +182,35 @@ button.primary {
 }
 
 .asset-choice select {
-  min-width: 15rem;
+  min-width: 11rem;
 }
 
 .panel .asset-choices label {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  min-width: 28rem;
+  min-width: 20rem;
   color: var(--text);
+}
+
+.operating-assets {
+  display: grid;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0;
+  list-style: none;
+}
+
+.operating-assets li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.operating-assets select {
+  flex: none;
+  min-width: 10rem;
 }
 
 .mission-events {
@@ -334,6 +355,27 @@ dialog p {
   color: #ff8a75;
 }
 
+/* The sky behind these is bright, so they need a backing to be read against it. */
+.on-surface span {
+  padding: 0.1rem 0.5rem;
+  border-radius: 0.3rem;
+  background: rgb(10 12 20 / 75%);
+}
+
+.lander-label span {
+  color: #ffd46b;
+}
+
+.rover-label span {
+  color: #6fe6d4;
+}
+
+.surface-site-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 .mission-side {
   z-index: 1;
   grid-row: 2;
@@ -376,8 +418,11 @@ dialog p {
 
 .mission-bar p {
   margin: 0;
+  /* Room for the longest date, so that the controls don't move as the days pass. */
+  min-width: 10em;
   font-size: 1.3rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .mission-bar progress {

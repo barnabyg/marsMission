@@ -3,6 +3,8 @@ import {
   chooseAssets,
   eventEntries,
   holdTurnWhenShown,
+  openLoadDialog,
+  openSaveDialog,
   pauseAtEvent,
   playToNextTurn,
   termsWithoutTooltips,
@@ -51,15 +53,16 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
     "Prospector Lander: landed at Jezero Crater",
   );
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
-    "Prospector Lander at Jezero Crater",
+    "Prospector Lander at Jezero Crater: Surface research",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await playToNextTurn(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
-  await expect(page.getByTestId("science")).toHaveText("270");
+  // 150 for the Milestone, 120 for the site, and what Surface research earned in the days left.
+  await expect(page.getByTestId("science")).toHaveText("343");
   await expect(page.getByTestId("operating-assets")).toContainText(
-    "Prospector Lander at Jezero Crater: 35 days of Service Life left",
+    "Prospector Lander at Jezero Crater: 735 days of Service Life left",
   );
   await chooseAssets(page, ["Prospector Lander"]);
   await expect(page.getByTestId("landing-site-details")).toContainText(
@@ -95,11 +98,15 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
     "Lost with the Mission: Prospector Lander",
   );
   await expect(failed).toContainText("Still safe: Pathfinder Orbiter");
+  await expect(page.getByTestId("solar-system-view")).toHaveAttribute(
+    "data-sequence",
+    "crash",
+  );
   await expect(page.getByTestId("journey-progress")).toHaveText(
     "Pathfinder Orbiter: arrived at Mars. Prospector Lander: crashed at Jezero Crater",
   );
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
-    "Pathfinder Orbiter",
+    "Pathfinder Orbiter: Survey",
   );
 
   await page.getByRole("button", { name: "10x" }).click();
@@ -152,6 +159,89 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
   expect(problems).toEqual([]);
 });
 
+test("turns Surveying off, sees no Survey that Turn, keeps that through a reload, and turns it back on", async ({
+  page,
+}) => {
+  // Over 5 s: plays two Turns, because turning Surveying back on needs an Asset already operating.
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${orbiterLastsSeed}`);
+  const activity = page.getByLabel("Activity for Pathfinder Orbiter");
+  await expect(activity).toHaveValue("survey");
+  await expect(activity.getByRole("option")).toHaveText([
+    "Survey",
+    "Orbital research",
+    "Nothing",
+  ]);
+  await activity.selectOption("nothing");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+
+  await expect(page.getByTestId("operating-at-mars")).toHaveText(
+    "Pathfinder Orbiter: Nothing",
+  );
+  await page.getByRole("button", { name: "10x" }).click();
+  await expect(page.getByTestId("turn-summary")).toBeVisible();
+  await expect(page.getByTestId("summary-survey")).toHaveCount(0);
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
+  const operating = page.getByTestId("operating-assets");
+  const operatingActivity = operating.getByLabel(
+    "Activity for Pathfinder Orbiter",
+  );
+  await expect(operatingActivity).toHaveValue("nothing");
+
+  // Coming back through the automatic save keeps it too.
+  await page.reload();
+  await page.getByRole("button", { name: "Continue this Program" }).click();
+  await expect(operatingActivity).toHaveValue("nothing");
+  await chooseAssets(page, ["Prospector Lander"]);
+  await expect(page.getByLabel("Landing Site").getByRole("option")).toHaveCount(
+    2,
+  );
+
+  await operatingActivity.selectOption("survey");
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await expect(page.getByTestId("operating-at-mars")).toHaveText(
+    "Pathfinder Orbiter: Survey",
+  );
+  await page.getByRole("button", { name: "10x" }).click();
+  await expect(page.getByTestId("summary-survey")).toContainText(
+    "Meridiani Planum",
+  );
+  expect(problems).toEqual([]);
+});
+
+test("forgets an Activity chosen but not yet carried out when a save is loaded", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${orbiterLastsSeed}`);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await playToNextTurn(page);
+
+  await openSaveDialog(page);
+  await page
+    .getByTestId("save-slot-1")
+    .getByRole("button", { name: "Save here" })
+    .click();
+  const activity = page
+    .getByTestId("operating-assets")
+    .getByLabel("Activity for Pathfinder Orbiter");
+  await activity.selectOption("nothing");
+
+  await openLoadDialog(page);
+  await page
+    .getByTestId("save-slot-1")
+    .getByRole("button", { name: "Load" })
+    .click();
+  await page.getByRole("button", { name: "Yes, load it" }).click();
+  await expect(activity).toHaveValue("survey");
+  expect(problems).toEqual([]);
+});
+
 test("offers a Service Life for each chosen Asset, which changes the cost, and sees one end during a Turn", async ({
   page,
 }) => {
@@ -160,29 +250,29 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   await page.goto(`/?seed=${orbiterLastsSeed}`);
   const life = page.getByLabel("Service Life for Pathfinder Orbiter");
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
-  await life.selectOption("1700");
+  await life.selectOption("2100");
   await expect(page.getByTestId("mission-cost")).toHaveText("$1.15B");
-  await life.selectOption("900");
+  await life.selectOption("1300");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await playToNextTurn(page);
   await expect(page.getByTestId("operating-assets")).toContainText(
-    "Pathfinder Orbiter: 330 days of Service Life left",
+    "Pathfinder Orbiter: 730 days of Service Life left",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  // At the 10x carried over, the Service Life ends about 0.5 s into this Turn.
   await holdTurnWhenShown(page);
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
-    "Pathfinder Orbiter",
+    "Pathfinder Orbiter: Survey",
   );
   const ended = "Pathfinder Orbiter: Service Life ended";
   await holdTurnWhenShown(page, ended);
-  await page.getByRole("button", { name: "10x" }).click();
+  // At 10x the Turn could finish in the same frame, with so little of it left.
+  await page.getByRole("button", { name: "1x" }).click();
   await expect(eventEntries(page).first().getByRole("heading")).toHaveText(
     ended,
   );

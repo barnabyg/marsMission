@@ -62,7 +62,7 @@ How long an Asset keeps operating once in place. Longer Service Life costs more.
 _Avoid_: Lifespan, durability
 
 **Activity**:
-The one task given to an Asset, or to all the Crew at one Landing Site, for a Turn, such as soil analysis, driving to a new site or nothing.
+The one task given to an Asset, or to all the Crew at one Landing Site, for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.
 _Avoid_: Task, job, assignment
 
 **Landing Site**:
@@ -70,13 +70,25 @@ A named location on Mars where a Mission can land, with its own landing risk and
 _Avoid_: Location, zone, region
 
 **Survey**:
-Observing Mars from orbit to reveal Landing Sites and lower their landing risk.
+Observing Mars from orbit to reveal Landing Sites and lower their landing risk. It is an Activity, and one surveying Asset is enough.
 _Avoid_: Scan, reconnaissance
+
+**Orbital research**:
+An Activity for an orbiter: Ongoing Research into the atmosphere and climate of Mars, in place of a Survey. It pays no Research Grant.
+
+**Surface research**:
+An Activity for a lander: Ongoing Research into the rocks and weather around its Landing Site. It pays a small Research Grant.
+
+**Soil analysis**:
+An Activity for a rover: Ongoing Research that stays near the Landing Site and analyses soil samples. It earns less Science than a Long traverse and pays a Research Grant.
+
+**Long traverse**:
+An Activity for a rover: Ongoing Research that drives long distances around the Landing Site. It earns more Science than Soil analysis and pays no Research Grant.
 
 ## Modes
 
 **Planning Mode**:
-The first part of a Turn, in which the player chooses Missions, Assets, technology and Safety Margin and spends money. No game time passes in Planning Mode.
+The first part of a Turn, in which the player chooses Missions, Assets, Activities, technology and Safety Margin and spends money. No game time passes in Planning Mode.
 _Avoid_: Build mode, design mode
 
 **Mission Mode**:
@@ -128,7 +140,7 @@ The Program's score. It comes from Milestones and Ongoing Research, and is weigh
 _Avoid_: Points, research
 
 **Milestone**:
-A one-off achievement, such as the first orbiter at Mars or returning a sample to Earth. It awards Science and Public Support.
+A one-off achievement, such as the first orbiter at Mars, reaching a total of Science, or returning a sample to Earth. It awards Science and Public Support.
 _Avoid_: Achievement, goal, objective
 
 **Ongoing Research**:
@@ -136,11 +148,11 @@ Science earned at a steady rate for as long as an Asset or Crew is actively doin
 _Avoid_: Passive science, income
 
 **Research Grant**:
-Money paid at the start of a Turn for certain Science earned in the previous Turn. Only some research qualifies, and early-game research pays little or nothing; it is the main income late in a Program.
+Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none. It is the main income late in a Program.
 _Avoid_: Science income, science payment
 
 **Public Support**:
-Points of public and political backing. Milestones add them, setbacks such as losing Crew remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.
+Points of public and political backing. Milestones and Ongoing Research add them, setbacks such as losing Crew remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.
 _Avoid_: Popularity, approval, morale
 
 **Funding Threshold**:

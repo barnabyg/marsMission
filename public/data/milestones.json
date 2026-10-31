@@ -12,11 +12,71 @@
   {
     "id": "first-landing-on-mars",
     "name": "First landing on Mars",
-    "description": "The Program has put a working lander on the surface of Mars, and the pictures are on every front page.",
+    "description": "The Program has put a working spacecraft on the surface of Mars, and the pictures are on every front page.",
     "trigger": {
-      "assetKindArrives": "lander"
+      "assetLands": true
     },
     "science": 150,
     "publicSupport": 250
+  },
+  {
+    "id": "first-rover-on-mars",
+    "name": "First rover on Mars",
+    "description": "The Program has a rover driving on Mars, and people everywhere are following where it goes next.",
+    "trigger": {
+      "assetKindArrives": "rover"
+    },
+    "science": 60,
+    "publicSupport": 100
+  },
+  {
+    "id": "science-700",
+    "name": "700 Science earned",
+    "description": "The Program has earned 700 Science, and its first results are in the news as well as the journals.",
+    "trigger": {
+      "totalScience": 700
+    },
+    "science": 20,
+    "publicSupport": 100
+  },
+  {
+    "id": "science-1200",
+    "name": "1200 Science earned",
+    "description": "The Program has earned 1200 Science, and schools and museums everywhere are teaching what it found.",
+    "trigger": {
+      "totalScience": 1200
+    },
+    "science": 30,
+    "publicSupport": 200
+  },
+  {
+    "id": "science-1800",
+    "name": "1800 Science earned",
+    "description": "The Program has earned 1800 Science, and it has changed what people think they know about Mars.",
+    "trigger": {
+      "totalScience": 1800
+    },
+    "science": 40,
+    "publicSupport": 300
+  },
+  {
+    "id": "science-2400",
+    "name": "2400 Science earned",
+    "description": "The Program has earned 2400 Science, and its discoveries are now the reason people give for going to Mars.",
+    "trigger": {
+      "totalScience": 2400
+    },
+    "science": 50,
+    "publicSupport": 350
+  },
+  {
+    "id": "science-3000",
+    "name": "3000 Science earned",
+    "description": "The Program has earned 3000 Science, and the world thinks of Mars as a place people have come to understand.",
+    "trigger": {
+      "totalScience": 3000
+    },
+    "science": 60,
+    "publicSupport": 400
   }
 ]

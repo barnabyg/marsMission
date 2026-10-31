@@ -68,7 +68,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
     /Pathfinder Orbiter: arrived at Mars/,
   );
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
-    "Pathfinder Orbiter",
+    "Pathfinder Orbiter: Survey",
   );
 
   await page.getByRole("button", { name: "10x" }).click();
@@ -307,6 +307,7 @@ test("lists the planned Mission's Mission Events with rough risk bands, which ch
           serviceLifeOptions: [{ days: 900, costMillions: 0 }],
           failureChancePerTurn: 0,
           missionEvents: [],
+          activities: ["nothing"],
         },
       ],
     });

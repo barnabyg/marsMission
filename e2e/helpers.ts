@@ -21,7 +21,7 @@ export function watchForProblems(page: Page): string[] {
   return problems;
 }
 
-/** Returns any game term on screen that has no tooltip. Button labels are plain text, so they don't count. */
+/** Returns any game term on screen that has no tooltip. Button labels and a select's options are plain text, so they don't count. */
 export function termsWithoutTooltips(page: Page): Promise<string[]> {
   return page.evaluate((pattern) => {
     const walker = document.createTreeWalker(
@@ -33,7 +33,7 @@ export function termsWithoutTooltips(page: Page): Promise<string[]> {
       const { parentElement, textContent } = walker.currentNode;
       if (
         parentElement?.closest(
-          "[data-term], [role=tooltip], button, script, style",
+          "[data-term], [role=tooltip], button, option, script, style",
         )
       ) {
         continue;
@@ -116,6 +116,42 @@ export async function holdTurnWhenShown(
   }, title ?? null);
 }
 
+/**
+ * Holds the Turn from inside the page once a landing or crash has played for this long, or just
+ * after it ends if no time is given. It resolves then, so start it before anything that sets the Turn going.
+ */
+export function holdSequence(page: Page, atMs?: number): Promise<void> {
+  return page.evaluate(
+    (wanted) =>
+      new Promise<void>((resolve) => {
+        let seen = false;
+        // The scene loads a moment after Mission Mode opens, and it goes when the Turn ends.
+        let loaded = false;
+        requestAnimationFrame(function check() {
+          const view = document.querySelector<HTMLElement>(
+            "[data-testid=solar-system-view]",
+          );
+          const playedMs = view?.dataset.sequenceMs;
+          seen ||= playedMs !== undefined;
+          loaded ||= view !== null;
+          const reached =
+            wanted === null
+              ? seen && playedMs === undefined
+              : Number(playedMs ?? -1) >= wanted;
+          if ((loaded && !view) || reached) {
+            [...document.querySelectorAll("button")]
+              .find((button) => button.textContent === "Pause")
+              ?.click();
+            resolve();
+          } else {
+            requestAnimationFrame(check);
+          }
+        });
+      }),
+    atMs ?? null,
+  );
+}
+
 /** Ticks exactly these Assets for the planned Mission. */
 export async function chooseAssets(page: Page, names: string[]): Promise<void> {
   const boxes = page.locator(".asset-choice");
@@ -136,4 +172,32 @@ export async function playToNextTurn(page: Page): Promise<void> {
   // The Turn may end before the click lands, which is fine.
   await fastest.click({ timeout: 2000 }).catch(() => undefined);
   await summary.getByRole("button", { name: "Continue" }).click();
+}
+
+export function viewButton(
+  page: Page,
+  name: "Solar system" | "Mars orbit" | "Surface",
+) {
+  return page
+    .getByRole("group", { name: "View" })
+    .getByRole("button", { name });
+}
+
+export function surfaceAssets(page: Page) {
+  return page.getByTestId("surface-asset");
+}
+
+export function orbiterLabels(page: Page) {
+  return page.getByTestId("mars-orbit-asset");
+}
+
+export async function launchFirstMission(
+  page: Page,
+  seed: number,
+): Promise<void> {
+  await page.goto(`/?seed=${seed}`);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(
+    page.getByTestId("solar-system-view").locator("canvas"),
+  ).toBeVisible();
 }

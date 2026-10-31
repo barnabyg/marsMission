@@ -8,6 +8,7 @@ import type { TimelineEntry } from "../simulation/simulation";
 export const missionViews = [
   { id: "solarSystem", name: "Solar system" },
   { id: "marsOrbit", name: "Mars orbit" },
+  { id: "surface", name: "Surface" },
 ] as const;
 
 export type MissionViewId = (typeof missionViews)[number]["id"];
@@ -19,7 +20,7 @@ export function viewName(view: MissionViewId): string {
 /** The Mission Events with a view of their own, whether they succeed or fail. */
 const viewsOfMissionEvents: Partial<Record<string, MissionViewId>> = {
   "mars-orbit-insertion": "marsOrbit",
-  "entry-descent-landing": "marsOrbit",
+  "entry-descent-landing": "surface",
 };
 
 /**
@@ -58,4 +59,34 @@ export function currentView(
     .map(viewAskedForBy)
     .findLast((view) => view !== null);
   return asked ?? choice.view;
+}
+
+/** The Landing Site the player last picked, and how many entries had happened when they did. */
+export interface SitePick {
+  siteName: string | null;
+  entriesHappened: number;
+}
+
+/** The player's pick, unless a landing has happened since, which the camera goes to instead. */
+export function landingSitePick(
+  entries: readonly TimelineEntry[],
+  entriesHappened: number,
+  pick: SitePick,
+): string | null {
+  const landedSince = entries
+    .slice(pick.entriesHappened, entriesHappened)
+    .some((entry) => viewAskedForBy(entry) === "surface");
+  return landedSince ? null : pick.siteName;
+}
+
+/**
+ * Hands over to Mars orbit when the surface view has no Landing Site left to show, such as when the
+ * only landing on its way is lost. A landing is on its way from the start of a Turn and its Assets
+ * operate from the day it's delivered, so once a Turn has lost its last site it never gets one back.
+ */
+export function viewWithSites(
+  view: MissionViewId,
+  sites: readonly string[],
+): MissionViewId {
+  return view === "surface" && sites.length === 0 ? "marsOrbit" : view;
 }

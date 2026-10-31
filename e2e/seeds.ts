@@ -24,9 +24,10 @@ const firstPlan = {
 function seedWhere(
   failedEvent: string | null,
   plan: TurnPlan = firstPlan,
+  playedBy = simulation,
 ): number {
   for (let seed = 1; seed < 100_000; seed++) {
-    const { summary } = simulation.runTurn(simulation.startProgram(seed), plan);
+    const { summary } = playedBy.runTurn(playedBy.startProgram(seed), plan);
     if ((summary.failure?.missionEventName ?? null) === failedEvent) {
       return seed;
     }
@@ -49,6 +50,15 @@ export const landingSeed = seedWhere(null, firstLanding);
 /** A seed whose first Mission crashes at the first known Landing Site. */
 export const crashSeed = seedWhere("Entry/descent/landing", firstLanding);
 
+/** A seed whose first Mission loses its lander before it has left Earth. */
+export const landerLostAtLaunchSeed = seedWhere("Launch", firstLanding);
+
+/** A seed whose first Mission loses its lander on the way to Mars. */
+export const landerLostOnTheWaySeed = seedWhere(
+  "Mars transfer burn",
+  firstLanding,
+);
+
 /** What the tests launch to carry an orbiter and a lander together. */
 const orbiterAndLander: TurnPlan = {
   mission: {
@@ -66,6 +76,51 @@ export const orbiterSafeSeed = seedWhere(
 
 /** A seed where an orbiter and lander launched together both arrive. */
 export const orbiterAndLanderSeed = seedWhere(null, orbiterAndLander);
+
+/** A seed whose first Mission lands a rover alone at the first known Landing Site. */
+export const roverSeed = seedWhere(null, {
+  mission: {
+    launchVehicleId: catalogue.launchVehicles[0]?.id ?? "",
+    assetIds: ["trailblazer-rover"],
+    landingSiteId: "jezero-crater",
+  },
+});
+
+/** Enough to launch a lander and a rover on the first Turn, which a real Program can't afford until later. */
+export const landerAndRoverMoney = 3000;
+
+const wealthySimulation = createSimulation(
+  parseCatalogue({
+    ...realCatalogueFiles(),
+    program: {
+      ...catalogue.program,
+      startingMoneyMillions: landerAndRoverMoney,
+    },
+  }),
+);
+
+/** What the tests launch to land a lander and a rover together. */
+const landerAndRover: TurnPlan = {
+  mission: {
+    launchVehicleId: "meridian-heavy",
+    assetIds: ["prospector-lander", "trailblazer-rover"],
+    landingSiteId: "jezero-crater",
+  },
+};
+
+/** A seed where a lander and a rover launched together both land. */
+export const landerAndRoverSeed = seedWhere(
+  null,
+  landerAndRover,
+  wealthySimulation,
+);
+
+/** A seed where a lander and a rover launched together crash. */
+export const landerAndRoverCrashSeed = seedWhere(
+  "Entry/descent/landing",
+  landerAndRover,
+  wealthySimulation,
+);
 
 /** A seed where the first orbiter arrives, and what happens to it during the next Turn is as asked. */
 function seedWhereOrbiter(nextTurn: (summary: TurnSummary) => boolean): number {

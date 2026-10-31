@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   advancePlayback,
   changeSpeed,
+  msSinceEntry,
   pausePlayback,
   speeds,
   startPlayback,
@@ -153,5 +154,67 @@ describe("playing a Turn", () => {
     );
     expect(state.finished).toBe(true);
     expect(state.day).toBe(780);
+  });
+});
+
+describe("the time since an entry happened", () => {
+  const landing: PlaybackTimeline = {
+    durationDays: 780,
+    entries: [{ day: 0 }, { day: 210 }],
+  };
+  /** At 1x, 210 days take about 5.4 minutes. */
+  const toLanding = 324_000;
+
+  const atLanding = (speed: number) =>
+    advancePlayback(
+      startPlayback(landing, speed),
+      landing,
+      toLanding / speed,
+      1,
+    );
+
+  it("is nothing until the entry happens", () => {
+    expect(msSinceEntry(startPlayback(landing), 1)).toBeNull();
+    expect(
+      msSinceEntry(
+        advancePlayback(startPlayback(landing), landing, 1000, 1),
+        1,
+      ),
+    ).toBeNull();
+    expect(msSinceEntry(startPlayback(landing), 0)).toBe(0);
+  });
+
+  it("starts from the moment the entry happens", () => {
+    expect(msSinceEntry(atLanding(1), 1)).toBe(0);
+  });
+
+  it.each([1, 5, 10])("counts real time at %ix", (speed) => {
+    const later = advancePlayback(atLanding(speed), landing, 1500, 1);
+    expect(msSinceEntry(later, 1)).toBe(1500);
+  });
+
+  it("carries on without a jump when the speed changes", () => {
+    const before = advancePlayback(atLanding(1), landing, 1000, 1);
+    const faster = changeSpeed(before, 10);
+    expect(msSinceEntry(faster, 1)).toBe(1000);
+    expect(msSinceEntry(advancePlayback(faster, landing, 500, 1), 1)).toBe(
+      1500,
+    );
+  });
+
+  it("stands still while paused", () => {
+    const before = advancePlayback(atLanding(1), landing, 1000, 1);
+    const paused = pausePlayback(before);
+    expect(msSinceEntry(advancePlayback(paused, landing, 9000, 1), 1)).toBe(
+      1000,
+    );
+  });
+
+  it("ignores the development time scale, so that browser tests see the same length of time", () => {
+    const fast = advancePlayback(startPlayback(landing), landing, 4000, 100);
+    expect(fast.entriesHappened).toBe(2);
+    expect(msSinceEntry(advancePlayback(fast, landing, 1000, 100), 1)).toBe(
+      1000,
+    );
   });
 });

@@ -1,10 +1,11 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import type { PlannedMission, Program } from "./types";
+import type { PlannedMission, Program, SurfaceMotion } from "./types";
 
 export type MissionEvent = Catalogue["missionEvents"][number];
 export type ReliabilityLevel = Catalogue["reliabilityLevels"][number];
 export type Asset = Catalogue["assets"][number];
 export type LandingSite = Catalogue["landingSites"][number];
+export type Activity = Catalogue["activities"][number];
 
 const millisecondsPerDay = 86_400_000;
 
@@ -44,7 +45,7 @@ export function roll(seed: number, turnNumber: number, key: string): number {
 }
 
 /** How many days after the first date the second is. */
-function daysBetween(from: string, to: string): number {
+export function daysBetween(from: string, to: string): number {
   return (
     (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) /
     millisecondsPerDay
@@ -57,6 +58,14 @@ export function daysUntilServiceEnds(
   asset: { arrivedOn: string; serviceLifeDays: number },
 ): number {
   return daysBetween(date, addDays(asset.arrivedOn, asset.serviceLifeDays));
+}
+
+/** How a plan names an Asset already operating. A Mission can't carry the same Asset twice, so no two share a key. */
+export function operatingKey(asset: {
+  assetId: string;
+  arrivedOn: string;
+}): string {
+  return `${asset.assetId}:${asset.arrivedOn}`;
 }
 
 /** The calculations shared by planning a Mission and resolving a Turn. */
@@ -104,6 +113,46 @@ export function createRules(catalogue: Catalogue) {
     return levelOrCheapest(
       mission?.assetChoices?.[asset.id]?.reliabilityLevelId,
     );
+  }
+
+  function activityById(id: string): Activity | undefined {
+    return catalogue.activities.find((activity) => activity.id === id);
+  }
+
+  /** The Activities an Asset can do, in the order it lists them. */
+  function activitiesOf(asset: Asset): Activity[] {
+    return asset.activities.flatMap((id) => activityById(id) ?? []);
+  }
+
+  /** The Activity a Mission has chosen for an Asset, which is the first it lists unless it chose another. */
+  function activityFor(mission: PlannedMission | null, asset: Asset): Activity {
+    const chosen = mission?.assetChoices?.[asset.id]?.activityId;
+    const available = activitiesOf(asset);
+    const activity = available.find(({ id }) => id === chosen) ?? available[0];
+    // The Catalogue guarantees at least one, and that each one exists.
+    if (!activity) throw new Error(`"${asset.id}" has no Activities`);
+    return activity;
+  }
+
+  /** The Catalogue's first Activity of doing nothing. */
+  function nothingActivity(): Activity {
+    const activity = catalogue.activities.find(
+      ({ effect }) => effect.kind === "nothing",
+    );
+    // The Catalogue guarantees at least one.
+    if (!activity) throw new Error("The Catalogue has no nothing Activity");
+    return activity;
+  }
+
+  /** An operating Asset's Activity as the player reads it. If a save holds one that has left the catalogue, the Asset does nothing. */
+  function activityNameOf(asset: { activityId: string }): string {
+    return (activityById(asset.activityId) ?? nothingActivity()).name;
+  }
+
+  /** How an operating Asset gets about on the surface, which only research sets. */
+  function surfaceMotionOf(asset: { activityId: string }): SurfaceMotion {
+    const effect = activityById(asset.activityId)?.effect;
+    return effect?.kind === "research" ? effect.surfaceMotion : "still";
   }
 
   /** The one calculation behind both an Asset's roll in service and the risk band Planning Mode shows. */
@@ -191,6 +240,11 @@ export function createRules(catalogue: Catalogue) {
     deliveryDay,
     serviceLifeFor,
     assetReliabilityFor,
+    activityById,
+    activitiesOf,
+    activityFor,
+    activityNameOf,
+    surfaceMotionOf,
     inServiceFailureChance,
     knownLandingSites,
     landingRisk,

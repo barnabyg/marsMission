@@ -178,7 +178,7 @@ test("keeps Survey progress, sites landed at and time left through saving to a s
   // Not the shortest option, which is what an upgraded save gets.
   await page
     .getByLabel("Service Life for Prospector Lander")
-    .selectOption("1500");
+    .selectOption("2100");
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await playToNextTurn(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
@@ -198,10 +198,10 @@ test("keeps Survey progress, sites landed at and time left through saving to a s
   await expect(page.getByTestId("turn-number")).toHaveText("2");
   const operating = page.getByTestId("operating-assets");
   await expect(operating).toContainText(
-    "Pathfinder Orbiter: 330 days of Service Life left",
+    "Pathfinder Orbiter: 730 days of Service Life left",
   );
   await expect(operating).toContainText(
-    "Prospector Lander at Jezero Crater: 935 days of Service Life left",
+    "Prospector Lander at Jezero Crater: 1535 days of Service Life left",
   );
   await chooseAssets(page, ["Prospector Lander"]);
   const sites = page.getByLabel("Landing Site").getByRole("option");
@@ -501,6 +501,6 @@ test("loads a save made before the Save and Load dialogs existed", async ({
   await expect(page.getByTestId("public-support")).toHaveText("227");
   // The upgrade gives it the shortest Service Life, counted from its arrival.
   await expect(page.getByTestId("operating-assets")).toContainText(
-    "Pathfinder Orbiter: 380 days of Service Life left",
+    "Pathfinder Orbiter: 780 days of Service Life left",
   );
 });

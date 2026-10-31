@@ -1,26 +1,28 @@
 import { describe, expect, it } from "vitest";
-import {
-  CatalogueError,
-  parseCatalogue,
-  type CatalogueFiles,
-} from "./catalogue";
+import { parseCatalogue } from "./catalogue";
+import { errorFrom } from "./errorFrom";
 import { createSimulation } from "../simulation/simulation";
 import { testCatalogueFiles } from "../simulation/testCatalogue";
 import { realCatalogueFiles } from "../testing/realCatalogue";
 
-function errorFrom(files: unknown): string {
-  try {
-    parseCatalogue(files as CatalogueFiles);
-  } catch (error) {
-    if (error instanceof CatalogueError) return error.message;
-    throw error;
-  }
-  throw new Error("Expected the catalogue to be rejected");
-}
-
 describe("the real data files", () => {
   it("are valid", () => {
     expect(() => parseCatalogue(realCatalogueFiles())).not.toThrow();
+  });
+
+  it.each([
+    ["orbiter", ["survey", "research", "nothing"]],
+    ["lander", ["research", "nothing"]],
+    ["rover", ["research", "research", "nothing"]],
+  ])("give a %s these choices, starting on the first", (kind, expected) => {
+    const { assets, activities } = parseCatalogue(realCatalogueFiles());
+    const effects = assets
+      .find((asset) => asset.kind === kind)
+      ?.activities.map(
+        (activityId) =>
+          activities.find(({ id }) => id === activityId)?.effect.kind,
+      );
+    expect(effects).toEqual(expected);
   });
 
   it("have a second Launch Vehicle with more capacity at a higher cost", () => {
@@ -100,6 +102,61 @@ describe("invalid data files", () => {
     });
     expect(message).toContain("milestones.json");
     expect(message).toContain("submarine");
+  });
+
+  it("reject a Milestone for landing when no Asset lands", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      assets: files.assets.filter(({ landsAtSite }) => !landsAtSite),
+      milestones: [{ ...files.milestones[0], trigger: { assetLands: true } }],
+    });
+    expect(message).toContain("milestones.json");
+    expect(message).toContain("landsAtSite");
+  });
+
+  it.each([
+    ["zero", { totalScience: 0 }],
+    ["negative", { totalScience: -5 }],
+    ["not a whole number", { totalScience: 1.5 }],
+    ["not a number", { totalScience: "100" }],
+    ["alongside another trigger", { totalScience: 100, assetLands: true }],
+  ])("reject a Milestone for total Science that is %s", (_, trigger) => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      milestones: [{ ...files.milestones[0], trigger }],
+    });
+    expect(message).toContain("milestones.json");
+    expect(message).toContain("0.trigger");
+    expect(message).toContain("totalScience");
+  });
+
+  it.each([
+    ["no way of moving", undefined],
+    ["an unknown way of moving", "hopping"],
+  ])("reject a research Activity with %s", (_, surfaceMotion) => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      activities: [
+        ...files.activities,
+        {
+          id: "bad-research",
+          name: "Bad research",
+          description: "Doesn't say how it moves.",
+          effect: {
+            kind: "research",
+            sciencePerTurn: 10,
+            publicSupportPerTurn: 1,
+            researchKind: "test-unpaid",
+            surfaceMotion,
+          },
+        },
+      ],
+    });
+    expect(message).toContain("activities.json");
+    expect(message).toContain("surfaceMotion");
   });
 
   it("reject a Cancellation Level that could never be fallen below", () => {
@@ -235,15 +292,6 @@ describe("invalid data files", () => {
     });
     expect(message).toContain("launch-vehicles.json");
     expect(message).toContain("capacityTonnes");
-  });
-
-  it("reject an Asset that both lands and surveys", () => {
-    const files = testCatalogueFiles();
-    const message = errorFrom({
-      ...files,
-      assets: files.assets.map((asset) => ({ ...asset, surveys: true })),
-    });
-    expect(message).toContain("can't both land and survey");
   });
 
   it("reject a Landing Site with an invalid risk", () => {

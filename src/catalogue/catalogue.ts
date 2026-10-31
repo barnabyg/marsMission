@@ -1,177 +1,7 @@
-import { z } from "zod";
+import type { z } from "zod";
+import { catalogueFileNames, schemas, type Catalogue } from "./schemas";
 
-const id = z.string().min(1);
-const money = z.number().int().nonnegative();
-
-export const isoDate = z.string().refine((value) => {
-  const date = new Date(`${value}T00:00:00Z`);
-  return (
-    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
-    !Number.isNaN(date.getTime()) &&
-    date.toISOString().startsWith(value)
-  );
-}, "must be a real date written as YYYY-MM-DD");
-
-const programSchema = z.strictObject({
-  firstLaunchWindow: isoDate,
-  launchWindowIntervalDays: z.number().int().positive(),
-  startingMoneyMillions: money,
-  startingPublicSupport: z.number().int().nonnegative(),
-  transferDays: z.number().int().positive(),
-  // At least 1%, and a level of at least 1, so a Program that only skips Turns is always cancelled.
-  publicSupportDrainPercent: z.number().int().min(1).max(100),
-  cancellationLevel: z.number().int().min(1),
-});
-
-const launchVehiclesSchema = z.array(
-  z.strictObject({
-    id,
-    name: z.string().min(1),
-    costMillions: money,
-    capacityTonnes: z.number().positive(),
-    missionEvents: z.array(id),
-  }),
-);
-
-const assetsSchema = z.array(
-  z.strictObject({
-    id,
-    name: z.string().min(1),
-    kind: id,
-    costMillions: money,
-    massTonnes: z.number().positive(),
-    // The chance of failing in each Turn after the one it arrives in, before Reliability.
-    failureChancePerTurn: z.number().min(0).max(1),
-    // In order, shortest first. Service Life starts when the Asset arrives, and the first option is what's chosen unless the player picks another.
-    serviceLifeOptions: z
-      .array(
-        z.strictObject({
-          days: z.number().int().positive(),
-          costMillions: money,
-        }),
-      )
-      .min(1),
-    missionEvents: z.array(id),
-    // Whether this Asset is a lander, so that a Mission carrying it must name a Landing Site.
-    landsAtSite: z.boolean().optional(),
-    // Whether this Asset carries out a Survey in each Turn it operates at Mars.
-    surveys: z.boolean().optional(),
-  }),
-);
-
-const landingSitesSchema = z.array(
-  z.strictObject({
-    id,
-    name: z.string().min(1),
-    description: z.string().min(1),
-    landingRisk: z.number().min(0).max(1),
-    surveyedLandingRisk: z.number().min(0).max(1),
-    // Earned by the first successful landing at this site.
-    science: z.number().int().nonnegative(),
-    knownFromStart: z.boolean(),
-    // In degrees, north and east, as the map in public/art/mars.jpg has them.
-    latitude: z.number().min(-90).max(90),
-    longitude: z.number().min(-180).max(180),
-  }),
-);
-
-const missionEventsSchema = z.array(
-  z.strictObject({
-    id,
-    name: z.string().min(1),
-    // {site} in either description stands for the Mission's Landing Site.
-    description: z.string().min(1),
-    failureDescription: z.string().min(1),
-    timing: z.strictObject({
-      from: z.enum(["launch", "arrival"]),
-      days: z.number().int().nonnegative(),
-    }),
-    // "landingSite" means the risk of the Mission's Landing Site.
-    failureProbability: z.union([
-      z.number().min(0).max(1),
-      z.literal("landingSite"),
-    ]),
-    publicSupportLoss: z.number().int().nonnegative(),
-  }),
-);
-
-const milestonesSchema = z.array(
-  z.strictObject({
-    id,
-    name: z.string().min(1),
-    description: z.string().min(1),
-    trigger: z.strictObject({ assetKindArrives: id }),
-    science: z.number().int().nonnegative(),
-    publicSupport: z.number().int().nonnegative(),
-  }),
-);
-
-const fundingThresholdsSchema = z.array(
-  z.strictObject({
-    publicSupport: z.number().int().positive(),
-    payoutMillions: z.number().int().positive(),
-  }),
-);
-
-const reliabilityLevelsSchema = z
-  .array(
-    z.strictObject({
-      id,
-      name: z.string().min(1),
-      costMillions: money,
-      // What a Mission Event's failure probability is multiplied by at this level.
-      failureMultiplier: z.number().min(0).max(1),
-    }),
-  )
-  .min(1);
-
-const riskBandsSchema = z
-  .array(
-    z.strictObject({
-      upTo: z.number().positive().max(1),
-      label: z.string().min(1),
-    }),
-  )
-  .min(1);
-
-const schemas = {
-  program: programSchema,
-  launchVehicles: launchVehiclesSchema,
-  assets: assetsSchema,
-  landingSites: landingSitesSchema,
-  missionEvents: missionEventsSchema,
-  milestones: milestonesSchema,
-  fundingThresholds: fundingThresholdsSchema,
-  reliabilityLevels: reliabilityLevelsSchema,
-  riskBands: riskBandsSchema,
-};
-
-/** The data file behind each part of the catalogue, relative to the data folder. */
-export const catalogueFileNames = {
-  program: "program.json",
-  launchVehicles: "launch-vehicles.json",
-  assets: "assets.json",
-  landingSites: "landing-sites.json",
-  missionEvents: "mission-events.json",
-  milestones: "milestones.json",
-  fundingThresholds: "funding-thresholds.json",
-  reliabilityLevels: "reliability-levels.json",
-  riskBands: "risk-bands.json",
-} as const satisfies Record<keyof typeof schemas, string>;
-
-export interface Catalogue {
-  program: z.output<typeof programSchema>;
-  launchVehicles: z.output<typeof launchVehiclesSchema>;
-  assets: z.output<typeof assetsSchema>;
-  /** In the order a Survey reveals them. */
-  landingSites: z.output<typeof landingSitesSchema>;
-  missionEvents: z.output<typeof missionEventsSchema>;
-  milestones: z.output<typeof milestonesSchema>;
-  fundingThresholds: z.output<typeof fundingThresholdsSchema>;
-  /** In order, cheapest first. */
-  reliabilityLevels: z.output<typeof reliabilityLevelsSchema>;
-  riskBands: z.output<typeof riskBandsSchema>;
-}
+export { catalogueFileNames, isoDate, type Catalogue } from "./schemas";
 
 export type CatalogueFiles = Catalogue;
 
@@ -203,6 +33,8 @@ function crossCheck(catalogue: Catalogue): string[] {
   const problems: string[] = [];
   const {
     program,
+    activities,
+    researchKinds,
     launchVehicles,
     assets,
     landingSites,
@@ -214,6 +46,8 @@ function crossCheck(catalogue: Catalogue): string[] {
   } = catalogue;
 
   const parts = [
+    [catalogueFileNames.activities, activities],
+    [catalogueFileNames.researchKinds, researchKinds],
     [catalogueFileNames.launchVehicles, launchVehicles],
     [catalogueFileNames.assets, assets],
     [catalogueFileNames.landingSites, landingSites],
@@ -272,14 +106,45 @@ function crossCheck(catalogue: Catalogue): string[] {
     !landingSites.some((site) => site.knownFromStart)
   ) {
     problems.push(
-      `${catalogueFileNames.landingSites}: there is a lander in ${catalogueFileNames.assets}, so at least one Landing Site must be known from the start`,
+      `${catalogueFileNames.landingSites}: an Asset in ${catalogueFileNames.assets} sets landsAtSite, so at least one Landing Site must be known from the start`,
     );
   }
-  for (const asset of assets) {
-    if (asset.landsAtSite === true && asset.surveys === true) {
+  // An old save's Asset does nothing unless it can survey, so there must be an Activity to give it.
+  if (!activities.some(({ effect }) => effect.kind === "nothing")) {
+    problems.push(
+      `${catalogueFileNames.activities}: there must be at least one Activity with a "nothing" effect`,
+    );
+  }
+  for (const { id: activityId, effect } of activities) {
+    if (
+      effect.kind === "research" &&
+      !researchKinds.some(({ id }) => id === effect.researchKind)
+    ) {
       problems.push(
-        `${catalogueFileNames.assets}: "${asset.id}" can't both land and survey, because a Survey is made from orbit`,
+        `${catalogueFileNames.activities}: "${activityId}" refers to the kind of research "${effect.researchKind}", which isn't in ${catalogueFileNames.researchKinds}`,
       );
+    }
+  }
+  for (const asset of assets) {
+    for (const duplicate of findDuplicates(asset.activities)) {
+      problems.push(
+        `${catalogueFileNames.assets}: "${asset.id}" lists the Activity "${duplicate}" more than once`,
+      );
+    }
+    for (const activityId of asset.activities) {
+      const activity = activities.find(({ id }) => id === activityId);
+      if (!activity) {
+        problems.push(
+          `${catalogueFileNames.assets}: "${asset.id}" refers to the Activity "${activityId}", which isn't in ${catalogueFileNames.activities}`,
+        );
+      } else if (
+        asset.landsAtSite === true &&
+        activity.effect.kind === "survey"
+      ) {
+        problems.push(
+          `${catalogueFileNames.assets}: "${asset.id}" can't both land and survey, because a Survey is made from orbit`,
+        );
+      }
     }
   }
   for (const asset of assets) {
@@ -308,6 +173,15 @@ function crossCheck(catalogue: Catalogue): string[] {
 
   const assetKinds = new Set(assets.map((asset) => asset.kind));
   for (const milestone of milestones) {
+    if ("assetLands" in milestone.trigger) {
+      if (!assets.some((asset) => asset.landsAtSite === true)) {
+        problems.push(
+          `${catalogueFileNames.milestones}: "${milestone.id}" needs an Asset that lands, but none in ${catalogueFileNames.assets} sets landsAtSite`,
+        );
+      }
+      continue;
+    }
+    if ("totalScience" in milestone.trigger) continue;
     const kind = milestone.trigger.assetKindArrives;
     if (!assetKinds.has(kind)) {
       problems.push(
@@ -374,6 +248,18 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     files.program,
     problems,
   );
+  const activities = parsePart(
+    catalogueFileNames.activities,
+    schemas.activities,
+    files.activities,
+    problems,
+  );
+  const researchKinds = parsePart(
+    catalogueFileNames.researchKinds,
+    schemas.researchKinds,
+    files.researchKinds,
+    problems,
+  );
   const launchVehicles = parsePart(
     catalogueFileNames.launchVehicles,
     schemas.launchVehicles,
@@ -429,6 +315,8 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
 
   if (
     !program ||
+    !activities ||
+    !researchKinds ||
     !launchVehicles ||
     !assets ||
     !landingSites ||
@@ -443,6 +331,8 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
 
   const catalogue = {
     program,
+    activities,
+    researchKinds,
     launchVehicles,
     assets,
     landingSites,

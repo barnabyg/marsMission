@@ -60,7 +60,7 @@ function coordinatesOf(sites: Sites, siteName: string) {
   return site;
 }
 
-/** The day a Mission's lander reaches the surface, in one piece or not, or null if it doesn't. */
+/** The day an Asset reaches the surface, in one piece or not, or null if it doesn't. */
 function landingDayOf(asset: Mission["assets"][number]): number | null {
   if (asset.landingSiteName === null) return null;
   return asset.crashed ? asset.lostOnDay : asset.deliveredOnDay;
@@ -74,7 +74,7 @@ interface LandingMarker {
   crashed: boolean;
 }
 
-/** The Mission's landers on their way down on a given day, and any that have crashed. */
+/** The Mission's Assets on their way down on a given day, and any that have crashed. */
 export function landingMarkersOn(
   mission: Mission | null,
   day: number,

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useMemo } from "react";
 import { addDays, type Timeline } from "../simulation/simulation";
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
@@ -6,6 +6,16 @@ import { EventsColumn } from "./EventsColumn";
 import { missionViews, viewName } from "./missionViews";
 import { speeds } from "./playback";
 import { assetsOperatingOn, describeJourney } from "./journey";
+import {
+  landingSequenceOf,
+  sequenceNow,
+  sitesDuring,
+} from "./surface/sequence";
+import { sitesToShow } from "./surface/surface";
+import {
+  SurfaceControls,
+  surfaceUnavailableId,
+} from "./surface/SurfaceControls";
 import { useMissionView } from "./useMissionView";
 import { usePlayback } from "./usePlayback";
 import { useSounds } from "./useSounds";
@@ -37,9 +47,16 @@ export function MissionMode({
     state.entriesHappened,
   );
 
-  const { view, chooseView } = useMissionView(
+  const landingSequence = useMemo(
+    () => landingSequenceOf(timeline),
+    [timeline],
+  );
+  const sequence = sequenceNow(landingSequence, state);
+  const sites = sitesDuring(sitesToShow(timeline, state.day), sequence);
+  const { view, chooseView, site, pickSite } = useMissionView(
     timeline.entries,
     state.entriesHappened,
+    sites,
   );
 
   useEffect(() => {
@@ -57,6 +74,8 @@ export function MissionMode({
           timeline={timeline}
           day={state.day}
           view={view}
+          site={site}
+          sequence={sequence}
           operatingAssetCount={operatingAssets.length}
         />
       </Suspense>
@@ -85,18 +104,25 @@ export function MissionMode({
           <span>
             View: <strong data-testid="current-view">{viewName(view)}</strong>
           </span>
-          {missionViews.map(({ id, name }) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={view === id}
-              onClick={() => {
-                chooseView(id);
-              }}
-            >
-              {name}
-            </button>
-          ))}
+          {missionViews.map(({ id, name }) => {
+            const unavailable = id === "surface" && site === null;
+            return (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={view === id}
+                disabled={unavailable}
+                aria-describedby={
+                  unavailable ? surfaceUnavailableId : undefined
+                }
+                onClick={() => {
+                  chooseView(id);
+                }}
+              >
+                {name}
+              </button>
+            );
+          })}
         </div>
         <div role="group" aria-label="Speed" className="speed-controls">
           <span>
@@ -133,11 +159,22 @@ export function MissionMode({
         <p data-testid="journey-progress">
           <GameText>{describeJourney(timeline.mission, state.day)}</GameText>
         </p>
+        <SurfaceControls
+          timeline={timeline}
+          day={state.day}
+          view={view}
+          sites={sites}
+          site={site}
+          sequence={sequence}
+          onPickSite={pickSite}
+        />
         <h2>Operating at Mars</h2>
         <ul data-testid="operating-at-mars">
           {operatingAssets.length === 0 && <li>Nothing</li>}
           {operatingAssets.map((asset, index) => (
-            <li key={index}>{asset}</li>
+            <li key={index}>
+              <GameText>{asset}</GameText>
+            </li>
           ))}
         </ul>
       </aside>

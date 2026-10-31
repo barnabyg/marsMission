@@ -47,7 +47,7 @@ describe("validating a landing", () => {
     ).toEqual(["alpha-plain", "beta-crater"]);
   });
 
-  it("needs a Landing Site when the Mission carries a lander", () => {
+  it("needs a Landing Site when the Mission carries something that lands", () => {
     const { simulation, program } = setup();
     const { problems } = simulation.validatePlan(program, {
       mission: { launchVehicleId: "test-vehicle", assetIds: ["test-lander"] },
@@ -64,7 +64,7 @@ describe("validating a landing", () => {
     },
   );
 
-  it("refuses a Landing Site on a Mission with no lander", () => {
+  it("refuses a Landing Site on a Mission where nothing lands", () => {
     const { simulation, program } = setup();
     const { problems } = simulation.validatePlan(program, {
       mission: {
@@ -73,7 +73,7 @@ describe("validating a landing", () => {
         landingSiteId: "alpha-plain",
       },
     });
-    expect(problems.join(" ")).toMatch(/Only a Mission carrying a lander/);
+    expect(problems.join(" ")).toMatch(/Only a Mission that lands/);
   });
 
   it("accepts a known Landing Site", () => {
@@ -149,15 +149,42 @@ describe("a successful landing", () => {
         landingSiteId: "alpha-plain",
         serviceLifeDays: 50_000,
         reliabilityLevelId: "none",
+        activityId: "test-nothing",
+        key: "test-lander:2029-06-24",
+        activityName: "Nothing",
+        activities: [
+          {
+            id: "test-nothing",
+            name: "Nothing",
+            description: "Does no work.",
+            surveys: false,
+            earnsPerTurn: null,
+          },
+          {
+            id: "test-research",
+            name: "Test research",
+            description: "Earns Science and Public Support.",
+            surveys: false,
+            earnsPerTurn: {
+              science: 78,
+              publicSupport: 39,
+              researchGrantMillions: 0,
+            },
+          },
+        ],
         daysLeft: 49_425,
         landingSiteName: "Alpha Plain",
       },
     ]);
     expect(timeline.assetsAtMars).toEqual([
       {
+        key: expect.stringMatching(/^test-lander:/) as string,
         name: "Test Lander",
         kind: "lander",
         landingSiteName: "Alpha Plain",
+        activityName: "Nothing",
+        surfaceMotion: "still",
+        arrivedOnDay: 205,
         fromDay: 205,
         untilDay: null,
       },
@@ -195,7 +222,9 @@ describe("a successful landing", () => {
       "First landing",
       "First landing at Alpha Plain",
     ]);
-    expect(onTheDay[0]?.description).toBe("Touched down at Alpha Plain.");
+    expect(onTheDay[0]?.description).toBe(
+      "The lander touched down at Alpha Plain.",
+    );
   });
 
   it("doesn't affect a Mission without a lander", () => {
@@ -221,7 +250,7 @@ describe("a failed landing", () => {
     const { timeline, summary } = crash();
     const entry = timeline.entries.at(-1);
     expect(entry?.title).toBe("Test landing failed");
-    expect(entry?.description).toContain("It crashed at Alpha Plain.");
+    expect(entry?.description).toContain("The lander crashed at Alpha Plain.");
     expect(summary.failure).toMatchObject({
       missionEventName: "Test landing",
       assetsLost: ["Test Lander"],

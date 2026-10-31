@@ -1,0 +1,62 @@
+[
+  {
+    "id": "survey",
+    "name": "Survey",
+    "description": "Observes Mars from orbit, which lowers the landing risk of the known Landing Sites and reveals a new one.",
+    "effect": { "kind": "survey" }
+  },
+  {
+    "id": "orbital-research",
+    "name": "Orbital research",
+    "description": "Studies the atmosphere and climate of Mars from orbit, in place of a Survey.",
+    "effect": {
+      "kind": "research",
+      "sciencePerTurn": 80,
+      "publicSupportPerTurn": 6,
+      "researchKind": "orbital-research",
+      "surfaceMotion": "nearby"
+    }
+  },
+  {
+    "id": "surface-research",
+    "name": "Surface research",
+    "description": "Studies the rocks and weather around the Landing Site.",
+    "effect": {
+      "kind": "research",
+      "sciencePerTurn": 100,
+      "publicSupportPerTurn": 9,
+      "researchKind": "surface-research",
+      "surfaceMotion": "nearby"
+    }
+  },
+  {
+    "id": "soil-analysis",
+    "name": "Soil analysis",
+    "description": "Stays near the Landing Site and analyses soil samples, which pays a Research Grant.",
+    "effect": {
+      "kind": "research",
+      "sciencePerTurn": 80,
+      "publicSupportPerTurn": 9,
+      "researchKind": "soil-analysis",
+      "surfaceMotion": "nearby"
+    }
+  },
+  {
+    "id": "long-traverse",
+    "name": "Long traverse",
+    "description": "Drives long distances around the Landing Site and finds more, but pays no Research Grant. The other Landing Sites are too far away to reach.",
+    "effect": {
+      "kind": "research",
+      "sciencePerTurn": 160,
+      "publicSupportPerTurn": 14,
+      "researchKind": "long-traverse",
+      "surfaceMotion": "traverse"
+    }
+  },
+  {
+    "id": "nothing",
+    "name": "Nothing",
+    "description": "Stays in place and does no work this Turn.",
+    "effect": { "kind": "nothing" }
+  }
+]

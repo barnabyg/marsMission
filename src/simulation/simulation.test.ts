@@ -27,6 +27,7 @@ describe("starting a Program", () => {
       "gold-orbiter",
       "test-relay",
       "test-lander",
+      "test-rover",
     ]);
   });
 });
