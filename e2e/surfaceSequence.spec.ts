@@ -154,6 +154,22 @@ test("lets the player switch away during a landing without pulling them back, an
   expect(problems).toEqual([]);
 });
 
+/** Waits until the page has drawn this many more frames. */
+function framesDrawn(page: Page, count: number): Promise<void> {
+  return page.evaluate(
+    (frames) =>
+      new Promise<void>((resolve) => {
+        let left = frames;
+        requestAnimationFrame(function check() {
+          left -= 1;
+          if (left > 0) requestAnimationFrame(check);
+          else resolve();
+        });
+      }),
+    count,
+  );
+}
+
 test("moves a rover's label across the surface on a Long traverse", async ({
   page,
 }) => {
@@ -180,9 +196,10 @@ test("moves a rover's label across the surface on a Long traverse", async ({
   await expect.poll(place).not.toBe(before);
   await page.getByRole("button", { name: "Pause" }).click();
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
-  await page.waitForTimeout(300);
+  // A label moves in the frame after its day, and on a slow renderer one frame outlasts any fixed wait.
+  await framesDrawn(page, 5);
   const moved = await place();
-  await page.waitForTimeout(300);
+  await framesDrawn(page, 5);
   await expect(label).toBeInViewport();
   expect(await place()).toBe(moved);
   expect(problems).toEqual([]);
