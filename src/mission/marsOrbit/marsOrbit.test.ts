@@ -21,6 +21,7 @@ const asset = (overrides: Partial<AssetAtMars>): AssetAtMars => ({
   kind: "orbiter",
   landingSiteName: null,
   fromDay: 0,
+  untilDay: null,
   ...overrides,
 });
 
@@ -38,6 +39,14 @@ const mission = (
 ): Pick<Mission, "arrivalDay" | "assets"> => ({ arrivalDay: 200, assets });
 
 describe("the orbiters in the Mars orbit view", () => {
+  it("leaves out one from the day it stops operating", () => {
+    const timeline = { assetsAtMars: [asset({ untilDay: 300 })] };
+    expect(orbitersOn(timeline, 299).map(({ name }) => name)).toEqual([
+      "Orbiter",
+    ]);
+    expect(orbitersOn(timeline, 300)).toEqual([]);
+  });
+
   it("leaves out anything on the surface", () => {
     const assetsAtMars = [
       asset({ name: "Lander", landingSiteName: "Alpha Plain" }),
