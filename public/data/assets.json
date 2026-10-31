@@ -17,7 +17,7 @@
         "costMillions": 150
       }
     ],
-    "failureChancePerTurn": 0.15
+    "failureChancePerTurn": 0.13
   },
   {
     "id": "prospector-lander",

@@ -276,7 +276,12 @@ describe("the balance of Phase 3", () => {
       assetIds: [orbiterId],
     });
     expect(asset?.riskBand).toBe("~10%");
-    expect(asset?.reliabilityLevels.at(-1)?.riskBand).toBe("~2%");
+    // Each level is visibly better than the one below it, so that none is money for nothing.
+    expect(asset?.reliabilityLevels.map(({ riskBand }) => riskBand)).toEqual([
+      "~10%",
+      "~5%",
+      "~2%",
+    ]);
     expect(asset?.reliabilityLevels.at(-1)?.costMillions).toBeGreaterThan(0);
   });
 
