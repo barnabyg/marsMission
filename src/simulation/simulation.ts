@@ -18,6 +18,7 @@ export { corruptSave, SaveError } from "./saveFormat";
 export type {
   AssetAtMars,
   AssetChoices,
+  PlannedAsset,
   Program,
   ProgramView,
   Timeline,
