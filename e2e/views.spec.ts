@@ -106,8 +106,9 @@ test("shows an orbiter going round Mars from the day it arrives, only in the Mar
   await viewButton(page, "Mars orbit").click();
   await expect(orbiterLabels(page)).toHaveCount(1);
 
-  // It's still there next Turn, from the first day.
-  await page.getByRole("button", { name: "10x" }).click();
+  // It's still there next Turn, from the first day. Ending this Turn keeps the next one at 1x, as
+  // a Turn at 10x can be over in the browser tests before the label has been checked.
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   await page
     .getByTestId("turn-summary")
     .getByRole("button", { name: "Continue" })
@@ -115,6 +116,7 @@ test("shows an orbiter going round Mars from the day it arrives, only in the Mar
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
+  await page.getByRole("button", { name: "Pause" }).click();
   await viewButton(page, "Mars orbit").click();
   await expect(orbiterLabels(page)).toHaveText(["Pathfinder Orbiter"]);
   expect(problems).toEqual([]);
