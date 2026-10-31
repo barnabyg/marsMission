@@ -66,7 +66,7 @@ export const tooltips = {
   "Research Grant":
     "Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none.",
   "Public Support":
-    "Points of public and political backing. Milestones add them, setbacks remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.",
+    "Points of public and political backing. Milestones and Ongoing Research add them, setbacks remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.",
   "Funding Threshold":
     "One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached. Reaching it again later pays nothing.",
   "Cancellation Level":

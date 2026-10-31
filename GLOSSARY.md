@@ -140,7 +140,7 @@ Money paid at the start of a Turn for certain Ongoing Research done in the previ
 _Avoid_: Science income, science payment
 
 **Public Support**:
-Points of public and political backing. Milestones add them, setbacks such as losing Crew remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.
+Points of public and political backing. Milestones and Ongoing Research add them, setbacks such as losing Crew remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.
 _Avoid_: Popularity, approval, morale
 
 **Funding Threshold**:
