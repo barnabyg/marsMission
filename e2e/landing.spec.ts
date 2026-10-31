@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
   eventEntries,
+  holdTurnWhenShown,
   pauseAtEvent,
   playToNextTurn,
   termsWithoutTooltips,
@@ -171,13 +172,20 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
+  // At the 10x carried over, the Service Life ends about 0.5 s into this Turn.
+  await holdTurnWhenShown(page);
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
     "Pathfinder Orbiter",
   );
-  await pauseAtEvent(page, "Pathfinder Orbiter: Service Life ended");
+  const ended = "Pathfinder Orbiter: Service Life ended";
+  await holdTurnWhenShown(page, ended);
+  await page.getByRole("button", { name: "10x" }).click();
+  await expect(eventEntries(page).first().getByRole("heading")).toHaveText(
+    ended,
+  );
   await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
   await expect(eventEntries(page).first()).toContainText(
     "costs no Public Support",
@@ -214,12 +222,16 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
 
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await playToNextTurn(page);
+  // At the 10x carried over, the whole of this Turn takes about a second.
+  await holdTurnWhenShown(page, "Pathfinder Orbiter failed");
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
 
-  await pauseAtEvent(page, "Pathfinder Orbiter failed");
   const failed = eventEntries(page).first();
+  await expect(failed.getByRole("heading")).toHaveText(
+    "Pathfinder Orbiter failed",
+  );
   await expect(failed).toHaveClass(/failed/);
   await expect(failed).toContainText("costs no Public Support");
   await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");

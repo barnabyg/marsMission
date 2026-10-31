@@ -89,6 +89,33 @@ export async function pauseAtEvent(page: Page, title: string): Promise<void> {
   await page.getByRole("button", { name: "Pause" }).click();
 }
 
+/**
+ * Holds the Turn from inside the page the moment an event with this title appears, or as soon as Mission Mode opens if
+ * there's no title. Call it before the click that starts things moving. A Turn starts at the speed last chosen, and at
+ * 10x pauseAtEvent's click from out here can land too late.
+ */
+export async function holdTurnWhenShown(
+  page: Page,
+  title?: string,
+): Promise<void> {
+  await page.evaluate((wanted) => {
+    new MutationObserver((_, observer) => {
+      const pause = [...document.querySelectorAll("button")].find(
+        (button) => button.textContent === "Pause",
+      );
+      const shown =
+        wanted === null ||
+        [...document.querySelectorAll("[data-testid=event-entry] h3")].some(
+          (heading) => heading.textContent === wanted,
+        );
+      if (pause && shown) {
+        observer.disconnect();
+        pause.click();
+      }
+    }).observe(document.body, { childList: true, subtree: true });
+  }, title ?? null);
+}
+
 /** Ticks exactly these Assets for the planned Mission. */
 export async function chooseAssets(page: Page, names: string[]): Promise<void> {
   const boxes = page.locator(".asset-choice");
