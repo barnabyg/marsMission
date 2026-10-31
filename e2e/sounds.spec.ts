@@ -85,6 +85,18 @@ test("stays silent for the rest of a Turn after muting partway through", async (
   ]);
 });
 
+test("plays no sounds for what End Turn skips", async ({ page }) => {
+  await listenForSounds(page);
+  await page.goto(`/?seed=${successSeed}`);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await pauseAtEvent(page, "Launch");
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await expect(page.getByTestId("turn-summary")).toBeVisible();
+  expect((await soundsHeard(page)).map(([file]) => file)).toEqual([
+    "launch.wav",
+  ]);
+});
+
 test("remembers the mute setting after the browser closes", async ({
   page,
 }) => {
