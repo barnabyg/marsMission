@@ -9,6 +9,8 @@ export interface PlannedMission {
   assetChoices?: Record<string, AssetChoices>;
   /** The Contingencies bought, by id. Each one covers one Mission Event that this Mission goes through. */
   contingencyIds?: string[];
+  /** The route to Mars. Left out, it's the first the Catalogue lists. */
+  trajectoryId?: string;
 }
 
 export interface AssetChoices {
@@ -343,6 +345,17 @@ export interface TurnResult {
   program: Program;
   timeline: Timeline;
   summary: TurnSummary;
+}
+
+/** A Trajectory as Planning Mode offers it. */
+export interface PlannedTrajectory {
+  id: string;
+  name: string;
+  description: string;
+  transferDays: number;
+  costMillions: number;
+  capacityLossTonnes: number;
+  chosen: boolean;
 }
 
 export type DecisionAnswer = "use" | "decline";

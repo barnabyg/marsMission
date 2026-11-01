@@ -36,6 +36,7 @@ function crossCheck(catalogue: Catalogue): string[] {
     activities,
     researchKinds,
     launchVehicles,
+    trajectories,
     assets,
     landingSites,
     missionEvents,
@@ -50,6 +51,7 @@ function crossCheck(catalogue: Catalogue): string[] {
     [catalogueFileNames.activities, activities],
     [catalogueFileNames.researchKinds, researchKinds],
     [catalogueFileNames.launchVehicles, launchVehicles],
+    [catalogueFileNames.trajectories, trajectories],
     [catalogueFileNames.assets, assets],
     [catalogueFileNames.landingSites, landingSites],
     [catalogueFileNames.missionEvents, missionEvents],
@@ -247,10 +249,18 @@ function crossCheck(catalogue: Catalogue): string[] {
     );
   }
 
-  if (program.transferDays >= program.launchWindowIntervalDays) {
-    problems.push(
-      `${catalogueFileNames.program}: transferDays must be shorter than launchWindowIntervalDays, so that a Mission arrives within its Turn`,
-    );
+  const lastAfterArrival = Math.max(
+    0,
+    ...missionEvents.map(({ timing }) =>
+      timing.from === "arrival" ? timing.days : 0,
+    ),
+  );
+  for (const { id: trajectoryId, transferDays } of trajectories) {
+    if (transferDays + lastAfterArrival >= program.launchWindowIntervalDays) {
+      problems.push(
+        `${catalogueFileNames.trajectories}: "${trajectoryId}" has transferDays too long for its Mission Events to finish within a Turn of ${program.launchWindowIntervalDays} days`,
+      );
+    }
   }
 
   return problems;
@@ -281,6 +291,12 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     catalogueFileNames.launchVehicles,
     schemas.launchVehicles,
     files.launchVehicles,
+    problems,
+  );
+  const trajectories = parsePart(
+    catalogueFileNames.trajectories,
+    schemas.trajectories,
+    files.trajectories,
     problems,
   );
   const assets = parsePart(
@@ -342,6 +358,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     !activities ||
     !researchKinds ||
     !launchVehicles ||
+    !trajectories ||
     !assets ||
     !landingSites ||
     !missionEvents ||
@@ -359,6 +376,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     activities,
     researchKinds,
     launchVehicles,
+    trajectories,
     assets,
     landingSites,
     missionEvents,

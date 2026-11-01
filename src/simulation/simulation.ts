@@ -21,6 +21,7 @@ import type {
   PlannedAsset,
   PlannedMission,
   PlannedMissionEvent,
+  PlannedTrajectory,
   Program,
   ProgramView,
   TurnPlan,
@@ -38,6 +39,7 @@ export type {
   DecisionPoint,
   PlannedActivity,
   PlannedAsset,
+  PlannedTrajectory,
   Program,
   ProgramView,
   Timeline,
@@ -63,6 +65,8 @@ export interface Simulation {
   ): PlannedMissionEvent[];
   /** The choices a Mission can make for each Asset it carries. Ids that aren't in the catalogue are skipped. */
   previewAssets(mission: PlannedMission): PlannedAsset[];
+  /** The Trajectories on offer to a Mission, in the order the Catalogue lists them. */
+  previewTrajectories(mission: PlannedMission): PlannedTrajectory[];
   /** Works out a Turn from the seed, the plan and the answers so far, stopping at the first Decision Point with no answer. */
   workOutTurn(
     program: Program,
@@ -162,7 +166,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       timeline: timelineUpToDecision(
         asIfDeclined.timeline,
         { ...flown, decisionPoint },
-        missionOnTimeline(catalogue, rules, flown),
+        missionOnTimeline(rules, plan, flown),
       ),
     };
   }
@@ -270,28 +274,26 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     validatePlan: checkPlan,
 
     previewMission(program, mission) {
-      return missionEventsFor(mission.launchVehicleId, mission.assetIds).map(
-        (event) => {
-          const chosen = reliabilityLevelFor(mission, event.id);
-          return {
-            eventId: event.id,
-            name: event.name,
+      return missionEventsFor(mission).map((event) => {
+        const chosen = reliabilityLevelFor(mission, event.id);
+        return {
+          eventId: event.id,
+          name: event.name,
+          riskBand: riskBandFor(
+            failureProbability(event, chosen, program, mission),
+          ),
+          reliabilityLevelId: chosen.id,
+          reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
+            id: level.id,
+            name: level.name,
+            costMillions: level.costMillions,
             riskBand: riskBandFor(
-              failureProbability(event, chosen, program, mission),
+              failureProbability(event, level, program, mission),
             ),
-            reliabilityLevelId: chosen.id,
-            reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
-              id: level.id,
-              name: level.name,
-              costMillions: level.costMillions,
-              riskBand: riskBandFor(
-                failureProbability(event, level, program, mission),
-              ),
-            })),
-            contingency: contingencyOffered(event.id, mission),
-          };
-        },
-      );
+          })),
+          contingency: contingencyOffered(event.id, mission),
+        };
+      });
     },
 
     previewAssets(mission) {
@@ -315,6 +317,19 @@ export function createSimulation(catalogue: Catalogue): Simulation {
             riskBand: riskBandFor(inServiceFailureChance(asset, level)),
           })),
         }));
+    },
+
+    previewTrajectories(mission) {
+      const chosen = rules.trajectoryFor(mission);
+      return catalogue.trajectories.map((trajectory) => ({
+        id: trajectory.id,
+        name: trajectory.name,
+        description: trajectory.description,
+        transferDays: trajectory.transferDays,
+        costMillions: trajectory.costMillions,
+        capacityLossTonnes: trajectory.capacityLossTonnes,
+        chosen: trajectory === chosen,
+      }));
     },
 
     workOutTurn,

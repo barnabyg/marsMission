@@ -13,6 +13,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     missionEventsFor,
     reliabilityLevelFor,
     serviceLifeFor,
+    trajectoryFor,
   } = rules;
 
   /** What's wrong with giving this Activity to an Asset that lists `activityIds`, if anything. */
@@ -66,6 +67,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
       landingSiteId,
       assetChoices = {},
       contingencyIds = [],
+      trajectoryId,
     } = plan.mission;
     const problems = operatingActivityProblems(program, plan);
     let costMillions = 0;
@@ -93,7 +95,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
         massTonnes += asset.massTonnes;
       } else problems.push(`There is no Asset called "${assetId}".`);
     }
-    const plannedEvents = missionEventsFor(launchVehicleId, assetIds);
+    const plannedEvents = missionEventsFor(plan.mission);
     if (new Set(contingencyIds).size < contingencyIds.length) {
       problems.push("A Mission can't buy the same Contingency twice.");
     }
@@ -115,7 +117,19 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     }
     // Masses like 0.1 and 0.2 don't add up exactly, and a Mission at exactly its capacity must fit.
     massTonnes = Math.round(massTonnes * 1000) / 1000;
-    const capacityTonnes = vehicle?.capacityTonnes ?? 0;
+    if (
+      trajectoryId !== undefined &&
+      !catalogue.trajectories.some(({ id }) => id === trajectoryId)
+    ) {
+      problems.push(`There is no Trajectory called "${trajectoryId}".`);
+    }
+    const trajectory = trajectoryFor(plan.mission);
+    costMillions += trajectory.costMillions;
+    const capacityTonnes = vehicle
+      ? Math.round(
+          (vehicle.capacityTonnes - trajectory.capacityLossTonnes) * 1000,
+        ) / 1000
+      : 0;
     if (vehicle && massTonnes > capacityTonnes) {
       problems.push(
         `This Mission weighs ${massTonnes} tonnes, but its Launch Vehicle can only carry ${capacityTonnes} tonnes.`,

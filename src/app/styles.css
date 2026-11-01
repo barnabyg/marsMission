@@ -158,6 +158,20 @@ button.primary {
   font-weight: 600;
 }
 
+.mission-route {
+  display: flex;
+  align-items: end;
+  gap: 1.5rem;
+}
+
+.mission-route p {
+  max-width: 34rem;
+}
+
+.mission-route select {
+  min-width: 22rem;
+}
+
 .asset-choices {
   display: grid;
   gap: 0.5rem;

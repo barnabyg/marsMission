@@ -7,6 +7,7 @@ export type Asset = Catalogue["assets"][number];
 export type LandingSite = Catalogue["landingSites"][number];
 export type Activity = Catalogue["activities"][number];
 export type Contingency = Catalogue["contingencies"][number];
+export type Trajectory = Catalogue["trajectories"][number];
 
 const millisecondsPerDay = 86_400_000;
 
@@ -71,10 +72,25 @@ export function operatingKey(asset: {
 
 /** The calculations shared by planning a Mission and resolving a Turn. */
 export function createRules(catalogue: Catalogue) {
-  function dayOf({ timing }: MissionEvent): number {
+  /** The Trajectory a Mission flies, which is the first listed unless it chose another. */
+  function trajectoryFor(mission: PlannedMission | null): Trajectory {
+    const { trajectories } = catalogue;
+    const trajectory =
+      trajectories.find(({ id }) => id === mission?.trajectoryId) ??
+      trajectories[0];
+    // The Catalogue guarantees at least one.
+    if (!trajectory) throw new Error("The catalogue has no Trajectories");
+    return trajectory;
+  }
+
+  /** The day of the Turn a Mission Event happens to this Mission. */
+  function dayOf(
+    { timing }: MissionEvent,
+    mission: PlannedMission | null,
+  ): number {
     return timing.from === "launch"
       ? timing.days
-      : catalogue.program.transferDays + timing.days;
+      : trajectoryFor(mission).transferDays + timing.days;
   }
 
   function levelOrCheapest(chosenId: string | undefined): ReliabilityLevel {
@@ -208,14 +224,14 @@ export function createRules(catalogue: Catalogue) {
     return (site ? landingRisk(program, site) : 1) * level.failureMultiplier;
   }
 
-  /** The day an Asset is delivered, which is when its last Mission Event happens. */
-  function deliveryDay(asset: Asset): number {
+  /** The day this Mission delivers an Asset, which is when its last Mission Event happens. */
+  function deliveryDay(asset: Asset, mission: PlannedMission | null): number {
     const days = asset.missionEvents.flatMap((eventId) =>
       catalogue.missionEvents
         .filter((event) => event.id === eventId)
-        .map(dayOf),
+        .map((event) => dayOf(event, mission)),
     );
-    return Math.max(catalogue.program.transferDays, ...days);
+    return Math.max(trajectoryFor(mission).transferDays, ...days);
   }
 
   function riskBandFor(probability: number): string {
@@ -226,15 +242,12 @@ export function createRules(catalogue: Catalogue) {
   }
 
   /** The Mission Events a Mission goes through, in the order they happen. */
-  function missionEventsFor(
-    launchVehicleId: string,
-    assetIds: string[],
-  ): MissionEvent[] {
+  function missionEventsFor(mission: PlannedMission): MissionEvent[] {
     const vehicle = catalogue.launchVehicles.find(
-      (candidate) => candidate.id === launchVehicleId,
+      (candidate) => candidate.id === mission.launchVehicleId,
     );
     const assets = catalogue.assets.filter((asset) =>
-      assetIds.includes(asset.id),
+      mission.assetIds.includes(asset.id),
     );
     const eventIds = new Set([
       ...(vehicle?.missionEvents ?? []),
@@ -244,10 +257,11 @@ export function createRules(catalogue: Catalogue) {
       .flatMap((eventId) =>
         catalogue.missionEvents.filter((event) => event.id === eventId),
       )
-      .sort((first, second) => dayOf(first) - dayOf(second));
+      .sort((first, second) => dayOf(first, mission) - dayOf(second, mission));
   }
 
   return {
+    trajectoryFor,
     dayOf,
     deliveryDay,
     serviceLifeFor,

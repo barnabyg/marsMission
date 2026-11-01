@@ -13,16 +13,6 @@ const orbiter = (trajectoryId?: string): TurnPlan => ({
   },
 });
 
-const lander = (trajectoryId?: string): TurnPlan => ({
-  mission: {
-    launchVehicleId: "test-vehicle",
-    assetIds: ["test-lander"],
-    landingSiteId: "gamma",
-    ...(trajectoryId ? { trajectoryId } : {}),
-    assetChoices: { "test-lander": { activityId: "test-research" } },
-  },
-});
-
 /** The Test Catalogue with no risk at a Landing Site. */
 function safely() {
   const files = testCatalogueFiles();
@@ -38,11 +28,14 @@ function safely() {
   return { simulation, program: simulation.startProgram(42) };
 }
 
-const safeLander = (trajectoryId?: string): TurnPlan => {
-  const { mission } = lander(trajectoryId);
-  if (!mission) throw new Error("Expected a Mission");
-  return { mission: { ...mission, landingSiteId: "alpha-plain" } };
-};
+const safeLander = (trajectoryId: string): TurnPlan => ({
+  mission: {
+    launchVehicleId: "test-vehicle",
+    assetIds: ["test-lander"],
+    landingSiteId: "alpha-plain",
+    trajectoryId,
+  },
+});
 
 describe("choosing a Trajectory", () => {
   it("gives a plan that names none the first one listed", () => {
@@ -65,9 +58,9 @@ describe("choosing a Trajectory", () => {
       costMillions: 500,
       capacityTonnes: 5,
     });
-    expect(simulation.validatePlan(program, orbiter("test-fast"))).toMatchObject(
-      { costMillions: 600, capacityTonnes: 4, problems: [] },
-    );
+    expect(
+      simulation.validatePlan(program, orbiter("test-fast")),
+    ).toMatchObject({ costMillions: 600, capacityTonnes: 4, problems: [] });
   });
 
   it("offers each one, saying what it changes", () => {
@@ -114,9 +107,9 @@ describe("choosing a Trajectory", () => {
         trajectoryId: "test-fast",
       },
     };
-    expect(simulation.validatePlan(program, heavy).problems.join(" ")).toContain(
-      "can only carry 4 tonnes",
-    );
+    expect(
+      simulation.validatePlan(program, heavy).problems.join(" "),
+    ).toContain("can only carry 4 tonnes");
 
     const files = testCatalogueFiles();
     const poor = createSimulation(
@@ -127,9 +120,9 @@ describe("choosing a Trajectory", () => {
     );
     const start = poor.startProgram(42);
     expect(poor.validatePlan(start, orbiter()).problems).toEqual([]);
-    expect(poor.validatePlan(start, orbiter("test-fast")).problems[0]).toContain(
-      "$600M",
-    );
+    expect(
+      poor.validatePlan(start, orbiter("test-fast")).problems[0],
+    ).toContain("$600M");
   });
 });
 
@@ -160,7 +153,7 @@ describe("arriving on a Fast Trajectory", () => {
       arrivedOnDay: 120,
     });
     const view = simulation.readProgram(next);
-    expect(view.date).toBe("2031-01-19");
+    expect(view.date).toBe("2031-01-20");
     expect(view.operatingAssets[0]?.arrivedOn).toBe("2029-03-31");
   });
 

@@ -1,5 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
-import { eventEntries, pauseAtEvent, viewButton, watchForProblems } from "./helpers";
+import {
+  eventEntries,
+  pauseAtEvent,
+  viewButton,
+  watchForProblems,
+} from "./helpers";
 import { successSeed } from "./seeds";
 
 function trajectory(page: Page) {
@@ -7,12 +12,9 @@ function trajectory(page: Page) {
 }
 
 /** Flies the first orbiter by this Trajectory, and returns the date of its arrival in the events column. */
-async function arrivalDate(page: Page, name: "Slow" | "Fast"): Promise<string> {
-  await page.evaluate(() => {
-    localStorage.clear();
-  });
+async function arrivalDate(page: Page, id: "slow" | "fast"): Promise<string> {
   await page.goto(`/?seed=${successSeed}`);
-  await trajectory(page).selectOption({ label: await optionNamed(page, name) });
+  await trajectory(page).selectOption(id);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await pauseAtEvent(page, "Mars orbit insertion");
   await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
@@ -23,13 +25,6 @@ async function arrivalDate(page: Page, name: "Slow" | "Fast"): Promise<string> {
     .filter({ hasText: "Mars orbit insertion" })
     .locator("time")
     .innerText();
-}
-
-async function optionNamed(page: Page, name: string): Promise<string> {
-  const options = await trajectory(page).locator("option").allTextContents();
-  const option = options.find((text) => text.startsWith(name));
-  if (!option) throw new Error(`No Trajectory called ${name}`);
-  return option;
 }
 
 test("Planning Mode shows what a Trajectory changes", async ({ page }) => {
@@ -58,9 +53,11 @@ test("a Fast Mission arrives earlier than a Slow one, with more research", async
   page,
 }) => {
   const problems = watchForProblems(page);
-  await page.goto("/");
-  const slow = await arrivalDate(page, "Slow");
-  const fast = await arrivalDate(page, "Fast");
+  const slow = await arrivalDate(page, "slow");
+  await page.evaluate(() => {
+    localStorage.clear();
+  });
+  const fast = await arrivalDate(page, "fast");
   expect(Date.parse(fast)).toBeLessThan(Date.parse(slow));
   // 60 days sooner, whichever month that lands in.
   expect(Date.parse(slow) - Date.parse(fast)).toBe(60 * 86_400_000);

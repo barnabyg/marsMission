@@ -408,12 +408,38 @@ describe("invalid data files", () => {
     expect(message).toContain("serviceLifeLossPercent");
   });
 
+  it("reject having no Trajectory, or one with a negative loss of mass capacity", () => {
+    const files = testCatalogueFiles();
+    expect(errorFrom({ ...files, trajectories: [] })).toContain(
+      "trajectories.json",
+    );
+    const [first] = files.trajectories;
+    if (!first) throw new Error("Expected a Trajectory");
+    expect(
+      errorFrom({
+        ...files,
+        trajectories: [{ ...first, capacityLossTonnes: -1 }],
+      }),
+    ).toContain("capacityLossTonnes");
+  });
+
   it("reject a transfer that wouldn't finish within the Turn", () => {
     const files = testCatalogueFiles();
     const message = errorFrom({
       ...files,
-      program: { ...files.program, transferDays: 800 },
+      trajectories: [
+        ...files.trajectories,
+        {
+          id: "too-slow",
+          name: "Too slow",
+          description: "Never gets there.",
+          transferDays: 776,
+          costMillions: 0,
+          capacityLossTonnes: 0,
+        },
+      ],
     });
-    expect(message).toContain("transferDays");
+    expect(message).toContain("trajectories.json");
+    expect(message).toContain('"too-slow"');
   });
 });

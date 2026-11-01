@@ -77,11 +77,10 @@ export function flyMission(
     text
       .replaceAll("{site}", landingSite?.name ?? "")
       .replaceAll("{lander}", whatLands(catalogue, assets));
-  const plannedEvents = mission
-    ? rules.missionEventsFor(mission.launchVehicleId, mission.assetIds)
-    : [];
+  const plannedEvents = mission ? rules.missionEventsFor(mission) : [];
+  const dayOf = (event: MissionEvent) => rules.dayOf(event, mission);
   const stillOnBoard = (event: MissionEvent) =>
-    assets.filter((asset) => rules.deliveryDay(asset) >= rules.dayOf(event));
+    assets.filter((asset) => rules.deliveryDay(asset, mission) >= dayOf(event));
   const lossFor = (event: MissionEvent, used: Contingency | undefined) =>
     Math.min(
       event.publicSupportLoss + (used?.extraPublicSupportLoss ?? 0),
@@ -103,7 +102,7 @@ export function flyMission(
   };
   const happened = (event: MissionEvent) => ({
     kind: "missionEvent" as const,
-    day: rules.dayOf(event),
+    day: dayOf(event),
     eventId: event.id,
   });
 
@@ -132,7 +131,7 @@ export function flyMission(
     if (contingency) {
       outcome.entries.push({
         kind: "decisionPoint",
-        day: rules.dayOf(event),
+        day: dayOf(event),
         eventId: event.id,
         title: `${event.name}: Decision Point`,
         description: filledIn(contingency.troubleDescription),
@@ -141,7 +140,7 @@ export function flyMission(
       if (answer === undefined) {
         outcome.decisionPoint = {
           id: decisionIdOf(event),
-          day: rules.dayOf(event),
+          day: dayOf(event),
           missionEventName: event.name,
           contingencyName: contingency.name,
           description: filledIn(contingency.troubleDescription),
@@ -208,7 +207,7 @@ export function flyMission(
     const used =
       answers[decisionIdOf(event)] === "use" ? contingency : undefined;
     outcome.failedEvent = event;
-    outcome.failedOnDay = rules.dayOf(event);
+    outcome.failedOnDay = dayOf(event);
     outcome.deliveredAssets = assets.filter(
       (asset) => !onBoard.includes(asset),
     );
@@ -231,14 +230,14 @@ export function flyMission(
 
 /** The Mission as Mission Mode displays it, or null if nothing launched. */
 export function missionOnTimeline(
-  catalogue: Catalogue,
   rules: Rules,
+  plan: TurnPlan,
   flown: MissionOutcome,
 ): Timeline["mission"] {
   if (flown.vehicleName === null) return null;
   return {
     launchDay: 0,
-    arrivalDay: catalogue.program.transferDays,
+    arrivalDay: rules.trajectoryFor(plan.mission).transferDays,
     launchVehicleName: flown.vehicleName,
     assetNames: flown.assets.map((asset) => asset.name),
     assets: flown.assets.map((asset): MissionAsset => {
@@ -249,7 +248,9 @@ export function missionOnTimeline(
         landingSiteName: asset.landsAtSite
           ? (flown.landingSite?.name ?? null)
           : null,
-        deliveredOnDay: delivered ? rules.deliveryDay(asset) : null,
+        deliveredOnDay: delivered
+          ? rules.deliveryDay(asset, plan.mission)
+          : null,
         lostOnDay: delivered ? null : flown.failedOnDay,
         crashed:
           !delivered &&

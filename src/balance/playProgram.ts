@@ -40,6 +40,7 @@ export function planningTools(
   return {
     previewAssets: (mission) => simulation.previewAssets(mission),
     previewMission: (mission) => simulation.previewMission(program, mission),
+    previewTrajectories: (mission) => simulation.previewTrajectories(mission),
     problemsWith: (plan) => simulation.validatePlan(program, plan).problems,
     costOf: (plan) => simulation.validatePlan(program, plan).costMillions,
   };

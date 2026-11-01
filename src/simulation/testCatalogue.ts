@@ -18,7 +18,6 @@ export function testCatalogueFiles(): CatalogueFiles {
       launchWindowIntervalDays: 780,
       startingMoneyMillions: 2000,
       startingPublicSupport: 100,
-      transferDays: 200,
       publicSupportDrainPercent: 15,
       cancellationLevel: 50,
     },
@@ -104,6 +103,24 @@ export function testCatalogueFiles(): CatalogueFiles {
         costMillions: 300,
         capacityTonnes: 10,
         missionEvents: ["test-launch", "test-burn"],
+      },
+    ],
+    trajectories: [
+      {
+        id: "test-slow",
+        name: "Slow",
+        description: "Takes its time.",
+        transferDays: 200,
+        costMillions: 0,
+        capacityLossTonnes: 0,
+      },
+      {
+        id: "test-fast",
+        name: "Fast",
+        description: "Gets there sooner.",
+        transferDays: 120,
+        costMillions: 100,
+        capacityLossTonnes: 1,
       },
     ],
     assets: [

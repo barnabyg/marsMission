@@ -19,11 +19,25 @@ const programSchema = z.strictObject({
   launchWindowIntervalDays: z.number().int().positive(),
   startingMoneyMillions: money,
   startingPublicSupport: z.number().int().nonnegative(),
-  transferDays: z.number().int().positive(),
   // At least 1%, and a level of at least 1, so a Program that only skips Turns is always cancelled.
   publicSupportDrainPercent: z.number().int().min(1).max(100),
   cancellationLevel: z.number().int().min(1),
 });
+
+const trajectoriesSchema = z
+  .array(
+    z.strictObject({
+      id,
+      name: z.string().min(1),
+      description: z.string().min(1),
+      // How long the Mission takes to reach Mars, which is its Duration so far.
+      transferDays: z.number().int().positive(),
+      costMillions: money,
+      // How much less its Launch Vehicle can carry on this route, because of the extra fuel.
+      capacityLossTonnes: z.number().nonnegative(),
+    }),
+  )
+  .min(1);
 
 const launchVehiclesSchema = z.array(
   z.strictObject({
@@ -206,6 +220,7 @@ export const schemas = {
   activities: activitiesSchema,
   researchKinds: researchKindsSchema,
   launchVehicles: launchVehiclesSchema,
+  trajectories: trajectoriesSchema,
   assets: assetsSchema,
   landingSites: landingSitesSchema,
   missionEvents: missionEventsSchema,
@@ -222,6 +237,7 @@ export const catalogueFileNames = {
   activities: "activities.json",
   researchKinds: "research-kinds.json",
   launchVehicles: "launch-vehicles.json",
+  trajectories: "trajectories.json",
   assets: "assets.json",
   landingSites: "landing-sites.json",
   missionEvents: "mission-events.json",
@@ -237,6 +253,8 @@ export interface Catalogue {
   activities: z.output<typeof activitiesSchema>;
   researchKinds: z.output<typeof researchKindsSchema>;
   launchVehicles: z.output<typeof launchVehiclesSchema>;
+  /** The first is what a Mission takes unless the player picks another. */
+  trajectories: z.output<typeof trajectoriesSchema>;
   assets: z.output<typeof assetsSchema>;
   /** In the order a Survey reveals them. */
   landingSites: z.output<typeof landingSitesSchema>;

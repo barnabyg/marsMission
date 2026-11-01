@@ -3,6 +3,7 @@ import {
   formatMoney,
   type AssetChoices,
   type PlannedAsset,
+  type PlannedTrajectory,
   type Program,
   type ProgramView,
   type Simulation,
@@ -47,6 +48,7 @@ export function MissionPanel({
     Record<string, AssetChoices>
   >({});
   const [contingencyIds, setContingencyIds] = useState<string[]>([]);
+  const [trajectoryId, setTrajectoryId] = useState<string | undefined>();
 
   const landsOnMars = view.assets.some(
     (asset) => assetIds.includes(asset.id) && asset.landsAtSite,
@@ -58,7 +60,10 @@ export function MissionPanel({
     launchVehicleId,
     assetIds,
     ...(landingSite && { landingSiteId: landingSite.id }),
+    ...(trajectoryId !== undefined && { trajectoryId }),
   };
+  const trajectories = simulation.previewTrajectories(mission);
+  const trajectory = trajectories.find(({ chosen }) => chosen);
   const plannedEvents = simulation.previewMission(program, {
     ...mission,
     reliability,
@@ -101,24 +106,48 @@ export function MissionPanel({
       <h2>
         <GameText>Mission</GameText>
       </h2>
-      <label>
-        <span>
-          <GameText>Launch Vehicle</GameText>
-        </span>
-        <select
-          value={launchVehicleId}
-          onChange={(event) => {
-            setLaunchVehicleId(event.target.value);
-          }}
-        >
-          {view.launchVehicles.map((vehicle) => (
-            <option key={vehicle.id} value={vehicle.id}>
-              {vehicle.name} ({formatMoney(vehicle.costMillions)},{" "}
-              {vehicle.capacityTonnes} t)
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="mission-route">
+        <label>
+          <span>
+            <GameText>Launch Vehicle</GameText>
+          </span>
+          <select
+            value={launchVehicleId}
+            onChange={(event) => {
+              setLaunchVehicleId(event.target.value);
+            }}
+          >
+            {view.launchVehicles.map((vehicle) => (
+              <option key={vehicle.id} value={vehicle.id}>
+                {vehicle.name} ({formatMoney(vehicle.costMillions)},{" "}
+                {vehicle.capacityTonnes} t)
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>
+            <GameText>Trajectory</GameText>
+          </span>
+          <select
+            value={trajectory?.id}
+            onChange={(event) => {
+              setTrajectoryId(event.target.value);
+            }}
+          >
+            {trajectories.map((option) => (
+              <option key={option.id} value={option.id}>
+                {describeTrajectory(option)}
+              </option>
+            ))}
+          </select>
+        </label>
+        {trajectory && (
+          <p data-testid="trajectory-details">
+            <GameText>{trajectory.description}</GameText>
+          </p>
+        )}
+      </div>
       <fieldset className="asset-choices">
         <legend>
           <GameText>Assets</GameText>
@@ -268,6 +297,21 @@ export function MissionPanel({
       </button>
     </section>
   );
+}
+
+/** What a Trajectory takes and what it costs, for its place in the list. */
+function describeTrajectory({
+  name,
+  transferDays,
+  costMillions,
+  capacityLossTonnes,
+}: PlannedTrajectory): string {
+  const costs = [
+    `${transferDays} days`,
+    ...(costMillions > 0 ? [formatMoney(costMillions)] : []),
+    ...(capacityLossTonnes > 0 ? [`${capacityLossTonnes} t less`] : []),
+  ];
+  return `${name} (${costs.join(", ")})`;
 }
 
 interface MissionAssetChoiceProps {

@@ -15,7 +15,7 @@ Phases are defined in the [Build order](#build-order). Phases 1, 2, 3 and 4 are 
 
 - **Phase 4:** Activities, with Survey, research and Nothing as the first ones; Ongoing Research, which also adds a little Public Support; Research Grants, which take over from Funding Thresholds as the main income of a Program that keeps Assets at Mars; a rover, choosing between Science and money; Science Milestones and more Funding Thresholds; the surface view, with generated terrain, landing and crash sequences it moves to by itself, and rovers that move according to their Activity; automated balance runs, and the numbers tuned with them, including longer Service Lives.
 
-- **Phase 5, so far:** Decision Points, with no time limit and End Turn stopping at each one; Contingency, a gamble bought in Planning Mode and used for a second roll when its Mission Event fails.
+- **Phase 5, so far:** Decision Points, with no time limit and End Turn stopping at each one; Contingency, a gamble bought in Planning Mode and used for a second roll when its Mission Event fails; Slow and Fast Trajectories.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
@@ -28,7 +28,7 @@ Any rule in this document beyond these is planned, so its absence from the code 
 - A Mission ends when it has delivered its Assets and Crew, or has failed. After that they operate at Mars on their own, so Mission Mode shows the Turn's Mission plus everything already operating.
 - If assembling or refuelling in Earth orbit needs several launches, those launches and rendezvous are Mission Events within the one Mission.
 - The Launch Vehicle is chosen from the catalogue and sets how much mass the Mission can carry.
-- Each Mission picks one of 2–3 fixed Trajectories, such as Slow (least fuel, longest Duration), Fast (more fuel and mass, less radiation for Crew) or Free-return (swings back to Earth if the arrival burn fails, at the cost of flexibility).
+- Each Mission picks one of 2–3 fixed Trajectories, such as Slow (least fuel, longest Duration), Fast (more fuel and mass, less radiation for Crew) or Free-return (swings back to Earth if the arrival burn fails, at the cost of flexibility). Until there is Crew, Fast pays through earlier arrival, which gives the Mission's Assets more research days in that Turn. A Turn's length doesn't change. Changing Trajectory doesn't re-roll a Mission Event's outcome.
 - Missions can go to Mars orbit or to a Landing Site. Phobos and Deimos are left out of the first version.
 - In Planning Mode the player gives each Asset one Activity for the Turn. Crew at one Landing Site share one Activity.
 - Each Turn begins at a Launch Window (roughly every 26 months) and consists of Planning Mode followed by Mission Mode.

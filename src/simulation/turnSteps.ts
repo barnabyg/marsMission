@@ -45,6 +45,7 @@ function awardArrivalMilestones(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
+  plan: TurnPlan,
   deliveredAssets: Asset[],
 ): MilestoneAward[] {
   const earnedBy = ({ trigger }: Milestone) =>
@@ -62,7 +63,11 @@ function awardArrivalMilestones(
     )
     .map((milestone) => ({
       milestone,
-      day: Math.min(...earnedBy(milestone).map(rules.deliveryDay)),
+      day: Math.min(
+        ...earnedBy(milestone).map((asset) =>
+          rules.deliveryDay(asset, plan.mission),
+        ),
+      ),
     }));
 }
 
@@ -80,6 +85,7 @@ function milestoneEntry({ milestone, day }: MilestoneAward): MilestoneEntry {
 function creditFirstLanding(
   rules: Rules,
   program: Program,
+  plan: TurnPlan,
   flown: MissionOutcome,
 ): { site: LandingSite; entry: FirstLandingEntry } | null {
   const landed = flown.deliveredAssets.find((asset) => asset.landsAtSite);
@@ -89,7 +95,7 @@ function creditFirstLanding(
     site,
     entry: {
       kind: "firstLanding",
-      day: rules.deliveryDay(landed),
+      day: rules.deliveryDay(landed, plan.mission),
       title: `First landing at ${site.name}`,
       description: `${site.description} It earns ${site.science} Science.`,
     },
@@ -159,9 +165,10 @@ export function resolveTurn(
     catalogue,
     rules,
     program,
+    plan,
     flown.deliveredAssets,
   );
-  const firstLanding = creditFirstLanding(rules, program, flown);
+  const firstLanding = creditFirstLanding(rules, program, plan, flown);
   const operated = operateAssets(catalogue, rules, program, plan, flown);
   const survey = carryOutSurvey(catalogue, rules, program, operated.inService);
   const research = carryOutOngoingResearch(
@@ -280,7 +287,7 @@ export function resolveTurn(
       startDate: program.date,
       durationDays: launchWindowIntervalDays,
       decisionDay: null,
-      mission: missionOnTimeline(catalogue, rules, flown),
+      mission: missionOnTimeline(rules, plan, flown),
       landingSites: catalogue.landingSites.map(
         ({ name, latitude, longitude }) => ({ name, latitude, longitude }),
       ),

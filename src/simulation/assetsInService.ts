@@ -72,7 +72,7 @@ export function operateAssets(
       assetId: asset.id,
       name: asset.name,
       kind: asset.kind,
-      arrivedOn: addDays(program.date, rules.deliveryDay(asset)),
+      arrivedOn: addDays(program.date, rules.deliveryDay(asset, plan.mission)),
       landingSiteId: asset.landsAtSite ? (flown.landingSite?.id ?? null) : null,
       serviceLifeDays:
         flown.rescuedServiceLife.get(asset) ??
@@ -80,7 +80,7 @@ export function operateAssets(
       reliabilityLevelId: rules.assetReliabilityFor(plan.mission, asset).id,
       activityId: rules.activityFor(plan.mission, asset).id,
     },
-    fromDay: rules.deliveryDay(asset),
+    fromDay: rules.deliveryDay(asset, plan.mission),
   }));
   const inService = [
     ...program.operatingAssets.map((asset) => ({
