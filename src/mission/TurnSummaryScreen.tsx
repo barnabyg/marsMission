@@ -25,7 +25,11 @@ export function TurnSummaryScreen({
       {summary.failure && (
         <section data-testid="summary-failure">
           <h2 className="problem">
-            <GameText>Mission failed</GameText>
+            <GameText>
+              {summary.failure.returnedToEarth
+                ? "Mission came back to Earth"
+                : "Mission failed"}
+            </GameText>
           </h2>
           <ul>
             <li>
@@ -35,7 +39,7 @@ export function TurnSummaryScreen({
             </li>
             <li>
               <GameText>
-                {`Assets lost: ${summary.failure.assetsLost.join(", ")}`}
+                {`${summary.failure.returnedToEarth ? "Assets back on Earth" : "Assets lost"}: ${summary.failure.assetsLost.join(", ")}`}
               </GameText>
             </li>
             <li>
@@ -43,6 +47,46 @@ export function TurnSummaryScreen({
                 {`Public Support lost: ${summary.failure.publicSupportLost}`}
               </GameText>
             </li>
+            {summary.failure.returnedToEarth && (
+              <li>{`Refund: ${formatMoney(summary.failure.refundMillions)}`}</li>
+            )}
+          </ul>
+        </section>
+      )}
+      {summary.contingencies.length > 0 && (
+        <section data-testid="summary-contingencies">
+          <h2>
+            <GameText>Decision Points</GameText>
+          </h2>
+          <ul>
+            {summary.contingencies.map(
+              ({
+                missionEventName,
+                contingencyName,
+                answer,
+                rescued,
+                assets,
+              }) => (
+                <li key={missionEventName}>
+                  <GameText>
+                    {`${missionEventName}: ${
+                      answer === "decline"
+                        ? `${contingencyName} not used`
+                        : rescued && assets.length === 0
+                          ? `saved by ${contingencyName}, but the Mission was lost later`
+                          : rescued
+                            ? `saved by ${contingencyName}. ${assets
+                                .map(
+                                  ({ name, serviceLifeDays }) =>
+                                    `${name} now has a Service Life of ${serviceLifeDays} days`,
+                                )
+                                .join(", ")}`
+                            : `${contingencyName} used, but it couldn't save the Mission`
+                    }`}
+                  </GameText>
+                </li>
+              ),
+            )}
           </ul>
         </section>
       )}

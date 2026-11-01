@@ -36,9 +36,11 @@ function crossCheck(catalogue: Catalogue): string[] {
     activities,
     researchKinds,
     launchVehicles,
+    trajectories,
     assets,
     landingSites,
     missionEvents,
+    contingencies,
     milestones,
     fundingThresholds,
     reliabilityLevels,
@@ -49,9 +51,11 @@ function crossCheck(catalogue: Catalogue): string[] {
     [catalogueFileNames.activities, activities],
     [catalogueFileNames.researchKinds, researchKinds],
     [catalogueFileNames.launchVehicles, launchVehicles],
+    [catalogueFileNames.trajectories, trajectories],
     [catalogueFileNames.assets, assets],
     [catalogueFileNames.landingSites, landingSites],
     [catalogueFileNames.missionEvents, missionEvents],
+    [catalogueFileNames.contingencies, contingencies],
     [catalogueFileNames.milestones, milestones],
     [catalogueFileNames.reliabilityLevels, reliabilityLevels],
   ] as const;
@@ -76,6 +80,21 @@ function crossCheck(catalogue: Catalogue): string[] {
         }
       }
     }
+  }
+
+  for (const { id: contingencyId, missionEvent } of contingencies) {
+    if (!eventIds.has(missionEvent)) {
+      problems.push(
+        `${catalogueFileNames.contingencies}: "${contingencyId}" refers to the Mission Event "${missionEvent}", which isn't in ${catalogueFileNames.missionEvents}`,
+      );
+    }
+  }
+  for (const duplicate of findDuplicates(
+    contingencies.map(({ missionEvent }) => missionEvent),
+  )) {
+    problems.push(
+      `${catalogueFileNames.contingencies}: the Mission Event "${duplicate}" has more than one Contingency`,
+    );
   }
 
   const landingSiteEvents = new Set(
@@ -230,10 +249,40 @@ function crossCheck(catalogue: Catalogue): string[] {
     );
   }
 
-  if (program.transferDays >= program.launchWindowIntervalDays) {
-    problems.push(
-      `${catalogueFileNames.program}: transferDays must be shorter than launchWindowIntervalDays, so that a Mission arrives within its Turn`,
-    );
+  const lastAfterArrival = Math.max(
+    0,
+    ...missionEvents.map(({ timing }) =>
+      timing.from === "arrival" ? timing.days : 0,
+    ),
+  );
+  for (const { id: trajectoryId, ...trajectory } of trajectories) {
+    const { freeReturn, transferDays, costMillions, capacityLossTonnes } =
+      trajectory;
+    if (freeReturn) {
+      if (!eventIds.has(freeReturn.arrivalBurn)) {
+        problems.push(
+          `${catalogueFileNames.trajectories}: "${trajectoryId}" refers to the Mission Event "${freeReturn.arrivalBurn}", which isn't in ${catalogueFileNames.missionEvents}`,
+        );
+      }
+      if (costMillions === 0 && capacityLossTonnes === 0) {
+        problems.push(
+          `${catalogueFileNames.trajectories}: "${trajectoryId}" must cost money or mass capacity, or it would always be the right choice`,
+        );
+      }
+      if (
+        transferDays + freeReturn.returnDays >=
+        program.launchWindowIntervalDays
+      ) {
+        problems.push(
+          `${catalogueFileNames.trajectories}: "${trajectoryId}" has returnDays too long for the Mission to be back within a Turn of ${program.launchWindowIntervalDays} days`,
+        );
+      }
+    }
+    if (transferDays + lastAfterArrival >= program.launchWindowIntervalDays) {
+      problems.push(
+        `${catalogueFileNames.trajectories}: "${trajectoryId}" has transferDays too long for its Mission Events to finish within a Turn of ${program.launchWindowIntervalDays} days`,
+      );
+    }
   }
 
   return problems;
@@ -266,6 +315,12 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     files.launchVehicles,
     problems,
   );
+  const trajectories = parsePart(
+    catalogueFileNames.trajectories,
+    schemas.trajectories,
+    files.trajectories,
+    problems,
+  );
   const assets = parsePart(
     catalogueFileNames.assets,
     schemas.assets,
@@ -282,6 +337,13 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     catalogueFileNames.missionEvents,
     schemas.missionEvents,
     files.missionEvents,
+    problems,
+  );
+
+  const contingencies = parsePart(
+    catalogueFileNames.contingencies,
+    schemas.contingencies,
+    files.contingencies,
     problems,
   );
 
@@ -318,9 +380,11 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     !activities ||
     !researchKinds ||
     !launchVehicles ||
+    !trajectories ||
     !assets ||
     !landingSites ||
     !missionEvents ||
+    !contingencies ||
     !milestones ||
     !fundingThresholds ||
     !reliabilityLevels ||
@@ -334,9 +398,11 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     activities,
     researchKinds,
     launchVehicles,
+    trajectories,
     assets,
     landingSites,
     missionEvents,
+    contingencies,
     milestones,
     fundingThresholds,
     reliabilityLevels,

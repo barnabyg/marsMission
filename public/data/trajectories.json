@@ -1,0 +1,32 @@
+[
+  {
+    "id": "slow",
+    "name": "Slow",
+    "description": "Uses the least fuel, and has the longest Duration.",
+    "transferDays": 210,
+    "costMillions": 0,
+    "capacityLossTonnes": 0
+  },
+  {
+    "id": "fast",
+    "name": "Fast",
+    "description": "A shorter Duration, so Assets arrive sooner and do more research this Turn. The extra fuel costs money and mass.",
+    "transferDays": 150,
+    "costMillions": 200,
+    "capacityLossTonnes": 0.5
+  },
+  {
+    "id": "free-return",
+    "name": "Free-return",
+    "description": "Swings back to Earth if the arrival burn fails, rather than losing the Mission. It costs extra however the Mission goes.",
+    "transferDays": 210,
+    "costMillions": 150,
+    "capacityLossTonnes": 0.2,
+    "freeReturn": {
+      "arrivalBurn": "mars-orbit-insertion",
+      "refundPercent": 50,
+      "returnDays": 420,
+      "description": "The engine didn't fire for long enough, and the spacecraft swung back past Mars on its way home to Earth."
+    }
+  }
+]

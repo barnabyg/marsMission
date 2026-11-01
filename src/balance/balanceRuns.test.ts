@@ -9,7 +9,9 @@ import { realCatalogueFiles } from "../testing/realCatalogue";
 import { invalidStates } from "./invalidStates";
 import { planningTools, playProgram } from "./playProgram";
 import { balanceReport } from "./report";
-import { strategies, type Strategy } from "./strategies";
+import type { Strategy } from "./playStyle";
+import { strategies } from "./strategies";
+import { sum } from "./sum";
 
 const files = realCatalogueFiles();
 const simulationOf = (catalogueFiles: CatalogueFiles) =>
@@ -38,6 +40,30 @@ const certain: CatalogueFiles = {
     failureProbability: 0,
   })),
 };
+
+describe("strategies with Contingencies", () => {
+  const usedBy = strategies.find(
+    ({ name }) => name === "steady: Contingency, used",
+  );
+  const declinedBy = strategies.find(
+    ({ name }) => name === "steady: Contingency, declined",
+  );
+
+  it("answer Decision Points through the Simulation, with no invalid state", () => {
+    if (!usedBy || !declinedBy) throw new Error("Expected both strategies");
+    const met = (strategy: Strategy) =>
+      Array.from({ length: 200 }, (_, index) => index + 1).flatMap(
+        (seed) => playProgram(real, strategy, seed, turns).turns,
+      );
+    const used = met(usedBy);
+    const declined = met(declinedBy);
+    expect(sum(used.map(({ rescues }) => rescues))).toBeGreaterThan(0);
+    expect(
+      sum(declined.map(({ decisionPoints }) => decisionPoints)),
+    ).toBeGreaterThan(0);
+    expect(sum(declined.map(({ rescues }) => rescues))).toBe(0);
+  });
+});
 
 describe("every strategy on the real data files", () => {
   it.each(strategyCases)(

@@ -143,6 +143,67 @@ export const orbiterLastsSeed = seedWhereOrbiter(
   ({ assetsEnded }) => assetsEnded.length > 0,
 );
 
+/** A seed whose first Mission reaches this Decision Point, and using the Contingency works or fails as asked. */
+function seedWhereUsing(
+  plan: TurnPlan,
+  decisionId: string,
+  rescued: boolean,
+  playedBy = simulation,
+): number {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const program = playedBy.startProgram(seed);
+    if (playedBy.workOutTurn(program, plan).decisionPoint?.id !== decisionId) {
+      continue;
+    }
+    const progress = playedBy.workOutTurn(program, plan, {
+      [decisionId]: "use",
+    });
+    const outcome = progress.decisionPoint
+      ? // It got past this one, as nothing else could stop it at another.
+        true
+      : progress.result.summary.contingencies[0]?.rescued;
+    if (outcome === rescued) return seed;
+  }
+  throw new Error(`No seed gives ${decisionId} that outcome`);
+}
+
+const orbiterWithReserveFuel: TurnPlan = {
+  mission: { ...firstPlan.mission, contingencyIds: ["reserve-fuel"] },
+};
+
+/** A seed whose first orbiter fails Mars orbit insertion, and Reserve fuel saves it. */
+export const orbitInsertionRescuedSeed = seedWhereUsing(
+  orbiterWithReserveFuel,
+  "contingency:mars-orbit-insertion",
+  true,
+);
+
+/** A seed whose first orbiter fails Mars orbit insertion, and Reserve fuel can't save it. */
+export const orbitInsertionRescueFailsSeed = seedWhereUsing(
+  orbiterWithReserveFuel,
+  "contingency:mars-orbit-insertion",
+  false,
+);
+
+/** A seed whose first lander comes down too fast, and Retro thrusters save it. */
+export const landingRescuedSeed = seedWhereUsing(
+  {
+    mission: {
+      launchVehicleId: catalogue.launchVehicles[0]?.id ?? "",
+      assetIds: ["prospector-lander"],
+      landingSiteId: "jezero-crater",
+      contingencyIds: ["retro-thrusters"],
+    },
+  },
+  "contingency:entry-descent-landing",
+  true,
+);
+
+/** A seed whose first orbiter fails Mars orbit insertion on a Free-return Trajectory. */
+export const freeReturnSeed = seedWhere("Mars orbit insertion", {
+  mission: { ...firstPlan.mission, trajectoryId: "free-return" },
+});
+
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);
 

@@ -35,7 +35,8 @@ export function invalidStates(
       summary.moneyStartMillions -
         summary.missionCostMillions +
         thresholdMillions +
-        summary.researchGrantMillions !==
+        summary.researchGrantMillions +
+        (summary.failure?.refundMillions ?? 0) !==
         summary.moneyEndMillions,
       "The Turn's money doesn't add up.",
     ],
@@ -82,6 +83,38 @@ export function invalidStates(
       new Set(milestoneIds).size < milestoneIds.length ||
         before.milestones.some(({ id }) => !milestoneIds.includes(id)),
       "A Milestone was awarded twice or lost.",
+    ],
+    [
+      summary.failure !== null &&
+        !summary.failure.returnedToEarth &&
+        summary.failure.refundMillions !== 0,
+      "A Mission that didn't come back was refunded.",
+    ],
+    [
+      summary.contingencies.some(
+        ({ rescued, assets }) => !rescued && assets.length > 0,
+      ),
+      "A Contingency that didn't work saved some Assets.",
+    ],
+    [
+      summary.contingencies.some(({ answer, rescued }) => {
+        return answer === "decline" && rescued;
+      }),
+      "A Contingency that was declined saved something.",
+    ],
+    [
+      summary.contingencies
+        .flatMap(({ assets }) => assets)
+        .some(({ serviceLifeDays }) => serviceLifeDays <= 0),
+      "A Contingency left an Asset with no Service Life.",
+    ],
+    [
+      summary.failure !== null &&
+        summary.contingencies.some(
+          ({ missionEventName, rescued }) =>
+            rescued && missionEventName === summary.failure?.missionEventName,
+        ),
+      "A Mission Event both failed and was saved.",
     ],
     [
       before.landingSites.some(({ id }) => !siteIds.includes(id)),

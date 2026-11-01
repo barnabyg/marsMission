@@ -3,7 +3,9 @@ import { missionTimeScale } from "./devSettings";
 import {
   advancePlayback,
   changeSpeed,
+  continueOnTimeline,
   pausePlayback,
+  skipToDecisionPoint,
   startPlayback,
   type PlaybackState,
   type PlaybackTimeline,
@@ -18,6 +20,7 @@ interface Playback {
   state: PlaybackState;
   setSpeed: (speed: number) => void;
   pause: () => void;
+  skipToDecision: () => void;
 }
 
 export function usePlayback(
@@ -28,6 +31,13 @@ export function usePlayback(
   const [state, setState] = useState(() =>
     startPlayback(timeline, initialSpeed),
   );
+
+  // An answer brings a new Timeline. Swapping during the render means no frame ever shows the old state on it.
+  const [shown, setShown] = useState(timeline);
+  if (timeline !== shown) {
+    setShown(timeline);
+    setState((current) => continueOnTimeline(current, shown, timeline));
+  }
 
   useEffect(() => {
     let previous = performance.now();
@@ -52,6 +62,9 @@ export function usePlayback(
     },
     pause: () => {
       setState(pausePlayback);
+    },
+    skipToDecision: () => {
+      setState((current) => skipToDecisionPoint(current, timeline));
     },
   };
 }

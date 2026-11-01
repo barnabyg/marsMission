@@ -1,10 +1,16 @@
 import { lazy, Suspense, useEffect, useMemo } from "react";
-import { addDays, type Timeline } from "../simulation/simulation";
+import {
+  addDays,
+  type DecisionAnswer,
+  type DecisionPoint,
+  type Timeline,
+} from "../simulation/simulation";
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
+import { DecisionPointPanel } from "./DecisionPointPanel";
 import { EventsColumn } from "./EventsColumn";
 import { missionViews, viewName } from "./missionViews";
-import { speeds } from "./playback";
+import { atDecisionPoint, speeds } from "./playback";
 import { assetsOperatingOn, describeJourney } from "./journey";
 import {
   landingSequenceOf,
@@ -24,6 +30,9 @@ const MissionScene = lazy(() => import("./MissionScene"));
 
 interface MissionModeProps {
   timeline: Timeline;
+  /** The Decision Point the Timeline stops at, if it does. */
+  decisionPoint: DecisionPoint | null;
+  onAnswer: (decisionId: string, answer: DecisionAnswer) => void;
   /** The speed to start at, so a player's choice carries over between Turns. */
   initialSpeed: number;
   onSpeedChange: (speed: number) => void;
@@ -32,11 +41,13 @@ interface MissionModeProps {
 
 export function MissionMode({
   timeline,
+  decisionPoint,
+  onAnswer,
   initialSpeed,
   onSpeedChange,
   onFinished,
 }: MissionModeProps) {
-  const { state, setSpeed, pause } = usePlayback(
+  const { state, setSpeed, pause, skipToDecision } = usePlayback(
     timeline,
     initialSpeed,
     onSpeedChange,
@@ -63,6 +74,7 @@ export function MissionMode({
     if (state.finished) onFinished();
   }, [state.finished, onFinished]);
 
+  const deciding = decisionPoint !== null && atDecisionPoint(state, timeline);
   const turnProgress = (state.day / timeline.durationDays) * 100;
 
   const operatingAssets = assetsOperatingOn(timeline, state.day);
@@ -128,17 +140,21 @@ export function MissionMode({
           <span>
             Speed:{" "}
             <strong data-testid="current-speed">
-              {state.paused ? "Paused" : `${state.speed}x`}
+              {state.paused || deciding ? "Paused" : `${state.speed}x`}
             </strong>
           </span>
-          <button type="button" aria-pressed={state.paused} onClick={pause}>
+          <button
+            type="button"
+            aria-pressed={state.paused || deciding}
+            onClick={pause}
+          >
             Pause
           </button>
           {speeds.map((speed) => (
             <button
               key={speed}
               type="button"
-              aria-pressed={!state.paused && state.speed === speed}
+              aria-pressed={!state.paused && !deciding && state.speed === speed}
               onClick={() => {
                 setSpeed(speed);
               }}
@@ -149,8 +165,13 @@ export function MissionMode({
         </div>
         <button
           type="button"
-          title="Skip to the Turn summary. The rest of the Turn still happens."
-          onClick={onFinished}
+          title={
+            decisionPoint
+              ? "Skip to the next Decision Point, which you must answer."
+              : "Skip to the Turn summary. The rest of the Turn still happens."
+          }
+          disabled={deciding}
+          onClick={decisionPoint ? skipToDecision : onFinished}
         >
           End Turn
         </button>
@@ -178,6 +199,14 @@ export function MissionMode({
           ))}
         </ul>
       </aside>
+      {deciding && (
+        <DecisionPointPanel
+          decisionPoint={decisionPoint}
+          onAnswer={(answer) => {
+            onAnswer(decisionPoint.id, answer);
+          }}
+        />
+      )}
       <EventsColumn
         timeline={timeline}
         entriesHappened={state.entriesHappened}

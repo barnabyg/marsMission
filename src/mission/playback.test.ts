@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   advancePlayback,
+  atDecisionPoint,
   changeSpeed,
+  continueOnTimeline,
   msSinceEntry,
   pausePlayback,
+  skipToDecisionPoint,
   speeds,
   startPlayback,
   type PlaybackTimeline,
@@ -216,5 +219,89 @@ describe("the time since an entry happened", () => {
     expect(msSinceEntry(advancePlayback(fast, landing, 1000, 100), 1)).toBe(
       1000,
     );
+  });
+});
+
+describe("a Decision Point", () => {
+  const stopping = {
+    durationDays: 780,
+    decisionDay: 210,
+    entries: [
+      { day: 0, title: "Launch" },
+      { day: 210, title: "Trouble" },
+    ],
+  };
+  const answered = {
+    durationDays: 780,
+    decisionDay: null,
+    entries: [
+      { day: 0, title: "Launch" },
+      { day: 210, title: "Trouble" },
+      { day: 210, title: "Saved" },
+      { day: 300, title: "Later" },
+    ],
+  };
+  /** Far more real time than the Turn takes at this speed. */
+  const longMs = 3_600_000;
+
+  it("holds play on its day, whatever the speed", () => {
+    for (const speed of speeds) {
+      const state = advancePlayback(
+        startPlayback(stopping, speed),
+        stopping,
+        longMs,
+        1,
+      );
+      expect(state.day).toBe(210);
+      expect(state.finished).toBe(false);
+      expect(state.entriesHappened).toBe(2);
+      expect(atDecisionPoint(state, stopping)).toBe(true);
+    }
+  });
+
+  it("holds real time too, so a landing can't play on behind it", () => {
+    const held = advancePlayback(startPlayback(stopping), stopping, longMs, 1);
+    expect(advancePlayback(held, stopping, 1000, 1)).toBe(held);
+  });
+
+  it("can't be left by choosing a speed", () => {
+    const held = advancePlayback(startPlayback(stopping), stopping, longMs, 1);
+    const resumed = changeSpeed(held, 10);
+    expect(advancePlayback(resumed, stopping, 1000, 1).day).toBe(210);
+  });
+
+  it("is where End Turn goes, from any earlier day", () => {
+    const state = skipToDecisionPoint(startPlayback(stopping), stopping);
+    expect(state.day).toBe(210);
+    expect(state.finished).toBe(false);
+    expect(state.entriesHappened).toBe(2);
+  });
+
+  it("carries on from the same day after an answer, with its outcome happening at once", () => {
+    const held = {
+      ...advancePlayback(startPlayback(stopping), stopping, longMs, 1),
+    };
+    const after = continueOnTimeline(held, stopping, answered);
+    expect(after.day).toBe(210);
+    expect(after.entriesHappened).toBe(3);
+    expect(after.entriesPlayedMs).toEqual([
+      held.entriesPlayedMs[0],
+      held.entriesPlayedMs[1],
+      held.playedMs,
+    ]);
+    expect(atDecisionPoint(after, answered)).toBe(false);
+    expect(advancePlayback(after, answered, 1000, 1).day).toBeGreaterThan(210);
+  });
+
+  it("copes with an answer that takes back something that had happened", () => {
+    const taken = {
+      durationDays: 780,
+      decisionDay: null,
+      entries: [{ day: 210, title: "Trouble" }],
+    };
+    const held = advancePlayback(startPlayback(stopping), stopping, longMs, 1);
+    const after = continueOnTimeline(held, stopping, taken);
+    expect(after.entriesHappened).toBe(1);
+    expect(after.entriesPlayedMs).toHaveLength(1);
   });
 });

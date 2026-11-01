@@ -1,0 +1,41 @@
+[
+  {
+    "id": "kick-stage",
+    "name": "Kick stage",
+    "description": "A small extra stage for a second try at leaving Earth orbit.",
+    "missionEvent": "mars-transfer-burn",
+    "costMillions": 100,
+    "massTonnes": 0.3,
+    "rescueFailureProbability": 0.3,
+    "serviceLifeLossPercent": 20,
+    "extraPublicSupportLoss": 10,
+    "troubleDescription": "The upper stage shut down early, leaving the spacecraft on a path that will never reach Mars. The kick stage could be fired to make up the difference.",
+    "rescueDescription": "The kick stage fired and put the spacecraft back on its way to Mars, using up fuel meant for later."
+  },
+  {
+    "id": "reserve-fuel",
+    "name": "Reserve fuel",
+    "description": "Extra fuel for a second try at the burn into Mars orbit.",
+    "missionEvent": "mars-orbit-insertion",
+    "costMillions": 120,
+    "massTonnes": 0.2,
+    "rescueFailureProbability": 0.4,
+    "serviceLifeLossPercent": 30,
+    "extraPublicSupportLoss": 15,
+    "troubleDescription": "The engine cut out early, and the spacecraft is about to fly past Mars. The reserve fuel could be used for a second burn.",
+    "rescueDescription": "The second burn on the reserve fuel caught the spacecraft, and it is in orbit around Mars, but its tanks are nearly dry."
+  },
+  {
+    "id": "retro-thrusters",
+    "name": "Retro thrusters",
+    "description": "Extra thrusters for a last try at slowing down above the ground.",
+    "missionEvent": "entry-descent-landing",
+    "costMillions": 150,
+    "massTonnes": 0.3,
+    "rescueFailureProbability": 0.5,
+    "serviceLifeLossPercent": 40,
+    "extraPublicSupportLoss": 15,
+    "troubleDescription": "{lander} came in too fast over {site}. The retro thrusters could be fired for a last try at slowing down.",
+    "rescueDescription": "{lander} made a hard landing at {site}, shaken but working."
+  }
+]

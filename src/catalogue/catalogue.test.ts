@@ -370,12 +370,109 @@ describe("invalid data files", () => {
     expect(message).toContain("firstLaunchWindow");
   });
 
+  it("reject a Contingency for a Mission Event that doesn't exist", () => {
+    const files = testCatalogueFiles();
+    const [first, ...rest] = files.contingencies;
+    if (!first) throw new Error("Expected a Contingency");
+    const message = errorFrom({
+      ...files,
+      contingencies: [{ ...first, missionEvent: "nope" }, ...rest],
+    });
+    expect(message).toContain("contingencies.json");
+    expect(message).toContain('"nope"');
+  });
+
+  it("reject two Contingencies for one Mission Event", () => {
+    const files = testCatalogueFiles();
+    const [first] = files.contingencies;
+    if (!first) throw new Error("Expected a Contingency");
+    const message = errorFrom({
+      ...files,
+      contingencies: [first, { ...first, id: "another" }],
+    });
+    expect(message).toContain("more than one Contingency");
+  });
+
+  it("reject a Contingency with a negative mass or an impossible loss of Service Life", () => {
+    const files = testCatalogueFiles();
+    const [first, ...rest] = files.contingencies;
+    if (!first) throw new Error("Expected a Contingency");
+    const message = errorFrom({
+      ...files,
+      contingencies: [
+        { ...first, massTonnes: -1, serviceLifeLossPercent: 100 },
+        ...rest,
+      ],
+    });
+    expect(message).toContain("massTonnes");
+    expect(message).toContain("serviceLifeLossPercent");
+  });
+
+  it("reject having no Trajectory, or one with a negative loss of mass capacity", () => {
+    const files = testCatalogueFiles();
+    expect(errorFrom({ ...files, trajectories: [] })).toContain(
+      "trajectories.json",
+    );
+    const [first] = files.trajectories;
+    if (!first) throw new Error("Expected a Trajectory");
+    expect(
+      errorFrom({
+        ...files,
+        trajectories: [{ ...first, capacityLossTonnes: -1 }],
+      }),
+    ).toContain("capacityLossTonnes");
+  });
+
+  it("reject a Free-return with an unknown burn, no cost, an impossible refund or too long a return", () => {
+    const files = testCatalogueFiles();
+    const freeReturn = {
+      arrivalBurn: "test-arrival",
+      refundPercent: 50,
+      returnDays: 300,
+      description: "It comes home.",
+    };
+    const withFreeReturn = (
+      changes: object,
+      trajectory: object = { costMillions: 10 },
+    ) =>
+      errorFrom({
+        ...files,
+        trajectories: [
+          {
+            id: "route",
+            name: "Route",
+            description: "A route.",
+            transferDays: 200,
+            costMillions: 0,
+            capacityLossTonnes: 0,
+            ...trajectory,
+            freeReturn: { ...freeReturn, ...changes },
+          },
+        ],
+      });
+    expect(withFreeReturn({ arrivalBurn: "nope" })).toContain('"nope"');
+    expect(withFreeReturn({ refundPercent: 101 })).toContain("refundPercent");
+    expect(withFreeReturn({ returnDays: 700 })).toContain("returnDays");
+    expect(withFreeReturn({}, {})).toContain("must cost money or mass");
+  });
+
   it("reject a transfer that wouldn't finish within the Turn", () => {
     const files = testCatalogueFiles();
     const message = errorFrom({
       ...files,
-      program: { ...files.program, transferDays: 800 },
+      trajectories: [
+        ...files.trajectories,
+        {
+          id: "too-slow",
+          name: "Too slow",
+          description: "Never gets there.",
+          transferDays: 776,
+          costMillions: 0,
+          capacityLossTonnes: 0,
+        },
+      ],
     });
-    expect(message).toContain("transferDays");
+    expect(message).toContain("trajectories.json");
+    expect(message).toContain('"too-slow"');
   });
 });

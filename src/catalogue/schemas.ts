@@ -19,11 +19,37 @@ const programSchema = z.strictObject({
   launchWindowIntervalDays: z.number().int().positive(),
   startingMoneyMillions: money,
   startingPublicSupport: z.number().int().nonnegative(),
-  transferDays: z.number().int().positive(),
   // At least 1%, and a level of at least 1, so a Program that only skips Turns is always cancelled.
   publicSupportDrainPercent: z.number().int().min(1).max(100),
   cancellationLevel: z.number().int().min(1),
 });
+
+const trajectoriesSchema = z
+  .array(
+    z.strictObject({
+      id,
+      name: z.string().min(1),
+      description: z.string().min(1),
+      // How long the Mission takes to reach Mars, which is its Duration so far.
+      transferDays: z.number().int().positive(),
+      costMillions: money,
+      // How much less its Launch Vehicle can carry on this Trajectory, because of the extra fuel.
+      capacityLossTonnes: z.number().nonnegative(),
+      // Brings the Mission home if this Mission Event fails, which only a Mission that goes through it can use.
+      freeReturn: z
+        .strictObject({
+          arrivalBurn: id,
+          // The share of what the Assets on board cost that comes back.
+          refundPercent: z.number().int().min(0).max(100),
+          // How long after the failed burn the Mission is back at Earth.
+          returnDays: z.number().int().positive(),
+          // Used in place of the Mission Event's failureDescription.
+          description: z.string().min(1),
+        })
+        .optional(),
+    }),
+  )
+  .min(1);
 
 const launchVehiclesSchema = z.array(
   z.strictObject({
@@ -130,6 +156,27 @@ const missionEventsSchema = z.array(
   }),
 );
 
+const contingenciesSchema = z.array(
+  z.strictObject({
+    id,
+    name: z.string().min(1),
+    description: z.string().min(1),
+    // The one Mission Event it can rescue.
+    missionEvent: id,
+    costMillions: money,
+    massTonnes: z.number().nonnegative(),
+    // The chance that the second roll fails as well.
+    rescueFailureProbability: z.number().min(0).max(1),
+    // How much shorter a rescued Asset's Service Life is.
+    serviceLifeLossPercent: z.number().int().min(0).max(99),
+    // Lost on top of the Mission Event's own loss if it's used and the second roll fails.
+    extraPublicSupportLoss: z.number().int().nonnegative(),
+    // In either description, {site} and {lander} work as they do in a Mission Event's.
+    troubleDescription: z.string().min(1),
+    rescueDescription: z.string().min(1),
+  }),
+);
+
 const milestonesSchema = z.array(
   z.strictObject({
     id,
@@ -185,9 +232,11 @@ export const schemas = {
   activities: activitiesSchema,
   researchKinds: researchKindsSchema,
   launchVehicles: launchVehiclesSchema,
+  trajectories: trajectoriesSchema,
   assets: assetsSchema,
   landingSites: landingSitesSchema,
   missionEvents: missionEventsSchema,
+  contingencies: contingenciesSchema,
   milestones: milestonesSchema,
   fundingThresholds: fundingThresholdsSchema,
   reliabilityLevels: reliabilityLevelsSchema,
@@ -200,9 +249,11 @@ export const catalogueFileNames = {
   activities: "activities.json",
   researchKinds: "research-kinds.json",
   launchVehicles: "launch-vehicles.json",
+  trajectories: "trajectories.json",
   assets: "assets.json",
   landingSites: "landing-sites.json",
   missionEvents: "mission-events.json",
+  contingencies: "contingencies.json",
   milestones: "milestones.json",
   fundingThresholds: "funding-thresholds.json",
   reliabilityLevels: "reliability-levels.json",
@@ -214,10 +265,13 @@ export interface Catalogue {
   activities: z.output<typeof activitiesSchema>;
   researchKinds: z.output<typeof researchKindsSchema>;
   launchVehicles: z.output<typeof launchVehiclesSchema>;
+  /** The first is what a Mission takes unless the player picks another. */
+  trajectories: z.output<typeof trajectoriesSchema>;
   assets: z.output<typeof assetsSchema>;
   /** In the order a Survey reveals them. */
   landingSites: z.output<typeof landingSitesSchema>;
   missionEvents: z.output<typeof missionEventsSchema>;
+  contingencies: z.output<typeof contingenciesSchema>;
   milestones: z.output<typeof milestonesSchema>;
   fundingThresholds: z.output<typeof fundingThresholdsSchema>;
   /** In order, cheapest first. */

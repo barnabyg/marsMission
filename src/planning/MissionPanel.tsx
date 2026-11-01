@@ -3,6 +3,7 @@ import {
   formatMoney,
   type AssetChoices,
   type PlannedAsset,
+  type PlannedTrajectory,
   type Program,
   type ProgramView,
   type Simulation,
@@ -46,6 +47,8 @@ export function MissionPanel({
   const [assetChoices, setAssetChoices] = useState<
     Record<string, AssetChoices>
   >({});
+  const [contingencyIds, setContingencyIds] = useState<string[]>([]);
+  const [trajectoryId, setTrajectoryId] = useState<string | undefined>();
 
   const landsOnMars = view.assets.some(
     (asset) => assetIds.includes(asset.id) && asset.landsAtSite,
@@ -57,10 +60,18 @@ export function MissionPanel({
     launchVehicleId,
     assetIds,
     ...(landingSite && { landingSiteId: landingSite.id }),
+    // A choice can outlive a change of Asset that takes it off the list.
+    ...(trajectoryId !== undefined &&
+      simulation
+        .previewTrajectories({ launchVehicleId, assetIds })
+        .some(({ id }) => id === trajectoryId) && { trajectoryId }),
   };
+  const trajectories = simulation.previewTrajectories(mission);
+  const trajectory = trajectories.find(({ chosen }) => chosen);
   const plannedEvents = simulation.previewMission(program, {
     ...mission,
     reliability,
+    contingencyIds,
   });
   const plannedAssets = simulation.previewAssets({
     ...mission,
@@ -73,6 +84,10 @@ export function MissionPanel({
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
       reliability: Object.fromEntries(
         plannedEvents.map((event) => [event.eventId, event.reliabilityLevelId]),
+      ),
+      // Only those for the Mission Events it goes through, for the same reason.
+      contingencyIds: plannedEvents.flatMap(({ contingency }) =>
+        contingency?.bought ? [contingency.id] : [],
       ),
       // Only the Assets this Mission carries, for the same reason.
       assetChoices: Object.fromEntries(
@@ -95,24 +110,48 @@ export function MissionPanel({
       <h2>
         <GameText>Mission</GameText>
       </h2>
-      <label>
-        <span>
-          <GameText>Launch Vehicle</GameText>
-        </span>
-        <select
-          value={launchVehicleId}
-          onChange={(event) => {
-            setLaunchVehicleId(event.target.value);
-          }}
-        >
-          {view.launchVehicles.map((vehicle) => (
-            <option key={vehicle.id} value={vehicle.id}>
-              {vehicle.name} ({formatMoney(vehicle.costMillions)},{" "}
-              {vehicle.capacityTonnes} t)
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="mission-launch">
+        <label>
+          <span>
+            <GameText>Launch Vehicle</GameText>
+          </span>
+          <select
+            value={launchVehicleId}
+            onChange={(event) => {
+              setLaunchVehicleId(event.target.value);
+            }}
+          >
+            {view.launchVehicles.map((vehicle) => (
+              <option key={vehicle.id} value={vehicle.id}>
+                {vehicle.name} ({formatMoney(vehicle.costMillions)},{" "}
+                {vehicle.capacityTonnes} t)
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>
+            <GameText>Trajectory</GameText>
+          </span>
+          <select
+            value={trajectory?.id}
+            onChange={(event) => {
+              setTrajectoryId(event.target.value);
+            }}
+          >
+            {trajectories.map((option) => (
+              <option key={option.id} value={option.id}>
+                {describeTrajectory(option)}
+              </option>
+            ))}
+          </select>
+        </label>
+        {trajectory && (
+          <p data-testid="trajectory-details">
+            <GameText>{trajectory.description}</GameText>
+          </p>
+        )}
+      </div>
       <fieldset className="asset-choices">
         <legend>
           <GameText>Assets</GameText>
@@ -178,7 +217,9 @@ export function MissionPanel({
         </>
       )}
       <h3>
-        <GameText>Mission Events, Risk Bands and Reliability</GameText>
+        <GameText>
+          Mission Events, Risk Bands, Reliability and Contingency
+        </GameText>
       </h3>
       <ol className="mission-events" data-testid="mission-events">
         {plannedEvents.map((event) => (
@@ -204,6 +245,29 @@ export function MissionPanel({
                 </option>
               ))}
             </select>
+            {event.contingency && (
+              <label
+                className="contingency-choice"
+                title={event.contingency.description}
+              >
+                <input
+                  type="checkbox"
+                  checked={event.contingency.bought}
+                  onChange={(change) => {
+                    const { id } = event.contingency ?? {};
+                    if (id === undefined) return;
+                    setContingencyIds(
+                      change.target.checked
+                        ? [...contingencyIds, id]
+                        : contingencyIds.filter((other) => other !== id),
+                    );
+                  }}
+                />
+                <GameText>
+                  {`Contingency: ${event.contingency.name} (${formatMoney(event.contingency.costMillions)}, ${event.contingency.massTonnes} t, ${event.contingency.riskBand} if used)`}
+                </GameText>
+              </label>
+            )}
           </li>
         ))}
       </ol>
@@ -240,6 +304,21 @@ export function MissionPanel({
       </button>
     </section>
   );
+}
+
+/** What a Trajectory takes and what it costs, for its place in the list. */
+function describeTrajectory({
+  name,
+  transferDays,
+  costMillions,
+  capacityLossTonnes,
+}: PlannedTrajectory): string {
+  const costs = [
+    `${transferDays} days`,
+    ...(costMillions > 0 ? [formatMoney(costMillions)] : []),
+    ...(capacityLossTonnes > 0 ? [`${capacityLossTonnes} t less`] : []),
+  ];
+  return `${name} (${costs.join(", ")})`;
 }
 
 interface MissionAssetChoiceProps {

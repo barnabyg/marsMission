@@ -15,6 +15,8 @@ Phases are defined in the [Build order](#build-order). Phases 1, 2, 3 and 4 are 
 
 - **Phase 4:** Activities, with Survey, research and Nothing as the first ones; Ongoing Research, which also adds a little Public Support; Research Grants, which take over from Funding Thresholds as the main income of a Program that keeps Assets at Mars; a rover, choosing between Science and money; Science Milestones and more Funding Thresholds; the surface view, with generated terrain, landing and crash sequences it moves to by itself, and rovers that move according to their Activity; automated balance runs, and the numbers tuned with them, including longer Service Lives.
 
+- **Phase 5, so far:** Decision Points, with no time limit and End Turn stopping at each one; Contingency, a gamble bought in Planning Mode and used for a second roll when its Mission Event fails; Slow, Fast and Free-return Trajectories.
+
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
 ## Program and Turns
@@ -26,12 +28,13 @@ Any rule in this document beyond these is planned, so its absence from the code 
 - A Mission ends when it has delivered its Assets and Crew, or has failed. After that they operate at Mars on their own, so Mission Mode shows the Turn's Mission plus everything already operating.
 - If assembling or refuelling in Earth orbit needs several launches, those launches and rendezvous are Mission Events within the one Mission.
 - The Launch Vehicle is chosen from the catalogue and sets how much mass the Mission can carry.
-- Each Mission picks one of 2–3 fixed Trajectories, such as Slow (least fuel, longest Duration), Fast (more fuel and mass, less radiation for Crew) or Free-return (swings back to Earth if the arrival burn fails, at the cost of flexibility).
+- Each Mission picks one of 2–3 fixed Trajectories, such as Slow (least fuel, longest Duration), Fast (more fuel and mass, less radiation for Crew) or Free-return (swings back to Earth if the arrival burn fails, at the cost of flexibility). Until there is Crew, Fast pays through earlier arrival, which gives the Mission's Assets more research days in that Turn. A Turn's length doesn't change. Changing Trajectory doesn't re-roll a Mission Event's outcome.
+- Free-return is offered only on a Mission that has Mars orbit insertion, because a lander alone has no arrival burn. If that burn fails, the Mission swings back to Earth instead of being lost: it costs no Public Support and refunds a share of the cost of the Assets on board, and everything not yet delivered comes back with it. The Assets aren't flown again. If the Mission has a Contingency for the burn, its Decision Point comes first, and the Free-return outcome replaces the ordinary loss when it's declined or its second roll fails, with its extra Public Support still applying in that second case. Free-return costs something when nothing goes wrong, so that it isn't always the right choice.
 - Missions can go to Mars orbit or to a Landing Site. Phobos and Deimos are left out of the first version.
 - In Planning Mode the player gives each Asset one Activity for the Turn. Crew at one Landing Site share one Activity.
 - Each Turn begins at a Launch Window (roughly every 26 months) and consists of Planning Mode followed by Mission Mode.
 - No game time passes in Planning Mode. Mission Mode runs from one Launch Window to the next, showing every Mission in flight and every operating Asset together. Mission Events don't hold game time; Decision Points pause play.
-- The player can end a Turn early from Mission Mode, on any Turn, which skips to the Turn summary. It only skips the viewing: the rest of the Turn still happens, with the same outcome. Once Decision Points exist, End Turn must stop at the next one rather than skip it.
+- The player can end a Turn early from Mission Mode, on any Turn, which skips to the Turn summary. It only skips the viewing: the rest of the Turn still happens, with the same outcome. End Turn stops at the next Decision Point rather than skip it, and can be used again once it's answered.
 - Missions can overlap Turns. For example, a Crewed Mission that stays on the surface for a long time lasts about 2.5 years, so the next Turn's Planning Mode happens while Crew are still at Mars.
 - Doing everything in a single Mission ("one jump") is possible but very expensive and risky. Building up Assets over several Turns is the intended cheaper path.
 - Robotic and Crewed Missions are both available. Crewed Missions cost much more and earn more Public Support.
@@ -64,6 +67,8 @@ Any rule in this document beyond these is planned, so its absence from the code 
   - Reliability (testing, redundancy) lowers an Event's failure probability.
   - Contingency (escape module, abort fuel) changes the outcome when an Event fails. Decision Points are often where a Contingency is used.
   - Protection (radiation shielding) reduces harm to Crew that builds up over the Mission's Duration.
+- A Contingency is a gamble, because a guaranteed rescue would always be the obvious answer. If its Mission Event fails, the player chooses at a Decision Point. Using it is a second roll, shown as a Risk Band: success saves every Asset not yet delivered with a shorter Service Life, and failure loses them and costs extra Public Support. Declining takes the ordinary loss. A Mission Event that fails with no Contingency bought raises no Decision Point. A rescued landing is a hard landing: it plays as a landing after the Decision Point, and earns first-landing Science and Milestones as any landing does. Launch has no Contingency yet.
+- A Turn is worked out from the seed, the plan and the answers so far, and stops at the first unanswered Decision Point. Answering works it out again with that answer added, and doesn't re-roll anything else. Decision Points aren't saved, so a reload during one returns to the start of the Turn.
 - All Safety Margin is worth having but expensive.
 - Failure probabilities are shown to the player as rough bands (for example "~5%"), not exact figures.
 - The random seed is fixed when the Program starts, so the same plan gives the same outcome after a reload. A changed plan can avoid a failure already seen, for example by buying more Reliability or by not launching. _Open: whether to keep this gap is to be settled by playtest feedback._

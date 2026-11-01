@@ -166,42 +166,20 @@ test("shows a lander coming down and then on the surface", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto(`/?seed=${landingSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
+  // The landing takes the view to the surface. The marker stays for some days after it, so the player can go back to look.
+  // Holding from inside the page is what stops the Turn in that time, as the marker before the landing is too brief to catch.
+  await holdTurnWhenShown(page, "Entry/descent/landing");
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(
-    page.getByTestId("solar-system-view").locator("canvas"),
-  ).toBeVisible();
-
-  // Pauses the moment the marker appears, which a click from out here would be too late for.
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        requestAnimationFrame(function check() {
-          const pause = [...document.querySelectorAll("button")].find(
-            (button) => button.textContent === "Pause",
-          );
-          if (document.querySelector("[data-testid=mars-landing]") !== null) {
-            pause?.click();
-            resolve();
-          } else {
-            requestAnimationFrame(check);
-          }
-        });
-        // The view has to be showing for the marker to be there at all.
-        [...document.querySelectorAll("button")]
-          .find((button) => button.textContent === "Mars orbit")
-          ?.click();
-      }),
-  );
+  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
+  await expect(page.getByTestId("current-view")).toHaveText("Surface");
+  await viewButton(page, "Mars orbit").click();
   const landing = page.getByTestId("mars-landing");
   await expect(landing).toHaveText(
     "Prospector Lander: landing at Jezero Crater",
   );
   await expect(page.getByTestId("mars-surface-asset")).toHaveCount(0);
 
-  // The landing takes the view to the surface, and the player goes back to look.
   await page.getByRole("button", { name: "1x" }).click();
-  await expect(page.getByTestId("current-view")).toHaveText("Surface");
-  await viewButton(page, "Mars orbit").click();
   await expect(page.getByTestId("mars-surface-asset")).toHaveText(
     "Prospector Lander at Jezero Crater",
   );

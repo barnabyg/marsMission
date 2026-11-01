@@ -7,6 +7,10 @@ export interface PlannedMission {
   landingSiteId?: string;
   /** The choices made for each Asset, by id. Anything left out gets the shortest Service Life, the cheapest Reliability and the first Activity it lists. */
   assetChoices?: Record<string, AssetChoices>;
+  /** The Contingencies bought, by id. Each one covers one Mission Event that this Mission goes through. */
+  contingencyIds?: string[];
+  /** The Trajectory to Mars. Left out, it's the first the Catalogue lists. */
+  trajectoryId?: string;
 }
 
 export interface AssetChoices {
@@ -150,6 +154,16 @@ export interface MissionEventEntry {
   title: string;
   description: string;
   outcome: "success" | "failure";
+  /** Whether this failure sends the Mission back to Earth rather than ending it where it is. */
+  returningToEarth?: true;
+}
+
+/** A Mission on a Free-return Trajectory has got back to Earth. */
+export interface MissionReturnedEntry {
+  kind: "missionReturned";
+  day: number;
+  title: string;
+  description: string;
 }
 
 export interface MilestoneEntry {
@@ -195,7 +209,18 @@ export interface AssetFailedEntry {
   description: string;
 }
 
+/** A Mission Event has gone wrong and a Contingency could still save it. What the player chose comes as the next entry. */
+export interface DecisionPointEntry {
+  kind: "decisionPoint";
+  day: number;
+  eventId: string;
+  title: string;
+  description: string;
+}
+
 export type TimelineEntry =
+  | DecisionPointEntry
+  | MissionReturnedEntry
   | AssetFailedEntry
   | AssetEndedEntry
   | SurveyEntry
@@ -253,7 +278,20 @@ export interface TurnSummary {
     missionEventName: string;
     assetsLost: string[];
     publicSupportLost: number;
+    /** Whether a Free-return brought those Assets back to Earth. They aren't flown again. */
+    returnedToEarth: boolean;
+    /** The share of their cost that came back, which moneyEndMillions includes. */
+    refundMillions: number;
   } | null;
+  /** How each Decision Point in this Turn was answered, and what came of it. */
+  contingencies: {
+    missionEventName: string;
+    contingencyName: string;
+    answer: DecisionAnswer;
+    rescued: boolean;
+    /** The Assets it saved, with the Service Life each has left to start with. */
+    assets: { name: string; serviceLifeDays: number }[];
+  }[];
   /** Why the Program was cancelled at the end of this Turn, if it was. */
   cancellationReason: string | null;
 }
@@ -291,12 +329,16 @@ export interface AssetAtMars {
   fromDay: number;
   /** The day of the Turn it stops operating, or null if it lasts beyond the Turn. */
   untilDay: number | null;
+  /** Its Service Life, if a Contingency cut it short on this Turn's Mission. */
+  cutServiceLifeDays?: number;
 }
 
 /** What happened in a Turn, for Mission Mode to display. */
 export interface Timeline {
   startDate: string;
   durationDays: number;
+  /** The day of the Decision Point this Timeline stops at, or null if it runs to the end of the Turn. */
+  decisionDay: number | null;
   /** The Mission launched this Turn, if any. */
   mission: {
     launchDay: number;
@@ -306,6 +348,8 @@ export interface Timeline {
     assets: MissionAsset[];
     /** The day a Mission Event failed and the journey stopped, if one did. */
     failedOnDay: number | null;
+    /** The way back, if a Free-return is bringing it home. */
+    returnsToEarth?: { fromDay: number; backOnDay: number };
   } | null;
   /** Where every Landing Site is, for showing Assets on the globe. */
   landingSites: { name: string; latitude: number; longitude: number }[];
@@ -319,6 +363,43 @@ export interface TurnResult {
   timeline: Timeline;
   summary: TurnSummary;
 }
+
+/** A Trajectory as Planning Mode offers it. */
+export interface PlannedTrajectory {
+  id: string;
+  name: string;
+  description: string;
+  transferDays: number;
+  costMillions: number;
+  capacityLossTonnes: number;
+  chosen: boolean;
+}
+
+export type DecisionAnswer = "use" | "decline";
+
+/** The answers to a Turn's Decision Points so far, by each one's `id`. */
+export type DecisionAnswers = Readonly<Record<string, DecisionAnswer>>;
+
+/** A choice the player must make before the Turn can go on. There is no time limit. */
+export interface DecisionPoint {
+  /** How the answers name this one. */
+  id: string;
+  day: number;
+  missionEventName: string;
+  contingencyName: string;
+  description: string;
+  use: {
+    /** The chance that the second roll fails too, as a rough figure. */
+    riskBand: string;
+    description: string;
+  };
+  decline: { description: string };
+}
+
+/** A Turn worked out as far as it can go: to its end, or to the first Decision Point with no answer yet. */
+export type TurnProgress =
+  | { decisionPoint: null; timeline: Timeline; result: TurnResult }
+  | { decisionPoint: DecisionPoint; timeline: Timeline };
 
 /** An Asset on a planned Mission as Planning Mode shows it. */
 export interface PlannedAsset {
@@ -351,4 +432,15 @@ export interface PlannedMissionEvent {
     costMillions: number;
     riskBand: string;
   }[];
+  /** The Contingency on offer for this Mission Event, if it has one. */
+  contingency: {
+    id: string;
+    name: string;
+    description: string;
+    costMillions: number;
+    massTonnes: number;
+    /** The chance that using it fails, as a rough figure. */
+    riskBand: string;
+    bought: boolean;
+  } | null;
 }

@@ -3,12 +3,25 @@ import {
   type LoadedSave,
   type SaveStore,
 } from "../save/saveStore";
-import type { Program, Simulation, TurnResult } from "../simulation/simulation";
+import type {
+  DecisionAnswers,
+  Program,
+  Simulation,
+  TurnPlan,
+  TurnProgress,
+  TurnResult,
+} from "../simulation/simulation";
 
 export type Screen =
   | { mode: "opening"; automaticSave: LoadedSave }
   | { mode: "planning"; program: Program; saved: boolean; visit: number }
-  | { mode: "mission"; result: TurnResult }
+  | {
+      mode: "mission";
+      program: Program;
+      plan: TurnPlan;
+      answers: DecisionAnswers;
+      progress: TurnProgress;
+    }
   | { mode: "turnSummary"; result: TurnResult }
   | { mode: "programSummary"; program: Program };
 

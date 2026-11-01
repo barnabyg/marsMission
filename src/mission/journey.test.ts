@@ -116,3 +116,48 @@ describe("listing what's operating at Mars", () => {
     ]);
   });
 });
+
+describe("a Mission coming home on a Free-return", () => {
+  const coming = {
+    launchDay: 0,
+    arrivalDay: 240,
+    launchVehicleName: "Test Vehicle",
+    assetNames: ["Test Orbiter", "Test Lander"],
+    assets: [
+      {
+        name: "Test Orbiter",
+        kind: "orbiter",
+        landingSiteName: null,
+        deliveredOnDay: null,
+        lostOnDay: 240,
+        crashed: false,
+      },
+      {
+        name: "Test Lander",
+        kind: "lander",
+        landingSiteName: "Alpha Plain",
+        deliveredOnDay: null,
+        lostOnDay: 240,
+        crashed: false,
+      },
+    ],
+    failedOnDay: 240,
+    returnsToEarth: { fromDay: 240, backOnDay: 660 },
+  };
+
+  it("is on its way to Mars until the burn fails", () => {
+    expect(describeJourney(coming, 120)).toContain("50% of the way to Mars");
+  });
+
+  it("heads back rather than being lost, with everything on board", () => {
+    expect(describeJourney(coming, 300)).toBe(
+      "Test Orbiter: heading back to Earth. Test Lander: heading back to Earth",
+    );
+  });
+
+  it("is back at Earth at the end", () => {
+    expect(describeJourney(coming, 660)).toBe(
+      "Test Orbiter: back at Earth. Test Lander: back at Earth",
+    );
+  });
+});

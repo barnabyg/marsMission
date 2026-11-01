@@ -1,7 +1,8 @@
 import { parseCatalogue, type CatalogueFiles } from "../catalogue/catalogue";
 import { createSimulation } from "../simulation/simulation";
 import { playProgram, type TurnRecord } from "./playProgram";
-import { strategies as allStrategies, type Strategy } from "./strategies";
+import type { Strategy } from "./playStyle";
+import { strategies as allStrategies } from "./strategies";
 import { sum } from "./sum";
 
 /** How many Turns each Program plays at most. */
@@ -245,6 +246,20 @@ function afterFirstMission(plays: Play[]): string[] {
   return [...outcome("worked", false), ...outcome("failed", true)];
 }
 
+/** What Contingencies did, for a strategy that buys them. */
+function decisionPoints(plays: Play[]): string[] {
+  const met = sum(
+    plays.map((play) => totalOf(play, (turn) => turn.decisionPoints)),
+  );
+  if (met === 0) return [];
+  const rescues = sum(
+    plays.map((play) => totalOf(play, (turn) => turn.rescues)),
+  );
+  return [
+    `Decision Points: ${tenth(met / plays.length)} per Program, ${percent(rescues, met)}% ended with the Assets saved`,
+  ];
+}
+
 function researchScience(plays: Play[]): string {
   const totals = new Map<string, number>();
   for (const { activityName, science } of plays
@@ -317,6 +332,7 @@ export function balanceReport(
       "",
       ...firstMissions(plays),
       ...afterFirstMission(plays),
+      ...decisionPoints(plays),
       "",
       researchScience(plays),
     );
