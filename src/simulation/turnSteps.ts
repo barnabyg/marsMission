@@ -1,5 +1,11 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { carryOutSurvey, operateAssets } from "./assetsInService";
+import {
+  flyMission,
+  missionFailure,
+  missionOnTimeline,
+  type MissionOutcome,
+} from "./missionFlight";
 import { carryOutOngoingResearch } from "./ongoingResearch";
 import {
   awardScienceMilestones,
@@ -12,11 +18,9 @@ import {
   daysBetween,
   formatMoney,
   operatingKey,
-  roll,
   sum,
   type Asset,
   type LandingSite,
-  type MissionEvent,
   type Rules,
 } from "./rules";
 import type {
@@ -24,8 +28,6 @@ import type {
   FirstLandingEntry,
   FundingThresholdEntry,
   MilestoneEntry,
-  MissionAsset,
-  MissionEventEntry,
   Program,
   TurnPlan,
   TurnResult,
@@ -34,113 +36,9 @@ import type {
 type Milestone = Catalogue["milestones"][number];
 type FundingThreshold = Catalogue["fundingThresholds"][number];
 
-/** What happened to the Turn's Mission, if there was one. */
-interface MissionOutcome {
-  vehicleName: string | null;
-  assets: Asset[];
-  /** The Mission Events that happened, ending with the one that failed if one did. */
-  entries: MissionEventEntry[];
-  failedEvent: MissionEvent | undefined;
-  deliveredAssets: Asset[];
-  publicSupportLost: number;
-  landingSite: LandingSite | undefined;
-}
-
 interface FundingOutcome {
   payouts: FundingThreshold[];
   entries: FundingThresholdEntry[];
-}
-
-/** What is landing, to start a sentence, such as "The rover". Always in the Catalogue's order, whatever order the Mission lists them. */
-function whatLands(catalogue: Catalogue, assets: Asset[]): string {
-  const kinds = catalogue.assets
-    .filter((asset) => asset.landsAtSite && assets.includes(asset))
-    .map(({ kind }) => `the ${kind}`);
-  const named = new Intl.ListFormat("en").format(new Set(kinds));
-  return named.charAt(0).toUpperCase() + named.slice(1);
-}
-
-/** Rolls each of the Mission's Mission Events in turn, up to the first that fails. */
-function flyMission(
-  catalogue: Catalogue,
-  rules: Rules,
-  program: Program,
-  plan: TurnPlan,
-): MissionOutcome {
-  const { mission } = plan;
-  const vehicle = catalogue.launchVehicles.find(
-    (candidate) => candidate.id === mission?.launchVehicleId,
-  );
-  const assets = (mission?.assetIds ?? []).flatMap((assetId) =>
-    catalogue.assets.filter((candidate) => candidate.id === assetId),
-  );
-  const landingSite = rules.landingSiteById(mission?.landingSiteId);
-  const filledIn = (text: string) =>
-    text
-      .replaceAll("{site}", landingSite?.name ?? "")
-      .replaceAll("{lander}", whatLands(catalogue, assets));
-  const plannedEvents = mission
-    ? rules.missionEventsFor(mission.launchVehicleId, mission.assetIds)
-    : [];
-  const failedIndex = plannedEvents.findIndex(
-    (event) =>
-      roll(program.seed, program.turnNumber, event.id) <
-      rules.failureProbability(
-        event,
-        rules.reliabilityLevelFor(mission, event.id),
-        program,
-        mission,
-      ),
-  );
-  const failedEvent = plannedEvents[failedIndex];
-  // An Asset is delivered when its last Mission Event succeeds, so anything delivered before a failure is safe.
-  const deliveredAssets = failedEvent
-    ? assets.filter(
-        (asset) => rules.deliveryDay(asset) < rules.dayOf(failedEvent),
-      )
-    : assets;
-  const lostNames = assets
-    .filter((asset) => !deliveredAssets.includes(asset))
-    .map((asset) => asset.name);
-  const safe =
-    deliveredAssets.length > 0
-      ? ` Still safe: ${deliveredAssets.map((asset) => asset.name).join(", ")}.`
-      : "";
-  const publicSupportLost = failedEvent
-    ? Math.min(failedEvent.publicSupportLoss, program.publicSupport)
-    : 0;
-
-  const entries = plannedEvents
-    .slice(0, failedEvent ? failedIndex + 1 : undefined)
-    .map((event): MissionEventEntry =>
-      event === failedEvent
-        ? {
-            kind: "missionEvent",
-            day: rules.dayOf(event),
-            eventId: event.id,
-            title: `${event.name} failed`,
-            description: `${filledIn(event.failureDescription)} Lost with the Mission: ${lostNames.join(", ")}.${safe} It costs ${publicSupportLost} Public Support.`,
-            outcome: "failure",
-          }
-        : {
-            kind: "missionEvent",
-            day: rules.dayOf(event),
-            eventId: event.id,
-            title: event.name,
-            description: filledIn(event.description),
-            outcome: "success",
-          },
-    );
-
-  return {
-    vehicleName: vehicle?.name ?? null,
-    assets,
-    entries,
-    failedEvent,
-    deliveredAssets,
-    publicSupportLost,
-    landingSite,
-  };
 }
 
 /** Awards each Milestone that an Asset delivered this Turn has earned for the first time. */
@@ -254,10 +152,10 @@ export function resolveTurn(
   plan: TurnPlan,
   costMillions: number,
 ): TurnResult {
-  const { launchWindowIntervalDays, transferDays } = catalogue.program;
+  const { launchWindowIntervalDays } = catalogue.program;
 
   const flown = flyMission(catalogue, rules, program, plan);
-  const failedOnDay = flown.failedEvent ? rules.dayOf(flown.failedEvent) : null;
+  const { failedOnDay } = flown;
   const arrivalAwards = awardArrivalMilestones(
     catalogue,
     rules,
@@ -327,24 +225,6 @@ export function resolveTurn(
     costMillions +
     sum(funding.payouts.map(({ payoutMillions }) => payoutMillions)) +
     research.researchGrantMillions;
-  const assetNames = flown.assets.map((asset) => asset.name);
-  const siteNameOf = (asset: Asset) =>
-    asset.landsAtSite ? (flown.landingSite?.name ?? null) : null;
-  const missionAssets = flown.assets.map((asset): MissionAsset => {
-    const delivered = flown.deliveredAssets.includes(asset);
-    return {
-      name: asset.name,
-      kind: asset.kind,
-      landingSiteName: siteNameOf(asset),
-      deliveredOnDay: delivered ? rules.deliveryDay(asset) : null,
-      lostOnDay: delivered ? null : failedOnDay,
-      crashed:
-        !delivered &&
-        asset.landsAtSite === true &&
-        flown.failedEvent !== undefined &&
-        asset.missionEvents.includes(flown.failedEvent.id),
-    };
-  });
   const assetsAtMars = operated.inService.map(
     ({ asset, fromDay, untilDay }): AssetAtMars => ({
       key: operatingKey(asset),
@@ -391,17 +271,7 @@ export function resolveTurn(
     timeline: {
       startDate: program.date,
       durationDays: launchWindowIntervalDays,
-      mission:
-        flown.vehicleName !== null
-          ? {
-              launchDay: 0,
-              arrivalDay: transferDays,
-              launchVehicleName: flown.vehicleName,
-              assetNames,
-              assets: missionAssets,
-              failedOnDay,
-            }
-          : null,
+      mission: missionOnTimeline(catalogue, rules, flown),
       landingSites: catalogue.landingSites.map(
         ({ name, latitude, longitude }) => ({ name, latitude, longitude }),
       ),
@@ -448,15 +318,7 @@ export function resolveTurn(
       fundingPayouts: funding.payouts,
       researchGrants: research.researchGrants,
       researchGrantMillions: research.researchGrantMillions,
-      failure: flown.failedEvent
-        ? {
-            missionEventName: flown.failedEvent.name,
-            assetsLost: flown.assets
-              .filter((asset) => !flown.deliveredAssets.includes(asset))
-              .map((asset) => asset.name),
-            publicSupportLost: flown.publicSupportLost,
-          }
-        : null,
+      failure: missionFailure(flown),
       cancellationReason: faded.cancellationReason,
     },
   };
