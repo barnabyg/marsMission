@@ -1,28 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { parseCatalogue } from "../catalogue/catalogue";
-import { createSimulation, type TurnPlan } from "./simulation";
-import { testCatalogueFiles } from "./testCatalogue";
+import type { TurnPlan } from "./simulation";
+import { withFailures } from "./testHelpers";
 
 describe("Contingencies for other Mission Events", () => {
-  /** A Simulation whose named Mission Events always fail, with no risk at any Landing Site otherwise. */
-  function failing(ids: string[], rescueFailureProbability = 0) {
-    const files = testCatalogueFiles();
-    const simulation = createSimulation(
-      parseCatalogue({
-        ...files,
-        program: { ...files.program, startingMoneyMillions: 5000 },
-        missionEvents: files.missionEvents.map((event) => ({
-          ...event,
-          failureProbability: ids.includes(event.id) ? 1 : 0,
-        })),
-        contingencies: files.contingencies.map((contingency) => ({
-          ...contingency,
-          rescueFailureProbability,
-        })),
-      }),
-    );
-    return { simulation, program: simulation.startProgram(42) };
-  }
+  const failing = (ids: string[], rescueFailureProbability = 0) =>
+    withFailures(ids, {
+      rescueFailureProbability,
+      startingMoneyMillions: 5000,
+    });
 
   const landing = "contingency:test-landing";
   const burn = "contingency:test-burn";
@@ -205,5 +190,42 @@ describe("Contingencies for other Mission Events", () => {
     expect(simulation.readProgram(restored).operatingAssets).toMatchObject([
       { serviceLifeDays: 25_000 },
     ]);
+  });
+
+  it("doesn't list an Asset as saved if a later Mission Event loses it", () => {
+    const { simulation, program } = failing(["test-burn", "test-arrival"]);
+    const { summary } = simulation.runTurn(
+      program,
+      {
+        mission: {
+          launchVehicleId: "test-vehicle",
+          assetIds: ["test-orbiter"],
+          contingencyIds: ["test-spare-engine"],
+        },
+      },
+      { [burn]: "use" },
+    );
+    expect(summary.failure?.assetsLost).toEqual(["Test Orbiter"]);
+    expect(summary.contingencies).toEqual([
+      expect.objectContaining({ rescued: true, assets: [] }),
+    ]);
+  });
+
+  it("shows the Service Life an Asset ended with after two rescues", () => {
+    const { simulation, program } = failing(["test-burn", "test-arrival"]);
+    const { summary } = simulation.runTurn(
+      program,
+      {
+        mission: {
+          launchVehicleId: "test-heavy",
+          assetIds: ["test-orbiter"],
+          contingencyIds: ["test-spare-engine", "test-reserve-fuel"],
+        },
+      },
+      { [burn]: "use", [arrival]: "use" },
+    );
+    expect(
+      summary.contingencies.map(({ assets }) => assets[0]?.serviceLifeDays),
+    ).toEqual([22_500, 22_500]);
   });
 });

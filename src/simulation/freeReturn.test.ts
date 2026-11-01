@@ -1,26 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parseCatalogue } from "../catalogue/catalogue";
-import { createSimulation, type TurnPlan } from "./simulation";
-import { testCatalogueFiles } from "./testCatalogue";
-import { setup } from "./testHelpers";
+import type { TurnPlan } from "./simulation";
+import { setup, withFailures } from "./testHelpers";
 
-function withFailures(failing: string[], rescueFailureProbability = 1) {
-  const files = testCatalogueFiles();
-  const simulation = createSimulation(
-    parseCatalogue({
-      ...files,
-      missionEvents: files.missionEvents.map((event) => ({
-        ...event,
-        failureProbability: failing.includes(event.id) ? 1 : 0,
-      })),
-      contingencies: files.contingencies.map((contingency) => ({
-        ...contingency,
-        rescueFailureProbability,
-      })),
-    }),
-  );
-  return { simulation, program: simulation.startProgram(42) };
-}
+/** With every Contingency's second roll failing, unless a test says otherwise. */
+const failingEvents = (failing: string[], rescueFailureProbability = 1) =>
+  withFailures(failing, { rescueFailureProbability });
 
 const orbiter: TurnPlan = {
   mission: {
@@ -90,7 +74,7 @@ describe("offering Free-return", () => {
 
 describe("a failed arrival burn on Free-return", () => {
   it("costs no Public Support and refunds the set share of the Assets on board", () => {
-    const { simulation, program } = withFailures(["test-arrival"]);
+    const { simulation, program } = failingEvents(["test-arrival"]);
     const { summary, program: next } = simulation.runTurn(program, orbiter);
     expect(summary.failure).toEqual({
       missionEventName: "Test arrival",
@@ -107,7 +91,7 @@ describe("a failed arrival burn on Free-return", () => {
   });
 
   it("says so in the events column, and when the Mission is back", () => {
-    const { simulation, program } = withFailures(["test-arrival"]);
+    const { simulation, program } = failingEvents(["test-arrival"]);
     const { timeline } = simulation.runTurn(program, orbiter);
     const failed = timeline.entries.find(
       ({ title }) => title === "Test arrival failed",
@@ -128,7 +112,7 @@ describe("a failed arrival burn on Free-return", () => {
   });
 
   it("brings back everything not yet delivered, including a lander", () => {
-    const { simulation, program } = withFailures(["test-arrival"]);
+    const { simulation, program } = failingEvents(["test-arrival"]);
     const { summary, timeline } = simulation.runTurn(program, orbiterAndLander);
     expect(summary.failure).toMatchObject({
       assetsLost: ["Test Orbiter", "Test Lander"],
@@ -144,7 +128,7 @@ describe("a failed arrival burn on Free-return", () => {
 
 describe("a Contingency on Free-return", () => {
   it("comes first, with both answers saying what Free-return will do", () => {
-    const { simulation, program } = withFailures(["test-arrival"]);
+    const { simulation, program } = failingEvents(["test-arrival"]);
     const { decisionPoint } = simulation.workOutTurn(program, insured);
     expect(decisionPoint?.decline.description).toContain("no Public Support");
     expect(decisionPoint?.decline.description).toContain("$200M");
@@ -153,7 +137,7 @@ describe("a Contingency on Free-return", () => {
   });
 
   it("leads to Free-return when it's declined, at no Public Support", () => {
-    const { simulation, program } = withFailures(["test-arrival"]);
+    const { simulation, program } = failingEvents(["test-arrival"]);
     const { summary } = simulation.runTurn(program, insured, {
       [decision]: "decline",
     });
@@ -165,7 +149,7 @@ describe("a Contingency on Free-return", () => {
   });
 
   it("leads to Free-return when the second roll fails, with its extra Public Support", () => {
-    const { simulation, program } = withFailures(["test-arrival"]);
+    const { simulation, program } = failingEvents(["test-arrival"]);
     const { summary } = simulation.runTurn(program, insured, {
       [decision]: "use",
     });
@@ -177,7 +161,7 @@ describe("a Contingency on Free-return", () => {
   });
 
   it("saves the Mission as usual when the second roll works", () => {
-    const { simulation, program } = withFailures(["test-arrival"], 0);
+    const { simulation, program } = failingEvents(["test-arrival"], 0);
     const { summary, timeline } = simulation.runTurn(program, insured, {
       [decision]: "use",
     });
@@ -189,7 +173,7 @@ describe("a Contingency on Free-return", () => {
 
 describe("other Mission Events failing on Free-return", () => {
   it("cost what they always do", () => {
-    const { simulation, program } = withFailures(["test-burn"]);
+    const { simulation, program } = failingEvents(["test-burn"]);
     const { summary, timeline } = simulation.runTurn(program, orbiter);
     expect(summary.failure).toEqual({
       missionEventName: "Test burn",
@@ -202,7 +186,7 @@ describe("other Mission Events failing on Free-return", () => {
   });
 
   it("crash a lander as usual, with an orbiter already delivered", () => {
-    const { simulation, program } = withFailures(["test-landing"]);
+    const { simulation, program } = failingEvents(["test-landing"]);
     const { summary, timeline } = simulation.runTurn(program, orbiterAndLander);
     expect(summary.failure).toMatchObject({
       missionEventName: "Test landing",

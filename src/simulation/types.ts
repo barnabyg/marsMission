@@ -9,7 +9,7 @@ export interface PlannedMission {
   assetChoices?: Record<string, AssetChoices>;
   /** The Contingencies bought, by id. Each one covers one Mission Event that this Mission goes through. */
   contingencyIds?: string[];
-  /** The route to Mars. Left out, it's the first the Catalogue lists. */
+  /** The Trajectory to Mars. Left out, it's the first the Catalogue lists. */
   trajectoryId?: string;
 }
 

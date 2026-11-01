@@ -22,6 +22,11 @@ import type {
   TurnSummary,
 } from "./types";
 
+/** One Decision Point and how it was answered, with the Assets that came through it. */
+type ContingencyUsed = Omit<TurnSummary["contingencies"][number], "assets"> & {
+  saved: Asset[];
+};
+
 /** What happened to the Turn's Mission, if there was one, as far as the answers so far take it. */
 export interface MissionOutcome {
   vehicleName: string | null;
@@ -39,7 +44,7 @@ export interface MissionOutcome {
   /** The first unanswered Decision Point, which the flight stopped at. */
   decisionPoint: DecisionPoint | null;
   /** How each Decision Point was answered, in the order they came. */
-  contingencies: TurnSummary["contingencies"];
+  contingencies: ContingencyUsed[];
   /** The Service Life of each Asset that a Contingency saved, which is what's left after every rescue it needed. */
   rescuedServiceLife: Map<Asset, number>;
 }
@@ -205,10 +210,7 @@ export function flyMission(
           contingencyName: contingency.name,
           answer,
           rescued: true,
-          assets: onBoard.map((asset) => ({
-            name: asset.name,
-            serviceLifeDays: outcome.rescuedServiceLife.get(asset) ?? 0,
-          })),
+          saved: onBoard,
         });
         outcome.entries.push({
           ...happened(event),
@@ -223,7 +225,7 @@ export function flyMission(
         contingencyName: contingency.name,
         answer,
         rescued: false,
-        assets: [],
+        saved: [],
       });
     }
 
@@ -316,6 +318,24 @@ export function missionOnTimeline(
   };
 }
 
+/**
+ * What the Turn summary says about each Decision Point. It goes by how the flight ended, so an Asset saved
+ * and then lost to a later Mission Event isn't listed, and one saved twice shows the Service Life it ended with.
+ */
+export function contingenciesAnswered(
+  flown: MissionOutcome,
+): TurnSummary["contingencies"] {
+  return flown.contingencies.map(({ saved, ...answered }) => ({
+    ...answered,
+    assets: saved
+      .filter((asset) => flown.deliveredAssets.includes(asset))
+      .map((asset) => ({
+        name: asset.name,
+        serviceLifeDays: flown.rescuedServiceLife.get(asset) ?? 0,
+      })),
+  }));
+}
+
 /** What the Turn summary says about a Mission that failed, or null if none did. */
 export function missionFailure(flown: MissionOutcome): TurnSummary["failure"] {
   return flown.failedEvent
@@ -335,8 +355,9 @@ const partOfTheFlight = ({ kind }: TimelineEntry) =>
   kind === "missionEvent" || kind === "decisionPoint";
 
 /**
- * What Mission Mode plays up to a Decision Point: the flight so far, and what else happens in the Turn before that day.
- * Everything else comes from the Turn worked out as if the answer were no, and playback can't get as far as what differs.
+ * What Mission Mode plays up to a Decision Point: the flight so far, and what else happens in the Turn before that
+ * day, worked out as if the answer were no. The answer can still change one thing already shown: a Funding Threshold's
+ * day depends on Public Support later in the Turn, so an answer can move it, and playback carries on from there.
  */
 export function timelineUpToDecision(
   asIfDeclined: Timeline,

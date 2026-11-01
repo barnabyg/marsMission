@@ -92,9 +92,9 @@ export function invalidStates(
     ],
     [
       summary.contingencies.some(
-        ({ rescued, assets }) => rescued !== assets.length > 0,
+        ({ rescued, assets }) => !rescued && assets.length > 0,
       ),
-      "A Contingency's outcome doesn't match the Assets it saved.",
+      "A Contingency that didn't work saved some Assets.",
     ],
     [
       summary.contingencies.some(({ answer, rescued }) => {

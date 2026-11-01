@@ -1,31 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { parseCatalogue, type CatalogueFiles } from "../catalogue/catalogue";
+import { parseCatalogue } from "../catalogue/catalogue";
 import { createSimulation, type TurnPlan } from "./simulation";
 import { testCatalogueFiles } from "./testCatalogue";
-import { sendOrbiter, setup } from "./testHelpers";
-
-/** A Simulation whose named Mission Events always fail, with these changes to the Reserve fuel. */
-function withFailures(
-  failing: string[],
-  reserveFuel: Partial<CatalogueFiles["contingencies"][number]> = {},
-) {
-  const files = testCatalogueFiles();
-  const simulation = createSimulation(
-    parseCatalogue({
-      ...files,
-      missionEvents: files.missionEvents.map((event) => ({
-        ...event,
-        failureProbability: failing.includes(event.id) ? 1 : 0,
-      })),
-      contingencies: files.contingencies.map((contingency) =>
-        contingency.id === "test-reserve-fuel"
-          ? { ...contingency, ...reserveFuel }
-          : contingency,
-      ),
-    }),
-  );
-  return { simulation, program: simulation.startProgram(42) };
-}
+import { sendOrbiter, setup, withFailures } from "./testHelpers";
 
 const insured: TurnPlan = {
   mission: {
@@ -97,7 +74,7 @@ describe("buying a Contingency", () => {
         },
       }).problems;
     expect(problemsWith(["nope"])[0]).toContain('"nope"');
-    expect(problemsWith(["test-thrusters"])[0]).toContain("Backup thrusters");
+    expect(problemsWith(["test-thrusters"])[0]).toContain("Retro thrusters");
     expect(
       problemsWith(["test-reserve-fuel", "test-reserve-fuel"])[0],
     ).toContain("twice");

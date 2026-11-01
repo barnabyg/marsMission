@@ -1,5 +1,5 @@
 import { createSimulation, type TurnPlan } from "./simulation";
-import type { CatalogueFiles } from "../catalogue/catalogue";
+import { parseCatalogue, type CatalogueFiles } from "../catalogue/catalogue";
 import { testCatalogue, testCatalogueFiles } from "./testCatalogue";
 
 export const sendOrbiter: TurnPlan = {
@@ -15,6 +15,36 @@ export const sendLander: TurnPlan = {
 };
 
 export const skipTurn: TurnPlan = { mission: null };
+
+/** A Simulation whose named Mission Events always fail and whose others never do, with these changes. */
+export function withFailures(
+  failing: string[],
+  {
+    rescueFailureProbability = 0,
+    startingMoneyMillions,
+  }: { rescueFailureProbability?: number; startingMoneyMillions?: number } = {},
+) {
+  const files = testCatalogueFiles();
+  const simulation = createSimulation(
+    parseCatalogue({
+      ...files,
+      program: {
+        ...files.program,
+        startingMoneyMillions:
+          startingMoneyMillions ?? files.program.startingMoneyMillions,
+      },
+      missionEvents: files.missionEvents.map((event) => ({
+        ...event,
+        failureProbability: failing.includes(event.id) ? 1 : 0,
+      })),
+      contingencies: files.contingencies.map((contingency) => ({
+        ...contingency,
+        rescueFailureProbability,
+      })),
+    }),
+  );
+  return { simulation, program: simulation.startProgram(42) };
+}
 
 export function setup() {
   const simulation = createSimulation(testCatalogue());

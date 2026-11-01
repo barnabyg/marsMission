@@ -368,7 +368,7 @@ export function testCatalogueFiles(): CatalogueFiles {
       },
       {
         id: "test-thrusters",
-        name: "Backup thrusters",
+        name: "Retro thrusters",
         description: "A second try at landing.",
         missionEvent: "test-landing",
         costMillions: 60,

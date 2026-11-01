@@ -72,14 +72,16 @@ export function TurnSummaryScreen({
                     {`${missionEventName}: ${
                       answer === "decline"
                         ? `${contingencyName} not used`
-                        : rescued
-                          ? `saved by ${contingencyName}. ${assets
-                              .map(
-                                ({ name, serviceLifeDays }) =>
-                                  `${name} now has a Service Life of ${serviceLifeDays} days`,
-                              )
-                              .join(", ")}`
-                          : `${contingencyName} used, but it couldn't save the Mission`
+                        : rescued && assets.length === 0
+                          ? `saved by ${contingencyName}, but the Mission was lost later`
+                          : rescued
+                            ? `saved by ${contingencyName}. ${assets
+                                .map(
+                                  ({ name, serviceLifeDays }) =>
+                                    `${name} now has a Service Life of ${serviceLifeDays} days`,
+                                )
+                                .join(", ")}`
+                            : `${contingencyName} used, but it couldn't save the Mission`
                     }`}
                   </GameText>
                 </li>

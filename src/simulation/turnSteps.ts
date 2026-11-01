@@ -1,6 +1,7 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { carryOutSurvey, operateAssets } from "./assetsInService";
 import {
+  contingenciesAnswered,
   missionFailure,
   missionOnTimeline,
   type MissionOutcome,
@@ -336,7 +337,7 @@ export function resolveTurn(
       researchGrants: research.researchGrants,
       researchGrantMillions: research.researchGrantMillions,
       failure: missionFailure(flown),
-      contingencies: flown.contingencies,
+      contingencies: contingenciesAnswered(flown),
       cancellationReason: faded.cancellationReason,
     },
   };
