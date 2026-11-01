@@ -64,6 +64,10 @@ export function assetsOperatingOn(
         asset.landingSiteName
           ? `${asset.name} at ${asset.landingSiteName}`
           : asset.name
-      }: ${asset.activityName}`,
+      }: ${asset.activityName}${
+        asset.cutServiceLifeDays === undefined
+          ? ""
+          : `, Service Life cut to ${asset.cutServiceLifeDays} days`
+      }`,
   );
 }

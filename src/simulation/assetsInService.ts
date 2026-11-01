@@ -57,7 +57,11 @@ export function operateAssets(
   rules: Rules,
   program: Program,
   plan: TurnPlan,
-  flown: { deliveredAssets: Asset[]; landingSite: LandingSite | undefined },
+  flown: {
+    deliveredAssets: Asset[];
+    landingSite: LandingSite | undefined;
+    rescuedServiceLife: Map<Asset, number>;
+  },
 ): {
   inService: AssetInService[];
   entries: (AssetEndedEntry | AssetFailedEntry)[];
@@ -70,7 +74,9 @@ export function operateAssets(
       kind: asset.kind,
       arrivedOn: addDays(program.date, rules.deliveryDay(asset)),
       landingSiteId: asset.landsAtSite ? (flown.landingSite?.id ?? null) : null,
-      serviceLifeDays: rules.serviceLifeFor(plan.mission, asset).days,
+      serviceLifeDays:
+        flown.rescuedServiceLife.get(asset) ??
+        rules.serviceLifeFor(plan.mission, asset).days,
       reliabilityLevelId: rules.assetReliabilityFor(plan.mission, asset).id,
       activityId: rules.activityFor(plan.mission, asset).id,
     },

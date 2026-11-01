@@ -1,0 +1,15 @@
+[
+  {
+    "id": "reserve-fuel",
+    "name": "Reserve fuel",
+    "description": "Extra fuel for a second try at the burn into Mars orbit.",
+    "missionEvent": "mars-orbit-insertion",
+    "costMillions": 120,
+    "massTonnes": 0.2,
+    "rescueFailureProbability": 0.4,
+    "serviceLifeLossPercent": 30,
+    "extraPublicSupportLoss": 15,
+    "troubleDescription": "The engine cut out early, and the spacecraft is about to fly past Mars. The reserve fuel could be used for a second burn.",
+    "rescueDescription": "The second burn on the reserve fuel caught the spacecraft, and it is in orbit around Mars, but its tanks are nearly dry."
+  }
+]

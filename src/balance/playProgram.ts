@@ -1,6 +1,10 @@
 import type {
+  DecisionAnswers,
   Program,
+  ProgramView,
   Simulation,
+  TurnPlan,
+  TurnResult,
   TurnSummary,
 } from "../simulation/simulation";
 import { invalidStates } from "./invalidStates";
@@ -23,6 +27,9 @@ export interface TurnRecord {
   assetsFailed: number;
   launched: boolean;
   missionFailed: boolean;
+  /** How many Decision Points came up, and how many of them ended with the Assets saved. */
+  decisionPoints: number;
+  rescues: number;
 }
 
 /** What a strategy may ask about the Program it is planning for, which it never sees itself. */
@@ -64,7 +71,30 @@ function recordOf(
     assetsFailed: summary.assetsFailed.length,
     launched,
     missionFailed: summary.failure !== null,
+    decisionPoints: summary.contingencies.length,
+    rescues: summary.contingencies.filter(({ rescued }) => rescued).length,
   };
+}
+
+/** Works out a Turn, answering each Decision Point as the strategy would, one at a time as a player does. */
+function playTurn(
+  simulation: Simulation,
+  strategy: Strategy,
+  program: Program,
+  view: ProgramView,
+  plan: TurnPlan,
+): TurnResult {
+  let answers: DecisionAnswers = {};
+  let progress = simulation.workOutTurn(program, plan);
+  while (progress.decisionPoint) {
+    const { decisionPoint } = progress;
+    answers = {
+      ...answers,
+      [decisionPoint.id]: strategy.answer?.(decisionPoint, view) ?? "use",
+    };
+    progress = simulation.workOutTurn(program, plan, answers);
+  }
+  return progress.result;
 }
 
 /**
@@ -90,7 +120,7 @@ export function playProgram(
     const { problems } = simulation.validatePlan(program, plan);
     if (problems.length > 0) throw fail(problems);
 
-    const result = simulation.runTurn(program, plan);
+    const result = playTurn(simulation, strategy, program, view, plan);
     const after = simulation.readProgram(result.program);
     const invalid = invalidStates(view, result.summary, after);
     if (invalid.length > 0) throw fail(invalid);

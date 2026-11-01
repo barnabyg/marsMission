@@ -46,6 +46,41 @@ export function TurnSummaryScreen({
           </ul>
         </section>
       )}
+      {summary.contingencies.length > 0 && (
+        <section data-testid="summary-contingencies">
+          <h2>
+            <GameText>Decision Points</GameText>
+          </h2>
+          <ul>
+            {summary.contingencies.map(
+              ({
+                missionEventName,
+                contingencyName,
+                answer,
+                rescued,
+                assets,
+              }) => (
+                <li key={missionEventName}>
+                  <GameText>
+                    {`${missionEventName}: ${
+                      answer === "decline"
+                        ? `${contingencyName} not used`
+                        : rescued
+                          ? `saved by ${contingencyName}. ${assets
+                              .map(
+                                ({ name, serviceLifeDays }) =>
+                                  `${name} now has a Service Life of ${serviceLifeDays} days`,
+                              )
+                              .join(", ")}`
+                          : `${contingencyName} used, but it couldn't save the Mission`
+                    }`}
+                  </GameText>
+                </li>
+              ),
+            )}
+          </ul>
+        </section>
+      )}
       {summary.milestones.length > 0 && (
         <section>
           <h2>

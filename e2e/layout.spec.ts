@@ -222,6 +222,27 @@ for (const size of screenSizes) {
       }
     });
 
+    test("Planning Mode fits on one screen with every Contingency on offer bought", async ({
+      page,
+    }) => {
+      await openBusyProgram(page);
+      await chooseAssets(page, allAssets);
+      const contingencies = page.getByRole("checkbox", {
+        name: /Contingency/,
+      });
+      await expect(contingencies.first()).toBeVisible();
+      for (const contingency of await contingencies.all()) {
+        await contingency.check();
+      }
+      await expect(page.getByTestId("landing-site-details")).toBeVisible();
+      expect(await somethingScrolls(page)).toBe(false);
+      for (const name of ["Launch Mission", "End Turn without launching"]) {
+        await expect(page.getByRole("button", { name })).toBeInViewport({
+          ratio: 1,
+        });
+      }
+    });
+
     test("Planning Mode fits on one screen with notes that nothing is left to Survey", async ({
       page,
     }) => {

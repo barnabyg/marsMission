@@ -1,4 +1,6 @@
 import type {
+  DecisionAnswer,
+  DecisionPoint,
   PlannedActivity,
   PlannedAsset,
   ProgramView,
@@ -25,6 +27,8 @@ export interface Strategy {
   name: string;
   description: string;
   plan(view: ProgramView, tools: PlanningTools): TurnPlan;
+  /** What it does at a Decision Point. It uses the Contingency it bought unless it says otherwise. */
+  answer?(decisionPoint: DecisionPoint, view: ProgramView): DecisionAnswer;
 }
 
 type Aim = "science" | "grants";
@@ -55,6 +59,8 @@ interface PlayStyle {
   reserveMillions?: number;
   /** Launches nothing after this Turn. */
   lastLaunchTurn?: number;
+  /** Buys every Contingency this Mission can have and afford, and what it does when one could be used. */
+  contingencies?: DecisionAnswer;
 }
 
 const surveyActivity = (activities: PlannedActivity[]) =>
@@ -193,24 +199,36 @@ function missionsFor(
         : [planned.reliabilityLevelId];
   const events = tools.previewMission(mission);
 
-  return serviceLives.flatMap((serviceLifeDays) =>
-    levels.map((level) => ({
-      ...mission,
-      ...(playStyle.missionEventReliability
-        ? {
-            reliability: Object.fromEntries(
-              events.map(({ eventId }) => [eventId, level]),
-            ),
-          }
-        : {}),
-      assetChoices: {
-        [asset.id]: {
-          activityId,
-          serviceLifeDays,
-          ...(assetLevels ? { reliabilityLevelId: level } : {}),
+  // Without them comes last, for when they cost too much for this Program.
+  const contingencyChoices = playStyle.contingencies
+    ? [
+        events.flatMap(({ contingency }) =>
+          contingency ? [contingency.id] : [],
+        ),
+        [],
+      ]
+    : [[]];
+  return contingencyChoices.flatMap((contingencyIds) =>
+    serviceLives.flatMap((serviceLifeDays) =>
+      levels.map((level) => ({
+        ...mission,
+        ...(contingencyIds.length > 0 ? { contingencyIds } : {}),
+        ...(playStyle.missionEventReliability
+          ? {
+              reliability: Object.fromEntries(
+                events.map(({ eventId }) => [eventId, level]),
+              ),
+            }
+          : {}),
+        assetChoices: {
+          [asset.id]: {
+            activityId,
+            serviceLifeDays,
+            ...(assetLevels ? { reliabilityLevelId: level } : {}),
+          },
         },
-      },
-    })),
+      })),
+    ),
   );
 }
 
@@ -241,6 +259,9 @@ function playStyle(
   return {
     name,
     description,
+    ...(chosen.contingencies === "decline"
+      ? { answer: () => "decline" as const }
+      : {}),
     plan(view, tools) {
       const { changes, surveying } = operatingActivities(view, chosen);
       const inService = view.operatingAssets.filter(
@@ -486,6 +507,16 @@ export const strategies: Strategy[] = [
     "steady: rover at once",
     "As steady: Soil analysis, but keeping no money back, so the first landing is a rover.",
     { ...steadyRovers, reserveMillions: 0 },
+  ),
+  playStyle(
+    "steady: Contingency, used",
+    "As steady: Soil analysis, buying every Contingency it can afford and using it when it's needed.",
+    { ...steadyRovers, contingencies: "use" },
+  ),
+  playStyle(
+    "steady: Contingency, declined",
+    "As steady: Soil analysis, buying every Contingency it can afford and never using it, to show what they cost.",
+    { ...steadyRovers, contingencies: "decline" },
   ),
   playStyle(
     "steady: Survey once",

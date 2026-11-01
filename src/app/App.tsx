@@ -65,7 +65,10 @@ export function App({ services, firstScreen }: AppProps) {
         onSubmit={(plan: TurnPlan) => {
           setScreen({
             mode: "mission",
-            result: simulation.runTurn(program, plan),
+            program,
+            plan,
+            answers: {},
+            progress: simulation.workOutTurn(program, plan),
           });
         }}
         onRetire={() => {
@@ -90,14 +93,30 @@ export function App({ services, firstScreen }: AppProps) {
     );
   }
 
-  const { result } = screen;
   if (screen.mode === "mission") {
+    const { progress } = screen;
     return (
       <MissionMode
-        timeline={result.timeline}
+        timeline={progress.timeline}
+        decisionPoint={progress.decisionPoint}
+        onAnswer={(decisionId, answer) => {
+          const answers = { ...screen.answers, [decisionId]: answer };
+          setScreen({
+            ...screen,
+            answers,
+            progress: simulation.workOutTurn(
+              screen.program,
+              screen.plan,
+              answers,
+            ),
+          });
+        }}
         initialSpeed={missionSpeed}
         onSpeedChange={setMissionSpeed}
         onFinished={() => {
+          // Mission Mode can't finish a Turn that still has a Decision Point to answer.
+          if (progress.decisionPoint) return;
+          const { result } = progress;
           // The player has now seen how the Turn ended, so a cancelled Program can't be reopened.
           if (simulation.readProgram(result.program).status.kind !== "active") {
             saveStore.clear("automatic");
@@ -108,6 +127,7 @@ export function App({ services, firstScreen }: AppProps) {
     );
   }
 
+  const { result } = screen;
   return (
     <TurnSummaryScreen
       summary={result.summary}

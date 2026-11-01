@@ -6,7 +6,9 @@ export const speeds = [1, 5, 10] as const;
 /** The parts of a Timeline that decide how it plays. Its entries are in the order they happen. */
 export interface PlaybackTimeline {
   durationDays: number;
-  entries: readonly { day: number }[];
+  entries: readonly { day: number; title?: string }[];
+  /** The day of the Decision Point it stops at, which play can't go past until it's answered. */
+  decisionDay?: number | null;
 }
 
 /** How far through a Turn Mission Mode has got. Playback only displays a Timeline and can't change it. */
@@ -82,6 +84,53 @@ export function pausePlayback(state: PlaybackState): PlaybackState {
   return { ...state, paused: true };
 }
 
+/** Whether play is held at a Decision Point. No speed gets it moving again, only an answer. */
+export function atDecisionPoint(
+  state: Pick<PlaybackState, "day">,
+  { decisionDay }: Pick<PlaybackTimeline, "decisionDay">,
+): boolean {
+  return decisionDay != null && state.day >= decisionDay;
+}
+
+/** Goes straight to the Decision Point, for End Turn, which can't skip it. */
+export function skipToDecisionPoint(
+  state: PlaybackState,
+  timeline: PlaybackTimeline,
+): PlaybackState {
+  return timeline.decisionDay == null
+    ? state
+    : atDay(state, timeline, Math.max(state.day, timeline.decisionDay));
+}
+
+/**
+ * Carries on from the same moment on the Timeline that an answer gives. What has already happened keeps
+ * the moment it happened, and anything that's new as of now, such as the answer's outcome, happens now.
+ */
+export function continueOnTimeline(
+  state: PlaybackState,
+  previous: PlaybackTimeline,
+  timeline: PlaybackTimeline,
+): PlaybackState {
+  const earlier = previous.entries
+    .slice(0, state.entriesHappened)
+    .map((entry, index) => ({
+      entry,
+      playedMs: state.entriesPlayedMs[index] ?? state.playedMs,
+    }));
+  const entriesPlayedMs = timeline.entries
+    .filter((entry) => entry.day <= state.day)
+    .map((entry) => {
+      const index = earlier.findIndex(
+        (seen) =>
+          seen.entry.day === entry.day && seen.entry.title === entry.title,
+      );
+      return index < 0
+        ? state.playedMs
+        : (earlier.splice(index, 1)[0]?.playedMs ?? state.playedMs);
+    });
+  return atDay({ ...state, entriesPlayedMs }, timeline, state.day);
+}
+
 /** Moves playback on by some real time. `timeScale` is the development-only setting. */
 export function advancePlayback(
   state: PlaybackState,
@@ -89,13 +138,23 @@ export function advancePlayback(
   realMs: number,
   timeScale: number,
 ): PlaybackState {
-  if (state.paused || state.finished || realMs <= 0) return state;
+  if (
+    state.paused ||
+    state.finished ||
+    realMs <= 0 ||
+    atDecisionPoint(state, timeline)
+  ) {
+    return state;
+  }
   const daysPerMs =
     (timeline.durationDays / realMsPerTurn) * state.speed * timeScale;
   return atDay(
     { ...state, playedMs: state.playedMs + realMs },
     timeline,
-    Math.min(state.day + realMs * daysPerMs, timeline.durationDays),
+    Math.min(
+      state.day + realMs * daysPerMs,
+      timeline.decisionDay ?? timeline.durationDays,
+    ),
   );
 }
 

@@ -6,6 +6,7 @@ export type ReliabilityLevel = Catalogue["reliabilityLevels"][number];
 export type Asset = Catalogue["assets"][number];
 export type LandingSite = Catalogue["landingSites"][number];
 export type Activity = Catalogue["activities"][number];
+export type Contingency = Catalogue["contingencies"][number];
 
 const millisecondsPerDay = 86_400_000;
 
@@ -92,6 +93,17 @@ export function createRules(catalogue: Catalogue) {
     eventId: string,
   ): ReliabilityLevel {
     return levelOrCheapest(mission?.reliability?.[eventId]);
+  }
+
+  /** The Contingency a Mission has bought for a Mission Event, if it has. */
+  function contingencyFor(
+    mission: PlannedMission | null,
+    eventId: string,
+  ): Contingency | undefined {
+    return catalogue.contingencies.find(
+      ({ id, missionEvent }) =>
+        missionEvent === eventId && mission?.contingencyIds?.includes(id),
+    );
   }
 
   /** The Service Life a Mission has chosen for an Asset, which is the shortest unless it chose another. */
@@ -250,6 +262,7 @@ export function createRules(catalogue: Catalogue) {
     landingRisk,
     landingSiteById,
     reliabilityLevelFor,
+    contingencyFor,
     failureProbability,
     riskBandFor,
     missionEventsFor,

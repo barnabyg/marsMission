@@ -1,7 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { carryOutSurvey, operateAssets } from "./assetsInService";
 import {
-  flyMission,
   missionFailure,
   missionOnTimeline,
   type MissionOutcome,
@@ -144,17 +143,17 @@ function fadePublicSupport(catalogue: Catalogue, publicSupport: number) {
   };
 }
 
-/** Works out a whole Turn from a plan that has already passed validation. */
+/** Works out a whole Turn from a plan that has already passed validation, and how its Mission flew. */
 export function resolveTurn(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
   plan: TurnPlan,
   costMillions: number,
+  flown: MissionOutcome,
 ): TurnResult {
   const { launchWindowIntervalDays } = catalogue.program;
 
-  const flown = flyMission(catalogue, rules, program, plan);
   const { failedOnDay } = flown;
   const arrivalAwards = awardArrivalMilestones(
     catalogue,
@@ -225,18 +224,27 @@ export function resolveTurn(
     costMillions +
     sum(funding.payouts.map(({ payoutMillions }) => payoutMillions)) +
     research.researchGrantMillions;
+  const cutServiceLife = new Map(
+    [...flown.rescuedServiceLife].map(([asset, days]) => [asset.id, days]),
+  );
   const assetsAtMars = operated.inService.map(
-    ({ asset, fromDay, untilDay }): AssetAtMars => ({
-      key: operatingKey(asset),
-      name: asset.name,
-      kind: asset.kind,
-      landingSiteName: rules.landingSiteById(asset.landingSiteId)?.name ?? null,
-      activityName: rules.activityNameOf(asset),
-      surfaceMotion: rules.surfaceMotionOf(asset),
-      arrivedOnDay: daysBetween(program.date, asset.arrivedOn),
-      fromDay,
-      untilDay,
-    }),
+    ({ asset, fromDay, untilDay }): AssetAtMars => {
+      const cutServiceLifeDays =
+        fromDay > 0 ? cutServiceLife.get(asset.assetId) : undefined;
+      return {
+        key: operatingKey(asset),
+        name: asset.name,
+        kind: asset.kind,
+        landingSiteName:
+          rules.landingSiteById(asset.landingSiteId)?.name ?? null,
+        activityName: rules.activityNameOf(asset),
+        surfaceMotion: rules.surfaceMotionOf(asset),
+        arrivedOnDay: daysBetween(program.date, asset.arrivedOn),
+        fromDay,
+        untilDay,
+        ...(cutServiceLifeDays === undefined ? {} : { cutServiceLifeDays }),
+      };
+    },
   );
 
   return {
@@ -271,6 +279,7 @@ export function resolveTurn(
     timeline: {
       startDate: program.date,
       durationDays: launchWindowIntervalDays,
+      decisionDay: null,
       mission: missionOnTimeline(catalogue, rules, flown),
       landingSites: catalogue.landingSites.map(
         ({ name, latitude, longitude }) => ({ name, latitude, longitude }),
@@ -319,6 +328,7 @@ export function resolveTurn(
       researchGrants: research.researchGrants,
       researchGrantMillions: research.researchGrantMillions,
       failure: missionFailure(flown),
+      contingencies: flown.contingencies,
       cancellationReason: faded.cancellationReason,
     },
   };

@@ -370,6 +370,44 @@ describe("invalid data files", () => {
     expect(message).toContain("firstLaunchWindow");
   });
 
+  it("reject a Contingency for a Mission Event that doesn't exist", () => {
+    const files = testCatalogueFiles();
+    const [first, ...rest] = files.contingencies;
+    if (!first) throw new Error("Expected a Contingency");
+    const message = errorFrom({
+      ...files,
+      contingencies: [{ ...first, missionEvent: "nope" }, ...rest],
+    });
+    expect(message).toContain("contingencies.json");
+    expect(message).toContain('"nope"');
+  });
+
+  it("reject two Contingencies for one Mission Event", () => {
+    const files = testCatalogueFiles();
+    const [first] = files.contingencies;
+    if (!first) throw new Error("Expected a Contingency");
+    const message = errorFrom({
+      ...files,
+      contingencies: [first, { ...first, id: "another" }],
+    });
+    expect(message).toContain("more than one Contingency");
+  });
+
+  it("reject a Contingency with a negative mass or an impossible loss of Service Life", () => {
+    const files = testCatalogueFiles();
+    const [first, ...rest] = files.contingencies;
+    if (!first) throw new Error("Expected a Contingency");
+    const message = errorFrom({
+      ...files,
+      contingencies: [
+        { ...first, massTonnes: -1, serviceLifeLossPercent: 100 },
+        ...rest,
+      ],
+    });
+    expect(message).toContain("massTonnes");
+    expect(message).toContain("serviceLifeLossPercent");
+  });
+
   it("reject a transfer that wouldn't finish within the Turn", () => {
     const files = testCatalogueFiles();
     const message = errorFrom({

@@ -84,6 +84,32 @@ export function invalidStates(
       "A Milestone was awarded twice or lost.",
     ],
     [
+      summary.contingencies.some(
+        ({ rescued, assets }) => rescued !== assets.length > 0,
+      ),
+      "A Contingency's outcome doesn't match the Assets it saved.",
+    ],
+    [
+      summary.contingencies.some(({ answer, rescued }) => {
+        return answer === "decline" && rescued;
+      }),
+      "A Contingency that was declined saved something.",
+    ],
+    [
+      summary.contingencies
+        .flatMap(({ assets }) => assets)
+        .some(({ serviceLifeDays }) => serviceLifeDays <= 0),
+      "A Contingency left an Asset with no Service Life.",
+    ],
+    [
+      summary.failure !== null &&
+        summary.contingencies.some(
+          ({ missionEventName, rescued }) =>
+            rescued && missionEventName === summary.failure?.missionEventName,
+        ),
+      "A Mission Event both failed and was saved.",
+    ],
+    [
       before.landingSites.some(({ id }) => !siteIds.includes(id)),
       "A known Landing Site was forgotten.",
     ],

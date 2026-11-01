@@ -7,6 +7,8 @@ export interface PlannedMission {
   landingSiteId?: string;
   /** The choices made for each Asset, by id. Anything left out gets the shortest Service Life, the cheapest Reliability and the first Activity it lists. */
   assetChoices?: Record<string, AssetChoices>;
+  /** The Contingencies bought, by id. Each one covers one Mission Event that this Mission goes through. */
+  contingencyIds?: string[];
 }
 
 export interface AssetChoices {
@@ -195,7 +197,17 @@ export interface AssetFailedEntry {
   description: string;
 }
 
+/** A Mission Event has gone wrong and a Contingency could still save it. What the player chose comes as the next entry. */
+export interface DecisionPointEntry {
+  kind: "decisionPoint";
+  day: number;
+  eventId: string;
+  title: string;
+  description: string;
+}
+
 export type TimelineEntry =
+  | DecisionPointEntry
   | AssetFailedEntry
   | AssetEndedEntry
   | SurveyEntry
@@ -254,6 +266,15 @@ export interface TurnSummary {
     assetsLost: string[];
     publicSupportLost: number;
   } | null;
+  /** How each Decision Point in this Turn was answered, and what came of it. */
+  contingencies: {
+    missionEventName: string;
+    contingencyName: string;
+    answer: DecisionAnswer;
+    rescued: boolean;
+    /** The Assets it saved, with the Service Life each has left to start with. */
+    assets: { name: string; serviceLifeDays: number }[];
+  }[];
   /** Why the Program was cancelled at the end of this Turn, if it was. */
   cancellationReason: string | null;
 }
@@ -291,12 +312,16 @@ export interface AssetAtMars {
   fromDay: number;
   /** The day of the Turn it stops operating, or null if it lasts beyond the Turn. */
   untilDay: number | null;
+  /** Its Service Life, if a Contingency cut it short on this Turn's Mission. */
+  cutServiceLifeDays?: number;
 }
 
 /** What happened in a Turn, for Mission Mode to display. */
 export interface Timeline {
   startDate: string;
   durationDays: number;
+  /** The day of the Decision Point this Timeline stops at, or null if it runs to the end of the Turn. */
+  decisionDay: number | null;
   /** The Mission launched this Turn, if any. */
   mission: {
     launchDay: number;
@@ -319,6 +344,32 @@ export interface TurnResult {
   timeline: Timeline;
   summary: TurnSummary;
 }
+
+export type DecisionAnswer = "use" | "decline";
+
+/** The answers to a Turn's Decision Points so far, by each one's `id`. */
+export type DecisionAnswers = Readonly<Record<string, DecisionAnswer>>;
+
+/** A choice the player must make before the Turn can go on. There is no time limit. */
+export interface DecisionPoint {
+  /** How the answers name this one. */
+  id: string;
+  day: number;
+  missionEventName: string;
+  contingencyName: string;
+  description: string;
+  use: {
+    /** The chance that the second roll fails too, as a rough figure. */
+    riskBand: string;
+    description: string;
+  };
+  decline: { description: string };
+}
+
+/** A Turn worked out as far as it can go: to its end, or to the first Decision Point with no answer yet. */
+export type TurnProgress =
+  | { decisionPoint: null; timeline: Timeline; result: TurnResult }
+  | { decisionPoint: DecisionPoint; timeline: Timeline };
 
 /** An Asset on a planned Mission as Planning Mode shows it. */
 export interface PlannedAsset {
@@ -351,4 +402,15 @@ export interface PlannedMissionEvent {
     costMillions: number;
     riskBand: string;
   }[];
+  /** The Contingency on offer for this Mission Event, if it has one. */
+  contingency: {
+    id: string;
+    name: string;
+    description: string;
+    costMillions: number;
+    massTonnes: number;
+    /** The chance that using it fails, as a rough figure. */
+    riskBand: string;
+    bought: boolean;
+  } | null;
 }

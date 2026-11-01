@@ -2,48 +2,68 @@ import type { Catalogue } from "../catalogue/catalogue";
 import {
   roll,
   type Asset,
+  type Contingency,
   type LandingSite,
   type MissionEvent,
   type Rules,
 } from "./rules";
 import type {
+  DecisionAnswers,
+  DecisionPoint,
+  DecisionPointEntry,
   MissionAsset,
   MissionEventEntry,
   Program,
   Timeline,
+  TimelineEntry,
   TurnPlan,
   TurnSummary,
 } from "./types";
 
-/** What happened to the Turn's Mission, if there was one. */
+/** What happened to the Turn's Mission, if there was one, as far as the answers so far take it. */
 export interface MissionOutcome {
   vehicleName: string | null;
   assets: Asset[];
   /** The Mission Events that happened, ending with the one that failed if one did. */
-  entries: MissionEventEntry[];
+  entries: (MissionEventEntry | DecisionPointEntry)[];
   failedEvent: MissionEvent | undefined;
   /** The day of the failed Mission Event, if there was one. */
   failedOnDay: number | null;
   deliveredAssets: Asset[];
   publicSupportLost: number;
   landingSite: LandingSite | undefined;
+  /** The first unanswered Decision Point, which the flight stopped at. */
+  decisionPoint: DecisionPoint | null;
+  /** How each Decision Point was answered, in the order they came. */
+  contingencies: TurnSummary["contingencies"];
+  /** The Service Life of each Asset that a Contingency saved, which is what's left after every rescue it needed. */
+  rescuedServiceLife: Map<Asset, number>;
 }
+
+// Slow to create, and balance runs fly a great many Missions.
+const listOfKinds = new Intl.ListFormat("en");
 
 /** What is landing, to start a sentence, such as "The rover". Always in the Catalogue's order, whatever order the Mission lists them. */
 function whatLands(catalogue: Catalogue, assets: Asset[]): string {
   const kinds = catalogue.assets
     .filter((asset) => asset.landsAtSite && assets.includes(asset))
     .map(({ kind }) => `the ${kind}`);
-  const named = new Intl.ListFormat("en").format(new Set(kinds));
+  const named = listOfKinds.format(new Set(kinds));
   return named.charAt(0).toUpperCase() + named.slice(1);
 }
 
-/** Rolls each of the Mission's Mission Events in turn, up to the first that fails. */
+const decisionIdOf = (event: MissionEvent) => `contingency:${event.id}`;
+
+/**
+ * Rolls each of the Mission's Mission Events in turn, up to the first that fails for good or the first Decision
+ * Point with no answer yet. Each roll depends only on the seed, the Turn and its key, so an answer can't change another.
+ */
 export function flyMission(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
   plan: TurnPlan,
+  answers: DecisionAnswers,
 ): MissionOutcome {
   const { mission } = plan;
   const vehicle = catalogue.launchVehicles.find(
@@ -60,66 +80,153 @@ export function flyMission(
   const plannedEvents = mission
     ? rules.missionEventsFor(mission.launchVehicleId, mission.assetIds)
     : [];
-  const failedIndex = plannedEvents.findIndex(
-    (event) =>
+  const stillOnBoard = (event: MissionEvent) =>
+    assets.filter((asset) => rules.deliveryDay(asset) >= rules.dayOf(event));
+  const lossFor = (event: MissionEvent, used: Contingency | undefined) =>
+    Math.min(
+      event.publicSupportLoss + (used?.extraPublicSupportLoss ?? 0),
+      program.publicSupport,
+    );
+
+  const outcome: MissionOutcome = {
+    vehicleName: vehicle?.name ?? null,
+    assets,
+    entries: [],
+    failedEvent: undefined,
+    failedOnDay: null,
+    deliveredAssets: assets,
+    publicSupportLost: 0,
+    landingSite,
+    decisionPoint: null,
+    contingencies: [],
+    rescuedServiceLife: new Map(),
+  };
+  const happened = (event: MissionEvent) => ({
+    kind: "missionEvent" as const,
+    day: rules.dayOf(event),
+    eventId: event.id,
+  });
+
+  for (const event of plannedEvents) {
+    const failed =
       roll(program.seed, program.turnNumber, event.id) <
       rules.failureProbability(
         event,
         rules.reliabilityLevelFor(mission, event.id),
         program,
         mission,
-      ),
-  );
-  const failedEvent = plannedEvents[failedIndex];
-  // An Asset is delivered when its last Mission Event succeeds, so anything delivered before a failure is safe.
-  const deliveredAssets = failedEvent
-    ? assets.filter(
-        (asset) => rules.deliveryDay(asset) < rules.dayOf(failedEvent),
-      )
-    : assets;
-  const lostNames = assets
-    .filter((asset) => !deliveredAssets.includes(asset))
-    .map((asset) => asset.name);
-  const safe =
-    deliveredAssets.length > 0
-      ? ` Still safe: ${deliveredAssets.map((asset) => asset.name).join(", ")}.`
-      : "";
-  const publicSupportLost = failedEvent
-    ? Math.min(failedEvent.publicSupportLoss, program.publicSupport)
-    : 0;
+      );
+    if (!failed) {
+      outcome.entries.push({
+        ...happened(event),
+        title: event.name,
+        description: filledIn(event.description),
+        outcome: "success",
+      });
+      continue;
+    }
 
-  const entries = plannedEvents
-    .slice(0, failedEvent ? failedIndex + 1 : undefined)
-    .map((event): MissionEventEntry =>
-      event === failedEvent
-        ? {
-            kind: "missionEvent",
-            day: rules.dayOf(event),
-            eventId: event.id,
-            title: `${event.name} failed`,
-            description: `${filledIn(event.failureDescription)} Lost with the Mission: ${lostNames.join(", ")}.${safe} It costs ${publicSupportLost} Public Support.`,
-            outcome: "failure",
-          }
-        : {
-            kind: "missionEvent",
-            day: rules.dayOf(event),
-            eventId: event.id,
-            title: event.name,
-            description: filledIn(event.description),
-            outcome: "success",
+    const onBoard = stillOnBoard(event);
+    const lostNames = onBoard.map((asset) => asset.name).join(", ");
+    const contingency = rules.contingencyFor(mission, event.id);
+    if (contingency) {
+      outcome.entries.push({
+        kind: "decisionPoint",
+        day: rules.dayOf(event),
+        eventId: event.id,
+        title: `${event.name}: Decision Point`,
+        description: filledIn(contingency.troubleDescription),
+      });
+      const answer = answers[decisionIdOf(event)];
+      if (answer === undefined) {
+        outcome.decisionPoint = {
+          id: decisionIdOf(event),
+          day: rules.dayOf(event),
+          missionEventName: event.name,
+          contingencyName: contingency.name,
+          description: filledIn(contingency.troubleDescription),
+          use: {
+            riskBand: rules.riskBandFor(contingency.rescueFailureProbability),
+            description: `A second try. If it works, ${lostNames} carry on with ${contingency.serviceLifeLossPercent}% less Service Life. If it fails, they are lost and it costs ${lossFor(event, contingency)} Public Support.`,
           },
-    );
+          decline: {
+            description: `${lostNames} are lost, and it costs ${lossFor(event, undefined)} Public Support.`,
+          },
+        };
+        outcome.deliveredAssets = assets.filter(
+          (asset) => !onBoard.includes(asset),
+        );
+        return outcome;
+      }
+      if (
+        answer === "use" &&
+        roll(program.seed, program.turnNumber, decisionIdOf(event)) >=
+          contingency.rescueFailureProbability
+      ) {
+        for (const asset of onBoard) {
+          const days =
+            outcome.rescuedServiceLife.get(asset) ??
+            rules.serviceLifeFor(mission, asset).days;
+          outcome.rescuedServiceLife.set(
+            asset,
+            Math.max(
+              1,
+              Math.round(
+                (days * (100 - contingency.serviceLifeLossPercent)) / 100,
+              ),
+            ),
+          );
+        }
+        outcome.contingencies.push({
+          missionEventName: event.name,
+          contingencyName: contingency.name,
+          answer,
+          rescued: true,
+          assets: onBoard.map((asset) => ({
+            name: asset.name,
+            serviceLifeDays: outcome.rescuedServiceLife.get(asset) ?? 0,
+          })),
+        });
+        outcome.entries.push({
+          ...happened(event),
+          title: `${event.name}: saved by ${contingency.name}`,
+          description: `${filledIn(contingency.rescueDescription)} ${lostNames} lost ${contingency.serviceLifeLossPercent}% of their Service Life.`,
+          outcome: "success",
+        });
+        continue;
+      }
+      outcome.contingencies.push({
+        missionEventName: event.name,
+        contingencyName: contingency.name,
+        answer,
+        rescued: false,
+        assets: [],
+      });
+    }
 
-  return {
-    vehicleName: vehicle?.name ?? null,
-    assets,
-    entries,
-    failedEvent,
-    failedOnDay: failedEvent ? rules.dayOf(failedEvent) : null,
-    deliveredAssets,
-    publicSupportLost,
-    landingSite,
-  };
+    // An Asset is delivered when its last Mission Event succeeds, so anything delivered before a failure is safe.
+    const used =
+      answers[decisionIdOf(event)] === "use" ? contingency : undefined;
+    outcome.failedEvent = event;
+    outcome.failedOnDay = rules.dayOf(event);
+    outcome.deliveredAssets = assets.filter(
+      (asset) => !onBoard.includes(asset),
+    );
+    outcome.publicSupportLost = lossFor(event, used);
+    const safe =
+      outcome.deliveredAssets.length > 0
+        ? ` Still safe: ${outcome.deliveredAssets.map((asset) => asset.name).join(", ")}.`
+        : "";
+    const tried = used ? ` ${used.name} couldn't save it.` : "";
+    outcome.entries.push({
+      ...happened(event),
+      title: `${event.name} failed`,
+      description: `${filledIn(event.failureDescription)}${tried} Lost with the Mission: ${lostNames}.${safe} It costs ${outcome.publicSupportLost} Public Support.`,
+      outcome: "failure",
+    });
+    return outcome;
+  }
+  return outcome;
 }
 
 /** The Mission as Mission Mode displays it, or null if nothing launched. */
@@ -166,4 +273,31 @@ export function missionFailure(flown: MissionOutcome): TurnSummary["failure"] {
         publicSupportLost: flown.publicSupportLost,
       }
     : null;
+}
+
+const partOfTheFlight = ({ kind }: TimelineEntry) =>
+  kind === "missionEvent" || kind === "decisionPoint";
+
+/**
+ * What Mission Mode plays up to a Decision Point: the flight so far, and what else happens in the Turn before that day.
+ * Everything else comes from the Turn worked out as if the answer were no, and playback can't get as far as what differs.
+ */
+export function timelineUpToDecision(
+  asIfDeclined: Timeline,
+  flown: MissionOutcome & { decisionPoint: DecisionPoint },
+  mission: Timeline["mission"],
+): Timeline {
+  const { day } = flown.decisionPoint;
+  return {
+    ...asIfDeclined,
+    mission,
+    decisionDay: day,
+    // The sort is stable, so the flight stays first on any day, as it does on a finished Turn's Timeline.
+    entries: [
+      ...flown.entries,
+      ...asIfDeclined.entries.filter(
+        (entry) => entry.day < day && !partOfTheFlight(entry),
+      ),
+    ].sort((first, second) => first.day - second.day),
+  };
 }

@@ -2,15 +2,20 @@ import type { Catalogue } from "../catalogue/catalogue";
 import {
   createRules,
   daysUntilServiceEnds,
-  formatMoney,
   operatingKey,
-  sum,
   type Activity,
 } from "./rules";
+import {
+  flyMission,
+  missionOnTimeline,
+  timelineUpToDecision,
+} from "./missionFlight";
 import { earningsPerTurn } from "./ongoingResearch";
+import { createPlanCheck } from "./planCheck";
 import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
 import { resolveTurn } from "./turnSteps";
 import type {
+  DecisionAnswers,
   PlanCheck,
   PlannedActivity,
   PlannedAsset,
@@ -19,6 +24,7 @@ import type {
   Program,
   ProgramView,
   TurnPlan,
+  TurnProgress,
   TurnResult,
 } from "./types";
 
@@ -27,6 +33,9 @@ export { corruptSave, SaveError } from "./saveFormat";
 export type {
   AssetAtMars,
   AssetChoices,
+  DecisionAnswer,
+  DecisionAnswers,
+  DecisionPoint,
   PlannedActivity,
   PlannedAsset,
   Program,
@@ -34,6 +43,7 @@ export type {
   Timeline,
   TimelineEntry,
   TurnPlan,
+  TurnProgress,
   TurnResult,
   TurnSummary,
 } from "./types";
@@ -53,17 +63,25 @@ export interface Simulation {
   ): PlannedMissionEvent[];
   /** The choices a Mission can make for each Asset it carries. Ids that aren't in the catalogue are skipped. */
   previewAssets(mission: PlannedMission): PlannedAsset[];
-  runTurn(program: Program, plan: TurnPlan): TurnResult;
+  /** Works out a Turn from the seed, the plan and the answers so far, stopping at the first Decision Point with no answer. */
+  workOutTurn(
+    program: Program,
+    plan: TurnPlan,
+    answers?: DecisionAnswers,
+  ): TurnProgress;
+  /** The whole of a Turn that has an answer for every Decision Point it meets. Throws if it hasn't. */
+  runTurn(
+    program: Program,
+    plan: TurnPlan,
+    answers?: DecisionAnswers,
+  ): TurnResult;
   retireProgram(program: Program): Program;
 }
-
-const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
 
 export function createSimulation(catalogue: Catalogue): Simulation {
   const rules = createRules(catalogue);
   const {
     activitiesOf,
-    activityById,
     activityFor,
     activityNameOf,
     failureProbability,
@@ -86,171 +104,67 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     earnsPerTurn: earningsPerTurn(catalogue, activity),
   });
 
-  /** What's wrong with giving this Activity to an Asset that lists `activityIds`, if anything. */
-  function activityProblems(
-    assetName: string,
-    activityIds: string[],
-    activityId: string,
-  ): string[] {
-    const activity = activityById(activityId);
-    if (!activity) return [`There is no Activity called "${activityId}".`];
-    return activityIds.includes(activityId)
-      ? []
-      : [`${assetName} can't do the Activity "${activity.name}".`];
+  const checkPlan = createPlanCheck(catalogue, rules);
+
+  function contingencyOffered(
+    eventId: string,
+    mission: PlannedMission,
+  ): PlannedMissionEvent["contingency"] {
+    const offered = catalogue.contingencies.find(
+      ({ missionEvent }) => missionEvent === eventId,
+    );
+    return offered
+      ? {
+          id: offered.id,
+          name: offered.name,
+          description: offered.description,
+          costMillions: offered.costMillions,
+          massTonnes: offered.massTonnes,
+          riskBand: riskBandFor(offered.rescueFailureProbability),
+          bought: mission.contingencyIds?.includes(offered.id) === true,
+        }
+      : null;
   }
 
-  function operatingActivityProblems(
+  function workOutTurn(
     program: Program,
     plan: TurnPlan,
-  ): string[] {
-    return Object.entries(plan.operatingActivities ?? {}).flatMap(
-      ([key, activityId]) => {
-        const asset = program.operatingAssets.find(
-          (candidate) => operatingKey(candidate) === key,
-        );
-        if (!asset) return [`There is no operating Asset called "${key}".`];
-        const design = catalogue.assets.find(({ id }) => id === asset.assetId);
-        return activityProblems(
-          asset.name,
-          design?.activities ?? [],
-          activityId,
-        );
-      },
-    );
-  }
+    answers: DecisionAnswers = {},
+  ): TurnProgress {
+    const { costMillions, problems } = checkPlan(program, plan);
+    if (problems.length > 0) throw new Error(problems.join(" "));
 
-  function checkPlan(program: Program, plan: TurnPlan): PlanCheck {
-    if (program.status.kind !== "active") {
-      return { ...noMission, problems: ["This Program has ended."] };
-    }
-    if (!plan.mission) {
-      return {
-        ...noMission,
-        problems: operatingActivityProblems(program, plan),
-      };
-    }
-
-    const {
-      launchVehicleId,
-      assetIds,
-      reliability = {},
-      landingSiteId,
-      assetChoices = {},
-    } = plan.mission;
-    const problems = operatingActivityProblems(program, plan);
-    let costMillions = 0;
-    let massTonnes = 0;
-
-    const vehicle = catalogue.launchVehicles.find(
-      (candidate) => candidate.id === launchVehicleId,
-    );
-    if (vehicle) costMillions += vehicle.costMillions;
-    else
-      problems.push(`There is no Launch Vehicle called "${launchVehicleId}".`);
-
-    if (assetIds.length === 0) {
-      problems.push("A Mission must carry at least one Asset.");
-    }
-    if (new Set(assetIds).size < assetIds.length) {
-      problems.push("A Mission can't carry the same Asset twice.");
-    }
-    for (const assetId of assetIds) {
-      const asset = catalogue.assets.find(
-        (candidate) => candidate.id === assetId,
+    const fly = (given: DecisionAnswers) =>
+      flyMission(catalogue, rules, program, plan, given);
+    const flown = fly(answers);
+    const { decisionPoint } = flown;
+    if (!decisionPoint) {
+      const result = resolveTurn(
+        catalogue,
+        rules,
+        program,
+        plan,
+        costMillions,
+        flown,
       );
-      if (asset) {
-        costMillions += asset.costMillions;
-        massTonnes += asset.massTonnes;
-      } else problems.push(`There is no Asset called "${assetId}".`);
+      return { decisionPoint, timeline: result.timeline, result };
     }
-    // Masses like 0.1 and 0.2 don't add up exactly, and a Mission at exactly its capacity must fit.
-    massTonnes = Math.round(massTonnes * 1000) / 1000;
-    const capacityTonnes = vehicle?.capacityTonnes ?? 0;
-    if (vehicle && massTonnes > capacityTonnes) {
-      problems.push(
-        `This Mission weighs ${massTonnes} tonnes, but its Launch Vehicle can only carry ${capacityTonnes} tonnes.`,
-      );
-    }
-
-    const landsOnMars = catalogue.assets.some(
-      (asset) => assetIds.includes(asset.id) && asset.landsAtSite === true,
+    const asIfDeclined = resolveTurn(
+      catalogue,
+      rules,
+      program,
+      plan,
+      costMillions,
+      fly({ ...answers, [decisionPoint.id]: "decline" }),
     );
-    if (landsOnMars) {
-      if (landingSiteId === undefined) {
-        problems.push(
-          "A Mission that lands on Mars must choose a Landing Site.",
-        );
-      } else if (
-        !knownLandingSites(program).some((site) => site.id === landingSiteId)
-      ) {
-        problems.push(
-          `There is no known Landing Site called "${landingSiteId}".`,
-        );
-      }
-    } else if (landingSiteId !== undefined) {
-      problems.push("Only a Mission that lands on Mars has a Landing Site.");
-    }
-
-    for (const [assetId, choices] of Object.entries(assetChoices)) {
-      if (!assetIds.includes(assetId)) {
-        problems.push(
-          `This Mission isn't carrying an Asset called "${assetId}".`,
-        );
-        continue;
-      }
-      const asset = catalogue.assets.find(({ id }) => id === assetId);
-      const { serviceLifeDays, reliabilityLevelId, activityId } = choices;
-      if (asset && activityId !== undefined) {
-        problems.push(
-          ...activityProblems(asset.name, asset.activities, activityId),
-        );
-      }
-      if (
-        reliabilityLevelId !== undefined &&
-        !catalogue.reliabilityLevels.some(({ id }) => id === reliabilityLevelId)
-      ) {
-        problems.push(
-          `There is no Reliability level called "${reliabilityLevelId}".`,
-        );
-      }
-      if (
-        asset &&
-        serviceLifeDays !== undefined &&
-        !asset.serviceLifeOptions.some(({ days }) => days === serviceLifeDays)
-      ) {
-        problems.push(
-          `${asset.name} has no Service Life of ${serviceLifeDays} days.`,
-        );
-      }
-    }
-    for (const asset of catalogue.assets) {
-      if (assetIds.includes(asset.id)) {
-        costMillions += serviceLifeFor(plan.mission, asset).costMillions;
-        costMillions += assetReliabilityFor(plan.mission, asset).costMillions;
-      }
-    }
-
-    const plannedEvents = missionEventsFor(launchVehicleId, assetIds);
-    for (const [eventId, levelId] of Object.entries(reliability)) {
-      if (!plannedEvents.some((event) => event.id === eventId)) {
-        problems.push(`This Mission has no Mission Event called "${eventId}".`);
-      }
-      if (!catalogue.reliabilityLevels.some((level) => level.id === levelId)) {
-        problems.push(`There is no Reliability level called "${levelId}".`);
-      }
-    }
-    costMillions += sum(
-      plannedEvents.map(
-        (event) => reliabilityLevelFor(plan.mission, event.id).costMillions,
+    return {
+      decisionPoint,
+      timeline: timelineUpToDecision(
+        asIfDeclined.timeline,
+        { ...flown, decisionPoint },
+        missionOnTimeline(catalogue, rules, flown),
       ),
-    );
-
-    if (costMillions > program.moneyMillions) {
-      problems.push(
-        `This Mission costs ${formatMoney(costMillions)}, but the Program only has ${formatMoney(program.moneyMillions)}.`,
-      );
-    }
-    return { costMillions, massTonnes, capacityTonnes, problems };
+    };
   }
 
   return {
@@ -374,6 +288,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
                 failureProbability(event, level, program, mission),
               ),
             })),
+            contingency: contingencyOffered(event.id, mission),
           };
         },
       );
@@ -402,11 +317,16 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         }));
     },
 
-    runTurn(program, plan) {
-      const { costMillions, problems } = checkPlan(program, plan);
-      if (problems.length > 0) throw new Error(problems.join(" "));
+    workOutTurn,
 
-      return resolveTurn(catalogue, rules, program, plan, costMillions);
+    runTurn(program, plan, answers) {
+      const progress = workOutTurn(program, plan, answers);
+      if (progress.decisionPoint) {
+        throw new Error(
+          `This Turn stops at a Decision Point with no answer: ${progress.decisionPoint.id}.`,
+        );
+      }
+      return progress.result;
     },
 
     retireProgram(program) {

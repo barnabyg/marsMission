@@ -46,6 +46,7 @@ export function MissionPanel({
   const [assetChoices, setAssetChoices] = useState<
     Record<string, AssetChoices>
   >({});
+  const [contingencyIds, setContingencyIds] = useState<string[]>([]);
 
   const landsOnMars = view.assets.some(
     (asset) => assetIds.includes(asset.id) && asset.landsAtSite,
@@ -61,6 +62,7 @@ export function MissionPanel({
   const plannedEvents = simulation.previewMission(program, {
     ...mission,
     reliability,
+    contingencyIds,
   });
   const plannedAssets = simulation.previewAssets({
     ...mission,
@@ -73,6 +75,10 @@ export function MissionPanel({
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
       reliability: Object.fromEntries(
         plannedEvents.map((event) => [event.eventId, event.reliabilityLevelId]),
+      ),
+      // Only those for the Mission Events it goes through, for the same reason.
+      contingencyIds: plannedEvents.flatMap(({ contingency }) =>
+        contingency?.bought ? [contingency.id] : [],
       ),
       // Only the Assets this Mission carries, for the same reason.
       assetChoices: Object.fromEntries(
@@ -178,7 +184,9 @@ export function MissionPanel({
         </>
       )}
       <h3>
-        <GameText>Mission Events, Risk Bands and Reliability</GameText>
+        <GameText>
+          Mission Events, Risk Bands, Reliability and Contingency
+        </GameText>
       </h3>
       <ol className="mission-events" data-testid="mission-events">
         {plannedEvents.map((event) => (
@@ -204,6 +212,26 @@ export function MissionPanel({
                 </option>
               ))}
             </select>
+            {event.contingency && (
+              <label className="contingency-choice">
+                <input
+                  type="checkbox"
+                  checked={event.contingency.bought}
+                  onChange={(change) => {
+                    const { id } = event.contingency ?? {};
+                    if (id === undefined) return;
+                    setContingencyIds(
+                      change.target.checked
+                        ? [...contingencyIds, id]
+                        : contingencyIds.filter((other) => other !== id),
+                    );
+                  }}
+                />
+                <GameText>
+                  {`Contingency: ${event.contingency.name} (${formatMoney(event.contingency.costMillions)}, ${event.contingency.massTonnes} t, ${event.contingency.riskBand} if used)`}
+                </GameText>
+              </label>
+            )}
           </li>
         ))}
       </ol>

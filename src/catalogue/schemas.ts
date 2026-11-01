@@ -130,6 +130,27 @@ const missionEventsSchema = z.array(
   }),
 );
 
+const contingenciesSchema = z.array(
+  z.strictObject({
+    id,
+    name: z.string().min(1),
+    description: z.string().min(1),
+    // The one Mission Event it can rescue.
+    missionEvent: id,
+    costMillions: money,
+    massTonnes: z.number().nonnegative(),
+    // The chance that the second roll fails as well.
+    rescueFailureProbability: z.number().min(0).max(1),
+    // How much shorter a rescued Asset's Service Life is.
+    serviceLifeLossPercent: z.number().int().min(0).max(99),
+    // Lost on top of the Mission Event's own loss if it's used and the second roll fails.
+    extraPublicSupportLoss: z.number().int().nonnegative(),
+    // In either description, {site} and {lander} work as they do in a Mission Event's.
+    troubleDescription: z.string().min(1),
+    rescueDescription: z.string().min(1),
+  }),
+);
+
 const milestonesSchema = z.array(
   z.strictObject({
     id,
@@ -188,6 +209,7 @@ export const schemas = {
   assets: assetsSchema,
   landingSites: landingSitesSchema,
   missionEvents: missionEventsSchema,
+  contingencies: contingenciesSchema,
   milestones: milestonesSchema,
   fundingThresholds: fundingThresholdsSchema,
   reliabilityLevels: reliabilityLevelsSchema,
@@ -203,6 +225,7 @@ export const catalogueFileNames = {
   assets: "assets.json",
   landingSites: "landing-sites.json",
   missionEvents: "mission-events.json",
+  contingencies: "contingencies.json",
   milestones: "milestones.json",
   fundingThresholds: "funding-thresholds.json",
   reliabilityLevels: "reliability-levels.json",
@@ -218,6 +241,7 @@ export interface Catalogue {
   /** In the order a Survey reveals them. */
   landingSites: z.output<typeof landingSitesSchema>;
   missionEvents: z.output<typeof missionEventsSchema>;
+  contingencies: z.output<typeof contingenciesSchema>;
   milestones: z.output<typeof milestonesSchema>;
   fundingThresholds: z.output<typeof fundingThresholdsSchema>;
   /** In order, cheapest first. */

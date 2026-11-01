@@ -18,17 +18,17 @@ To try the latest phase, follow the [Phase 4 playtest guide](docs/playtest/phase
 
 The Simulation holds all the rules and knows nothing about the browser. Everything else loads its data, saves its state or displays what it produces.
 
-| Folder           | What it holds                                                                                                                                              |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/app`        | The App component that moves between screens and connects them to the Simulation, all styles (`styles.css`), and start-up                                  |
-| `src/balance`    | Balance runs: strategies that play whole Programs through the Simulation, the checks for invalid states and the report (see [Balance runs](#balance-runs)) |
-| `src/catalogue`  | The Catalogue: parses and validates the data files in `public/data`, which `src/app` fetches                                                               |
-| `src/mission`    | Mission Mode and the Turn summary: playback, sounds, and the views, each in its own subfolder, which `MissionMode.tsx` and `MissionScene.tsx` connect      |
-| `src/planning`   | Planning Mode and the Program summary screen                                                                                                               |
-| `src/save`       | The Save Store, which keeps what the Simulation saves in the browser, and the screens for saving: the opening screen and Save Slots                        |
-| `src/simulation` | The Simulation: all the rules, with most of the tests, plus the small test catalogue and helpers those tests share                                         |
-| `src/testing`    | Test support that reads the real data files with Node, which is kept out of `src/simulation` because that folder has no Node types                         |
-| `src/ui`         | Shared UI: dialogs (`Dialog.tsx`), tooltips (`tooltips.ts`, `GameText.tsx`, `TooltipLayer.tsx`) and date formatting                                        |
+| Folder           | What it holds                                                                                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app`        | The App component that moves between screens and connects them to the Simulation, all styles (`styles.css`), and start-up                                       |
+| `src/balance`    | Balance runs: strategies that play whole Programs through the Simulation, the checks for invalid states and the report (see [Balance runs](#balance-runs))      |
+| `src/catalogue`  | The Catalogue: parses and validates the data files in `public/data`, which `src/app` fetches                                                                    |
+| `src/mission`    | Mission Mode and the Turn summary: playback, sounds, and the views, each in its own subfolder, which `MissionMode.tsx` and `MissionScene.tsx` connect           |
+| `src/planning`   | Planning Mode and the Program summary screen                                                                                                                    |
+| `src/save`       | The Save Store, which keeps what the Simulation saves in the browser, and the screens for saving: the opening screen and Save Slots                             |
+| `src/simulation` | The Simulation: all the rules, with most of the tests, plus the small test catalogue and helpers those tests share. A Mission's flight is in `missionFlight.ts` |
+| `src/testing`    | Test support that reads the real data files with Node, which is kept out of `src/simulation` because that folder has no Node types                              |
+| `src/ui`         | Shared UI: dialogs (`Dialog.tsx`), tooltips (`tooltips.ts`, `GameText.tsx`, `TooltipLayer.tsx`) and date formatting                                             |
 
 Test fixtures go in `src/simulation/testCatalogue.ts` and `testHelpers.ts` for rule tests, which use round numbers so that balance changes don't break them. Use `src/testing/realCatalogue.ts` for tests of the game's actual balance.
 
