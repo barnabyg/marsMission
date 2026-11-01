@@ -12,7 +12,7 @@ You need [Node.js](https://nodejs.org/) 24 or later. From the repository root, r
 
 You can also double-click `run.bat`. It installs what's needed, builds the game and opens it in your browser. The game is designed for a 4K desktop, at 100% or 150% display scaling.
 
-To try the latest phase, follow the [Phase 4 playtest guide](docs/playtest/phase-4.md). The [Phase 1](docs/playtest/phase-1.md), [Phase 2](docs/playtest/phase-2.md) and [Phase 3](docs/playtest/phase-3.md) guides are kept as records of those phases, so some controls and numbers have changed since they were written: saving, loading and retiring are now buttons with dialogs, Mission Mode lists what happens in an events column, Assets are chosen with tick boxes, and Service Life, Science and money are as tuned for Phase 4.
+Phase 5 is in progress, with Decision Points, Contingency and Trajectories so far. To try the latest finished phase, follow the [Phase 4 playtest guide](docs/playtest/phase-4.md). The [Phase 1](docs/playtest/phase-1.md), [Phase 2](docs/playtest/phase-2.md) and [Phase 3](docs/playtest/phase-3.md) guides are kept as records of those phases, so some controls and numbers have changed since they were written: saving, loading and retiring are now buttons with dialogs, Mission Mode lists what happens in an events column, Assets are chosen with tick boxes, and Service Life, Science and money are as tuned for Phase 4.
 
 ## Develop
 

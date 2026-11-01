@@ -1,5 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import {
+  formatMoney,
   roll,
   type Asset,
   type Contingency,
@@ -13,6 +14,7 @@ import type {
   DecisionPointEntry,
   MissionAsset,
   MissionEventEntry,
+  MissionReturnedEntry,
   Program,
   Timeline,
   TimelineEntry,
@@ -25,13 +27,15 @@ export interface MissionOutcome {
   vehicleName: string | null;
   assets: Asset[];
   /** The Mission Events that happened, ending with the one that failed if one did. */
-  entries: (MissionEventEntry | DecisionPointEntry)[];
+  entries: (MissionEventEntry | DecisionPointEntry | MissionReturnedEntry)[];
   failedEvent: MissionEvent | undefined;
   /** The day of the failed Mission Event, if there was one. */
   failedOnDay: number | null;
   deliveredAssets: Asset[];
   publicSupportLost: number;
   landingSite: LandingSite | undefined;
+  /** What a Free-return brought back, if it did. */
+  returned: { refundMillions: number; backOnDay: number } | null;
   /** The first unanswered Decision Point, which the flight stopped at. */
   decisionPoint: DecisionPoint | null;
   /** How each Decision Point was answered, in the order they came. */
@@ -81,11 +85,24 @@ export function flyMission(
   const dayOf = (event: MissionEvent) => rules.dayOf(event, mission);
   const stillOnBoard = (event: MissionEvent) =>
     assets.filter((asset) => rules.deliveryDay(asset, mission) >= dayOf(event));
+  const { freeReturn } = rules.trajectoryFor(mission);
+  /** Whether failing this Mission Event brings the Mission home. */
+  const comesHomeFrom = (event: MissionEvent) =>
+    freeReturn?.arrivalBurn === event.id;
   const lossFor = (event: MissionEvent, used: Contingency | undefined) =>
     Math.min(
-      event.publicSupportLoss + (used?.extraPublicSupportLoss ?? 0),
+      (comesHomeFrom(event) ? 0 : event.publicSupportLoss) +
+        (used?.extraPublicSupportLoss ?? 0),
       program.publicSupport,
     );
+  const refundFor = (onBoard: Asset[]) =>
+    Math.round(
+      (onBoard.reduce((total, asset) => total + asset.costMillions, 0) *
+        (freeReturn?.refundPercent ?? 0)) /
+        100,
+    );
+  const supportCost = (loss: number) =>
+    loss > 0 ? `${loss} Public Support` : "no Public Support";
 
   const outcome: MissionOutcome = {
     vehicleName: vehicle?.name ?? null,
@@ -96,6 +113,7 @@ export function flyMission(
     deliveredAssets: assets,
     publicSupportLost: 0,
     landingSite,
+    returned: null,
     decisionPoint: null,
     contingencies: [],
     rescuedServiceLife: new Map(),
@@ -146,10 +164,16 @@ export function flyMission(
           description: filledIn(contingency.troubleDescription),
           use: {
             riskBand: rules.riskBandFor(contingency.rescueFailureProbability),
-            description: `A second try. If it works, ${lostNames} carry on with ${contingency.serviceLifeLossPercent}% less Service Life. If it fails, they are lost and it costs ${lossFor(event, contingency)} Public Support.`,
+            description: `A second try. If it works, ${lostNames} carry on with ${contingency.serviceLifeLossPercent}% less Service Life. If it fails, ${
+              comesHomeFrom(event)
+                ? `they swing back to Earth, which costs ${supportCost(lossFor(event, contingency))} and refunds ${formatMoney(refundFor(onBoard))}.`
+                : `they are lost and it costs ${lossFor(event, contingency)} Public Support.`
+            }`,
           },
           decline: {
-            description: `${lostNames} are lost, and it costs ${lossFor(event, undefined)} Public Support.`,
+            description: comesHomeFrom(event)
+              ? `${lostNames} swing back to Earth, which costs ${supportCost(lossFor(event, undefined))} and refunds ${formatMoney(refundFor(onBoard))}.`
+              : `${lostNames} are lost, and it costs ${lossFor(event, undefined)} Public Support.`,
           },
         };
         outcome.deliveredAssets = assets.filter(
@@ -217,6 +241,27 @@ export function flyMission(
         ? ` Still safe: ${outcome.deliveredAssets.map((asset) => asset.name).join(", ")}.`
         : "";
     const tried = used ? ` ${used.name} couldn't save it.` : "";
+    if (freeReturn && comesHomeFrom(event)) {
+      const refundMillions = refundFor(onBoard);
+      const backOnDay = dayOf(event) + freeReturn.returnDays;
+      outcome.returned = { refundMillions, backOnDay };
+      outcome.entries.push(
+        {
+          ...happened(event),
+          title: `${event.name} failed`,
+          description: `${freeReturn.description}${tried} Coming back with the Mission: ${lostNames}.${safe} It costs ${supportCost(outcome.publicSupportLost)} and refunds ${formatMoney(refundMillions)}.`,
+          outcome: "failure",
+          returningToEarth: true,
+        },
+        {
+          kind: "missionReturned",
+          day: backOnDay,
+          title: "Mission back at Earth",
+          description: `${lostNames} came back to Earth, and won't fly again.`,
+        },
+      );
+      return outcome;
+    }
     outcome.entries.push({
       ...happened(event),
       title: `${event.name} failed`,
@@ -260,6 +305,14 @@ export function missionOnTimeline(
       };
     }),
     failedOnDay: flown.failedOnDay,
+    ...(flown.returned && flown.failedOnDay !== null
+      ? {
+          returnsToEarth: {
+            fromDay: flown.failedOnDay,
+            backOnDay: flown.returned.backOnDay,
+          },
+        }
+      : {}),
   };
 }
 
@@ -272,6 +325,8 @@ export function missionFailure(flown: MissionOutcome): TurnSummary["failure"] {
           .filter((asset) => !flown.deliveredAssets.includes(asset))
           .map((asset) => asset.name),
         publicSupportLost: flown.publicSupportLost,
+        returnedToEarth: flown.returned !== null,
+        refundMillions: flown.returned?.refundMillions ?? 0,
       }
     : null;
 }

@@ -154,6 +154,16 @@ export interface MissionEventEntry {
   title: string;
   description: string;
   outcome: "success" | "failure";
+  /** Whether this failure sends the Mission back to Earth rather than ending it where it is. */
+  returningToEarth?: true;
+}
+
+/** A Mission on a Free-return Trajectory has got back to Earth. */
+export interface MissionReturnedEntry {
+  kind: "missionReturned";
+  day: number;
+  title: string;
+  description: string;
 }
 
 export interface MilestoneEntry {
@@ -210,6 +220,7 @@ export interface DecisionPointEntry {
 
 export type TimelineEntry =
   | DecisionPointEntry
+  | MissionReturnedEntry
   | AssetFailedEntry
   | AssetEndedEntry
   | SurveyEntry
@@ -267,6 +278,10 @@ export interface TurnSummary {
     missionEventName: string;
     assetsLost: string[];
     publicSupportLost: number;
+    /** Whether a Free-return brought those Assets back to Earth. They aren't flown again. */
+    returnedToEarth: boolean;
+    /** The share of their cost that came back, which moneyEndMillions includes. */
+    refundMillions: number;
   } | null;
   /** How each Decision Point in this Turn was answered, and what came of it. */
   contingencies: {
@@ -333,6 +348,8 @@ export interface Timeline {
     assets: MissionAsset[];
     /** The day a Mission Event failed and the journey stopped, if one did. */
     failedOnDay: number | null;
+    /** The way back, if a Free-return is bringing it home. */
+    returnsToEarth?: { fromDay: number; backOnDay: number };
   } | null;
   /** Where every Landing Site is, for showing Assets on the globe. */
   landingSites: { name: string; latitude: number; longitude: number }[];

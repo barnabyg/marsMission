@@ -14,6 +14,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     reliabilityLevelFor,
     serviceLifeFor,
     trajectoryFor,
+    trajectoryOffered,
   } = rules;
 
   /** What's wrong with giving this Activity to an Asset that lists `activityIds`, if anything. */
@@ -124,6 +125,14 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
       problems.push(`There is no Trajectory called "${trajectoryId}".`);
     }
     const trajectory = trajectoryFor(plan.mission);
+    if (!trajectoryOffered(trajectory, plan.mission)) {
+      const burn = catalogue.missionEvents.find(
+        ({ id }) => id === trajectory.freeReturn?.arrivalBurn,
+      );
+      problems.push(
+        `${trajectory.name} is only for a Mission that goes through ${burn?.name ?? "its arrival burn"}.`,
+      );
+    }
     costMillions += trajectory.costMillions;
     const capacityTonnes = vehicle
       ? Math.round(

@@ -423,6 +423,39 @@ describe("invalid data files", () => {
     ).toContain("capacityLossTonnes");
   });
 
+  it("reject a Free-return with an unknown burn, no cost, an impossible refund or too long a return", () => {
+    const files = testCatalogueFiles();
+    const freeReturn = {
+      arrivalBurn: "test-arrival",
+      refundPercent: 50,
+      returnDays: 300,
+      description: "It comes home.",
+    };
+    const withFreeReturn = (
+      changes: object,
+      trajectory: object = { costMillions: 10 },
+    ) =>
+      errorFrom({
+        ...files,
+        trajectories: [
+          {
+            id: "route",
+            name: "Route",
+            description: "A route.",
+            transferDays: 200,
+            costMillions: 0,
+            capacityLossTonnes: 0,
+            ...trajectory,
+            freeReturn: { ...freeReturn, ...changes },
+          },
+        ],
+      });
+    expect(withFreeReturn({ arrivalBurn: "nope" })).toContain('"nope"');
+    expect(withFreeReturn({ refundPercent: 101 })).toContain("refundPercent");
+    expect(withFreeReturn({ returnDays: 700 })).toContain("returnDays");
+    expect(withFreeReturn({}, {})).toContain("must cost money or mass");
+  });
+
   it("reject a transfer that wouldn't finish within the Turn", () => {
     const files = testCatalogueFiles();
     const message = errorFrom({

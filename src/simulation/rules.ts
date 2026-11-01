@@ -93,6 +93,17 @@ export function createRules(catalogue: Catalogue) {
       : trajectoryFor(mission).transferDays + timing.days;
   }
 
+  /** Whether a Mission can fly this Trajectory, which a Free-return only allows if it has the burn it's for. */
+  function trajectoryOffered(
+    { freeReturn }: Trajectory,
+    mission: PlannedMission,
+  ): boolean {
+    return (
+      freeReturn === undefined ||
+      missionEventsFor(mission).some(({ id }) => id === freeReturn.arrivalBurn)
+    );
+  }
+
   function levelOrCheapest(chosenId: string | undefined): ReliabilityLevel {
     const { reliabilityLevels } = catalogue;
     const level =
@@ -262,6 +273,7 @@ export function createRules(catalogue: Catalogue) {
 
   return {
     trajectoryFor,
+    trajectoryOffered,
     dayOf,
     deliveryDay,
     serviceLifeFor,

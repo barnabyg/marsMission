@@ -86,6 +86,7 @@ describe("choosing a Trajectory", () => {
         capacityLossTonnes: 1,
         chosen: true,
       }),
+      expect.objectContaining({ id: "test-free-return", chosen: false }),
     ]);
   });
 

@@ -234,6 +234,12 @@ for (const size of screenSizes) {
       for (const contingency of await contingencies.all()) {
         await contingency.check();
       }
+      await page
+        .getByRole("combobox", { name: "Trajectory" })
+        .selectOption("free-return");
+      await expect(page.getByTestId("trajectory-details")).toContainText(
+        "swings back",
+      );
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
       expect(await somethingScrolls(page)).toBe(false);
       for (const name of ["Launch Mission", "End Turn without launching"]) {

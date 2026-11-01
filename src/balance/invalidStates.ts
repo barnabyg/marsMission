@@ -35,7 +35,8 @@ export function invalidStates(
       summary.moneyStartMillions -
         summary.missionCostMillions +
         thresholdMillions +
-        summary.researchGrantMillions !==
+        summary.researchGrantMillions +
+        (summary.failure?.refundMillions ?? 0) !==
         summary.moneyEndMillions,
       "The Turn's money doesn't add up.",
     ],
@@ -82,6 +83,12 @@ export function invalidStates(
       new Set(milestoneIds).size < milestoneIds.length ||
         before.milestones.some(({ id }) => !milestoneIds.includes(id)),
       "A Milestone was awarded twice or lost.",
+    ],
+    [
+      summary.failure !== null &&
+        !summary.failure.returnedToEarth &&
+        summary.failure.refundMillions !== 0,
+      "A Mission that didn't come back was refunded.",
     ],
     [
       summary.contingencies.some(

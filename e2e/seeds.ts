@@ -199,6 +199,11 @@ export const landingRescuedSeed = seedWhereUsing(
   true,
 );
 
+/** A seed whose first orbiter fails Mars orbit insertion on a Free-return Trajectory. */
+export const freeReturnSeed = seedWhere("Mars orbit insertion", {
+  mission: { ...firstPlan.mission, trajectoryId: "free-return" },
+});
+
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);
 

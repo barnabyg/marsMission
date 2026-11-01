@@ -230,7 +230,8 @@ export function resolveTurn(
     program.moneyMillions -
     costMillions +
     sum(funding.payouts.map(({ payoutMillions }) => payoutMillions)) +
-    research.researchGrantMillions;
+    research.researchGrantMillions +
+    (flown.returned?.refundMillions ?? 0);
   const cutServiceLife = new Map(
     [...flown.rescuedServiceLife].map(([asset, days]) => [asset.id, days]),
   );

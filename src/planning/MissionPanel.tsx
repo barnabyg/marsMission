@@ -60,7 +60,11 @@ export function MissionPanel({
     launchVehicleId,
     assetIds,
     ...(landingSite && { landingSiteId: landingSite.id }),
-    ...(trajectoryId !== undefined && { trajectoryId }),
+    // A choice can outlive a change of Asset that takes it off the list.
+    ...(trajectoryId !== undefined &&
+      simulation
+        .previewTrajectories({ launchVehicleId, assetIds })
+        .some(({ id }) => id === trajectoryId) && { trajectoryId }),
   };
   const trajectories = simulation.previewTrajectories(mission);
   const trajectory = trajectories.find(({ chosen }) => chosen);

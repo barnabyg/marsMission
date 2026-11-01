@@ -122,6 +122,20 @@ export function testCatalogueFiles(): CatalogueFiles {
         costMillions: 100,
         capacityLossTonnes: 1,
       },
+      {
+        id: "test-free-return",
+        name: "Free-return",
+        description: "Comes home if it can't stay.",
+        transferDays: 220,
+        costMillions: 50,
+        capacityLossTonnes: 0.5,
+        freeReturn: {
+          arrivalBurn: "test-arrival",
+          refundPercent: 50,
+          returnDays: 300,
+          description: "It swung back towards Earth.",
+        },
+      },
     ],
     assets: [
       {

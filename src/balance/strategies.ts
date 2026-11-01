@@ -534,6 +534,11 @@ export const strategies: Strategy[] = [
     { ...steadyRovers, trajectory: "fast" },
   ),
   playStyle(
+    "steady: Free-return",
+    "As steady: Soil analysis, flying Free-return whenever a Mission has an arrival burn.",
+    { ...steadyRovers, trajectory: "free-return" },
+  ),
+  playStyle(
     "steady: Survey once",
     "As steady: Soil analysis, but the orbiter changes to research after its first Survey.",
     {

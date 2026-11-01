@@ -15,8 +15,10 @@ import {
 } from "../sceneParts";
 import {
   journeyHasFailed,
+  journeyIsReturning,
   orbits,
   planetPosition,
+  returnRoutePosition,
   routePosition,
   spacecraftPosition,
   type Planet,
@@ -127,22 +129,26 @@ function PlanetGlobe({
 function Route({
   mission,
   startDate,
+  positionAt,
+  color,
 }: {
   mission: Journey;
   startDate: string;
+  positionAt: typeof routePosition;
+  color: string;
 }) {
   const geometry = useMemo(() => {
     const points: Vector3[] = [];
     for (let step = 0; step <= 120; step++) {
-      const { x, z } = routePosition(startDate, mission, step / 120);
+      const { x, z } = positionAt(startDate, mission, step / 120);
       points.push(new Vector3(x, 0, z));
     }
     return new TubeGeometry(new CatmullRomCurve3(points), 480, 0.0045, 8);
-  }, [mission, startDate]);
+  }, [mission, startDate, positionAt]);
 
   return (
     <mesh geometry={geometry}>
-      <meshBasicMaterial color="#ffb37a" />
+      <meshBasicMaterial color={color} />
     </mesh>
   );
 }
@@ -209,6 +215,9 @@ export function SolarSystemScene({
   const { mission, startDate } = timeline;
   const failed = mission !== null && journeyHasFailed(mission, day);
   const inTransit = mission !== null && !failed && day < mission.arrivalDay;
+  const returning = mission !== null && journeyIsReturning(mission, day);
+  // A Mission that swings back isn't left lost in space.
+  const lost = failed && mission.returnsToEarth === undefined;
 
   return (
     <>
@@ -229,13 +238,28 @@ export function SolarSystemScene({
         day={day}
         tiltDegrees={25.2}
       />
-      {mission && <Route mission={mission} startDate={startDate} />}
-      {mission && (inTransit || failed) && (
+      {mission && (
+        <Route
+          mission={mission}
+          startDate={startDate}
+          positionAt={routePosition}
+          color="#ffb37a"
+        />
+      )}
+      {mission && failed && mission.returnsToEarth && (
+        <Route
+          mission={mission}
+          startDate={startDate}
+          positionAt={returnRoutePosition}
+          color="#7fe7ff"
+        />
+      )}
+      {mission && (inTransit || lost || returning) && (
         <Spacecraft
           mission={mission}
           startDate={startDate}
           day={day}
-          lost={failed}
+          lost={lost}
         />
       )}
       <OperatingAssetMarkers
@@ -271,6 +295,15 @@ export function solarSystemLabels(
       text: mission.assetNames.join(", "),
       position: [spacecraft.x, 0, spacecraft.z - 0.04],
       className: "spacecraft-label",
+    });
+  }
+  if (mission && journeyIsReturning(mission, day)) {
+    const spacecraft = spacecraftPosition(startDate, mission, day);
+    labels.push({
+      text: `${mission.assetNames.join(", ")}: heading back`,
+      position: [spacecraft.x, 0, spacecraft.z - 0.04],
+      className: "spacecraft-label",
+      testId: "returning-spacecraft",
     });
   }
   return labels;

@@ -35,6 +35,18 @@ const trajectoriesSchema = z
       costMillions: money,
       // How much less its Launch Vehicle can carry on this route, because of the extra fuel.
       capacityLossTonnes: z.number().nonnegative(),
+      // Brings the Mission home if this Mission Event fails, which only a Mission that goes through it can use.
+      freeReturn: z
+        .strictObject({
+          arrivalBurn: id,
+          // The share of what the Assets on board cost that comes back.
+          refundPercent: z.number().int().min(0).max(100),
+          // How long after the failed burn the Mission is back at Earth.
+          returnDays: z.number().int().positive(),
+          // Used in place of the Mission Event's failureDescription.
+          description: z.string().min(1),
+        })
+        .optional(),
     }),
   )
   .min(1);

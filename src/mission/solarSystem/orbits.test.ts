@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   angleBetweenDegrees,
   journeyHasFailed,
+  journeyIsReturning,
   journeyProgress,
   planetPosition,
   spacecraftPosition,
@@ -81,5 +82,44 @@ describe("the spacecraft", () => {
     expect(journeyHasFailed(failed, 104)).toBe(false);
     expect(journeyHasFailed(failed, 105)).toBe(true);
     expect(journeyHasFailed(mission, 700)).toBe(false);
+  });
+});
+
+describe("a Mission coming home on a Free-return", () => {
+  const journey = {
+    launchDay: 0,
+    arrivalDay: 240,
+    failedOnDay: 240,
+    returnsToEarth: { fromDay: 240, backOnDay: 660 },
+  };
+  const startDate = "2028-12-01";
+  const fromSun = ({ x, z }: { x: number; z: number }) => Math.hypot(x, z);
+
+  it("is returning from the failed burn until it's back", () => {
+    expect(journeyIsReturning(journey, 239)).toBe(false);
+    expect(journeyIsReturning(journey, 240)).toBe(true);
+    expect(journeyIsReturning(journey, 659)).toBe(true);
+    expect(journeyIsReturning(journey, 660)).toBe(false);
+  });
+
+  it("is never returning without a Free-return", () => {
+    expect(
+      journeyIsReturning(
+        { launchDay: 0, arrivalDay: 240, failedOnDay: 240 },
+        300,
+      ),
+    ).toBe(false);
+  });
+
+  it("moves back in from Mars's orbit to Earth's, rather than staying where it failed", () => {
+    const at = (day: number) => spacecraftPosition(startDate, journey, day);
+    expect(fromSun(at(240))).toBeCloseTo(1.524);
+    expect(fromSun(at(450))).toBeLessThan(1.524);
+    expect(fromSun(at(450))).toBeGreaterThan(1);
+    expect(fromSun(at(660))).toBeCloseTo(1);
+    // 660 days after the start date, when Earth is there to meet it.
+    const earth = planetPosition("earth", "2030-09-22");
+    expect(at(660).x).toBeCloseTo(earth.x);
+    expect(at(660).z).toBeCloseTo(earth.z);
   });
 });

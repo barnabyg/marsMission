@@ -28,9 +28,11 @@ const viewsOfMissionEvents: Partial<Record<string, MissionViewId>> = {
  * This is the only place that does, and it only reads the Timeline, so it can't change any rules.
  */
 export function viewAskedForBy(entry: TimelineEntry): MissionViewId | null {
-  return entry.kind === "missionEvent"
-    ? (viewsOfMissionEvents[entry.eventId] ?? null)
-    : null;
+  if (entry.kind !== "missionEvent") return null;
+  // A failure that swings the Mission back is one to watch on its way home.
+  return entry.returningToEarth
+    ? "solarSystem"
+    : (viewsOfMissionEvents[entry.eventId] ?? null);
 }
 
 /** The view the player last chose, and how many entries had happened when they did. */

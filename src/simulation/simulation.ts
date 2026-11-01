@@ -321,7 +321,10 @@ export function createSimulation(catalogue: Catalogue): Simulation {
 
     previewTrajectories(mission) {
       const chosen = rules.trajectoryFor(mission);
-      return catalogue.trajectories.map((trajectory) => ({
+      const offered = catalogue.trajectories.filter((trajectory) =>
+        rules.trajectoryOffered(trajectory, mission),
+      );
+      return offered.map((trajectory) => ({
         id: trajectory.id,
         name: trajectory.name,
         description: trajectory.description,

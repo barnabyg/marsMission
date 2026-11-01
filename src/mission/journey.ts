@@ -1,11 +1,19 @@
 import type { AssetAtMars, Timeline } from "../simulation/simulation";
 import { journeyProgress } from "./solarSystem/orbits";
 
+type Mission = NonNullable<Timeline["mission"]>;
+
 function describeAsset(
-  asset: NonNullable<Timeline["mission"]>["assets"][number],
+  asset: Mission["assets"][number],
   day: number,
+  returnsToEarth: Mission["returnsToEarth"],
 ): string | null {
   if (asset.lostOnDay !== null && day >= asset.lostOnDay) {
+    if (returnsToEarth) {
+      return day >= returnsToEarth.backOnDay
+        ? `${asset.name}: back at Earth`
+        : `${asset.name}: heading back to Earth`;
+    }
     return asset.crashed
       ? `${asset.name}: crashed at ${asset.landingSiteName ?? "Mars"}`
       : `${asset.name}: lost, and will not reach Mars`;
@@ -25,11 +33,13 @@ export function describeJourney(
 ): string {
   if (!mission) return "No Mission this Turn";
   const settled = mission.assets.flatMap((asset) => {
-    const text = describeAsset(asset, day);
+    const text = describeAsset(asset, day, mission.returnsToEarth);
     return text === null ? [] : [text];
   });
   const stillGoing = mission.assets
-    .filter((asset) => describeAsset(asset, day) === null)
+    .filter(
+      (asset) => describeAsset(asset, day, mission.returnsToEarth) === null,
+    )
     .map((asset) => asset.name);
   if (stillGoing.length > 0) {
     const progress = journeyProgress(mission, day);

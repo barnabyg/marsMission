@@ -12,6 +12,8 @@ interface JourneyDays {
   launchDay: number;
   arrivalDay: number;
   failedOnDay: number | null;
+  /** The way back, if a Free-return is bringing the Mission home. */
+  returnsToEarth?: { fromDay: number; backOnDay: number };
 }
 
 const millisecondsPerDay = 86_400_000;
@@ -67,6 +69,32 @@ export function journeyHasFailed(journey: JourneyDays, day: number): boolean {
   return journey.failedOnDay !== null && day >= journey.failedOnDay;
 }
 
+/** Whether a Free-return is on its way home on this day. It has gone from the view once it's back. */
+export function journeyIsReturning(journey: JourneyDays, day: number): boolean {
+  const { returnsToEarth } = journey;
+  return (
+    returnsToEarth !== undefined &&
+    day >= returnsToEarth.fromDay &&
+    day < returnsToEarth.backOnDay
+  );
+}
+
+/** A point along the way back: inwards from where Mars was on arrival to where Earth will be on the day it's back. */
+export function returnRoutePosition(
+  startDate: string,
+  journey: JourneyDays,
+  progress: number,
+): PlanePosition {
+  const backOnDay = journey.returnsToEarth?.backOnDay ?? journey.arrivalDay;
+  const from = longitudeDegrees("mars", addDays(startDate, journey.arrivalDay));
+  const to = longitudeDegrees("earth", addDays(startDate, backOnDay));
+  const sweep = (((to - from) % 360) + 360) % 360;
+  const eased = progress * progress * (3 - 2 * progress);
+  const radius =
+    orbits.mars.radius + (orbits.earth.radius - orbits.mars.radius) * eased;
+  return fromPolar(radius, from + sweep * progress);
+}
+
 /** A point along the route: outwards from Earth at launch to where Mars will be on arrival. */
 export function routePosition(
   startDate: string,
@@ -87,5 +115,14 @@ export function spacecraftPosition(
   journey: JourneyDays,
   day: number,
 ): PlanePosition {
+  const { returnsToEarth } = journey;
+  if (returnsToEarth && day >= returnsToEarth.fromDay) {
+    const { fromDay, backOnDay } = returnsToEarth;
+    return returnRoutePosition(
+      startDate,
+      journey,
+      Math.min(1, (day - fromDay) / (backOnDay - fromDay)),
+    );
+  }
   return routePosition(startDate, journey, journeyProgress(journey, day));
 }
