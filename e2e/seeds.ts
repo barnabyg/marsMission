@@ -185,6 +185,20 @@ export const orbitInsertionRescueFailsSeed = seedWhereUsing(
   false,
 );
 
+/** A seed whose first lander comes down too fast, and Backup thrusters save it. */
+export const landingRescuedSeed = seedWhereUsing(
+  {
+    mission: {
+      launchVehicleId: catalogue.launchVehicles[0]?.id ?? "",
+      assetIds: ["prospector-lander"],
+      landingSiteId: "jezero-crater",
+      contingencyIds: ["backup-thrusters"],
+    },
+  },
+  "contingency:entry-descent-landing",
+  true,
+);
+
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);
 

@@ -1,6 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
-import { eventEntries, watchForProblems } from "./helpers";
 import {
+  chooseAssets,
+  eventEntries,
+  holdSequence,
+  surfaceAssets,
+  watchForProblems,
+} from "./helpers";
+import {
+  landingRescuedSeed,
   orbitInsertionRescuedSeed,
   orbitInsertionRescueFailsSeed,
 } from "./seeds";
@@ -184,4 +191,45 @@ test("a Decision Point explains its terms", async ({ page }) => {
   await expect(
     decisionPoint(page).locator("[data-term]", { hasText: "Risk Band" }),
   ).toBeVisible();
+});
+
+test("a rescued landing shows its Decision Point first, then plays the landing, and the lander operates", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${landingRescuedSeed}`);
+  await chooseAssets(page, ["Prospector Lander"]);
+  await page.getByRole("checkbox", { name: /Backup thrusters/ }).check();
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await page.getByRole("button", { name: "10x" }).click();
+
+  await expect(decisionPoint(page)).toBeVisible();
+  const view = page.getByTestId("solar-system-view");
+  await expect(view).not.toHaveAttribute("data-sequence", /./);
+
+  // The test build's Turns are so short that at 10x this one would end before anything could hold it.
+  await page.getByRole("button", { name: "1x", exact: true }).click();
+  const held = holdSequence(page, 500);
+  await decisionPoint(page)
+    .getByRole("button", { name: /Use Backup thrusters/ })
+    .click();
+  await held;
+  await expect(view).toHaveAttribute("data-sequence", "landing");
+  await expect(page.getByTestId("current-view")).toHaveText("Surface");
+
+  await expect(surfaceAssets(page).first()).toContainText("Prospector Lander");
+  await expect(page.getByTestId("operating-at-mars")).toContainText(
+    "Service Life cut to 780 days",
+  );
+
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await expect(page.getByTestId("summary-contingencies")).toContainText(
+    "Prospector Lander now has a Service Life of 780 days",
+  );
+  await expect(page.getByTestId("summary-first-landing")).toBeVisible();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByTestId("operating-assets")).toContainText(
+    "Prospector Lander at Jezero Crater",
+  );
+  expect(problems).toEqual([]);
 });

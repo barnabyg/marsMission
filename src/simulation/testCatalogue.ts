@@ -345,7 +345,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         rescueFailureProbability: 0,
         serviceLifeLossPercent: 20,
         extraPublicSupportLoss: 15,
-        troubleDescription: "{lander} is coming down too fast at {site}.",
+        troubleDescription: "{lander} came in too fast at {site}.",
         rescueDescription: "{lander} made a hard landing at {site}.",
       },
     ],
