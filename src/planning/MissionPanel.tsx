@@ -110,7 +110,7 @@ export function MissionPanel({
       <h2>
         <GameText>Mission</GameText>
       </h2>
-      <div className="mission-route">
+      <div className="mission-launch">
         <label>
           <span>
             <GameText>Launch Vehicle</GameText>
@@ -246,7 +246,10 @@ export function MissionPanel({
               ))}
             </select>
             {event.contingency && (
-              <label className="contingency-choice">
+              <label
+                className="contingency-choice"
+                title={event.contingency.description}
+              >
                 <input
                   type="checkbox"
                   checked={event.contingency.bought}

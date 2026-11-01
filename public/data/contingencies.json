@@ -1,6 +1,6 @@
 [
   {
-    "id": "spare-upper-stage",
+    "id": "kick-stage",
     "name": "Kick stage",
     "description": "A small extra stage for a second try at leaving Earth orbit.",
     "missionEvent": "mars-transfer-burn",
@@ -26,8 +26,8 @@
     "rescueDescription": "The second burn on the reserve fuel caught the spacecraft, and it is in orbit around Mars, but its tanks are nearly dry."
   },
   {
-    "id": "backup-thrusters",
-    "name": "Backup thrusters",
+    "id": "retro-thrusters",
+    "name": "Retro thrusters",
     "description": "Extra thrusters for a last try at slowing down above the ground.",
     "missionEvent": "entry-descent-landing",
     "costMillions": 150,
@@ -35,7 +35,7 @@
     "rescueFailureProbability": 0.5,
     "serviceLifeLossPercent": 40,
     "extraPublicSupportLoss": 15,
-    "troubleDescription": "{lander} came in too fast over {site}. The backup thrusters could be fired for a last try at slowing down.",
+    "troubleDescription": "{lander} came in too fast over {site}. The retro thrusters could be fired for a last try at slowing down.",
     "rescueDescription": "{lander} made a hard landing at {site}, shaken but working."
   }
 ]

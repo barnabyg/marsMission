@@ -238,7 +238,7 @@ for (const size of screenSizes) {
         .getByRole("combobox", { name: "Trajectory" })
         .selectOption("free-return");
       await expect(page.getByTestId("trajectory-details")).toContainText(
-        "swings back",
+        "Swings back",
       );
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
       expect(await somethingScrolls(page)).toBe(false);

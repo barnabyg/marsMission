@@ -33,7 +33,7 @@ const trajectoriesSchema = z
       // How long the Mission takes to reach Mars, which is its Duration so far.
       transferDays: z.number().int().positive(),
       costMillions: money,
-      // How much less its Launch Vehicle can carry on this route, because of the extra fuel.
+      // How much less its Launch Vehicle can carry on this Trajectory, because of the extra fuel.
       capacityLossTonnes: z.number().nonnegative(),
       // Brings the Mission home if this Mission Event fails, which only a Mission that goes through it can use.
       freeReturn: z

@@ -2,7 +2,7 @@
   {
     "id": "slow",
     "name": "Slow",
-    "description": "The route that uses the least fuel, and the longest Duration.",
+    "description": "Uses the least fuel, and has the longest Duration.",
     "transferDays": 210,
     "costMillions": 0,
     "capacityLossTonnes": 0
@@ -18,8 +18,8 @@
   {
     "id": "free-return",
     "name": "Free-return",
-    "description": "A longer route that swings back to Earth if the arrival burn fails, rather than losing the Mission. It costs extra however the Mission goes.",
-    "transferDays": 240,
+    "description": "Swings back to Earth if the arrival burn fails, rather than losing the Mission. It costs extra however the Mission goes.",
+    "transferDays": 210,
     "costMillions": 150,
     "capacityLossTonnes": 0.2,
     "freeReturn": {

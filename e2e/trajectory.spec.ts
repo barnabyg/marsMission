@@ -32,6 +32,7 @@ test("Planning Mode shows what a Trajectory changes", async ({ page }) => {
   await expect(trajectory(page).locator("option")).toHaveText([
     "Slow (210 days)",
     "Fast (150 days, $200M, 0.5 t less)",
+    "Free-return (210 days, $150M, 0.2 t less)",
   ]);
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
   await expect(page.getByTestId("mission-mass")).toHaveText("2.5 of 4 tonnes");
@@ -73,7 +74,7 @@ test("a Trajectory too heavy for the Launch Vehicle is refused", async ({
   await page.goto(`/?seed=${successSeed}`);
   await page.getByRole("checkbox", { name: /Pathfinder Orbiter/ }).uncheck();
   await page.getByRole("checkbox", { name: /Trailblazer Rover/ }).check();
-  await page.getByRole("checkbox", { name: /Backup thrusters/ }).check();
+  await page.getByRole("checkbox", { name: /Retro thrusters/ }).check();
   await trajectory(page).selectOption("fast");
   await expect(page.getByRole("alert").first()).toContainText("3.5 tonnes");
   await expect(

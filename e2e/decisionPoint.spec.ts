@@ -199,7 +199,7 @@ test("a rescued landing shows its Decision Point first, then plays the landing, 
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${landingRescuedSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
-  await page.getByRole("checkbox", { name: /Backup thrusters/ }).check();
+  await page.getByRole("checkbox", { name: /Retro thrusters/ }).check();
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await page.getByRole("button", { name: "10x" }).click();
 
@@ -211,7 +211,7 @@ test("a rescued landing shows its Decision Point first, then plays the landing, 
   await page.getByRole("button", { name: "1x", exact: true }).click();
   const held = holdSequence(page, 500);
   await decisionPoint(page)
-    .getByRole("button", { name: /Use Backup thrusters/ })
+    .getByRole("button", { name: /Use Retro thrusters/ })
     .click();
   await held;
   await expect(view).toHaveAttribute("data-sequence", "landing");
