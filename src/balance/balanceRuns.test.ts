@@ -9,7 +9,8 @@ import { realCatalogueFiles } from "../testing/realCatalogue";
 import { invalidStates } from "./invalidStates";
 import { planningTools, playProgram } from "./playProgram";
 import { balanceReport } from "./report";
-import { strategies, type Strategy } from "./strategies";
+import type { Strategy } from "./playStyle";
+import { strategies } from "./strategies";
 import { sum } from "./sum";
 
 const files = realCatalogueFiles();

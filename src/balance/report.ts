@@ -1,7 +1,8 @@
 import { parseCatalogue, type CatalogueFiles } from "../catalogue/catalogue";
 import { createSimulation } from "../simulation/simulation";
 import { playProgram, type TurnRecord } from "./playProgram";
-import { strategies as allStrategies, type Strategy } from "./strategies";
+import type { Strategy } from "./playStyle";
+import { strategies as allStrategies } from "./strategies";
 import { sum } from "./sum";
 
 /** How many Turns each Program plays at most. */

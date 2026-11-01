@@ -8,7 +8,7 @@ import type {
   TurnSummary,
 } from "../simulation/simulation";
 import { invalidStates } from "./invalidStates";
-import type { PlanningTools, Strategy } from "./strategies";
+import type { PlanningTools, Strategy } from "./playStyle";
 
 /** What a report needs from one Turn of one Program. */
 export interface TurnRecord {
