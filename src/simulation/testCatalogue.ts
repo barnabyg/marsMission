@@ -115,6 +115,16 @@ export function testCatalogueFiles(): CatalogueFiles {
         technologyReadiness: "built",
         unproven: { costMillions: 200, failureMultiplier: 2 },
       },
+      {
+        id: "test-future-vehicle",
+        name: "Test Future Vehicle",
+        costMillions: 400,
+        capacityTonnes: 20,
+        missionEvents: ["test-launch", "test-burn"],
+        technologyReadiness: "not-built",
+        unproven: { costMillions: 600, failureMultiplier: 2 },
+        development: { costMillions: 500, turns: 1 },
+      },
     ],
     trajectories: [
       {
@@ -225,6 +235,20 @@ export function testCatalogueFiles(): CatalogueFiles {
         activities: ["test-nothing", "test-research"],
         landsAtSite: true,
         landingRiskMultiplier: 0.5,
+      },
+      {
+        id: "test-future-orbiter",
+        name: "Test Future Orbiter",
+        kind: "orbiter",
+        costMillions: 400,
+        massTonnes: 2,
+        failureChancePerTurn: 0,
+        serviceLifeOptions: longLife,
+        missionEvents: ["test-arrival"],
+        technologyReadiness: "not-built",
+        unproven: { costMillions: 600, failureMultiplier: 2 },
+        development: { costMillions: 300, turns: 2 },
+        activities: ["test-survey", "test-nothing", "test-research"],
       },
     ],
     landingSites: [

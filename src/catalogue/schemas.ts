@@ -53,14 +53,22 @@ const trajectoriesSchema = z
 
 /** How mature an Asset or Launch Vehicle is when a Program starts, and what it costs and risks until it is Flight-proven. */
 const technologyFields = {
-  // "built" hasn't flown yet, so it is Flight-proven only after its first successful use.
-  technologyReadiness: z.enum(["flight-proven", "built"]),
+  // "built" hasn't flown yet, so it is Flight-proven only after its first successful use. "not-built" can't fly until
+  // it has been through Development, and is then built.
+  technologyReadiness: z.enum(["flight-proven", "built", "not-built"]),
   // Only for one that doesn't start Flight-proven: its cost in place of costMillions, and what the failure probabilities
   // of the Mission Events it brings and of its failing in service are multiplied by, until it is Flight-proven.
   unproven: z
     .strictObject({
       costMillions: money,
       failureMultiplier: z.number().min(1),
+    })
+    .optional(),
+  // Only for one that isn't built yet: what its Development costs, paid when it starts, and how many Turns it takes.
+  development: z
+    .strictObject({
+      costMillions: money,
+      turns: z.number().int().positive(),
     })
     .optional(),
 };

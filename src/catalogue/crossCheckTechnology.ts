@@ -2,7 +2,7 @@ import { catalogueFileNames, type Catalogue } from "./schemas";
 
 /**
  * Technology Readiness: what a technology costs and risks until it is Flight-proven, given only for one that doesn't
- * start that way, and ids that name one technology each, because the Program saves which are Flight-proven by id.
+ * start that way, its Development, given only for one that isn't built yet, and ids that name one technology each, because the Program saves which are Flight-proven by id.
  */
 export function technologyProblems({
   assets,
@@ -14,9 +14,24 @@ export function technologyProblems({
     [catalogueFileNames.launchVehicles, launchVehicles],
   ] as const;
   for (const [file, technologies] of parts) {
-    for (const { id, costMillions, technologyReadiness, unproven } of [
-      ...technologies,
-    ]) {
+    for (const {
+      id,
+      costMillions,
+      technologyReadiness,
+      unproven,
+      development,
+    } of [...technologies]) {
+      if (technologyReadiness === "not-built") {
+        if (!development) {
+          problems.push(
+            `${file}: "${id}" isn't built yet, so it must have "development", with what its Development costs and how many Turns it takes`,
+          );
+        }
+      } else if (development) {
+        problems.push(
+          `${file}: "${id}" is already built, so it can't have "development"`,
+        );
+      }
       if (technologyReadiness === "flight-proven") {
         if (unproven) {
           problems.push(

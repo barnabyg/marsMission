@@ -90,5 +90,35 @@
     ],
     "failureChancePerTurn": 0.14,
     "technologyReadiness": "flight-proven"
+  },
+  {
+    "id": "endurance-rover",
+    "name": "Endurance Rover",
+    "kind": "rover",
+    "costMillions": 1300,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "activities": ["soil-analysis", "long-traverse", "nothing"],
+    "massTonnes": 3.5,
+    "serviceLifeOptions": [
+      {
+        "days": 2100,
+        "costMillions": 0
+      },
+      {
+        "days": 3600,
+        "costMillions": 300
+      }
+    ],
+    "failureChancePerTurn": 0.08,
+    "technologyReadiness": "not-built",
+    "unproven": {
+      "costMillions": 1600,
+      "failureMultiplier": 1.5
+    },
+    "development": {
+      "costMillions": 1500,
+      "turns": 2
+    }
   }
 ]

@@ -63,16 +63,16 @@ The sound effects in `public/sounds` are synthesised by `node scripts/generate-s
 
 `parseCatalogue` in `catalogue.ts` checks each data file against its schema in `schemas.ts`, then runs the cross-checks, which check the files against each other, one subject per file. A new field goes in `schemas.ts`. A check that needs another file goes in the cross-check for its subject, or, for a new subject such as Technology, in a new file beside them, added to the `crossChecks` list in `catalogue.ts`.
 
-| File                         | What it cross-checks                                                                                       |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `crossCheckIds.ts`           | That each id is used once in its file                                                                      |
-| `crossCheckMissionEvents.ts` | The Mission Events that Launch Vehicles, Assets and Contingencies refer to, and one Contingency per event  |
-| `crossCheckHazards.ts`       | Dust storms and solar particle events against the Turn and the Trajectories                                |
-| `crossCheckAssets.ts`        | Assets: Mission Events that need a Landing Site, Landing Sites, Activities and Service Life                |
-| `crossCheckMilestones.ts`    | Milestones that can be earned, and Funding Thresholds in ascending order                                   |
-| `crossCheckReliability.ts`   | Reliability levels in order, and Risk Bands that cover every failure probability                           |
-| `crossCheckTrajectories.ts`  | Trajectories and Free-returns that finish within a Turn                                                    |
-| `crossCheckTechnology.ts`    | Technology Readiness: what an unproven Asset or Launch Vehicle costs and risks, and ids unique across both |
+| File                         | What it cross-checks                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `crossCheckIds.ts`           | That each id is used once in its file                                                                         |
+| `crossCheckMissionEvents.ts` | The Mission Events that Launch Vehicles, Assets and Contingencies refer to, and one Contingency per event     |
+| `crossCheckHazards.ts`       | Dust storms and solar particle events against the Turn and the Trajectories                                   |
+| `crossCheckAssets.ts`        | Assets: Mission Events that need a Landing Site, Landing Sites, Activities and Service Life                   |
+| `crossCheckMilestones.ts`    | Milestones that can be earned, and Funding Thresholds in ascending order                                      |
+| `crossCheckReliability.ts`   | Reliability levels in order, and Risk Bands that cover every failure probability                              |
+| `crossCheckTrajectories.ts`  | Trajectories and Free-returns that finish within a Turn                                                       |
+| `crossCheckTechnology.ts`    | Technology Readiness: unproven costs and risks, Development, and ids unique across Assets and Launch Vehicles |
 
 ### The Simulation's files
 

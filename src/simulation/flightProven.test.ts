@@ -17,7 +17,7 @@ const onPrototype: TurnPlan = {
 };
 
 describe("Technology Readiness in Planning Mode", () => {
-  it("shows each Asset and Launch Vehicle as Flight-proven or built, with what it costs now", () => {
+  it("shows each Asset and Launch Vehicle as Flight-proven, built or not built, with what it costs now", () => {
     const { simulation, program } = setup();
     const view = simulation.readProgram(program);
     expect(
@@ -30,6 +30,7 @@ describe("Technology Readiness in Planning Mode", () => {
       ["test-vehicle", "flight-proven", 100],
       ["test-heavy", "flight-proven", 300],
       ["test-prototype", "built", 200],
+      ["test-future-vehicle", "not-built", 600],
     ]);
     expect(
       view.assets
