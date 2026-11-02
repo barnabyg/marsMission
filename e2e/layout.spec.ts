@@ -49,67 +49,91 @@ const allLandingSiteIds = realFiles.landingSites.map(({ id }) => id);
  */
 async function openBusyProgram(
   page: Page,
-  { allSurveyed = false } = {},
+  { allSurveyed = false, colossusBuilt = false } = {},
 ): Promise<void> {
+  const saved = busyProgram(allSurveyed);
   await page.addInitScript(
     ([key, value]) => {
       localStorage.setItem(key, value);
     },
     [
       storageKeyFor("automatic"),
-      JSON.stringify({
-        formatVersion: 6,
-        program: {
-          seed: successSeed,
-          turnNumber: 9,
-          date: "2045-01-01",
-          moneyMillions: 5000,
-          publicSupport: 200,
-          science: 800,
-          milestoneIds: realMilestones.map(({ id }) => id),
-          landedSiteIds: ["jezero-crater"],
-          knownLandingSiteIds: allSurveyed
-            ? allLandingSiteIds
-            : ["jezero-crater", "gale-crater"],
-          surveyedLandingSiteIds: allSurveyed ? allLandingSiteIds : [],
-          fundingThresholdsPaid: [250],
-          // A lander and a rover at a Landing Site too, whose rows are the longest and whose research lengthens the panel's text.
-          operatingAssets: Array.from({ length: 8 }, (_, index) => ({
-            ...(index < 6
-              ? {
-                  assetId: "pathfinder-orbiter",
-                  name: "Pathfinder Orbiter",
-                  kind: "orbiter",
-                  landingSiteId: null,
-                  activityId: "survey",
-                }
-              : index < 7
-                ? {
-                    assetId: "prospector-lander",
-                    name: "Prospector Lander",
-                    kind: "lander",
-                    landingSiteId: "jezero-crater",
-                    activityId: "surface-research",
-                  }
-                : {
-                    assetId: "trailblazer-rover",
-                    name: "Trailblazer Rover",
-                    kind: "rover",
-                    landingSiteId: "jezero-crater",
-                    activityId: "long-traverse",
-                  }),
-            arrivedOn: `203${index}-08-01`,
-            serviceLifeDays: 9000,
-            reliabilityLevelId: "none",
-          })),
-          status: { kind: "active" },
-        },
-      }),
+      JSON.stringify(
+        colossusBuilt
+          ? {
+              // Format 8 holds Development, here with the Meridian Colossus built.
+              formatVersion: 8,
+              program: {
+                ...saved.program,
+                provenTechnologyIds: [],
+                developments: [
+                  { technologyId: "meridian-colossus", finishesOnTurn: 9 },
+                ],
+                operatingAssets: saved.program.operatingAssets.map((asset) => ({
+                  ...asset,
+                  flewUnproven: false,
+                })),
+              },
+            }
+          : saved,
+      ),
     ] as const,
   );
   await page.goto("/");
   await page.getByRole("button", { name: "Continue this Program" }).click();
   await expect(page.getByTestId("turn-number")).toHaveText("9");
+}
+
+/** A Program in save format 6 with every Milestone earned and several operating Assets. */
+function busyProgram(allSurveyed: boolean) {
+  return {
+    formatVersion: 6,
+    program: {
+      seed: successSeed,
+      turnNumber: 9,
+      date: "2045-01-01",
+      moneyMillions: 5000,
+      publicSupport: 200,
+      science: 800,
+      milestoneIds: realMilestones.map(({ id }) => id),
+      landedSiteIds: ["jezero-crater"],
+      knownLandingSiteIds: allSurveyed
+        ? allLandingSiteIds
+        : ["jezero-crater", "gale-crater"],
+      surveyedLandingSiteIds: allSurveyed ? allLandingSiteIds : [],
+      fundingThresholdsPaid: [250],
+      // A lander and a rover at a Landing Site too, whose rows are the longest and whose research lengthens the panel's text.
+      operatingAssets: Array.from({ length: 8 }, (_, index) => ({
+        ...(index < 6
+          ? {
+              assetId: "pathfinder-orbiter",
+              name: "Pathfinder Orbiter",
+              kind: "orbiter",
+              landingSiteId: null,
+              activityId: "survey",
+            }
+          : index < 7
+            ? {
+                assetId: "prospector-lander",
+                name: "Prospector Lander",
+                kind: "lander",
+                landingSiteId: "jezero-crater",
+                activityId: "surface-research",
+              }
+            : {
+                assetId: "trailblazer-rover",
+                name: "Trailblazer Rover",
+                kind: "rover",
+                landingSiteId: "jezero-crater",
+                activityId: "long-traverse",
+              }),
+        arrivedOn: `203${index}-08-01`,
+        serviceLifeDays: 9000,
+        reliabilityLevelId: "none",
+      })),
+      status: { kind: "active" },
+    },
+  };
 }
 
 for (const size of screenSizes) {
@@ -238,6 +262,39 @@ for (const size of screenSizes) {
       await expect(page.getByTestId("trajectory-details")).toContainText(
         "Swings back",
       );
+      await expect(page.getByTestId("landing-site-details")).toBeVisible();
+      expect(await somethingScrolls(page)).toBe(false);
+      for (const name of ["Launch Mission", "End Turn without launching"]) {
+        await expect(page.getByRole("button", { name })).toBeInViewport({
+          ratio: 1,
+        });
+      }
+    });
+
+    test("Planning Mode fits on one screen with the Meridian Colossus, its refuelling and everything else chosen", async ({
+      page,
+    }) => {
+      await openBusyProgram(page, { colossusBuilt: true });
+      await page
+        .getByRole("combobox", { name: "Launch Vehicle" })
+        .selectOption("meridian-colossus");
+      await chooseAssets(page, allAssets);
+      await expect(
+        page.getByTestId("mission-event").filter({ hasText: "Rendezvous" }),
+      ).toBeVisible();
+      for (const contingency of await page
+        .getByRole("checkbox", { name: /Contingency/ })
+        .all()) {
+        await contingency.check();
+      }
+      for (const development of await page
+        .getByRole("checkbox", { name: "Start Development" })
+        .all()) {
+        await development.check();
+      }
+      await page
+        .getByRole("combobox", { name: "Trajectory" })
+        .selectOption("free-return");
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
       expect(await somethingScrolls(page)).toBe(false);
       for (const name of ["Launch Mission", "End Turn without launching"]) {

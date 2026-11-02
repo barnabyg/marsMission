@@ -199,7 +199,8 @@
 
 .mission-events {
   display: grid;
-  gap: 0.6rem;
+  /* Tight enough for the six Mission Events of a refuelled Mission with a landing to fit at 150% scaling. */
+  gap: 0.3rem;
   margin: 0;
   padding: 0;
   list-style: none;
