@@ -328,7 +328,7 @@ export const freeReturnSeed = seedWhere("Mars orbit insertion", {
   mission: { ...firstPlan.mission, trajectoryId: "free-return" },
 });
 
-/** Enough to develop the Meridian Colossus and then fill it, which a real Program can't afford until much later. */
+/** Enough to develop the Meridian Colossus and then fill it, which a real Program can't afford until later. */
 export const colossusMoney = 7000;
 
 const colossusSimulation = createSimulation(

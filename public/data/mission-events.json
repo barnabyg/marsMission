@@ -20,7 +20,7 @@
       "from": "launch",
       "days": 1
     },
-    "failureProbability": 0.06,
+    "failureProbability": 0.04,
     "publicSupportLoss": 20
   },
   {
@@ -32,7 +32,7 @@
       "from": "launch",
       "days": 2
     },
-    "failureProbability": 0.08,
+    "failureProbability": 0.05,
     "publicSupportLoss": 20
   },
   {

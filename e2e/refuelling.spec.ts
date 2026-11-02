@@ -34,7 +34,7 @@ test("develops the Meridian Colossus, then fills it with more than any other Lau
     launchVehicle(page).locator("option", { hasText: "Meridian Colossus" }),
   ).toHaveJSProperty("disabled", true);
   await expect(colossusDevelopment(page)).toContainText(
-    "Meridian Colossus ($2B, 2 Turns)",
+    "Meridian Colossus ($1.2B, 2 Turns)",
   );
   await colossusDevelopment(page)
     .getByRole("checkbox", { name: "Start Development" })

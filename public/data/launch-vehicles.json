@@ -18,7 +18,7 @@
   {
     "id": "meridian-colossus",
     "name": "Meridian Colossus",
-    "costMillions": 1200,
+    "costMillions": 800,
     "capacityTonnes": 16,
     "missionEvents": [
       "launch",
@@ -28,11 +28,11 @@
     ],
     "technologyReadiness": "not-built",
     "unproven": {
-      "costMillions": 1600,
+      "costMillions": 1100,
       "failureMultiplier": 1.5
     },
     "development": {
-      "costMillions": 2000,
+      "costMillions": 1200,
       "turns": 2
     }
   }

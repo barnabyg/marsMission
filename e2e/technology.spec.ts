@@ -32,14 +32,14 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
   await expect(
     page.locator(".asset-choice", { hasText: "Prospector Lander" }),
   ).toContainText("Flight-proven");
-  await expect(pinpointRow(page)).toContainText("Pinpoint Lander ($1.3B, 3 t)");
+  await expect(pinpointRow(page)).toContainText("Pinpoint Lander ($1.1B, 3 t)");
   await expect(
     pinpointRow(page).getByTestId("technology-readiness"),
   ).toHaveText("Unproven");
 
   await chooseAssets(page, ["Pinpoint Lander"]);
-  await expect(page.getByTestId("mission-cost")).toHaveText("$1.6B");
-  // Half the landing risk, but twice that until it is Flight-proven, and twice the chance of failing in service.
+  await expect(page.getByTestId("mission-cost")).toHaveText("$1.4B");
+  // Half the landing risk, but one and a half times that until it is Flight-proven, as is the chance of failing in service.
   await expect(landingRiskBand(page)).toHaveText("Over 30%");
   await expect(pinpointRow(page).getByTestId("asset-risk-band")).toHaveText(
     "~20% per Turn",
@@ -51,7 +51,7 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
   );
   await expect(
     eventEntries(page).filter({ hasText: "Pinpoint Lander is Flight-proven" }),
-  ).toContainText("From the next Turn on, it costs $1B");
+  ).toContainText("From the next Turn on, it costs $900M");
   await page.getByRole("button", { name: "10x" }).click();
   await expect(page.getByTestId("summary-flight-proven")).toHaveText(
     "Now Flight-proven: Pinpoint Lander",
@@ -62,12 +62,12 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
     .click();
 
   await expect(page.getByTestId("turn-number")).toHaveText("2");
-  await expect(pinpointRow(page)).toContainText("Pinpoint Lander ($1B, 3 t)");
+  await expect(pinpointRow(page)).toContainText("Pinpoint Lander ($900M, 3 t)");
   await expect(
     pinpointRow(page).getByTestId("technology-readiness"),
   ).toHaveText("Flight-proven");
   await chooseAssets(page, ["Pinpoint Lander"]);
-  await expect(page.getByTestId("mission-cost")).toHaveText("$1.3B");
+  await expect(page.getByTestId("mission-cost")).toHaveText("$1.2B");
   await expect(landingRiskBand(page)).toHaveText("~20%");
   await expect(pinpointRow(page).getByTestId("asset-risk-band")).toHaveText(
     "~10% per Turn",
@@ -95,13 +95,13 @@ test("develops the Endurance Rover over two Turns, then chooses it for a Mission
   ).toHaveText("Needs Development");
   await expect(enduranceRow(page).getByRole("checkbox")).toBeDisabled();
   await expect(enduranceDevelopment(page)).toContainText(
-    "Endurance Rover ($1.5B, 2 Turns)",
+    "Endurance Rover ($1.2B, 2 Turns)",
   );
   await enduranceDevelopment(page)
     .getByRole("checkbox", { name: "Start Development" })
     .check();
   // Paid this Turn alongside the Mission, so both count against the money.
-  await expect(page.getByTestId("development-cost")).toHaveText("$1.5B");
+  await expect(page.getByTestId("development-cost")).toHaveText("$1.2B");
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page
     .getByRole("button", { name: "End Turn without launching" })
@@ -111,7 +111,7 @@ test("develops the Endurance Rover over two Turns, then chooses it for a Mission
     "Development started: Endurance Rover",
   );
   await expect(page.getByTestId("summary-development-cost")).toHaveText(
-    "$1.5B",
+    "$1.2B",
   );
   await page
     .getByTestId("turn-summary")
@@ -119,7 +119,7 @@ test("develops the Endurance Rover over two Turns, then chooses it for a Mission
     .click();
 
   await expect(page.getByTestId("turn-number")).toHaveText("2");
-  await expect(page.getByTestId("money")).toHaveText("$2.5B");
+  await expect(page.getByTestId("money")).toHaveText("$2.8B");
   await expect(
     enduranceDevelopment(page).getByTestId("development-progress"),
   ).toHaveText("In Development: 1 Turn left");
@@ -146,7 +146,7 @@ test("develops the Endurance Rover over two Turns, then chooses it for a Mission
   ).toHaveText("Unproven");
   await chooseAssets(page, ["Endurance Rover"]);
   // Its unproven cost and the Launch Vehicle's.
-  await expect(page.getByTestId("mission-cost")).toHaveText("$1.9B");
+  await expect(page.getByTestId("mission-cost")).toHaveText("$1.7B");
   await expect(page.getByRole("alert")).toHaveCount(0);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(

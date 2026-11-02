@@ -46,7 +46,7 @@
     "id": "pinpoint-lander",
     "name": "Pinpoint Lander",
     "kind": "lander",
-    "costMillions": 1000,
+    "costMillions": 900,
     "missionEvents": ["entry-descent-landing"],
     "landsAtSite": true,
     "landingRiskMultiplier": 0.5,
@@ -65,8 +65,8 @@
     "failureChancePerTurn": 0.12,
     "technologyReadiness": "built",
     "unproven": {
-      "costMillions": 1300,
-      "failureMultiplier": 2
+      "costMillions": 1100,
+      "failureMultiplier": 1.5
     }
   },
   {
@@ -95,7 +95,7 @@
     "id": "endurance-rover",
     "name": "Endurance Rover",
     "kind": "rover",
-    "costMillions": 1300,
+    "costMillions": 1100,
     "missionEvents": ["entry-descent-landing"],
     "landsAtSite": true,
     "activities": ["soil-analysis", "long-traverse", "nothing"],
@@ -113,11 +113,11 @@
     "failureChancePerTurn": 0.08,
     "technologyReadiness": "not-built",
     "unproven": {
-      "costMillions": 1600,
+      "costMillions": 1400,
       "failureMultiplier": 1.5
     },
     "development": {
-      "costMillions": 1500,
+      "costMillions": 1200,
       "turns": 2
     }
   },
@@ -143,7 +143,7 @@
     "technologyReadiness": "flight-proven",
     "benefit": {
       "raises": "surfaceResearch",
-      "percent": 50
+      "percent": 75
     }
   }
 ]
