@@ -85,8 +85,9 @@ test("switches to the spacecraft view by hand on the way to Mars, and moves on o
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "1x" }).click();
-  await pauseAtEvent(page, "Mars orbit insertion");
+  await pauseAtEvent(page, "Mars orbit insertion", () =>
+    page.getByRole("button", { name: "1x" }).click(),
+  );
   await expect(currentView(page)).toHaveText("Mars orbit");
   await expectSpacecraftUnavailable(page);
   await expect(carried(page)).toHaveCount(0);

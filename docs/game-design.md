@@ -72,10 +72,10 @@ Any rule in this document beyond these is planned, so its absence from the code 
 - All Safety Margin is worth having but expensive.
 - Failure probabilities are shown to the player as rough bands (for example "~5%"), not exact figures.
 - The random seed is fixed when the Program starts, so the same plan gives the same outcome after a reload. A changed plan can avoid a failure already seen, for example by buying more Reliability or by not launching. _Open: whether to keep this gap is to be settled by playtest feedback._
+- Hazards are random environmental dangers, separate from planned Mission Events, that can raise Decision Points. Dust storms and solar particle events are the first two. A dust storm cutting solar power is planned.
 - A dust storm can blow up over any Landing Site in a Turn, for a stretch of days. Whether it does, when and for how long come from the seed, the Turn and that site alone, so no plan or answer moves it. It raises a Decision Point only if an Asset is operating at that site when it starts: sheltering keeps the Assets there safe but earns no Ongoing Research for the storm's days, and carrying on keeps them earning with a chance of each failing for good. It costs no Public Support, an orbiter isn't affected, and with nothing at stake it is only an entry in the events column.
 - A solar particle event can hit a Mission on its way to Mars, so never one that has arrived, and never with no Mission in flight. Each day on the way carries the same chance, so a longer Trajectory is more exposed. With no Crew yet it threatens hardware: safe mode costs each Asset on board some Service Life, and carrying on costs nothing unless they're hit, which shortens Service Life much further or loses the Mission and costs Public Support as a failed Mission Event does.
 - A landing due while a dust storm is over its Landing Site gets a go/no-go check, a Decision Point. Go lands now at a raised risk. Hold off lands on the day the storm has passed, at the usual risk, which moves the landing, the delivery, the research days and any Milestones with it, all within the Turn. Until there are Crew and Supplies, the only cost of waiting is Service Life, lost by each Asset being landed for each day held. There is no check for any other risk, such as landing at a site that hasn't been surveyed, because waiting does nothing for it. A Contingency for the landing still applies if it fails, whichever answer was given.
-- Mission Mode also has Hazards: random environmental dangers such as dust storms (less solar power, risk to Assets) and solar particle events (radiation, reduced by Protection). They are separate from planned Mission Events and can create Decision Points.
 
 ## Mission Mode
 
@@ -83,16 +83,12 @@ Any rule in this document beyond these is planned, so its absence from the code 
 - The graphics are a mix of pre-made animations (such as an asteroid strike on a base) and displays (such as orbital tracking of a journey).
 - Pre-made animations are scripted 3D sequences that run live in the game, not pre-rendered video, so they show the Assets the player actually bought at the Landing Site they actually chose.
 - The first animation goal is one success and one failure animation per kind of Mission Event, and one per Hazard. More will follow. Each Mission Event, Milestone and Funding Threshold is added to an events column beside the view when it happens, with its date, title and description, newest at the top, and stays until the Turn ends. Nothing needs dismissing and time keeps running, so the player pauses to read. A failure stands out in the failure colour and plays its sound.
-- Decision Points come from three triggers:
-  - A Mission Event fails and a Contingency the player bought can be used.
-  - A Hazard hits.
-  - A go/no-go check before a high-risk Mission Event, where the player can hold off (for example, delay a landing until a dust storm passes, at a cost in Supplies or Service Life).
-- Play pauses at each Decision Point with no time limit.
+- Play pauses at each Decision Point with no time limit. What raises one is under [Risk and Safety Margin](#risk-and-safety-margin).
 - Mission Mode has four views, with smooth camera transitions between them:
   - Solar system: Earth, Mars and the Mission's journey along its Trajectory.
   - Mars orbit: orbiting Assets, arrival, aerocapture.
   - Surface: a Landing Site, with landings, rovers and bases.
-  - Spacecraft: a close-up of the Mission in transit, used when something happens on the way, such as a solar particle event or a mechanical failure.
+  - Spacecraft: a close-up of the Mission in transit, used when something happens on the way: a solar particle event or a failed Mars transfer burn.
 - The view switches automatically for Mission Events and Hazards, and the player can switch views at any time.
 - A landing or crash plays for a few seconds of real time, the same at every speed, and pausing holds it. It only displays what has already been worked out. After a crash, the view goes back to whichever Landing Site still has something to show, or else to Mars orbit.
 

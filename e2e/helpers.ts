@@ -81,18 +81,28 @@ export function eventEntries(page: Page): Locator {
   return page.getByTestId("event-entry");
 }
 
-/** Waits for a Mission Event, Milestone or Funding Threshold to happen, then holds the Turn there to look at it. */
-export async function pauseAtEvent(page: Page, title: string): Promise<void> {
+/**
+ * Does `start`, which sets the Turn going and can then act or check things as it plays, and holds the Turn on the day a
+ * Mission Event, Milestone or Funding Threshold with this title happens, to look at it. The hold is set from inside the
+ * page before `start`, as a click on Pause from out here can land days later, or after the Turn has ended.
+ */
+export async function pauseAtEvent(
+  page: Page,
+  title: string,
+  start: () => Promise<unknown>,
+): Promise<void> {
+  await holdTurnWhenShown(page, title);
+  await start();
   await expect(
     eventEntries(page).getByRole("heading", { name: title, exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Pause" }).click();
+  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
 }
 
 /**
  * Holds the Turn from inside the page the moment an event with this title appears, or as soon as Mission Mode opens if
- * there's no title. Call it before the click that starts things moving. A Turn starts at the speed last chosen, and at
- * 10x pauseAtEvent's click from out here can land too late.
+ * there's no title. Call it before the click that starts things moving, as a click on Pause from out here can land too
+ * late.
  */
 export async function holdTurnWhenShown(
   page: Page,
@@ -174,13 +184,43 @@ export async function playToNextTurn(page: Page): Promise<void> {
   await summary.getByRole("button", { name: "Continue" }).click();
 }
 
-export function viewButton(
-  page: Page,
-  name: "Solar system" | "Mars orbit" | "Surface" | "Spacecraft",
-) {
+type ViewName = "Solar system" | "Mars orbit" | "Surface" | "Spacecraft";
+
+export function viewButton(page: Page, name: ViewName) {
   return page
     .getByRole("group", { name: "View" })
     .getByRole("button", { name });
+}
+
+/**
+ * Plays at this speed, switches to this view and pauses, all from inside the page in one go, and returns the view and
+ * speed shown while it played. At speed, a busy machine can reach the Turn's end between two clicks from out here.
+ * Waiting on microtasks lets React show each click without a frame passing, so no game time passes either.
+ */
+export function switchViewWhilePlaying(
+  page: Page,
+  speed: "1x" | "5x" | "10x",
+  view: ViewName,
+): Promise<{ view: string | null; speed: string | null }> {
+  return page.evaluate(
+    async ([speed, view]) => {
+      const click = async (name: string) => {
+        [...document.querySelectorAll("button")]
+          .find((button) => button.textContent === name)
+          ?.click();
+        await Promise.resolve();
+        await Promise.resolve();
+      };
+      const text = (testId: string) =>
+        document.querySelector(`[data-testid=${testId}]`)?.textContent ?? null;
+      await click(speed);
+      await click(view);
+      const seen = { view: text("current-view"), speed: text("current-speed") };
+      await click("Pause");
+      return seen;
+    },
+    [speed, view] as const,
+  );
 }
 
 export function surfaceAssets(page: Page) {
@@ -191,12 +231,18 @@ export function orbiterLabels(page: Page) {
   return page.getByTestId("mars-orbit-asset");
 }
 
+/** Launches the first Mission as planned, holding the Turn at the event with this title if there is one. */
 export async function launchFirstMission(
   page: Page,
   seed: number,
+  pauseAt?: string,
 ): Promise<void> {
   await page.goto(`/?seed=${seed}`);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
+  const launch = () =>
+    page.getByRole("button", { name: "Launch Mission" }).click();
+  await (pauseAt === undefined
+    ? launch()
+    : pauseAtEvent(page, pauseAt, launch));
   await expect(
     page.getByTestId("mission-scene").locator("canvas"),
   ).toBeVisible();

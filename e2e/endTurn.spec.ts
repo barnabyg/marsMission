@@ -43,9 +43,9 @@ test("ending a Turn partway gives the same outcome as playing it to the end", as
     localStorage.clear();
   });
   await page.goto(`/?seed=${successSeed}`);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await pauseAtEvent(page, "Launch");
-  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
+  await pauseAtEvent(page, "Launch", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
   await expect(
     page.getByRole("button", { name: "End Turn", exact: true }),
   ).toHaveAttribute("title", /The rest of the Turn still happens/);

@@ -34,7 +34,7 @@ function landingRiskBand(page: Page) {
 test("plans a landing, plays it through and reaches the next Turn", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing so the pause lands in time, then plays on to the next Turn.
+  // Over 5 s: waits at 1x for the landing, then plays on to the next Turn.
   const problems = watchForProblems(page);
   await planLanding(page, landingSeed);
 
@@ -44,8 +44,9 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await pauseAtEvent(page, "First landing at Jezero Crater");
+  await pauseAtEvent(page, "First landing at Jezero Crater", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
   await expect(
     eventEntries(page).getByRole("heading", { name: "First landing on Mars" }),
   ).toBeVisible();
@@ -74,7 +75,7 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
 test("refuses a too-heavy Mission, then launches an orbiter and a lander together", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing so the pause lands in time, then plays out the Turn.
+  // Over 5 s: waits at 1x for the landing, then plays out the Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
@@ -90,9 +91,10 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
   await expect(page.getByTestId("mission-mass")).toHaveText("5.5 of 8 tonnes");
   await expect(page.getByTestId("mission-cost")).toHaveText("$2.2B");
   await expect(page.getByTestId("mission-event")).toHaveCount(4);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
 
-  await pauseAtEvent(page, "Entry/descent/landing failed");
+  await pauseAtEvent(page, "Entry/descent/landing failed", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
   const failed = eventEntries(page).first();
   await expect(failed).toContainText(
     "Lost with the Mission: Prospector Lander",
@@ -122,7 +124,7 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
 test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site when planning a landing", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the Survey so the pause lands in time, then plays out the Turn.
+  // Over 5 s: waits at 1x for the Survey, then plays out the Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
@@ -134,8 +136,9 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
   );
 
   await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await pauseAtEvent(page, "Survey from orbit");
+  await pauseAtEvent(page, "Survey from orbit", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
   const survey = eventEntries(page).filter({ hasText: "Survey from orbit" });
   await expect(survey).toContainText("29 June 2029");
   await expect(survey).toContainText(
@@ -338,12 +341,13 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
 test("reports a failed landing as a crash at the Landing Site", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing so the pause lands in time, then plays out the Turn.
+  // Over 5 s: waits at 1x for the landing, then plays out the Turn.
   const problems = watchForProblems(page);
   await planLanding(page, crashSeed);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
 
-  await pauseAtEvent(page, "Entry/descent/landing failed");
+  await pauseAtEvent(page, "Entry/descent/landing failed", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
   const failed = eventEntries(page).first();
   await expect(failed).toHaveClass(/failed/);
   await expect(failed).toContainText("crashed at Jezero Crater");

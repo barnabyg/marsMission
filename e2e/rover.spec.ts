@@ -37,7 +37,7 @@ async function expectApart(labels: Locator): Promise<void> {
 test("lands a rover, gives it an Activity and sees its Science in the Turn summary", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing so the pause lands in time, then plays on to the next Turn.
+  // Over 5 s: waits at 1x for the landing, then plays on to the next Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${roverSeed}`);
   await chooseAssets(page, ["Trailblazer Rover"]);
@@ -60,9 +60,10 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   );
   await activity.selectOption("long-traverse");
   expect(await termsWithoutTooltips(page)).toEqual([]);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
 
-  await pauseAtEvent(page, "First landing at Jezero Crater");
+  await pauseAtEvent(page, "First landing at Jezero Crater", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
   await expect(
     eventEntries(page).filter({ hasText: "Entry/descent/landing" }),
   ).toContainText(
@@ -124,7 +125,7 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
 test("lands a rover and a lander at one site, each with its own Activity", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing so the pause lands in time.
+  // Over 5 s: waits at 1x for the landing.
   const problems = watchForProblems(page);
   await overrideProgramData(page, {
     startingMoneyMillions: landerAndRoverMoney,
@@ -141,9 +142,10 @@ test("lands a rover and a lander at one site, each with its own Activity", async
       .getByTestId("mission-event")
       .filter({ hasText: "Entry/descent/landing" }),
   ).toHaveCount(1);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
 
-  await pauseAtEvent(page, "First landing at Jezero Crater");
+  await pauseAtEvent(page, "First landing at Jezero Crater", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
   await expect(
     eventEntries(page).filter({ hasText: "Entry/descent/landing" }),
   ).toContainText(
@@ -153,14 +155,35 @@ test("lands a rover and a lander at one site, each with its own Activity", async
     .getByRole("group", { name: "View" })
     .getByRole("button", { name: "Mars orbit" })
     .click();
-  await page.getByRole("button", { name: "1x" }).click();
+  // Plays at 1x and pauses from inside the page as soon as both labels show, because a click from out here can come
+  // after the Turn ends. If the Turn ends first, the check after this fails at once.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const button = (name: string) =>
+          [...document.querySelectorAll("button")].find(
+            (button) => button.textContent === name,
+          );
+        button("1x")?.click();
+        requestAnimationFrame(function check() {
+          const shown = document.querySelectorAll(
+            "[data-testid=mars-surface-asset]",
+          ).length;
+          if (shown < 2 && button("Pause")) {
+            requestAnimationFrame(check);
+            return;
+          }
+          button("Pause")?.click();
+          resolve();
+        });
+      }),
+  );
+  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
   const landed = page.getByTestId("mars-surface-asset");
-  await expect(landed).toHaveCount(2);
   await expect(landed).toHaveText([
     "Prospector Lander at Jezero Crater",
     "Trailblazer Rover at Jezero Crater",
   ]);
-  await page.getByRole("button", { name: "Pause" }).click();
   await expectApart(landed);
 
   await page.getByRole("button", { name: "End Turn", exact: true }).click();
@@ -177,7 +200,7 @@ test("lands a rover and a lander at one site, each with its own Activity", async
 });
 
 test("loses a rover and a lander together in one crash", async ({ page }) => {
-  // Over 5 s: waits at 1x for the landing so the pause lands in time.
+  // Over 5 s: waits at 1x for the landing.
   const problems = watchForProblems(page);
   await overrideProgramData(page, {
     startingMoneyMillions: landerAndRoverMoney,
@@ -185,9 +208,10 @@ test("loses a rover and a lander together in one crash", async ({ page }) => {
   await page.goto(`/?seed=${landerAndRoverCrashSeed}`);
   await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
   await chooseAssets(page, ["Prospector Lander", "Trailblazer Rover"]);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
 
-  await pauseAtEvent(page, "Entry/descent/landing failed");
+  await pauseAtEvent(page, "Entry/descent/landing failed", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
   const failed = eventEntries(page).first();
   await expect(failed).toContainText(
     "The lander and the rover hit the ground too fast and crashed at Jezero Crater.",
