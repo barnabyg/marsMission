@@ -315,6 +315,7 @@ test("lists the planned Mission's Mission Events with rough risk bands, which ch
           serviceLifeOptions: [{ days: 900, costMillions: 0 }],
           failureChancePerTurn: 0,
           missionEvents: [],
+          technologyReadiness: "flight-proven",
           activities: ["nothing"],
         },
       ],
