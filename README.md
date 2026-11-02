@@ -18,17 +18,17 @@ To try the latest phase, follow the [Phase 5 playtest guide](docs/playtest/phase
 
 The Simulation holds all the rules and knows nothing about the browser. Everything else loads its data, saves its state or displays what it produces.
 
-| Folder           | What it holds                                                                                                                                                             |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/app`        | The App component that moves between screens and connects them to the Simulation, all styles (`styles.css`), and start-up                                                 |
-| `src/balance`    | Balance runs: strategies that play whole Programs through the Simulation, the checks for invalid states and the report (see [Balance runs](#balance-runs))                |
-| `src/catalogue`  | The Catalogue: parses and validates the data files in `public/data`, which `src/app` fetches                                                                              |
-| `src/mission`    | Mission Mode and the Turn summary: playback, sounds, and the views, each in its own subfolder, which `MissionMode.tsx` and `MissionScene.tsx` connect                     |
-| `src/planning`   | Planning Mode and the Program summary screen                                                                                                                              |
-| `src/save`       | The Save Store, which keeps what the Simulation saves in the browser, and the screens for saving: the opening screen and Save Slots                                       |
-| `src/simulation` | The Simulation: all the rules, with most of the tests, plus the small test catalogue and helpers those tests share (see [The Simulation's files](#the-simulations-files)) |
-| `src/testing`    | Test support that reads the real data files with Node, which is kept out of `src/simulation` because that folder has no Node types                                        |
-| `src/ui`         | Shared UI: dialogs (`Dialog.tsx`), tooltips (`tooltips.ts`, `GameText.tsx`, `TooltipLayer.tsx`) and date formatting                                                       |
+| Folder           | What it holds                                                                                                                                                                     |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app`        | The App component that moves between screens and connects them to the Simulation, all styles (`styles.css`), and start-up                                                         |
+| `src/balance`    | Balance runs: strategies that play whole Programs through the Simulation, the checks for invalid states and the report (see [Balance runs](#balance-runs))                        |
+| `src/catalogue`  | The Catalogue: parses and validates the data files in `public/data`, which `src/app` fetches. Also the tests of the tuned balance and of the current playtest guide's known seeds |
+| `src/mission`    | Mission Mode and the Turn summary: playback, sounds, and the views, each in its own subfolder, which `MissionMode.tsx` and `MissionScene.tsx` connect                             |
+| `src/planning`   | Planning Mode and the Program summary screen                                                                                                                                      |
+| `src/save`       | The Save Store, which keeps what the Simulation saves in the browser, and the screens for saving: the opening screen and Save Slots                                               |
+| `src/simulation` | The Simulation: all the rules, with most of the tests, plus the small test catalogue and helpers those tests share (see [The Simulation's files](#the-simulations-files))         |
+| `src/testing`    | Test support that reads the real data files with Node, which is kept out of `src/simulation` because that folder has no Node types                                                |
+| `src/ui`         | Shared UI: dialogs (`Dialog.tsx`), tooltips (`tooltips.ts`, `GameText.tsx`, `TooltipLayer.tsx`) and date formatting                                                               |
 
 Test fixtures go in `src/simulation/testCatalogue.ts` and `testHelpers.ts` for rule tests, which use round numbers so that balance changes don't break them. Use `src/testing/realCatalogue.ts` for tests of the game's actual balance.
 
@@ -42,6 +42,8 @@ A feature with new content touches these folders, in order:
 6. `e2e`: a browser test of the journey. A test that needs a known outcome, such as a landing that crashes or a dust storm on the second Turn, takes its seed from `e2e/seeds.ts`, which searches the real data files for one rather than pinning a number, so add a search there for a new outcome
 
 A ticket that only changes a screen or dialog starts from its component in `src/planning`, `src/mission` or `src/save`, and usually also touches `src/ui`, `src/app/styles.css` and the `e2e` file for that subject.
+
+A balance change starts in `public/data` and is judged by comparing `npm.cmd run balance` reports from before and after (see [Balance runs](#balance-runs)). It usually also reaches the tests of the tuned balance and the current playtest guide's known seeds in `src/catalogue`, the current guide in `docs/playtest`, and `src/balance/strategies.ts` if a strategy stops coping. It also reaches `e2e`: browser tests play with the real data files, so money, Public Support and Science figures in them can change with tuning, and a seed found in `e2e/seeds.ts` can change too. Rule tests in `src/simulation` use the test catalogue, so tuning doesn't touch them.
 
 | Command                | What it does                                                   |
 | ---------------------- | -------------------------------------------------------------- |
