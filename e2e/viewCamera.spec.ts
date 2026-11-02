@@ -158,6 +158,7 @@ test("a switch away holds until the next Mission Event with a view of its own", 
 test("ends up on the surface when several Mission Events pass at 10x", async ({
   page,
 }) => {
+  // Over 5 s: plays out a whole Turn, which is what the test is about.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
