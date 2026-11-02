@@ -25,3 +25,9 @@ Every sound file in this folder, with its source and licence, as [ADR 0005](../.
 - What: Two bright, quick chimes.
 - Source: scripts/generate-sounds.mjs in this repository
 - Licence: CC0-1.0 (public domain dedication)
+
+## rendezvous.wav
+
+- What: Two dull clunks, then a soft hiss.
+- Source: scripts/generate-sounds.mjs in this repository
+- Licence: CC0-1.0 (public domain dedication)
