@@ -33,6 +33,7 @@ async function expectSurfaceUnavailable(page: Page): Promise<void> {
   );
 }
 
+/** Launches a lander and a rover to Jezero Crater, holding the Turn as Mission Mode opens. */
 async function launchLanderAndRover(page: Page): Promise<void> {
   await overrideProgramData(page, {
     startingMoneyMillions: landerAndRoverMoney,
@@ -40,6 +41,7 @@ async function launchLanderAndRover(page: Page): Promise<void> {
   await page.goto(`/?seed=${landerAndRoverSeed}`);
   await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
   await chooseAssets(page, ["Prospector Lander", "Trailblazer Rover"]);
+  await holdTurnWhenShown(page);
   await page.getByRole("button", { name: "Launch Mission" }).click();
 }
 
@@ -51,16 +53,38 @@ test("switches to the surface view and back during a Turn, at any speed and whil
   await launchLanderAndRover(page);
   const current = page.getByTestId("current-view");
   const speed = page.getByTestId("current-speed");
-  await page.getByRole("button", { name: "5x" }).click();
+  await expect(speed).toHaveText("Paused");
 
-  // On the way, the destination with nothing there yet. Playing, which leaves the speed alone.
-  await viewButton(page, "Surface").click();
+  // Switching while playing leaves the speed alone. At 5x a busy machine can reach the Turn's end between two clicks
+  // from out here, so the page plays, switches, reads and pauses in one go. Waiting on microtasks lets React show
+  // each click without a frame passing, so no game time passes either.
+  const whilePlaying = await page.evaluate(async () => {
+    const shown = async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    };
+    const click = async (name: string) => {
+      [...document.querySelectorAll("button")]
+        .find((button) => button.textContent === name)
+        ?.click();
+      await shown();
+    };
+    const text = (testId: string) =>
+      document.querySelector(`[data-testid=${testId}]`)?.textContent;
+    await click("5x");
+    await click("Surface");
+    const seen = { view: text("current-view"), speed: text("current-speed") };
+    await click("Pause");
+    return seen;
+  });
+  expect(whilePlaying).toEqual({ view: "Surface", speed: "5x" });
+
+  // On the way, the destination with nothing there yet.
   await expect(current).toHaveText("Surface");
   await expect(viewButton(page, "Surface")).toHaveAttribute(
     "aria-pressed",
     "true",
   );
-  await expect(speed).toHaveText("5x");
   await expect(page.getByTestId("surface-site")).toHaveText("Jezero Crater");
   await expect(page.getByTestId("surface-status")).toContainText(
     "Nothing here yet",
@@ -73,7 +97,7 @@ test("switches to the surface view and back during a Turn, at any speed and whil
   await expect(page.getByTestId("surface-unavailable")).toHaveCount(0);
 
   // Paused, which holds the date and the events column.
-  await page.getByRole("button", { name: "Pause" }).click();
+  await expect(speed).toHaveText("Paused");
   const date = await page.getByTestId("mission-date").textContent();
   const happened = await eventEntries(page).count();
   await viewButton(page, "Solar system").click();

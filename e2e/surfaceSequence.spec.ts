@@ -192,9 +192,29 @@ test("moves a rover's label across the surface on a Long traverse", async ({
   const place = () => label.evaluate((element) => element.style.transform);
 
   const before = await place();
+  // Paused from inside the page as soon as the label moves, because a click from out here can come after the Turn ends.
+  // If the label goes first, the Turn has ended, and the check after this fails at once.
+  const labelMoved = page.evaluate(
+    (start) =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(function check() {
+          const label = document.querySelector<HTMLElement>(
+            "[data-testid=surface-asset]",
+          );
+          if (label?.style.transform === start) {
+            requestAnimationFrame(check);
+            return;
+          }
+          [...document.querySelectorAll("button")]
+            .find((button) => button.textContent === "Pause")
+            ?.click();
+          resolve();
+        });
+      }),
+    before,
+  );
   await page.getByRole("button", { name: "1x" }).click();
-  await expect.poll(place).not.toBe(before);
-  await page.getByRole("button", { name: "Pause" }).click();
+  await labelMoved;
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
   // A label moves in the frame after its day, and on a slow renderer one frame outlasts any fixed wait.
   await framesDrawn(page, 5);
