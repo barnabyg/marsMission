@@ -85,7 +85,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 | `saveFormat.ts`                                               | Each released save format and how to upgrade it to the next                                                                                   |
 | `testCatalogue.ts`, `testHelpers.ts`, `scienceTestHelpers.ts` | Fixtures and helpers for the rule tests                                                                                                       |
 
-A new rule usually goes in the file for its step of the Turn, or a new file beside them for a new Hazard, called from `turnSteps.ts` if it happens at Mars and from `flyMission.ts` if it happens to the Mission. Its tests go in a test file named after the rule.
+A new rule usually goes in the file for its step of the Turn, or a new file beside them for a new Hazard, called from `turnSteps.ts` if it happens at Mars and from `flyMission.ts` if it happens to the Mission. Its tests go in a test file named after the rule. A new Hazard usually also needs a Decision Point kind and its answers in `types.ts`, an entry for it in `timeline.ts`, a cautious answer in `simulation.ts`, and switching off in `calmCatalogueFiles` in `src/testing/realCatalogue.ts`, so that tests of the rest of the balance aren't disturbed by it.
 
 ### Balance runs
 
