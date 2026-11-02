@@ -4,35 +4,14 @@ import { playProgram, type TurnRecord } from "./playProgram";
 import type { Strategy } from "./playStyle";
 import { strategies as allStrategies } from "./strategies";
 import { sum } from "./sum";
+import { mean, percent, table, tenth, whole } from "./reportFormat";
+import { technology } from "./technologyReport";
 
 /** How many Turns each Program plays at most. */
 const turnHorizon = 20;
 const barWidth = 40;
 
 type Play = TurnRecord[];
-
-const mean = (values: number[]) =>
-  values.length > 0 ? sum(values) / values.length : 0;
-const percent = (part: number, whole: number) =>
-  whole > 0 ? ((100 * part) / whole).toFixed(1) : "-";
-const whole = (value: number) => String(Math.round(value));
-const tenth = (value: number) => value.toFixed(1);
-
-/** Lines of a fixed-width table: the first column on the left and the rest on the right. */
-function table(headers: string[], rows: string[][]): string[] {
-  const widths = headers.map((header, column) =>
-    Math.max(header.length, ...rows.map((row) => row[column]?.length ?? 0)),
-  );
-  return [headers, ...rows].map((row) =>
-    row
-      .map((cell, column) =>
-        column === 0
-          ? cell.padEnd(widths[column] ?? 0)
-          : cell.padStart(widths[column] ?? 0),
-      )
-      .join("  "),
-  );
-}
 
 const totalOf = (play: Play, read: (turn: TurnRecord) => number) =>
   sum(play.map(read));
@@ -399,6 +378,10 @@ export function balanceReport(
     "Programs that gave each answer at least once, and how they ended: Gave% of the strategy's Programs, then their means.",
     "",
     ...decisionOutcomes(results),
+    "",
+    "== Technology ==",
+    "",
+    ...technology(results),
   ];
   for (const { strategy, plays } of results) {
     lines.push(

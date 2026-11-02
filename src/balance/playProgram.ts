@@ -36,6 +36,11 @@ export interface TurnRecord {
   rescues: number;
   /** Each Decision Point answered, by kind. */
   decisions: { kind: DecisionPoint["kind"]; answer: DecisionAnswer }[];
+  /** The technologies whose Development started this Turn, and those that finish as the next Turn starts. */
+  developmentsStarted: string[];
+  developmentsFinished: string[];
+  /** Each technology the Turn's Mission flew before it was Flight-proven, and whether that flight failed to prove it. */
+  unprovenFlights: { name: string; failed: boolean }[];
 }
 
 /** What a strategy may ask about the Program it is planning for, which it never sees itself. */
@@ -59,9 +64,10 @@ export function planningTools(
 }
 
 function recordOf(
-  launched: boolean,
+  before: ProgramView,
+  plan: TurnPlan,
   summary: TurnSummary,
-  after: ReturnType<Simulation["readProgram"]>,
+  after: ProgramView,
 ): TurnRecord {
   const decisions = decisionsIn(summary);
   return {
@@ -88,12 +94,32 @@ function recordOf(
       0,
     ),
     assetsFailed: summary.assetsFailed.length,
-    launched,
+    launched: plan.mission !== null,
     missionFailed: summary.failure !== null,
     decisionPoints: decisions.length,
     rescues: summary.contingencies.filter(({ rescued }) => rescued).length,
     decisions,
+    developmentsStarted: summary.developmentsStarted,
+    developmentsFinished: summary.developmentsFinished,
+    unprovenFlights: unprovenOn(before, plan).map((name) => ({
+      name,
+      failed: !summary.technologiesProven.includes(name),
+    })),
   };
+}
+
+/** The technologies on a plan's Mission that aren't Flight-proven as the Turn starts, by name. */
+function unprovenOn({ launchVehicles, assets }: ProgramView, plan: TurnPlan) {
+  const { mission } = plan;
+  if (!mission) return [];
+  return [
+    ...launchVehicles.filter(({ id }) => id === mission.launchVehicleId),
+    ...assets.filter(({ id }) => mission.assetIds.includes(id)),
+  ]
+    .filter(
+      ({ technologyReadiness }) => technologyReadiness !== "flight-proven",
+    )
+    .map(({ name }) => name);
 }
 
 /** Every Decision Point a Turn's summary reports, with how it was answered. */
@@ -175,7 +201,7 @@ export function playProgram(
     ];
     if (invalid.length > 0) throw fail(invalid);
 
-    records.push(recordOf(plan.mission !== null, result.summary, after));
+    records.push(recordOf(view, plan, result.summary, after));
     program = result.program;
     view = after;
   }

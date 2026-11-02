@@ -151,3 +151,63 @@ describe("the report", () => {
     expect(text).not.toContain("First Mission failed (");
   });
 });
+
+describe("the report on technology", () => {
+  const named = (name: string) => {
+    const strategy = strategies.find((each) => each.name === name);
+    if (!strategy) throw new Error(`Expected the strategy "${name}"`);
+    return strategy;
+  };
+
+  it("counts Developments started and finished, and how Programs ended by whether they started one", () => {
+    const text = balanceReport(certain, 2, [
+      named("steady: develop the Endurance Rover"),
+    ]);
+    expect(text).toMatch(
+      /^steady: develop the Endurance Rover +yes +100\.0 +1\.0 +1\.0 +\d+ +\d+ +0\.0$/m,
+    );
+    expect(text).not.toMatch(/^steady: develop the Endurance Rover +no /m);
+  });
+
+  it("counts first flights of unproven technology, how often they failed, and how Programs ended after each", () => {
+    const text = balanceReport(files, 20, [
+      named("land straight away, Pinpoint Lander"),
+    ]);
+    const row = (pattern: string) =>
+      new RegExp(
+        `^land straight away, Pinpoint Lander +Pinpoint Lander +${pattern}$`,
+        "m",
+      );
+    expect(text).toMatch(row(String.raw`100\.0 +\d+\.\d +1\.0`));
+    expect(text).toMatch(row(String.raw`worked +\d+\.\d +\d+ +\d+ +\d+\.\d`));
+    expect(text).toMatch(row(String.raw`failed +\d+\.\d +\d+ +\d+ +\d+\.\d`));
+  });
+
+  it("records a first flight as failed when it doesn't make the technology Flight-proven", () => {
+    const flights = Array.from({ length: 20 }, (_, index) =>
+      playProgram(
+        real,
+        named("land straight away, Pinpoint Lander"),
+        index + 1,
+        turns,
+      ),
+    ).flatMap(({ turns: played }) =>
+      played.flatMap(({ unprovenFlights, missionFailed }) =>
+        unprovenFlights.map(({ failed }) => ({ failed, missionFailed })),
+      ),
+    );
+    expect(flights.some(({ failed }) => failed)).toBe(true);
+    expect(flights.some(({ failed }) => !failed)).toBe(true);
+    // Only the Pinpoint Lander is unproven here, so its flight fails exactly when the Mission does.
+    for (const { failed, missionFailed } of flights) {
+      expect(failed).toBe(missionFailed);
+    }
+  });
+
+  it("says so when a strategy neither develops nor flies unproven technology", () => {
+    const text = balanceReport(files, 3, [launchNothing]);
+    expect(text).toContain("== Technology ==");
+    expect(text).toContain("Developments: none");
+    expect(text).toContain("First flights of unproven technology: none");
+  });
+});
