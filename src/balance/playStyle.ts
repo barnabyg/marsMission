@@ -39,6 +39,8 @@ type Aim = "science" | "grants";
 export interface PlayStyle {
   /** The kinds of Asset to try sending this Turn, best first. */
   order(view: ProgramView): string[];
+  /** Assets, by id, to send in place of the first of their kind, whether or not they are Flight-proven yet, when it can afford them. */
+  prefers?: string[];
   /** What Assets on the surface and orbiters doing research aim for, which can change as the Program goes on. */
   aim: Aim | ((view: ProgramView) => Aim);
   /** Whether an Asset that can Survey does that first, while there is something left to Survey. */
@@ -162,8 +164,23 @@ function missionsFor(
   playStyle: PlayStyle,
   surveying: boolean,
 ): PlannedMission[] {
-  const asset = view.assets.find((candidate) => candidate.kind === kind);
-  if (!asset) return [];
+  const ofKind = view.assets.filter((candidate) => candidate.kind === kind);
+  const preferred = ofKind.filter(({ id }) => playStyle.prefers?.includes(id));
+  const assets = new Set([...preferred, ...ofKind.slice(0, 1)]);
+  return [...assets].flatMap((asset) =>
+    missionsForAsset(asset, view, tools, playStyle, surveying),
+  );
+}
+
+/** Ways of sending this Asset this Turn, from what the PlayStyle wants most down to the cheapest. */
+function missionsForAsset(
+  asset: ProgramView["assets"][number],
+  view: ProgramView,
+  tools: PlanningTools,
+  playStyle: PlayStyle,
+  surveying: boolean,
+): PlannedMission[] {
+  const { kind } = asset;
   const vehicle = view.launchVehicles
     .filter(({ capacityTonnes }) => capacityTonnes >= asset.massTonnes)
     .toSorted((first, second) => first.costMillions - second.costMillions)[0];

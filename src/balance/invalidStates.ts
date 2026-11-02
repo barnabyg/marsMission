@@ -13,6 +13,17 @@ export function invalidStates(
   const belowCancellationLevel = after.publicSupport < after.cancellationLevel;
   const milestoneIds = after.milestones.map(({ id }) => id);
   const siteIds = after.landingSites.map(({ id }) => id);
+  const flightProven = (view: ProgramView) =>
+    [...view.launchVehicles, ...view.assets]
+      .filter(
+        ({ technologyReadiness }) => technologyReadiness === "flight-proven",
+      )
+      .map(({ name }) => name);
+  const provenBefore = flightProven(before);
+  const provenAfter = flightProven(after);
+  const newlyProven = provenAfter
+    .filter((name) => !provenBefore.includes(name))
+    .toSorted();
   const checks: [impossible: boolean, problem: string][] = [
     [
       before.status.kind !== "active",
@@ -158,6 +169,20 @@ export function invalidStates(
     [
       before.landingSites.some(({ id }) => !siteIds.includes(id)),
       "A known Landing Site was forgotten.",
+    ],
+    [
+      provenBefore.some((name) => !provenAfter.includes(name)),
+      "A Flight-proven technology became unproven.",
+    ],
+    [
+      newlyProven.join() !== summary.technologiesProven.toSorted().join(),
+      "The technologies that became Flight-proven don't match the Turn summary.",
+    ],
+    [
+      summary.technologiesProven.some((name) =>
+        summary.failure?.assetsLost.includes(name),
+      ),
+      "An Asset lost with the Mission became Flight-proven.",
     ],
   ];
   return checks.flatMap(([impossible, problem]) =>

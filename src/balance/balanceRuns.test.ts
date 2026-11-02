@@ -198,6 +198,22 @@ describe("every strategy on the real data files", () => {
     ]);
   });
 
+  it("sends the Pinpoint Lander unproven when it prefers it, which makes it Flight-proven", () => {
+    const pinpoint = strategies.find(
+      ({ name }) => name === "land straight away, Pinpoint Lander",
+    );
+    if (!pinpoint) throw new Error("Expected the Pinpoint Lander strategy");
+    const certainly = simulationOf(certain);
+    const start = certainly.startProgram(1);
+    const plan = pinpoint.plan(
+      certainly.readProgram(start),
+      planningTools(certainly, start),
+    );
+    expect(plan.mission?.assetIds).toEqual(["pinpoint-lander"]);
+    const { summary } = certainly.runTurn(start, plan);
+    expect(summary.technologiesProven).toEqual(["Pinpoint Lander"]);
+  });
+
   it("gives an orbiter research once nothing is left to Survey", () => {
     const surveyFirst = strategies.find(({ name }) => name === "survey first");
     if (!surveyFirst) throw new Error("Expected the survey first strategy");
@@ -356,6 +372,43 @@ describe("the checks for invalid states", () => {
       "a forgotten Landing Site",
       () => changedAfter({ landingSites: [] }),
       /Landing Site was forgotten/,
+    ],
+    [
+      "a Flight-proven technology becoming unproven",
+      () =>
+        changedAfter({
+          assets: after.assets.map((asset) => ({
+            ...asset,
+            technologyReadiness: "built" as const,
+          })),
+        }),
+      /Flight-proven technology became unproven/,
+    ],
+    [
+      "a technology becoming Flight-proven that the Turn summary doesn't list",
+      () =>
+        changedAfter({
+          assets: after.assets.map((asset) => ({
+            ...asset,
+            technologyReadiness: "flight-proven" as const,
+          })),
+        }),
+      /don't match the Turn summary/,
+    ],
+    [
+      "an Asset lost with the Mission becoming Flight-proven",
+      () =>
+        changedSummary({
+          technologiesProven: ["Pathfinder Orbiter"],
+          failure: {
+            missionEventName: "Launch",
+            assetsLost: ["Pathfinder Orbiter"],
+            publicSupportLost: 0,
+            returnedToEarth: false,
+            refundMillions: 0,
+          },
+        }),
+      /lost with the Mission became Flight-proven/,
     ],
   ])("catch %s", (_, check, expected) => {
     expect(check().join(" ")).toMatch(expected);

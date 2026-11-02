@@ -14,6 +14,16 @@ const surveyingLanders: PlayStyle = {
   onlySurveyedSites: true,
 };
 
+/** Landers at unsurveyed sites until one lands, and then the same as surveyingLanders. */
+const landingStraightAway: PlayStyle = {
+  ...surveyingLanders,
+  onlySurveyedSites: false,
+  order: (view) =>
+    view.landingSites.some(({ landed }) => landed)
+      ? surveyThenLand(["lander"])(view)
+      : ["lander", "orbiter"],
+};
+
 const surveyingRovers: PlayStyle = {
   ...surveyingLanders,
   order: surveyThenLand(["rover", "lander"]),
@@ -68,14 +78,17 @@ export const strategies: Strategy[] = [
   playStyle(
     "land straight away",
     "Landers at unsurveyed sites until one lands, and then the same as survey first.",
-    {
-      ...surveyingLanders,
-      onlySurveyedSites: false,
-      order: (view) =>
-        view.landingSites.some(({ landed }) => landed)
-          ? surveyThenLand(["lander"])(view)
-          : ["lander", "orbiter"],
-    },
+    landingStraightAway,
+  ),
+  playStyle(
+    "survey first, Pinpoint Lander",
+    "As survey first, sending the Pinpoint Lander, which starts unproven, in place of the other lander whenever it can afford it.",
+    { ...surveyingLanders, prefers: ["pinpoint-lander"] },
+  ),
+  playStyle(
+    "land straight away, Pinpoint Lander",
+    "As land straight away, sending the Pinpoint Lander in place of the other lander whenever it can afford it.",
+    { ...landingStraightAway, prefers: ["pinpoint-lander"] },
   ),
   playStyle(
     "favour Science",
