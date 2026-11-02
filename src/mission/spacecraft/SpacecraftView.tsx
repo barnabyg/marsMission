@@ -14,12 +14,10 @@ import { useDisposal, type Point, type SceneLabel } from "../sceneParts";
 import { markChanged, softDot } from "../surface/SequenceParticles";
 import { particleCount, writeParticleStream } from "./particleStream";
 import { assetsOnBoard, spacecraftCentre, stackLayout } from "./spacecraft";
+import { MissionStack } from "./spacecraftModels";
 
 /** How far above the middle of the stack the Assets' labels sit. */
 const labelHeight = 0.62;
-
-/** What's lost on the way is drawn darkened, and turns over slowly with nothing to steady it. */
-const lostColor = "#5b3c36";
 
 /** A place along the stack and a height above it, in the scene. The stack runs across the shot, which is along z. */
 function inTheShot(along: number, height: number): Point {
@@ -28,91 +26,6 @@ function inTheShot(along: number, height: number): Point {
     spacecraftCentre[1] + height,
     spacecraftCentre[2] - along,
   ];
-}
-
-function Part({
-  color,
-  lost,
-  children,
-}: {
-  color: string;
-  lost: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <mesh>
-      {children}
-      <meshStandardMaterial
-        color={lost ? lostColor : color}
-        roughness={0.55}
-        metalness={0.35}
-      />
-    </mesh>
-  );
-}
-
-/** The cruise stage that carries everything to Mars: a drum with an engine behind it and a solar panel either side. */
-function CruiseStage({ lost }: { lost: boolean }) {
-  return (
-    <>
-      <group rotation={[0, 0, Math.PI / 2]}>
-        <Part color="#c9ccd4" lost={lost}>
-          <cylinderGeometry args={[0.3, 0.3, 0.6, 24]} />
-        </Part>
-        {/* The engine's bell, opening out behind. */}
-        <group position={[0, 0.42, 0]} rotation={[Math.PI, 0, 0]}>
-          <Part color="#55585f" lost={lost}>
-            <coneGeometry args={[0.16, 0.26, 20]} />
-          </Part>
-        </group>
-      </group>
-      {[1, -1].map((side) => (
-        <group key={side} position={[0, side * 0.85, 0]}>
-          <Part color="#20345e" lost={lost}>
-            <boxGeometry args={[0.5, 1.1, 0.03]} />
-          </Part>
-        </group>
-      ))}
-    </>
-  );
-}
-
-/** An orbiter folded up for the journey: a gold-wrapped body with its dish on top. */
-function Orbiter({ lost }: { lost: boolean }) {
-  return (
-    <>
-      <Part color="#d6a640" lost={lost}>
-        <boxGeometry args={[0.6, 0.5, 0.5]} />
-      </Part>
-      <group position={[0, 0.3, 0]}>
-        <Part color="#e8e8ec" lost={lost}>
-          <cylinderGeometry args={[0.22, 0.12, 0.06, 24]} />
-        </Part>
-      </group>
-    </>
-  );
-}
-
-/** A lander or rover, packed inside its aeroshell: a cone narrowing towards the cruise stage, and the heat shield ahead. */
-function Aeroshell({ lost, color }: { lost: boolean; color: string }) {
-  return (
-    <group rotation={[0, 0, Math.PI / 2]}>
-      <Part color={color} lost={lost}>
-        <coneGeometry args={[0.4, 0.5, 28]} />
-      </Part>
-      <group position={[0, -0.28, 0]}>
-        <Part color="#7a4a2c" lost={lost}>
-          <cylinderGeometry args={[0.44, 0.44, 0.08, 28]} />
-        </Part>
-      </group>
-    </group>
-  );
-}
-
-function AssetModel({ kind, lost }: { kind: string; lost: boolean }) {
-  if (kind === "lander") return <Aeroshell lost={lost} color="#d9d6cf" />;
-  if (kind === "rover") return <Aeroshell lost={lost} color="#eef0f4" />;
-  return <Orbiter lost={lost} />;
 }
 
 /** A solar particle event: a stream of particles sweeping past, and a glow that flickers over the whole shot. */
@@ -204,37 +117,13 @@ export function SpacecraftScene({
 }) {
   const onBoard = assetsOnBoard(timeline.mission, day);
   if (!timeline.mission) return null;
-  const layout = stackLayout(onBoard.length);
   const lost = onBoard.some((asset) => asset.lost);
-  const last = layout.assets.at(-1);
   return (
     <group position={spacecraftCentre}>
       {/* Along the stack is across the shot. */}
       <group rotation={[0, Math.PI / 2, 0]}>
         <Tumble turning={lost}>
-          {last !== undefined && (
-            <group
-              position={[(layout.cruise + last) / 2, 0, 0]}
-              rotation={[0, 0, Math.PI / 2]}
-            >
-              <Part color="#8a8d94" lost={lost}>
-                <cylinderGeometry
-                  args={[0.05, 0.05, last - layout.cruise, 8]}
-                />
-              </Part>
-            </group>
-          )}
-          <group position={[layout.cruise, 0, 0]}>
-            <CruiseStage lost={lost} />
-          </group>
-          {onBoard.map((asset, index) => (
-            <group
-              key={asset.name}
-              position={[layout.assets[index] ?? 0, 0, 0]}
-            >
-              <AssetModel kind={asset.kind} lost={asset.lost} />
-            </group>
-          ))}
+          <MissionStack onBoard={onBoard} lost={lost} />
         </Tumble>
         {particles && <SolarParticleEffect />}
       </group>
