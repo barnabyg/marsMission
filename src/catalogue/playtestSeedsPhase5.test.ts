@@ -4,7 +4,8 @@ import { parseCatalogue } from "./catalogue";
 import { createSimulation, type TurnPlan } from "../simulation/simulation";
 import { realCatalogueFiles } from "../testing/realCatalogue";
 
-// If tuning fails one of these, find a new seed that gives this story and update the guide.
+// Only the current playtest guide's known seeds are tested, and these tests move to the new guide with each phase.
+// If tuning fails one of these, find a new seed that gives this story and update this guide. Earlier guides are records and aren't updated.
 describe("the known seeds in the Phase 5 playtest guide", () => {
   const guide = readFileSync("docs/playtest/phase-5.md", "utf8");
   const real = createSimulation(parseCatalogue(realCatalogueFiles()));
