@@ -62,14 +62,13 @@ test("moves the view to Mars orbit on arrival, and leaves it where the player th
 }) => {
   // Over 5 s: stops at two points at 1x, then checks the view for the rest of the Turn.
   const problems = watchForProblems(page);
-  await launchFirstMission(page, successSeed);
+  await launchFirstMission(page, successSeed, "Mars transfer burn");
   const current = page.getByTestId("current-view");
-
-  await pauseAtEvent(page, "Mars transfer burn");
   await expect(current).toHaveText("Solar system");
 
-  await page.getByRole("button", { name: "1x" }).click();
-  await pauseAtEvent(page, "Mars orbit insertion");
+  await pauseAtEvent(page, "Mars orbit insertion", () =>
+    page.getByRole("button", { name: "1x" }).click(),
+  );
   await expect(current).toHaveText("Mars orbit");
   await expect(orbiterLabels(page)).toHaveText(["Pathfinder Orbiter"]);
 
@@ -93,10 +92,13 @@ test("moves the view to Mars orbit on arrival, and leaves it where the player th
 test("moves the view to Mars orbit when orbit insertion fails", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the failure so the pause lands in time.
+  // Over 5 s: waits at 1x for the failure.
   const problems = watchForProblems(page);
-  await launchFirstMission(page, seedFailingAt("Mars orbit insertion"));
-  await pauseAtEvent(page, "Mars orbit insertion failed");
+  await launchFirstMission(
+    page,
+    seedFailingAt("Mars orbit insertion"),
+    "Mars orbit insertion failed",
+  );
   await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
   expect(problems).toEqual([]);
 });
@@ -104,8 +106,7 @@ test("moves the view to Mars orbit when orbit insertion fails", async ({
 // A failed transfer burn goes to the spacecraft view, which e2e/spacecraft.spec.ts covers.
 test("stays on the solar system when Launch fails", async ({ page }) => {
   // Over 5 s: plays out the rest of the Turn after the failure.
-  await launchFirstMission(page, seedFailingAt("Launch"));
-  await pauseAtEvent(page, "Launch failed");
+  await launchFirstMission(page, seedFailingAt("Launch"), "Launch failed");
   await expect(page.getByTestId("current-view")).toHaveText("Solar system");
   await page.getByRole("button", { name: "10x" }).click();
   await expect(page.getByTestId("turn-summary")).toBeVisible();
@@ -139,18 +140,21 @@ test("a switch away holds until the next Mission Event with a view of its own", 
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
   await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
-  await page.getByRole("button", { name: "Launch Mission" }).click();
   const current = page.getByTestId("current-view");
 
-  await pauseAtEvent(page, "Mars orbit insertion");
+  await pauseAtEvent(page, "Mars orbit insertion", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
   await expect(current).toHaveText("Mars orbit");
   await viewButton(page, "Solar system").click();
   await expect(current).toHaveText("Solar system");
-  await page.getByRole("button", { name: "1x" }).click();
-  await expect(page.getByTestId("mission-date")).not.toHaveText("29 June 2029");
-  await expect(current).toHaveText("Solar system");
-
-  await pauseAtEvent(page, "Entry/descent/landing failed");
+  await pauseAtEvent(page, "Entry/descent/landing failed", async () => {
+    await page.getByRole("button", { name: "1x" }).click();
+    await expect(page.getByTestId("mission-date")).not.toHaveText(
+      "29 June 2029",
+    );
+    await expect(current).toHaveText("Solar system");
+  });
   await expect(current).toHaveText("Surface");
   expect(problems).toEqual([]);
 });
@@ -175,8 +179,7 @@ test("moves the camera smoothly while paused, and can be turned back partway", a
 }) => {
   // Over 5 s: camera moves take real time at any speed, and this makes several.
   const problems = watchForProblems(page);
-  await launchFirstMission(page, successSeed);
-  await pauseAtEvent(page, "Launch");
+  await launchFirstMission(page, successSeed, "Launch");
   const camera = cameraPosition(page);
   await expect(camera).toHaveAttribute(
     "data-camera-position",

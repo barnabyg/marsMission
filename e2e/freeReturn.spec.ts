@@ -39,9 +39,10 @@ test("a Free-return Mission whose arrival burn fails comes back, at no Public Su
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${freeReturnSeed}`);
   await trajectory(page).selectOption("free-return");
-  await page.getByRole("button", { name: "Launch Mission" }).click();
 
-  await pauseAtEvent(page, "Mars orbit insertion failed");
+  await pauseAtEvent(page, "Mars orbit insertion failed", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
   const failed = page
     .getByTestId("event-entry")
     .filter({ hasText: "Mars orbit insertion failed" });

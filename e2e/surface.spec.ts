@@ -8,6 +8,7 @@ import {
   overrideProgramData,
   pauseAtEvent,
   surfaceAssets,
+  switchViewWhilePlaying,
   termsWithoutTooltips,
   viewButton,
   watchForProblems,
@@ -55,29 +56,11 @@ test("switches to the surface view and back during a Turn, at any speed and whil
   const speed = page.getByTestId("current-speed");
   await expect(speed).toHaveText("Paused");
 
-  // Switching while playing leaves the speed alone. At 5x a busy machine can reach the Turn's end between two clicks
-  // from out here, so the page plays, switches, reads and pauses in one go. Waiting on microtasks lets React show
-  // each click without a frame passing, so no game time passes either.
-  const whilePlaying = await page.evaluate(async () => {
-    const shown = async () => {
-      await Promise.resolve();
-      await Promise.resolve();
-    };
-    const click = async (name: string) => {
-      [...document.querySelectorAll("button")]
-        .find((button) => button.textContent === name)
-        ?.click();
-      await shown();
-    };
-    const text = (testId: string) =>
-      document.querySelector(`[data-testid=${testId}]`)?.textContent;
-    await click("5x");
-    await click("Surface");
-    const seen = { view: text("current-view"), speed: text("current-speed") };
-    await click("Pause");
-    return seen;
+  // Switching while playing leaves the speed alone.
+  expect(await switchViewWhilePlaying(page, "5x", "Surface")).toEqual({
+    view: "Surface",
+    speed: "5x",
   });
-  expect(whilePlaying).toEqual({ view: "Surface", speed: "5x" });
 
   // On the way, the destination with nothing there yet.
   await expect(current).toHaveText("Surface");
@@ -193,8 +176,9 @@ test("moves from the surface to the spacecraft on the day the only landing on it
   await viewButton(page, "Surface").click();
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
 
-  await page.getByRole("button", { name: "1x" }).click();
-  await pauseAtEvent(page, "Mars transfer burn failed");
+  await pauseAtEvent(page, "Mars transfer burn failed", () =>
+    page.getByRole("button", { name: "1x" }).click(),
+  );
   // The loss on the way is shown close up, and there's no Landing Site left to go back to.
   await expect(page.getByTestId("current-view")).toHaveText("Spacecraft");
   await expectSurfaceUnavailable(page);
@@ -208,13 +192,13 @@ test("plays a crash on the surface without showing it as operating, then moves t
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${crashSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await viewButton(page, "Surface").click();
-  await expect(page.getByTestId("surface-status")).toContainText(
-    "On its way: Prospector Lander",
-  );
-
-  await pauseAtEvent(page, "Entry/descent/landing failed");
+  await pauseAtEvent(page, "Entry/descent/landing failed", async () => {
+    await page.getByRole("button", { name: "Launch Mission" }).click();
+    await viewButton(page, "Surface").click();
+    await expect(page.getByTestId("surface-status")).toContainText(
+      "On its way: Prospector Lander",
+    );
+  });
   const current = page.getByTestId("current-view");
   await expect(current).toHaveText("Surface");
   await expect(page.getByTestId("surface-site")).toHaveText("Jezero Crater");
@@ -354,16 +338,18 @@ test("picks between Landing Sites, and drops each from the day its Assets stop",
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   // The player's pick goes with its last Asset, and the view moves to the other site.
-  await page.getByRole("button", { name: "1x" }).click();
-  await pauseAtEvent(page, "Trailblazer Rover: Service Life ended");
+  await pauseAtEvent(page, "Trailblazer Rover: Service Life ended", () =>
+    page.getByRole("button", { name: "1x" }).click(),
+  );
   await expect(site).toHaveText("Jezero Crater");
   await expect(surfaceAssets(page)).toHaveText(["Prospector Lander"]);
   await expect(picker).toHaveCount(0);
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
 
   // With no site left, the view moves to Mars orbit and says why it can't go back.
-  await page.getByRole("button", { name: "1x" }).click();
-  await pauseAtEvent(page, "Prospector Lander: Service Life ended");
+  await pauseAtEvent(page, "Prospector Lander: Service Life ended", () =>
+    page.getByRole("button", { name: "1x" }).click(),
+  );
   await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
   await expectSurfaceUnavailable(page);
   await expect(surfaceAssets(page)).toHaveCount(0);
@@ -397,14 +383,15 @@ test("shows a crash at its own site where other sites have Assets, and then goes
   await openTwoSites(page, true);
   await chooseAssets(page, ["Prospector Lander"]);
   await page.getByLabel("Landing Site").selectOption("meridiani-planum");
-  await page.getByRole("button", { name: "Launch Mission" }).click();
   const site = page.getByTestId("surface-site");
 
   // The player is looking at another site, which gives way when the crash happens.
-  await viewButton(page, "Surface").click();
-  await page.getByLabel("Landing Site to show").selectOption("Jezero Crater");
-  await expect(site).toHaveText("Jezero Crater");
-  await pauseAtEvent(page, "Entry/descent/landing failed");
+  await pauseAtEvent(page, "Entry/descent/landing failed", async () => {
+    await page.getByRole("button", { name: "Launch Mission" }).click();
+    await viewButton(page, "Surface").click();
+    await page.getByLabel("Landing Site to show").selectOption("Jezero Crater");
+    await expect(site).toHaveText("Jezero Crater");
+  });
   await expect(site).toHaveText("Meridiani Planum");
   await expect(surfaceAssets(page)).toHaveCount(0);
   await expect(page.getByTestId("surface-crash")).toHaveText(

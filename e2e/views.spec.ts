@@ -6,6 +6,7 @@ import {
   launchFirstMission,
   orbiterLabels,
   pauseAtEvent,
+  switchViewWhilePlaying,
   termsWithoutTooltips,
   viewButton,
   watchForProblems,
@@ -15,7 +16,7 @@ import { crashSeed, landingSeed, seedFailingAt, successSeed } from "./seeds";
 test("switches to the Mars orbit view and back during a Turn, at any speed and while paused", async ({
   page,
 }) => {
-  // Over 5 s: switches view at 5x, while paused and at 10x, through to the end of the Turn.
+  // Over 5 s: switches view at 5x, while paused and at 10x, then plays through to the end of the Turn.
   const problems = watchForProblems(page);
   await launchFirstMission(page, successSeed);
   const current = page.getByTestId("current-view");
@@ -28,8 +29,10 @@ test("switches to the Mars orbit view and back during a Turn, at any speed and w
   await expect(page.locator(".view-label", { hasText: "Earth" })).toBeVisible();
 
   // While playing, which leaves the speed alone.
-  await page.getByRole("button", { name: "5x" }).click();
-  await viewButton(page, "Mars orbit").click();
+  expect(await switchViewWhilePlaying(page, "5x", "Mars orbit")).toEqual({
+    view: "Mars orbit",
+    speed: "5x",
+  });
   await expect(current).toHaveText("Mars orbit");
   await expect(viewButton(page, "Mars orbit")).toHaveAttribute(
     "aria-pressed",
@@ -39,13 +42,12 @@ test("switches to the Mars orbit view and back during a Turn, at any speed and w
     "aria-pressed",
     "false",
   );
-  await expect(speed).toHaveText("5x");
   await expect(page.locator(".view-label", { hasText: "Earth" })).toHaveCount(
     0,
   );
 
   // While paused, which holds the date and the events column.
-  await page.getByRole("button", { name: "Pause" }).click();
+  await expect(speed).toHaveText("Paused");
   const date = await page.getByTestId("mission-date").textContent();
   const happened = await eventEntries(page).count();
   await viewButton(page, "Solar system").click();
@@ -58,12 +60,12 @@ test("switches to the Mars orbit view and back during a Turn, at any speed and w
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   // At top speed, and the Turn still runs to its end.
-  await page.getByRole("button", { name: "10x" }).click();
-  await expect(
-    eventEntries(page).getByRole("heading", { name: "Mars orbit insertion" }),
-  ).toBeVisible();
-  await viewButton(page, "Solar system").click();
+  expect(await switchViewWhilePlaying(page, "10x", "Solar system")).toEqual({
+    view: "Solar system",
+    speed: "10x",
+  });
   await expect(current).toHaveText("Solar system");
+  await page.getByRole("button", { name: "10x" }).click();
   await expect(page.getByTestId("turn-summary")).toBeVisible();
   expect(problems).toEqual([]);
 });
@@ -71,16 +73,18 @@ test("switches to the Mars orbit view and back during a Turn, at any speed and w
 test("shows an orbiter going round Mars from the day it arrives, only in the Mars orbit view", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the arrival so the pause lands in time, then plays into the next Turn.
+  // Over 5 s: waits at 1x for the arrival, then plays into the next Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await pauseAtEvent(page, "Launch");
+  await pauseAtEvent(page, "Launch", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
   await viewButton(page, "Mars orbit").click();
   await expect(orbiterLabels(page)).toHaveCount(0);
 
-  await page.getByRole("button", { name: "1x" }).click();
-  await pauseAtEvent(page, "Mars orbit insertion");
+  await pauseAtEvent(page, "Mars orbit insertion", () =>
+    page.getByRole("button", { name: "1x" }).click(),
+  );
   await expect(orbiterLabels(page)).toHaveText(["Pathfinder Orbiter"]);
   await expect(orbiterLabels(page)).toBeVisible();
 
@@ -96,22 +100,27 @@ test("shows an orbiter going round Mars from the day it arrives, only in the Mar
     .getByTestId("turn-summary")
     .getByRole("button", { name: "Continue" })
     .click();
-  await page
-    .getByRole("button", { name: "End Turn without launching" })
-    .click();
-  await page.getByRole("button", { name: "Pause" }).click();
+  const endTurn = page.getByRole("button", {
+    name: "End Turn without launching",
+  });
+  await expect(endTurn).toBeVisible();
+  await holdTurnWhenShown(page);
+  await endTurn.click();
+  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
   await viewButton(page, "Mars orbit").click();
   await expect(orbiterLabels(page)).toHaveText(["Pathfinder Orbiter"]);
   expect(problems).toEqual([]);
 });
 
 test("never shows an orbiter whose Mission failed", async ({ page }) => {
-  // Over 5 s: waits at 1x for the failure so the pause lands in time, then checks the view for the rest of the Turn.
+  // Over 5 s: waits at 1x for the failure, then checks the view for the rest of the Turn.
   const problems = watchForProblems(page);
-  await launchFirstMission(page, seedFailingAt("Mars orbit insertion"));
+  await launchFirstMission(
+    page,
+    seedFailingAt("Mars orbit insertion"),
+    "Mars orbit insertion failed",
+  );
   await viewButton(page, "Mars orbit").click();
-
-  await pauseAtEvent(page, "Mars orbit insertion failed");
   await expect(orbiterLabels(page)).toHaveCount(0);
   await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
 
@@ -159,12 +168,13 @@ test("shows a lander coming down and then on the surface", async ({ page }) => {
 test("shows a crash in red in the Mars orbit view, when the player goes there from the surface", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing so the pause lands in time.
+  // Over 5 s: waits at 1x for the landing.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${crashSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await pauseAtEvent(page, "Entry/descent/landing failed");
+  await pauseAtEvent(page, "Entry/descent/landing failed", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
   await viewButton(page, "Mars orbit").click();
   const crash = page.getByTestId("mars-landing");
