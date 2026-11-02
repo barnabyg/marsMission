@@ -13,7 +13,7 @@ import "../planning/planning.css";
 import "../ui/dialog.css";
 import "../save/saveSlots.css";
 import "../mission/mission.css";
-import "./summaryScreens.css";
+import "../ui/summaryScreen.css";
 import "../ui/tooltips.css";
 
 const container = document.getElementById("root");
