@@ -1,4 +1,8 @@
-import type { ProgramView, TurnSummary } from "../simulation/simulation";
+import type {
+  ProgramView,
+  Timeline,
+  TurnSummary,
+} from "../simulation/simulation";
 import { sum } from "./sum";
 
 /** Anything impossible about one Turn, read from the Program before it, its summary and the Program after it. */
@@ -269,4 +273,50 @@ function developmentProblems(
       "A technology flew before its Development finished.",
     ],
   ];
+}
+
+/**
+ * What's impossible about the Mission Events on a Turn's Timeline, such as those of orbital refuelling: each on a day
+ * of its own, none after one that failed, a failure the Turn summary reports, and nothing delivered once it was lost.
+ */
+export function missionEventProblems(
+  timeline: Timeline,
+  summary: TurnSummary,
+): string[] {
+  const events = timeline.entries.flatMap((entry) =>
+    entry.kind === "missionEvent" ? [entry] : [],
+  );
+  const days = events.map(({ day }) => day);
+  const failedAt = events.findIndex(({ outcome }) => outcome === "failure");
+  const failedName =
+    summary.failure && !summary.failure.hazard
+      ? summary.failure.missionEventName
+      : null;
+  const failedOnDay = timeline.mission?.failedOnDay ?? null;
+  const checks: [impossible: boolean, problem: string][] = [
+    [
+      new Set(days).size < days.length,
+      "Two Mission Events happened on the same day.",
+    ],
+    [
+      failedAt >= 0 && failedAt < events.length - 1,
+      "A Mission Event happened after one failed.",
+    ],
+    [
+      (events[failedAt]?.title ?? null) !==
+        (failedName === null ? null : `${failedName} failed`),
+      "The Mission Event that failed doesn't match the Turn summary.",
+    ],
+    [
+      failedOnDay !== null &&
+        (timeline.mission?.assets ?? []).some(
+          ({ deliveredOnDay }) =>
+            deliveredOnDay !== null && deliveredOnDay > failedOnDay,
+        ),
+      "An Asset was delivered after the Mission was lost.",
+    ],
+  ];
+  return checks.flatMap(([impossible, problem]) =>
+    impossible ? [problem] : [],
+  );
 }
