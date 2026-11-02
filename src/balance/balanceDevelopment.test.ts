@@ -56,6 +56,40 @@ describe("strategies that develop technology", () => {
     expect(launched.some((assetIds) => assetIds.length > 1)).toBe(true);
   });
 
+  it("fill a big Launch Vehicle only once rich, and fly three Assets at once only on the Meridian Colossus", () => {
+    const launches = (name: string) => {
+      const strategy = strategies.find((each) => each.name === name);
+      if (!strategy) throw new Error(`Expected the strategy "${name}"`);
+      const certainly = simulationOf(certain);
+      let program = certainly.startProgram(1);
+      const launched: { assetIds: string[]; moneyMillions: number }[] = [];
+      for (let turn = 1; turn <= turns; turn++) {
+        const view = certainly.readProgram(program);
+        if (view.status.kind !== "active") break;
+        const plan = strategy.plan(view, planningTools(certainly, program));
+        if (plan.mission) {
+          launched.push({
+            assetIds: plan.mission.assetIds,
+            moneyMillions: view.moneyMillions,
+          });
+        }
+        program = certainly.runTurn(program, plan).program;
+      }
+      return launched;
+    };
+    const heavy = launches("big Program: fill the Meridian Heavy when rich");
+    const colossus = launches(
+      "big Program: develop the Meridian Colossus when rich",
+    );
+    for (const { assetIds, moneyMillions } of [...heavy, ...colossus]) {
+      if (assetIds.length > 1)
+        expect(moneyMillions).toBeGreaterThanOrEqual(5000);
+    }
+    expect(heavy.some(({ assetIds }) => assetIds.length === 2)).toBe(true);
+    expect(heavy.every(({ assetIds }) => assetIds.length <= 2)).toBe(true);
+    expect(colossus.some(({ assetIds }) => assetIds.length === 3)).toBe(true);
+  });
+
   it("are the only ones that start Development", () => {
     for (const strategy of strategies.filter(
       (each) => !developing.includes(each),

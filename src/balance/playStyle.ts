@@ -40,7 +40,7 @@ export interface PlayStyle {
   /** The kinds of Asset to try sending this Turn, best first. */
   order(view: ProgramView): string[];
   /** Assets, by id, to send in place of the first of their kind, whether or not they are Flight-proven yet, when it can afford them. */
-  prefers?: string[];
+  prefers?: string[] | ((view: ProgramView) => string[]);
   /** What Assets on the surface and orbiters doing research aim for, which can change as the Program goes on. */
   aim: Aim | ((view: ProgramView) => Aim);
   /**
@@ -48,6 +48,8 @@ export interface PlayStyle {
    * Turn, as many as fit and it can afford, in place of a Mission with one Asset on the cheapest that can carry it.
    */
   fillsVehicle?: string;
+  /** Fills that Launch Vehicle only while this is true. */
+  fillsWhile?: (view: ProgramView) => boolean;
   /** Technologies, by id, whose Development it starts as soon as it can afford it on top of the Turn's Mission, keeping any reserve. */
   develops?: string[];
   /** Starts that Development only while this is true. */
@@ -105,6 +107,9 @@ export const surveyThenLand =
     !surveyorInService(view) && view.somethingLeftToSurvey
       ? ["orbiter", ...surfaceKinds]
       : surfaceKinds;
+
+const preferredIds = (view: ProgramView, { prefers = [] }: PlayStyle) =>
+  typeof prefers === "function" ? prefers(view) : prefers;
 
 const aimOf = ({ aim }: PlayStyle, view: ProgramView): Aim =>
   typeof aim === "function" ? aim(view) : aim;
@@ -204,7 +209,9 @@ function missionsFor(
   const ofKind = view.assets.filter(
     (candidate) => candidate.kind === kind && canFly(candidate),
   );
-  const preferred = ofKind.filter(({ id }) => playStyle.prefers?.includes(id));
+  const preferred = ofKind.filter(({ id }) =>
+    preferredIds(view, playStyle).includes(id),
+  );
   const assets = new Set([...preferred, ...ofKind.slice(0, 1)]);
   return [...assets].flatMap((asset) =>
     missionsForAsset(asset, view, tools, playStyle, surveying),
@@ -335,7 +342,9 @@ function fuller(
   const vehicle = view.launchVehicles.find(
     ({ id }) => id === playStyle.fillsVehicle,
   );
-  if (!vehicle || !canFly(vehicle)) return [];
+  if (!vehicle || !canFly(vehicle) || !(playStyle.fillsWhile?.(view) ?? true)) {
+    return [];
+  }
   const onBoard = view.assets.filter(({ id }) => mission.assetIds.includes(id));
   const site =
     mission.landingSiteId ?? landingSiteFor(view, playStyle)?.id ?? null;
@@ -348,7 +357,8 @@ function fuller(
         (!asset.landsAtSite || site !== null),
     );
     const asset =
-      ofKind.find(({ id }) => playStyle.prefers?.includes(id)) ?? ofKind[0];
+      ofKind.find(({ id }) => preferredIds(view, playStyle).includes(id)) ??
+      ofKind[0];
     return asset ? [asset] : [];
   });
   return extras
