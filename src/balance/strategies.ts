@@ -363,13 +363,13 @@ export const strategies: Strategy[] = [
     },
   ),
   playStyle(
-    "steady: Courier Relay Orbiter",
-    "As steady: Soil analysis, sending the Courier Relay Orbiter, whose Benefit raises surface research, in place of the other orbiter whenever it can afford it.",
+    "steady: Courier Relay",
+    "As steady: Soil analysis, sending the Courier Relay, a relay orbiter whose Benefit raises surface research, in place of the other orbiter whenever it can afford it.",
     { ...steadyRovers, prefers: ["courier-relay-orbiter"] },
   ),
   playStyle(
     "steady: relay when rich",
-    "As steady: Courier Relay Orbiter, also sending another relay orbiter before more rovers once it has the money for several rovers, whenever none is operating and something on the surface is.",
+    "As steady: Courier Relay, also sending another relay orbiter before more rovers once it has the money for several rovers, whenever none is operating and something on the surface is.",
     {
       ...steadyRovers,
       prefers: ["courier-relay-orbiter"],

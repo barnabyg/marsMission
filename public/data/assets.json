@@ -123,7 +123,7 @@
   },
   {
     "id": "courier-relay-orbiter",
-    "name": "Courier Relay Orbiter",
+    "name": "Courier Relay",
     "kind": "orbiter",
     "costMillions": 900,
     "missionEvents": ["mars-orbit-insertion"],

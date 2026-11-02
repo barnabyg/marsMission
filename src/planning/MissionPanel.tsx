@@ -335,25 +335,27 @@ export function MissionPanel({
           <GameText>{problem}</GameText>
         </p>
       ))}
-      <button
-        type="button"
-        className="primary"
-        disabled={problems.length > 0}
-        onClick={() => {
-          onSubmit(plan);
-        }}
-      >
-        Launch Mission
-      </button>
-      <button
-        type="button"
-        disabled={!canEndWithoutLaunching}
-        onClick={() => {
-          onSubmit(withoutLaunching);
-        }}
-      >
-        End Turn without launching
-      </button>
+      <div className="mission-buttons">
+        <button
+          type="button"
+          className="primary"
+          disabled={problems.length > 0}
+          onClick={() => {
+            onSubmit(plan);
+          }}
+        >
+          Launch Mission
+        </button>
+        <button
+          type="button"
+          disabled={!canEndWithoutLaunching}
+          onClick={() => {
+            onSubmit(withoutLaunching);
+          }}
+        >
+          End Turn without launching
+        </button>
+      </div>
     </section>
   );
 }

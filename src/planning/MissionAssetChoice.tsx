@@ -42,6 +42,18 @@ export function MissionAssetChoice({
           readiness={asset.technologyReadiness}
           testId="technology-readiness"
         />
+        {asset.benefit && (
+          // Its tooltip says what this Asset's Benefit does, after what a Benefit is.
+          <span
+            className="term benefit-tag"
+            data-term="Benefit"
+            data-detail={`${asset.name}: ${asset.benefit}`}
+            data-testid="benefit-tag"
+            tabIndex={0}
+          >
+            Benefit
+          </span>
+        )}
       </label>
       {planned && (
         <>

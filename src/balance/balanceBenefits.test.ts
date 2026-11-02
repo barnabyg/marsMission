@@ -11,8 +11,8 @@ const relayStrategy = (name: string) => {
 };
 
 describe("strategies with a relay orbiter", () => {
-  it("sends the Courier Relay Orbiter in place of the other orbiter when it prefers it", () => {
-    const strategy = relayStrategy("steady: Courier Relay Orbiter");
+  it("sends the Courier Relay in place of the other orbiter when it prefers it", () => {
+    const strategy = relayStrategy("steady: Courier Relay");
     const certainly = simulationOf(certain);
     const start = certainly.startProgram(1);
     const plan = strategy.plan(
@@ -22,7 +22,7 @@ describe("strategies with a relay orbiter", () => {
     expect(plan.mission?.assetIds).toEqual(["courier-relay-orbiter"]);
   });
 
-  it.each(["steady: Courier Relay Orbiter", "steady: relay when rich"])(
+  it.each(["steady: Courier Relay", "steady: relay when rich"])(
     "%s earns Science from its Benefit",
     (name) => {
       const earned = Array.from({ length: 20 }, (_, index) => index + 1)
@@ -36,7 +36,7 @@ describe("strategies with a relay orbiter", () => {
 
   it("reports the Science that Benefits added, and leaves it out for a strategy that earned none", () => {
     const report = balanceReport(files, 20, [
-      relayStrategy("steady: Courier Relay Orbiter"),
+      relayStrategy("steady: Courier Relay"),
       relayStrategy("steady: Soil analysis"),
     ]);
     const lines = report
