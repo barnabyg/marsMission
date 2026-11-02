@@ -210,6 +210,18 @@ export async function playToNextTurn(page: Page): Promise<void> {
   await summary.getByRole("button", { name: "Continue" }).click();
 }
 
+/** Ends a Turn with nothing launched, and continues past its Turn summary. */
+export async function endTurnWithoutLaunching(page: Page): Promise<void> {
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page
+    .getByTestId("turn-summary")
+    .getByRole("button", { name: "Continue" })
+    .click();
+}
+
 type ViewName = "Solar system" | "Mars orbit" | "Surface" | "Spacecraft";
 
 export function viewButton(page: Page, name: ViewName) {

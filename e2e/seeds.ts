@@ -336,9 +336,9 @@ const onColossus: TurnPlan = {
 
 /**
  * A seed where the Meridian Colossus, developed over the first two Turns with nothing launched, carries its first
- * Mission through the tanker launch and the rendezvous to Mars with nothing going wrong and nothing to answer.
+ * Mission with nothing to answer, and the only Mission Event to fail, if any, is the named one.
  */
-export const colossusSeed = (() => {
+function colossusSeedWhere(failedEvent: string | null): number {
   for (let seed = 1; seed < 100_000; seed++) {
     const developing = colossusSimulation.runTurn(
       colossusSimulation.startProgram(seed),
@@ -348,12 +348,24 @@ export const colossusSeed = (() => {
       mission: null,
     });
     const progress = colossusSimulation.workOutTurn(built.program, onColossus);
-    if (!progress.decisionPoint && !progress.result.summary.failure) {
+    if (
+      !progress.decisionPoint &&
+      (progress.result.summary.failure?.missionEventName ?? null) ===
+        failedEvent
+    ) {
       return seed;
     }
   }
-  throw new Error("No seed flies the Meridian Colossus to Mars");
-})();
+  throw new Error(
+    `No seed gives the Meridian Colossus's first Mission the outcome ${failedEvent}`,
+  );
+}
+
+/** A seed where the Meridian Colossus carries its first Mission through the tanker launch and the rendezvous to Mars. */
+export const colossusSeed = colossusSeedWhere(null);
+
+/** A seed where the Meridian Colossus's first Mission collides with its Tanker at the rendezvous. */
+export const rendezvousFailureSeed = colossusSeedWhere("Rendezvous");
 
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);

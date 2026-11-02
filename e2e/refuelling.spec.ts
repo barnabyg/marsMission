@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
+  endTurnWithoutLaunching,
   eventEntries,
   listenForSounds,
   overrideProgramData,
@@ -19,18 +20,6 @@ function colossusDevelopment(page: Page) {
 
 function launchVehicle(page: Page) {
   return page.getByRole("combobox", { name: "Launch Vehicle" });
-}
-
-/** Ends a Turn with nothing launched, and continues past its Turn summary. */
-async function endTurnWithoutLaunching(page: Page): Promise<void> {
-  await page
-    .getByRole("button", { name: "End Turn without launching" })
-    .click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
-  await page
-    .getByTestId("turn-summary")
-    .getByRole("button", { name: "Continue" })
-    .click();
 }
 
 test("develops the Meridian Colossus, then fills it with more than any other Launch Vehicle carries and sees it refuel on the way", async ({
