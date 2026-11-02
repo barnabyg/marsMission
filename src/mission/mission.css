@@ -20,6 +20,11 @@
   pointer-events: none;
 }
 
+/* A game term in a label, such as the Tanker, takes the pointer for its tooltip, though the label doesn't. */
+.view-label .term {
+  pointer-events: auto;
+}
+
 .view-label span {
   display: block;
   transform: translate(-50%, -100%);

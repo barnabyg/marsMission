@@ -2,6 +2,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo, useRef, useState, type RefObject } from "react";
 import { BufferAttribute, BufferGeometry, Vector3 } from "three";
 import type { Timeline } from "../simulation/simulation";
+import { GameText } from "../ui/GameText";
 import { advanceMove, headFor, poseDuring, settledAt } from "./cameraMove";
 import {
   marsOrbitLabels,
@@ -230,7 +231,9 @@ export default function MissionScene({
             className={`view-label ${className ?? ""}`}
             data-testid={testId}
           >
-            <span>{text}</span>
+            <span>
+              <GameText>{text}</GameText>
+            </span>
           </div>
         ))}
       </div>
