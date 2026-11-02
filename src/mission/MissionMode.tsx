@@ -27,6 +27,7 @@ import {
   spacecraftFallback,
   spacecraftHasSomethingToShow,
 } from "./spacecraft/spacecraft";
+import { earthOrbitNow, refuellingOf } from "./spacecraft/refuelling";
 import {
   SpacecraftControls,
   spacecraftUnavailableId,
@@ -75,6 +76,8 @@ export function MissionMode({
   const sites = sitesDuring(sitesToShow(timeline, state.day), sequence);
   const spacecraftAvailable = spacecraftHasSomethingToShow(timeline, state);
   const particles = solarParticleEventShowing(timeline.entries, state);
+  const refuelling = useMemo(() => refuellingOf(timeline.entries), [timeline]);
+  const earthOrbit = earthOrbitNow(refuelling, state);
   const { view, chooseView, site, pickSite } = useMissionView(
     timeline.entries,
     state.entriesHappened,
@@ -108,6 +111,7 @@ export function MissionMode({
           site={site}
           sequence={sequence}
           particles={particles}
+          earthOrbit={earthOrbit}
           operatingAssetCount={operatingAssets.length}
         />
       </Suspense>
@@ -210,6 +214,7 @@ export function MissionMode({
           view={view}
           available={spacecraftAvailable}
           particles={particles}
+          earthOrbit={earthOrbit}
         />
         <h2>Operating at Mars</h2>
         <ul data-testid="operating-at-mars">

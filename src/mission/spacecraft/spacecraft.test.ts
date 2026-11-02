@@ -5,6 +5,7 @@ import type { Point } from "../sceneParts";
 import { solarSystemShot } from "../solarSystem/SolarSystemView";
 import { surfaceCentre } from "../surface/surface";
 import { particleCount, writeParticleStream } from "./particleStream";
+import { rendezvousMs } from "./refuelling";
 import {
   assetsInFlight,
   assetsLostOnTheWay,
@@ -234,6 +235,42 @@ describe("whether the spacecraft view has something to show", () => {
     };
     expect(
       lossOnTheWayShowing(timeline, played(90, [0, 500, 3000], 3000)),
+    ).toBe(false);
+  });
+
+  it("shows a Mission wrecked at the rendezvous for as long as the rendezvous plays, and then has nothing", () => {
+    const wrecked = missionOf(
+      orbiterAndLander.map((onBoard) => ({
+        ...onBoard,
+        deliveredOnDay: null,
+        lostOnDay: 2,
+      })),
+      { failedOnDay: 2 },
+    );
+    const timeline = {
+      mission: wrecked,
+      entries: [
+        launch,
+        entry({
+          kind: "missionEvent",
+          day: 1,
+          eventId: "tanker-launch",
+          outcome: "success",
+        }),
+        entry({
+          kind: "missionEvent",
+          day: 2,
+          eventId: "rendezvous",
+          outcome: "failure",
+        }),
+      ],
+    };
+    const at = (playedMs: number) => played(20, [0, 0, 1000], playedMs);
+    expect(
+      spacecraftHasSomethingToShow(timeline, at(1000 + rendezvousMs - 1)),
+    ).toBe(true);
+    expect(
+      spacecraftHasSomethingToShow(timeline, at(1000 + rendezvousMs)),
     ).toBe(false);
   });
 

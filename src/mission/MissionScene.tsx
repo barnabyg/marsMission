@@ -10,7 +10,9 @@ import {
 } from "./marsOrbit/MarsOrbitView";
 import type { MissionViewId } from "./missionViews";
 import type { CameraPose, SceneLabel } from "./sceneParts";
-import { spacecraftShot } from "./spacecraft/spacecraft";
+import { earthOrbitLabels, EarthOrbitScene } from "./spacecraft/EarthOrbitView";
+import type { EarthOrbitNow } from "./spacecraft/refuelling";
+import { earthOrbitShot, spacecraftShot } from "./spacecraft/spacecraft";
 import { spacecraftLabels, SpacecraftScene } from "./spacecraft/SpacecraftView";
 import { sequenceRunning, type SequenceNow } from "./surface/sequence";
 import { dustStormAt, landingShot, surfaceShot } from "./surface/surface";
@@ -31,6 +33,8 @@ interface MissionSceneProps {
   sequence: SequenceNow | null;
   /** Whether a solar particle event is sweeping past the Mission. */
   particles: boolean;
+  /** The Mission in Earth orbit for Orbital refuelling, which the spacecraft view shows instead while it's there. */
+  earthOrbit: EarthOrbitNow | null;
   /** How many Assets are operating at Mars right now. */
   operatingAssetCount: number;
 }
@@ -147,11 +151,16 @@ export default function MissionScene({
   site,
   sequence,
   particles,
+  earthOrbit,
   operatingAssetCount,
 }: MissionSceneProps) {
   const labelLayer = useRef<HTMLDivElement>(null);
-  const { shot, labels: labelsOnDay } = viewSettings[view];
-  const labels = labelsOnDay(timeline, day, site, sequence);
+  const { shot: viewShot, labels: labelsOnDay } = viewSettings[view];
+  const inEarthOrbit = view === "spacecraft" && earthOrbit !== null;
+  const shot = inEarthOrbit ? earthOrbitShot : viewShot;
+  const labels = inEarthOrbit
+    ? earthOrbitLabels(timeline, earthOrbit)
+    : labelsOnDay(timeline, day, site, sequence);
   const running = sequenceRunning(sequence);
   const showingSequence =
     view === "surface" && running && sequence.sequence.siteName === site;
@@ -179,6 +188,12 @@ export default function MissionScene({
       data-solar-particle-event={
         view === "spacecraft" && particles ? "showing" : undefined
       }
+      data-earth-orbit={inEarthOrbit ? earthOrbit.stage : undefined}
+      data-rendezvous-ms={
+        inEarthOrbit && earthOrbit.sinceRendezvousMs !== null
+          ? Math.floor(earthOrbit.sinceRendezvousMs / 100) * 100
+          : undefined
+      }
     >
       <Canvas camera={{ position: [...solarSystemShot.position], fov: 45 }}>
         <color attach="background" args={["#05060c"]} />
@@ -189,7 +204,14 @@ export default function MissionScene({
           operatingAssetCount={operatingAssetCount}
         />
         <MarsOrbitScene timeline={timeline} day={day} />
-        <SpacecraftScene timeline={timeline} day={day} particles={particles} />
+        {earthOrbit === null && (
+          <SpacecraftScene
+            timeline={timeline}
+            day={day}
+            particles={particles}
+          />
+        )}
+        <EarthOrbitScene timeline={timeline} now={earthOrbit} />
         {lastSite !== null && (
           <SurfaceScene
             timeline={timeline}

@@ -1,6 +1,7 @@
 import type { Timeline } from "../../simulation/simulation";
 import { GameText } from "../../ui/GameText";
 import type { MissionViewId } from "../missionViews";
+import { earthOrbitStatus, type EarthOrbitNow } from "./refuelling";
 import { assetsOnBoard } from "./spacecraft";
 
 /** Ties the reason on screen to the disabled button it explains. */
@@ -14,6 +15,26 @@ interface SpacecraftControlsProps {
   available: boolean;
   /** Whether a solar particle event is sweeping past. */
   particles: boolean;
+  /** The Mission in Earth orbit for Orbital refuelling, if it's there. */
+  earthOrbit: EarthOrbitNow | null;
+}
+
+/** What's on board, each Asset with its kind, and whether it's lost. */
+function onBoardLines(
+  timeline: Pick<Timeline, "mission">,
+  day: number,
+  earthOrbit: EarthOrbitNow | null,
+): string[] {
+  if (earthOrbit) {
+    return (timeline.mission?.assets ?? []).map(({ name, kind }) =>
+      earthOrbit.missionLost
+        ? `${name} (${kind}): lost in Earth orbit`
+        : `${name} (${kind})`,
+    );
+  }
+  return assetsOnBoard(timeline.mission, day).map(({ name, kind, lost }) =>
+    lost ? `${name} (${kind}): lost on the way` : `${name} (${kind})`,
+  );
 }
 
 /** Why the spacecraft view can't be chosen, or else what's on board and what's happening to it. */
@@ -23,6 +44,7 @@ export function SpacecraftControls({
   view,
   available,
   particles,
+  earthOrbit,
 }: SpacecraftControlsProps) {
   if (!available) {
     return (
@@ -40,9 +62,8 @@ export function SpacecraftControls({
           ...(particles
             ? ["Solar particle event: radiation sweeping past"]
             : []),
-          ...assetsOnBoard(timeline.mission, day).map(({ name, kind, lost }) =>
-            lost ? `${name} (${kind}): lost on the way` : `${name} (${kind})`,
-          ),
+          ...[earthOrbitStatus(earthOrbit) ?? []].flat(),
+          ...onBoardLines(timeline, day, earthOrbit),
         ].map((line) => (
           <li key={line}>
             <GameText>{line}</GameText>

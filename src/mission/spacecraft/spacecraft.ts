@@ -1,6 +1,7 @@
 import type { Timeline, TimelineEntry } from "../../simulation/simulation";
 import { msSinceEntry, type PlaybackState } from "../playback";
 import type { CameraPose, Point } from "../sceneParts";
+import { earthOrbitNow, refuellingOf } from "./refuelling";
 
 /**
  * The Mission close up, on the far side of the solar system from both other views and inside the stars. The
@@ -127,14 +128,15 @@ export function solarParticleEventShowing(
   );
 }
 
-/** Whether the spacecraft view has anything to show: a Mission in flight, or one just lost on the way. */
+/** Whether the spacecraft view has anything to show: a Mission in flight, one just lost on the way, or one in Earth orbit for Orbital refuelling. */
 export function spacecraftHasSomethingToShow(
   timeline: Pick<Timeline, "entries" | "mission">,
   played: Played,
 ): boolean {
   return (
     assetsInFlight(timeline.mission, played.day).length > 0 ||
-    lossOnTheWayShowing(timeline, played)
+    lossOnTheWayShowing(timeline, played) ||
+    earthOrbitNow(refuellingOf(timeline.entries), played) !== null
   );
 }
 
@@ -156,13 +158,17 @@ const cruiseLength = 0.7;
 const assetLength = 0.9;
 const gap = 0.12;
 
+/** The stack's length from the back of the cruise stage to the front of the last Asset. */
+function stackLength(assetCount: number): number {
+  return cruiseLength + assetCount * (gap + assetLength);
+}
+
 /** Where the middle of the cruise stage and of each Asset is along the stack, which is centred on the shot. */
 export function stackLayout(assetCount: number): {
   cruise: number;
   assets: number[];
 } {
-  const total = cruiseLength + assetCount * (gap + assetLength);
-  const start = -total / 2;
+  const start = -stackLength(assetCount) / 2;
   return {
     cruise: start + cruiseLength / 2,
     assets: Array.from(
@@ -174,5 +180,53 @@ export function stackLayout(assetCount: number): {
         index * (gap + assetLength) +
         assetLength / 2,
     ),
+  };
+}
+
+/**
+ * The Mission in Earth orbit, beside the spacecraft view's shot and looking the same way, so that when the Mission
+ * leaves for Mars the camera slides across from one to the other. The Sun lights it from behind the camera.
+ */
+export const earthOrbitCentre: Point = [-20, 0, 8];
+
+export const earthOrbitShot: CameraPose = {
+  position: [-11.5, 2.2, 8],
+  target: earthOrbitCentre,
+};
+
+/** The lengths along the Mission in Earth orbit of the Tanker and of the upper stage that makes the Mars transfer burn. */
+export const tankerLength = 1.6;
+export const upperStageLength = 1.1;
+const dockingGap = 0.1;
+const stageGap = 0.12;
+
+/**
+ * Where the middle of each part is along x in Earth orbit, with the Tanker docked: the Tanker, the docking port, the
+ * upper stage, and the middle of the Mission as the spacecraft view draws it, with half its length. The whole row is
+ * centred on the shot.
+ */
+export function earthOrbitLayout(assetCount: number): {
+  tanker: number;
+  dock: number;
+  upperStage: number;
+  stack: number;
+  stackHalfLength: number;
+} {
+  const stackHalfLength = stackLength(assetCount) / 2;
+  const total =
+    tankerLength +
+    dockingGap +
+    upperStageLength +
+    stageGap +
+    stackHalfLength * 2;
+  const start = -total / 2;
+  const dock = start + tankerLength + dockingGap / 2;
+  return {
+    tanker: start + tankerLength / 2,
+    dock,
+    upperStage: dock + dockingGap / 2 + upperStageLength / 2,
+    stack:
+      dock + dockingGap / 2 + upperStageLength + stageGap + stackHalfLength,
+    stackHalfLength,
   };
 }

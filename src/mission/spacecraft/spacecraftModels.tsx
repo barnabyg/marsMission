@@ -4,7 +4,7 @@ import { stackLayout } from "./spacecraft";
 /** What's lost is drawn darkened. */
 const lostColor = "#5b3c36";
 
-function Part({
+export function Part({
   color,
   lost,
   children,
