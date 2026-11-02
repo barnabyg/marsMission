@@ -101,18 +101,14 @@ test("moves the view to Mars orbit when orbit insertion fails", async ({
   expect(problems).toEqual([]);
 });
 
-for (const failedEvent of ["Launch", "Mars transfer burn"]) {
-  test(`stays on the solar system when ${failedEvent} fails`, async ({
-    page,
-  }) => {
-    // Over 5 s: for a later Mission Event, waits at 1x for the failure so the pause lands in time, then plays out the Turn.
-    await launchFirstMission(page, seedFailingAt(failedEvent));
-    await pauseAtEvent(page, `${failedEvent} failed`);
-    await expect(page.getByTestId("current-view")).toHaveText("Solar system");
-    await page.getByRole("button", { name: "10x" }).click();
-    await expect(page.getByTestId("turn-summary")).toBeVisible();
-  });
-}
+// A failed transfer burn goes to the spacecraft view, which e2e/spacecraft.spec.ts covers.
+test("stays on the solar system when Launch fails", async ({ page }) => {
+  await launchFirstMission(page, seedFailingAt("Launch"));
+  await pauseAtEvent(page, "Launch failed");
+  await expect(page.getByTestId("current-view")).toHaveText("Solar system");
+  await page.getByRole("button", { name: "10x" }).click();
+  await expect(page.getByTestId("turn-summary")).toBeVisible();
+});
 
 test("a switch away holds until the next Mission Event with a view of its own", async ({
   page,
@@ -129,6 +125,15 @@ test("a switch away holds until the next Mission Event with a view of its own", 
     const landing = events.find(({ id }) => id === "entry-descent-landing");
     if (landing) landing.timing.days = 200;
     await route.fulfill({ json: events });
+  });
+  // A dust storm on the later day could hold the landing at a go/no-go check, which this test isn't about.
+  await page.route("**/data/hazards.json", async (route) => {
+    const response = await route.fetch();
+    const hazards = (await response.json()) as {
+      dustStorm: { chancePerSitePerTurn: number };
+    };
+    hazards.dustStorm.chancePerSitePerTurn = 0;
+    await route.fulfill({ json: hazards });
   });
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);

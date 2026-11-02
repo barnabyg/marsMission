@@ -136,13 +136,14 @@ async function summaryAfterFirstTurn(
   await launchFirstMission(page, seed);
   await page.getByRole("button", { name: "10x" }).click();
   const summary = page.getByTestId("turn-summary");
-  let next: "Mars orbit" | "Solar system" = "Mars orbit";
+  const views = ["Mars orbit", "Spacecraft", "Solar system"] as const;
+  let next = 0;
   while (keepSwitching && (await summary.count()) === 0) {
-    // The Turn may end before the click lands, which is fine.
-    await viewButton(page, next)
+    // The Turn may end before the click lands, or the view may have nothing to show by then, which is fine.
+    await viewButton(page, views[next % views.length] ?? "Solar system")
       .click({ timeout: 500 })
       .catch(() => undefined);
-    next = next === "Mars orbit" ? "Solar system" : "Mars orbit";
+    next++;
   }
   await expect(summary).toBeVisible();
   return (await summary.textContent()) ?? "";
@@ -260,6 +261,7 @@ for (const size of [
       viewButton(page, "Solar system"),
       viewButton(page, "Mars orbit"),
       viewButton(page, "Surface"),
+      viewButton(page, "Spacecraft"),
       page.getByRole("button", { name: "10x" }),
     ]) {
       const box = await control.boundingBox();

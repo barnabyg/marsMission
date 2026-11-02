@@ -7,7 +7,7 @@ import {
   type Program,
   type TurnPlan,
 } from "../simulation/simulation";
-import { realCatalogueFiles } from "../testing/realCatalogue";
+import { calmCatalogueFiles } from "../testing/realCatalogue";
 import {
   succeeding,
   files,
@@ -38,7 +38,7 @@ describe("Research Grants in the real data files", () => {
 });
 
 describe("the rover in the real data files", () => {
-  const files = realCatalogueFiles();
+  const files = calmCatalogueFiles();
   const assetOfKind = (kind: string) =>
     files.assets.find((asset) => asset.kind === kind);
   const earnings = (id: string) =>

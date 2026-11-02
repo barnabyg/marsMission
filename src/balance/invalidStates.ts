@@ -117,6 +117,45 @@ export function invalidStates(
       "A Mission Event both failed and was saved.",
     ],
     [
+      summary.dustStorms.some(
+        ({ answer, assetsFailed }) =>
+          answer === "shelter" && assetsFailed.length > 0,
+      ),
+      "An Asset failed while it sheltered from a dust storm.",
+    ],
+    [
+      summary.dustStorms
+        .flatMap(({ assetsFailed }) => assetsFailed)
+        .some((name) => !summary.assetsFailed.includes(name)),
+      "An Asset lost to a dust storm isn't listed as failed.",
+    ],
+    [
+      summary.dustStorms.some(
+        ({ assets, assetsFailed }) =>
+          assets.length === 0 ||
+          assetsFailed.some((name) => !assets.includes(name)),
+      ),
+      "A dust storm raised a Decision Point with nothing at stake, or took an Asset that wasn't there.",
+    ],
+    [
+      (summary.solarParticleEvent?.outcome === "lost") !==
+        (summary.failure?.hazard === true),
+      "A solar particle event and the Mission's failure disagree about whether it was lost.",
+    ],
+    [
+      summary.solarParticleEvent !== null &&
+        (summary.solarParticleEvent.answer === "safeMode") !==
+          (summary.solarParticleEvent.outcome === "protected"),
+      "A solar particle event's outcome doesn't follow from its answer.",
+    ],
+    [
+      summary.goNoGo !== null &&
+        (summary.goNoGo.answer === "holdOff") !==
+          (summary.goNoGo.daysHeld > 0 &&
+            summary.goNoGo.serviceLifeDaysLost > 0),
+      "A landing was held off with no wait or no cost, or went ahead with one.",
+    ],
+    [
       before.landingSites.some(({ id }) => !siteIds.includes(id)),
       "A known Landing Site was forgotten.",
     ],

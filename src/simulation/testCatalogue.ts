@@ -242,6 +242,29 @@ export function testCatalogueFiles(): CatalogueFiles {
         longitude: -40,
       },
     ],
+    // None of these happen unless a test says so, so that they can't get in the way of the others.
+    hazards: {
+      dustStorm: {
+        name: "Dust storm",
+        chancePerSitePerTurn: 0,
+        minDays: 100,
+        maxDays: 100,
+        failureChance: 0,
+        landingRiskMultiplier: 2,
+        serviceLifeLostPerDayHeld: 1,
+        description: "A storm over {site} for {days} days.",
+      },
+      solarParticleEvent: {
+        name: "Solar particle event",
+        chancePerDayInFlight: 0,
+        safeModeServiceLifeLossPercent: 10,
+        damageChance: 0,
+        damageServiceLifeLossPercent: 50,
+        lossChanceIfDamaged: 0,
+        publicSupportLoss: 30,
+        description: "A burst of radiation from the Sun.",
+      },
+    },
     fundingThresholds: [
       { publicSupport: 300, payoutMillions: 1000 },
       { publicSupport: 1000, payoutMillions: 7000 },

@@ -10,8 +10,10 @@ import {
 } from "./marsOrbit/MarsOrbitView";
 import type { MissionViewId } from "./missionViews";
 import type { CameraPose, SceneLabel } from "./sceneParts";
+import { spacecraftShot } from "./spacecraft/spacecraft";
+import { spacecraftLabels, SpacecraftScene } from "./spacecraft/SpacecraftView";
 import { sequenceRunning, type SequenceNow } from "./surface/sequence";
-import { landingShot, surfaceShot } from "./surface/surface";
+import { dustStormAt, landingShot, surfaceShot } from "./surface/surface";
 import { surfaceLabels, SurfaceScene } from "./surface/SurfaceView";
 import {
   solarSystemLabels,
@@ -27,6 +29,8 @@ interface MissionSceneProps {
   site: string | null;
   /** The Turn's landing or crash, once it has started. */
   sequence: SequenceNow | null;
+  /** Whether a solar particle event is sweeping past the Mission. */
+  particles: boolean;
   /** How many Assets are operating at Mars right now. */
   operatingAssetCount: number;
 }
@@ -47,6 +51,7 @@ const viewSettings: Record<
   solarSystem: { shot: solarSystemShot, labels: solarSystemLabels },
   marsOrbit: { shot: marsOrbitShot, labels: marsOrbitLabels },
   surface: { shot: surfaceShot, labels: surfaceLabels },
+  spacecraft: { shot: spacecraftShot, labels: spacecraftLabels },
 };
 
 function Stars() {
@@ -141,6 +146,7 @@ export default function MissionScene({
   view,
   site,
   sequence,
+  particles,
   operatingAssetCount,
 }: MissionSceneProps) {
   const labelLayer = useRef<HTMLDivElement>(null);
@@ -165,6 +171,14 @@ export default function MissionScene({
       data-sequence-ms={
         running ? Math.floor(sequence.elapsedMs / 100) * 100 : undefined
       }
+      data-dust-storm={
+        view === "surface" && site !== null && dustStormAt(timeline, day, site)
+          ? site
+          : undefined
+      }
+      data-solar-particle-event={
+        view === "spacecraft" && particles ? "showing" : undefined
+      }
     >
       <Canvas camera={{ position: [...solarSystemShot.position], fov: 45 }}>
         <color attach="background" args={["#05060c"]} />
@@ -175,6 +189,7 @@ export default function MissionScene({
           operatingAssetCount={operatingAssetCount}
         />
         <MarsOrbitScene timeline={timeline} day={day} />
+        <SpacecraftScene timeline={timeline} day={day} particles={particles} />
         {lastSite !== null && (
           <SurfaceScene
             timeline={timeline}

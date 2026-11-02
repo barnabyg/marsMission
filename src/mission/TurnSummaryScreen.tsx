@@ -1,6 +1,24 @@
 import { formatMoney, type TurnSummary } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 
+function describeSolarParticleEvent({
+  outcome,
+  assets,
+  serviceLifeLossPercent,
+}: NonNullable<TurnSummary["solarParticleEvent"]>): string {
+  const names = assets.join(", ");
+  switch (outcome) {
+    case "protected":
+      return `Safe mode protected ${names}, at a cost of ${serviceLifeLossPercent}% of each Asset's Service Life`;
+    case "unharmed":
+      return `Carried on, and ${names} came through unharmed`;
+    case "damaged":
+      return `Carried on, and the radiation damaged ${names}, which cost each Asset ${serviceLifeLossPercent}% of its Service Life`;
+    case "lost":
+      return `Carried on, and the radiation lost ${names}`;
+  }
+}
+
 interface TurnSummaryScreenProps {
   summary: TurnSummary;
   onContinue: () => void;
@@ -34,7 +52,7 @@ export function TurnSummaryScreen({
           <ul>
             <li>
               <GameText>
-                {`Mission Event that failed: ${summary.failure.missionEventName}`}
+                {`${summary.failure.hazard ? "Lost to" : "Mission Event that failed"}: ${summary.failure.missionEventName}`}
               </GameText>
             </li>
             <li>
@@ -82,6 +100,56 @@ export function TurnSummaryScreen({
                                 )
                                 .join(", ")}`
                             : `${contingencyName} used, but it couldn't save the Mission`
+                    }`}
+                  </GameText>
+                </li>
+              ),
+            )}
+          </ul>
+        </section>
+      )}
+      {summary.goNoGo && (
+        <section data-testid="summary-go-no-go">
+          <h2>
+            <GameText>Go/no-go check</GameText>
+          </h2>
+          <p>
+            <GameText>
+              {summary.goNoGo.answer === "holdOff"
+                ? `Held off the landing at ${summary.goNoGo.siteName} for ${summary.goNoGo.daysHeld} days, until the dust storm had passed. Each Asset landed lost ${summary.goNoGo.serviceLifeDaysLost} days of Service Life.`
+                : `Landed at ${summary.goNoGo.siteName} in a dust storm, at a higher risk.`}
+            </GameText>
+          </p>
+        </section>
+      )}
+      {summary.solarParticleEvent && (
+        <section data-testid="summary-solar-particle-event">
+          <h2>
+            <GameText>Solar particle event</GameText>
+          </h2>
+          <p>
+            <GameText>
+              {describeSolarParticleEvent(summary.solarParticleEvent)}
+            </GameText>
+          </p>
+        </section>
+      )}
+      {summary.dustStorms.length > 0 && (
+        <section data-testid="summary-dust-storms">
+          <h2>
+            <GameText>Hazards</GameText>
+          </h2>
+          <ul>
+            {summary.dustStorms.map(
+              ({ siteName, days, answer, assets, assetsFailed }) => (
+                <li key={siteName}>
+                  <GameText>
+                    {`Dust storm over ${siteName}: ${
+                      answer === "shelter"
+                        ? `${assets.join(", ")} sheltered for ${days} days, with no Ongoing Research`
+                        : assetsFailed.length > 0
+                          ? `carried on through ${days} days, and lost ${assetsFailed.join(", ")}`
+                          : `${assets.join(", ")} carried on through ${days} days, and came through`
                     }`}
                   </GameText>
                 </li>

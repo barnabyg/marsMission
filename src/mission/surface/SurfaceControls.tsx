@@ -2,13 +2,13 @@ import type { Timeline } from "../../simulation/simulation";
 import { GameText } from "../../ui/GameText";
 import type { MissionViewId } from "../missionViews";
 import { sequenceStatus, type SequenceNow } from "./sequence";
-import { describeSite } from "./surface";
+import { describeSite, dustStormAt } from "./surface";
 
 /** Ties the reason on screen to the disabled button it explains. */
 export const surfaceUnavailableId = "surface-unavailable";
 
 interface SurfaceControlsProps {
-  timeline: Pick<Timeline, "assetsAtMars" | "mission">;
+  timeline: Pick<Timeline, "assetsAtMars" | "mission" | "dustStorms">;
   day: number;
   view: MissionViewId;
   sites: readonly string[];
@@ -36,6 +36,7 @@ export function SurfaceControls({
   }
   if (view !== "surface") return null;
   const status = sequenceStatus(sequence, site);
+  const storm = dustStormAt(timeline, day, site);
   return (
     <>
       <h2>
@@ -65,6 +66,9 @@ export function SurfaceControls({
       <ul data-testid="surface-status">
         {[
           ...(status === null ? [] : [status]),
+          ...(storm === null
+            ? []
+            : [`Dust storm: ${Math.ceil(storm.toDay - day)} days left`]),
           ...describeSite(timeline, day, site),
         ].map((line) => (
           <li key={line}>

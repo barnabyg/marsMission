@@ -27,7 +27,9 @@ function seedWhere(
   playedBy = simulation,
 ): number {
   for (let seed = 1; seed < 100_000; seed++) {
-    const { summary } = playedBy.runTurn(playedBy.startProgram(seed), plan);
+    const progress = playedBy.workOutTurn(playedBy.startProgram(seed), plan);
+    if (progress.decisionPoint) continue;
+    const { summary } = progress.result;
     if ((summary.failure?.missionEventName ?? null) === failedEvent) {
       return seed;
     }
@@ -125,10 +127,15 @@ export const landerAndRoverCrashSeed = seedWhere(
 /** A seed where the first orbiter arrives, and what happens to it during the next Turn is as asked. */
 function seedWhereOrbiter(nextTurn: (summary: TurnSummary) => boolean): number {
   for (let seed = 1; seed < 100_000; seed++) {
-    const first = simulation.runTurn(simulation.startProgram(seed), firstPlan);
-    if (first.summary.failure) continue;
-    const second = simulation.runTurn(first.program, { mission: null });
-    if (nextTurn(second.summary)) return seed;
+    const first = simulation.workOutTurn(
+      simulation.startProgram(seed),
+      firstPlan,
+    );
+    if (first.decisionPoint || first.result.summary.failure) continue;
+    const second = simulation.workOutTurn(first.result.program, {
+      mission: null,
+    });
+    if (!second.decisionPoint && nextTurn(second.result.summary)) return seed;
   }
   throw new Error("No seed gives the orbiter that outcome");
 }
@@ -158,11 +165,11 @@ function seedWhereUsing(
     const progress = playedBy.workOutTurn(program, plan, {
       [decisionId]: "use",
     });
-    const outcome = progress.decisionPoint
-      ? // It got past this one, as nothing else could stop it at another.
-        true
-      : progress.result.summary.contingencies[0]?.rescued;
-    if (outcome === rescued) return seed;
+    // Another Decision Point later in the Turn would get in the way of what the tests look at.
+    if (progress.decisionPoint) continue;
+    if (progress.result.summary.contingencies[0]?.rescued === rescued) {
+      return seed;
+    }
   }
   throw new Error(`No seed gives ${decisionId} that outcome`);
 }
@@ -198,6 +205,101 @@ export const landingRescuedSeed = seedWhereUsing(
   "contingency:entry-descent-landing",
   true,
 );
+
+/**
+ * A seed whose first lander lands at the first known Landing Site with nothing to answer on the way, and a dust storm
+ * over it then raises a Decision Point on Turn 2, where carrying on loses the lander or doesn't, as asked.
+ */
+function seedWithStormOnTurn2(lostIfCarryingOn: boolean): number {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const first = simulation.workOutTurn(
+      simulation.startProgram(seed),
+      firstLanding,
+    );
+    if (first.decisionPoint || first.result.summary.failure) continue;
+    const { program } = first.result;
+    const skip = { mission: null };
+    const second = simulation.workOutTurn(program, skip);
+    if (second.decisionPoint?.id !== "dust-storm:jezero-crater") continue;
+    const carriedOn = simulation.workOutTurn(program, skip, {
+      "dust-storm:jezero-crater": "carryOn",
+    });
+    if (
+      !carriedOn.decisionPoint &&
+      carriedOn.result.summary.dustStorms[0]?.assetsFailed.length ===
+        (lostIfCarryingOn ? 1 : 0)
+    ) {
+      return seed;
+    }
+  }
+  throw new Error("No seed gives that dust storm");
+}
+
+/** A seed whose first lander lands at the first known Landing Site, and Turn 2 then has nothing to answer there. */
+export const calmSecondTurnSeed = (() => {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const first = simulation.workOutTurn(
+      simulation.startProgram(seed),
+      firstLanding,
+    );
+    if (first.decisionPoint || first.result.summary.failure) continue;
+    const second = simulation.workOutTurn(first.result.program, {
+      mission: null,
+    });
+    if (!second.decisionPoint) return seed;
+  }
+  throw new Error("No seed gives a calm second Turn");
+})();
+
+/** A seed with a dust storm on Turn 2 that a lander comes through if it carries on. */
+export const dustStormSeed = seedWithStormOnTurn2(false);
+
+/** A seed with a dust storm on Turn 2 that a lander fails in if it carries on. */
+export const dustStormLossSeed = seedWithStormOnTurn2(true);
+
+/** A seed whose first orbiter meets a solar particle event, where carrying on gives this outcome and nothing else stops the Turn. */
+function seedWithParticles(carryingOn: "unharmed" | "lost"): number {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const program = simulation.startProgram(seed);
+    const met = simulation.workOutTurn(program, firstPlan);
+    if (met.decisionPoint?.id !== "solar-particle-event") continue;
+    const answered = (answer: "safeMode" | "carryOn") =>
+      simulation.workOutTurn(program, firstPlan, {
+        "solar-particle-event": answer,
+      });
+    const carriedOn = answered("carryOn");
+    if (answered("safeMode").decisionPoint || carriedOn.decisionPoint) {
+      continue;
+    }
+    if (carriedOn.result.summary.solarParticleEvent?.outcome === carryingOn) {
+      return seed;
+    }
+  }
+  throw new Error("No seed gives that solar particle event");
+}
+
+/** A seed whose first orbiter meets a solar particle event and comes through it whatever the answer. */
+export const solarParticleEventSeed = seedWithParticles("unharmed");
+
+/** A seed whose first orbiter meets a solar particle event, which loses it if it carries on. */
+export const solarParticleLossSeed = seedWithParticles("lost");
+
+/**
+ * A seed whose first lander reaches the first known Landing Site during a dust storm, and holding off lands it safely
+ * after the storm with nothing else to answer that Turn.
+ */
+export const holdOffSeed = (() => {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const program = simulation.startProgram(seed);
+    const met = simulation.workOutTurn(program, firstLanding);
+    if (met.decisionPoint?.id !== "go-no-go:entry-descent-landing") continue;
+    const held = simulation.workOutTurn(program, firstLanding, {
+      "go-no-go:entry-descent-landing": "holdOff",
+    });
+    if (!held.decisionPoint && !held.result.summary.failure) return seed;
+  }
+  throw new Error("No seed gives a landing to hold off");
+})();
 
 /** A seed whose first orbiter fails Mars orbit insertion on a Free-return Trajectory. */
 export const freeReturnSeed = seedWhere("Mars orbit insertion", {

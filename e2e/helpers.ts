@@ -176,7 +176,7 @@ export async function playToNextTurn(page: Page): Promise<void> {
 
 export function viewButton(
   page: Page,
-  name: "Solar system" | "Mars orbit" | "Surface",
+  name: "Solar system" | "Mars orbit" | "Surface" | "Spacecraft",
 ) {
   return page
     .getByRole("group", { name: "View" })

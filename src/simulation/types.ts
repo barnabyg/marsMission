@@ -147,6 +147,8 @@ export interface ProgramView {
   }[];
 }
 
+type HazardKind = "dustStorm" | "solarParticleEvent";
+
 export interface MissionEventEntry {
   kind: "missionEvent";
   day: number;
@@ -209,17 +211,32 @@ export interface AssetFailedEntry {
   description: string;
 }
 
-/** A Mission Event has gone wrong and a Contingency could still save it. What the player chose comes as the next entry. */
+/** The player has a choice to make, because of a Mission Event or a Hazard. What they chose comes as the next entry. */
 export interface DecisionPointEntry {
   kind: "decisionPoint";
   day: number;
-  eventId: string;
+  /** The Mission Event it's about, if it is about one. */
+  eventId?: string;
+  /** The Hazard it's about, if it is about one. */
+  hazard?: HazardKind;
+  /** The Landing Site it's about, if it is about one, which the surface view goes to. */
+  siteName?: string;
+  title: string;
+  description: string;
+}
+
+/** A Hazard, or how the player's answer to one came out. */
+export interface HazardEntry {
+  kind: "hazard";
+  hazard: HazardKind;
+  day: number;
   title: string;
   description: string;
 }
 
 export type TimelineEntry =
   | DecisionPointEntry
+  | HazardEntry
   | MissionReturnedEntry
   | AssetFailedEntry
   | AssetEndedEntry
@@ -282,6 +299,8 @@ export interface TurnSummary {
     returnedToEarth: boolean;
     /** The share of their cost that came back, which moneyEndMillions includes. */
     refundMillions: number;
+    /** Whether a Hazard did it, which missionEventName then names, rather than a Mission Event. */
+    hazard?: true;
   } | null;
   /** How each Decision Point in this Turn was answered, and what came of it. */
   contingencies: {
@@ -292,6 +311,34 @@ export interface TurnSummary {
     /** The Assets it saved, with the Service Life each has left to start with. */
     assets: { name: string; serviceLifeDays: number }[];
   }[];
+  /** The dust storms that had something at stake, how each was answered, and what came of it. */
+  dustStorms: {
+    siteName: string;
+    days: number;
+    answer: "shelter" | "carryOn";
+    /** The Assets operating there when it started. */
+    assets: string[];
+    /** Those that failed because they carried on. assetsFailed lists them too. */
+    assetsFailed: string[];
+  }[];
+  /** The solar particle event that hit the Mission, if one did, how it was answered and what came of it. */
+  solarParticleEvent: {
+    answer: "safeMode" | "carryOn";
+    outcome: "protected" | "unharmed" | "damaged" | "lost";
+    /** The Assets on board. */
+    assets: string[];
+    /** How much shorter it made each one's Service Life. */
+    serviceLifeLossPercent: number;
+  } | null;
+  /** The go/no-go check before a landing in a dust storm, if there was one, and how it was answered. */
+  goNoGo: {
+    siteName: string;
+    answer: "go" | "holdOff";
+    /** How long the landing waited, which is 0 if it went ahead. */
+    daysHeld: number;
+    /** The Service Life each Asset being landed lost by waiting. */
+    serviceLifeDaysLost: number;
+  } | null;
   /** Why the Program was cancelled at the end of this Turn, if it was. */
   cancellationReason: string | null;
 }
@@ -329,7 +376,7 @@ export interface AssetAtMars {
   fromDay: number;
   /** The day of the Turn it stops operating, or null if it lasts beyond the Turn. */
   untilDay: number | null;
-  /** Its Service Life, if a Contingency cut it short on this Turn's Mission. */
+  /** Its Service Life, if something on this Turn's Mission cut it short. */
   cutServiceLifeDays?: number;
 }
 
@@ -350,11 +397,15 @@ export interface Timeline {
     failedOnDay: number | null;
     /** The way back, if a Free-return is bringing it home. */
     returnsToEarth?: { fromDay: number; backOnDay: number };
+    /** The day a solar particle event hit it, if one did. */
+    solarParticleEventDay?: number;
   } | null;
   /** Where every Landing Site is, for showing Assets on the globe. */
   landingSites: { name: string; latitude: number; longitude: number }[];
   /** Every Asset that operates at Mars during the Turn. */
   assetsAtMars: AssetAtMars[];
+  /** The dust storms over the Landing Sites known so far. Each is over by toDay. */
+  dustStorms: { siteName: string; fromDay: number; toDay: number }[];
   entries: TimelineEntry[];
 }
 
@@ -375,7 +426,8 @@ export interface PlannedTrajectory {
   chosen: boolean;
 }
 
-export type DecisionAnswer = "use" | "decline";
+export type DecisionAnswer =
+  "use" | "decline" | "shelter" | "carryOn" | "safeMode" | "go" | "holdOff";
 
 /** The answers to a Turn's Decision Points so far, by each one's `id`. */
 export type DecisionAnswers = Readonly<Record<string, DecisionAnswer>>;
@@ -384,16 +436,25 @@ export type DecisionAnswers = Readonly<Record<string, DecisionAnswer>>;
 export interface DecisionPoint {
   /** How the answers name this one. */
   id: string;
+  kind: "contingency" | "dustStorm" | "solarParticleEvent" | "goNoGo";
   day: number;
-  missionEventName: string;
-  contingencyName: string;
+  /** What it's about, such as a Mission Event or a Hazard. */
+  title: string;
   description: string;
-  use: {
-    /** The chance that the second roll fails too, as a rough figure. */
-    riskBand: string;
-    description: string;
-  };
-  decline: { description: string };
+  /** The Assets at stake. */
+  assets: string[];
+  /** The Landing Site it's about, if it is about one. */
+  siteName?: string;
+  /** What the player can do. */
+  choices: [DecisionChoice, DecisionChoice];
+}
+
+interface DecisionChoice {
+  answer: DecisionAnswer;
+  label: string;
+  /** The chance of it going wrong as a rough figure, or null if no roll depends on it. */
+  riskBand: string | null;
+  description: string;
 }
 
 /** A Turn worked out as far as it can go: to its end, or to the first Decision Point with no answer yet. */

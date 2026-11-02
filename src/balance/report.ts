@@ -246,18 +246,88 @@ function afterFirstMission(plays: Play[]): string[] {
   return [...outcome("worked", false), ...outcome("failed", true)];
 }
 
-/** What Contingencies did, for a strategy that buys them. */
+const kindNames: Record<TurnRecord["decisions"][number]["kind"], string> = {
+  contingency: "Contingency",
+  dustStorm: "dust storm",
+  solarParticleEvent: "solar particle event",
+  goNoGo: "go/no-go check",
+};
+
+/** How often each kind of Decision Point came up, and what Contingencies did. */
 function decisionPoints(plays: Play[]): string[] {
-  const met = sum(
-    plays.map((play) => totalOf(play, (turn) => turn.decisionPoints)),
-  );
-  if (met === 0) return [];
-  const rescues = sum(
-    plays.map((play) => totalOf(play, (turn) => turn.rescues)),
-  );
+  const turns = plays.flat();
+  const met = sum(turns.map((turn) => turn.decisionPoints));
+  if (met === 0) return ["Decision Points: none"];
+  const contingencies = turns
+    .flatMap(({ decisions }) => decisions)
+    .filter(({ kind }) => kind === "contingency").length;
+  const rescues = sum(turns.map((turn) => turn.rescues));
+  const perKind = Object.entries(kindNames).flatMap(([kind, name]) => {
+    const count = turns
+      .flatMap(({ decisions }) => decisions)
+      .filter((decision) => decision.kind === kind).length;
+    return count > 0 ? [`${name} ${tenth(count / plays.length)}`] : [];
+  });
   return [
-    `Decision Points: ${tenth(met / plays.length)} per Program, ${percent(rescues, met)}% ended with the Assets saved`,
+    `Decision Points: ${tenth(met / plays.length)} per Program (${perKind.join(", ")}), in ${percent(turns.filter((turn) => turn.decisionPoints > 0).length, turns.length)}% of Turns` +
+      (contingencies > 0
+        ? `, ${percent(rescues, contingencies)}% of Contingencies saved the Assets`
+        : ""),
   ];
+}
+
+/**
+ * How Programs end up according to each answer to each kind of Decision Point, over the Programs that gave it at least
+ * once, for every strategy that did. Compare strategies that differ only in that answer, such as two "steady:" ones.
+ */
+function decisionOutcomes(
+  results: { strategy: Strategy; plays: Play[] }[],
+): string[] {
+  const rows = Object.entries(kindNames).flatMap(([kind, name]) =>
+    results.flatMap(({ strategy, plays }) => {
+      const answers = [
+        ...new Set(
+          plays
+            .flat()
+            .flatMap(({ decisions }) => decisions)
+            .filter((decision) => decision.kind === kind)
+            .map(({ answer }) => answer),
+        ),
+      ].toSorted();
+      return answers.map((answer) => {
+        const gave = plays.filter((play) =>
+          play.some(({ decisions }) =>
+            decisions.some(
+              (decision) =>
+                decision.kind === kind && decision.answer === answer,
+            ),
+          ),
+        );
+        const last = gave.flatMap((play) => play.at(-1) ?? []);
+        return [
+          name,
+          answer,
+          strategy.name,
+          percent(gave.length, plays.length),
+          whole(mean(last.map((turn) => turn.science))),
+          whole(mean(last.map((turn) => turn.moneyMillions))),
+          percent(last.filter((turn) => turn.cancelled).length, last.length),
+        ];
+      });
+    }),
+  );
+  return table(
+    [
+      "Decision Point",
+      "Answer",
+      "Strategy",
+      "Gave%",
+      "Science",
+      "Money",
+      "Cancel%",
+    ],
+    rows,
+  );
 }
 
 function researchScience(plays: Play[]): string {
@@ -315,6 +385,12 @@ export function balanceReport(
       summaryHeaders,
       results.map(({ strategy, plays }) => summaryRow(strategy.name, plays)),
     ),
+    "",
+    "== Decision Points by answer ==",
+    "",
+    "Programs that gave each answer at least once, and how they ended: Gave% of the strategy's Programs, then their means.",
+    "",
+    ...decisionOutcomes(results),
   ];
   for (const { strategy, plays } of results) {
     lines.push(

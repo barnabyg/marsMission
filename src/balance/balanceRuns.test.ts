@@ -5,7 +5,10 @@ import {
   type ProgramView,
   type TurnSummary,
 } from "../simulation/simulation";
-import { realCatalogueFiles } from "../testing/realCatalogue";
+import {
+  calmCatalogueFiles,
+  realCatalogueFiles,
+} from "../testing/realCatalogue";
 import { invalidStates } from "./invalidStates";
 import { planningTools, playProgram } from "./playProgram";
 import { balanceReport } from "./report";
@@ -30,7 +33,7 @@ const strategyCases = strategies.map(
 
 /** With nothing able to fail, so that a test can work out what must happen. */
 const certain: CatalogueFiles = {
-  ...files,
+  ...calmCatalogueFiles(),
   assets: files.assets.map((asset) => ({
     ...asset,
     failureChancePerTurn: 0,
@@ -381,6 +384,49 @@ describe("the checks for invalid states", () => {
     ],
   ])("catch %s", (_, check, expected) => {
     expect(check().join(" ")).toMatch(expected);
+  });
+});
+
+describe("the report on Decision Points", () => {
+  const sheltering = strategies.find(
+    ({ name }) => name === "steady: Soil analysis",
+  );
+  const carryingOn = strategies.find(
+    ({ name }) => name === "steady: carry on through storms",
+  );
+  if (!sheltering || !carryingOn) throw new Error("Expected both strategies");
+  const report = balanceReport(files, 40, [sheltering, carryingOn]);
+
+  it("says how often each kind came up, and in what share of Turns", () => {
+    expect(report).toMatch(
+      /Decision Points: \d+\.\d per Program \(.*dust storm \d+\.\d.*\), in \d+\.\d% of Turns/,
+    );
+  });
+
+  it("shows how Programs ended up according to each answer", () => {
+    const rows = report
+      .split("\n")
+      .filter((line) => line.startsWith("dust storm"))
+      .map((line) => line.trim().split(/\s{2,}/));
+    expect(rows.map((row) => row.slice(0, 3))).toEqual([
+      ["dust storm", "shelter", "steady: Soil analysis"],
+      ["dust storm", "carryOn", "steady: carry on through storms"],
+    ]);
+    for (const row of rows) expect(row).toHaveLength(7);
+  });
+
+  it("records every kind of Decision Point a Turn answered", () => {
+    const decisions = Array.from({ length: 40 }, (_, index) => index + 1)
+      .flatMap((seed) => playProgram(real, carryingOn, seed, turns).turns)
+      .flatMap((turn) => turn.decisions);
+    expect(new Set(decisions.map(({ kind }) => kind))).toEqual(
+      new Set(["dustStorm", "solarParticleEvent", "goNoGo"]),
+    );
+    expect(
+      decisions
+        .filter(({ kind }) => kind === "dustStorm")
+        .every(({ answer }) => answer === "carryOn"),
+    ).toBe(true);
   });
 });
 

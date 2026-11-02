@@ -105,6 +105,10 @@ _Avoid_: Prompt, intervention
 
 ## Risk
 
+**Go/no-go check**:
+A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life.
+_Avoid_: Abort check, landing poll
+
 **Mission Event**:
 A discrete, riskable step within a Mission, such as launch, Mars transfer burn, Mars orbit insertion, entry/descent/landing or rendezvous. Each one has a failure probability.
 _Avoid_: Step, phase
@@ -132,6 +136,14 @@ _Avoid_: Shielding (as the general term)
 **Hazard**:
 A random environmental danger that happens during Mission Mode, separate from planned Mission Events, such as a dust storm, a solar particle event or an asteroid strike on a base.
 _Avoid_: Random event, disaster
+
+**Dust storm**:
+A Hazard: a storm over one Landing Site for a stretch of days. If an Asset is operating there when it starts, the player chooses between sheltering, which earns no Ongoing Research for those days, and carrying on, with a chance of each Asset failing.
+_Avoid_: Sandstorm, weather
+
+**Solar particle event**:
+A Hazard: a burst of radiation from the Sun that hits a Mission on its way to Mars, more likely the longer its Duration. The player chooses between safe mode, which costs each Asset on board some Service Life, and carrying on, with a chance of damage that costs much more or loses the Mission.
+_Avoid_: Solar flare, radiation storm
 
 ## Balance elements
 

@@ -129,6 +129,22 @@ export function siteShown(
     : (sites[0] ?? null);
 }
 
+/** The dust storm over a Landing Site on a given day, if there is one. */
+export function dustStormAt(
+  { dustStorms }: Pick<Timeline, "dustStorms">,
+  day: number,
+  siteName: string,
+): Timeline["dustStorms"][number] | null {
+  return (
+    dustStorms.find(
+      (storm) =>
+        storm.siteName === siteName &&
+        day >= storm.fromDay &&
+        day < storm.toDay,
+    ) ?? null
+  );
+}
+
 /** What the player reads about a Landing Site on a given day, one line each. */
 export function describeSite(
   timeline: Pick<Timeline, "assetsAtMars" | "mission">,

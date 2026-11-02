@@ -37,7 +37,7 @@ test("Planning Mode offers Reserve fuel only for a Mission with Mars orbit inser
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
   await expect(page.getByTestId("mission-mass")).toHaveText("2.5 of 4 tonnes");
   await reserveFuel.check();
-  await expect(page.getByTestId("mission-cost")).toHaveText("$1.12B");
+  await expect(page.getByTestId("mission-cost")).toHaveText("$1.08B");
   await expect(page.getByTestId("mission-mass")).toHaveText("2.7 of 4 tonnes");
 
   await page.getByRole("checkbox", { name: /Pathfinder Orbiter/ }).uncheck();

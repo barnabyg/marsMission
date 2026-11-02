@@ -147,7 +147,7 @@ test("disables the surface view from the start when the lander is lost at launch
   expect(problems).toEqual([]);
 });
 
-test("moves from the surface to Mars orbit on the day the only landing on its way is lost", async ({
+test("moves from the surface to the spacecraft on the day the only landing on its way is lost", async ({
   page,
 }) => {
   // Over 5 s: waits at 1x for the failure so the pause lands in time.
@@ -172,7 +172,8 @@ test("moves from the surface to Mars orbit on the day the only landing on its wa
 
   await page.getByRole("button", { name: "1x" }).click();
   await pauseAtEvent(page, "Mars transfer burn failed");
-  await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
+  // The loss on the way is shown close up, and there's no Landing Site left to go back to.
+  await expect(page.getByTestId("current-view")).toHaveText("Spacecraft");
   await expectSurfaceUnavailable(page);
   expect(problems).toEqual([]);
 });

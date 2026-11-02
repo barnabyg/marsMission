@@ -23,29 +23,57 @@ interface Playback {
   skipToDecision: () => void;
 }
 
+/** The playback state, kept with the Timeline it's for. */
+interface Stored {
+  timeline: PlaybackTimeline;
+  state: PlaybackState;
+}
+
+/** The state on this Timeline, worked out from the one before if an answer has brought a new one since. */
+function onTimeline(stored: Stored, timeline: PlaybackTimeline): PlaybackState {
+  return stored.timeline === timeline
+    ? stored.state
+    : continueOnTimeline(stored.state, stored.timeline, timeline);
+}
+
+/** Applies a change on this Timeline, keeping the same object if nothing changed, as while paused, so nothing renders again. */
+function changed(
+  stored: Stored,
+  timeline: PlaybackTimeline,
+  change: (current: PlaybackState) => PlaybackState,
+): Stored {
+  const current = onTimeline(stored, timeline);
+  const next = change(current);
+  return next === current && stored.timeline === timeline
+    ? stored
+    : { timeline, state: next };
+}
+
 export function usePlayback(
   timeline: PlaybackTimeline,
   initialSpeed: number,
   onSpeedChange: (speed: number) => void,
 ): Playback {
-  const [state, setState] = useState(() =>
-    startPlayback(timeline, initialSpeed),
-  );
-
-  // An answer brings a new Timeline. Swapping during the render means no frame ever shows the old state on it.
-  const [shown, setShown] = useState(timeline);
-  if (timeline !== shown) {
-    setShown(timeline);
-    setState((current) => continueOnTimeline(current, shown, timeline));
-  }
+  // An answer brings a new Timeline. The state on it is worked out from the one before as it renders, so no frame ever
+  // shows the old state on it, even while paused, and the next change keeps it.
+  const [stored, setStored] = useState<Stored>(() => ({
+    timeline,
+    state: startPlayback(timeline, initialSpeed),
+  }));
+  const state = onTimeline(stored, timeline);
+  const update = (change: (current: PlaybackState) => PlaybackState) => {
+    setStored((current) => changed(current, timeline, change));
+  };
 
   useEffect(() => {
     let previous = performance.now();
     let frame = requestAnimationFrame(function tick(now) {
       const realMs = Math.min(now - previous, maxFrameMs);
       previous = now;
-      setState((current) =>
-        advancePlayback(current, timeline, realMs, timeScale),
+      setStored((current) =>
+        changed(current, timeline, (state) =>
+          advancePlayback(state, timeline, realMs, timeScale),
+        ),
       );
       frame = requestAnimationFrame(tick);
     });
@@ -57,14 +85,14 @@ export function usePlayback(
   return {
     state,
     setSpeed: (speed) => {
-      setState((current) => changeSpeed(current, speed));
+      update((current) => changeSpeed(current, speed));
       onSpeedChange(speed);
     },
     pause: () => {
-      setState(pausePlayback);
+      update(pausePlayback);
     },
     skipToDecision: () => {
-      setState((current) => skipToDecisionPoint(current, timeline));
+      update((current) => skipToDecisionPoint(current, timeline));
     },
   };
 }

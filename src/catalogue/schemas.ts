@@ -177,6 +177,39 @@ const contingenciesSchema = z.array(
   }),
 );
 
+const hazardsSchema = z.strictObject({
+  dustStorm: z.strictObject({
+    name: z.string().min(1),
+    // The chance of one over each Landing Site in each Turn.
+    chancePerSitePerTurn: z.number().min(0).max(1),
+    // How long one lasts, somewhere from the first to the second.
+    minDays: z.number().int().positive(),
+    maxDays: z.number().int().positive(),
+    // The chance that each Asset carrying on through one fails.
+    failureChance: z.number().min(0).max(1),
+    // A landing during one over its Landing Site: what its risk is multiplied by if it goes ahead, and the days of
+    // Service Life each Asset being landed loses for each day it's held off instead.
+    landingRiskMultiplier: z.number().min(1),
+    serviceLifeLostPerDayHeld: z.number().positive(),
+    // {site} stands for the Landing Site and {days} for how long it lasts.
+    description: z.string().min(1),
+  }),
+  solarParticleEvent: z.strictObject({
+    name: z.string().min(1),
+    // The chance of one on each day a Mission is on its way to Mars, so a longer Duration is more exposed.
+    chancePerDayInFlight: z.number().min(0).max(1),
+    // How much shorter the Service Life of each Asset on board is in safe mode.
+    safeModeServiceLifeLossPercent: z.number().int().min(0).max(99),
+    // Carrying on: the chance of damage, how much Service Life it costs, and the chance that damage loses them all.
+    damageChance: z.number().min(0).max(1),
+    damageServiceLifeLossPercent: z.number().int().min(0).max(99),
+    lossChanceIfDamaged: z.number().min(0).max(1),
+    // Lost if it loses the Mission, as a failed Mission Event's is.
+    publicSupportLoss: z.number().int().nonnegative(),
+    description: z.string().min(1),
+  }),
+});
+
 const milestonesSchema = z.array(
   z.strictObject({
     id,
@@ -237,6 +270,7 @@ export const schemas = {
   landingSites: landingSitesSchema,
   missionEvents: missionEventsSchema,
   contingencies: contingenciesSchema,
+  hazards: hazardsSchema,
   milestones: milestonesSchema,
   fundingThresholds: fundingThresholdsSchema,
   reliabilityLevels: reliabilityLevelsSchema,
@@ -254,6 +288,7 @@ export const catalogueFileNames = {
   landingSites: "landing-sites.json",
   missionEvents: "mission-events.json",
   contingencies: "contingencies.json",
+  hazards: "hazards.json",
   milestones: "milestones.json",
   fundingThresholds: "funding-thresholds.json",
   reliabilityLevels: "reliability-levels.json",
@@ -272,6 +307,7 @@ export interface Catalogue {
   landingSites: z.output<typeof landingSitesSchema>;
   missionEvents: z.output<typeof missionEventsSchema>;
   contingencies: z.output<typeof contingenciesSchema>;
+  hazards: z.output<typeof hazardsSchema>;
   milestones: z.output<typeof milestonesSchema>;
   fundingThresholds: z.output<typeof fundingThresholdsSchema>;
   /** In order, cheapest first. */

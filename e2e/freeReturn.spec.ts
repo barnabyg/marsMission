@@ -16,7 +16,7 @@ test("Free-return is offered only for a Mission with Mars orbit insertion, and s
 }) => {
   await page.goto(`/?seed=${freeReturnSeed}`);
   await trajectory(page).selectOption("free-return");
-  await expect(page.getByTestId("mission-cost")).toHaveText("$1.15B");
+  await expect(page.getByTestId("mission-cost")).toHaveText("$1.03B");
   await expect(page.getByTestId("mission-mass")).toHaveText(
     "2.5 of 3.8 tonnes",
   );
@@ -80,8 +80,8 @@ test("a Free-return Mission whose arrival burn fails comes back, at no Public Su
     "Assets back on Earth: Pathfinder Orbiter",
   );
   await page.getByRole("button", { name: "Continue" }).click();
-  // $2.3B, less $1.15B for the Mission, plus the $350M refund.
-  await expect(page.getByTestId("money")).toHaveText("$1.5B");
+  // $2.3B, less $1.03B for the Mission, plus the $350M refund.
+  await expect(page.getByTestId("money")).toHaveText("$1.62B");
   expect(problems).toEqual([]);
 });
 

@@ -1,0 +1,22 @@
+{
+  "dustStorm": {
+    "name": "Dust storm",
+    "chancePerSitePerTurn": 0.3,
+    "minDays": 100,
+    "maxDays": 220,
+    "failureChance": 0.15,
+    "landingRiskMultiplier": 1.5,
+    "serviceLifeLostPerDayHeld": 1.5,
+    "description": "A dust storm has blown up over {site}, and will last {days} days."
+  },
+  "solarParticleEvent": {
+    "name": "Solar particle event",
+    "chancePerDayInFlight": 0.0012,
+    "safeModeServiceLifeLossPercent": 15,
+    "damageChance": 0.2,
+    "damageServiceLifeLossPercent": 40,
+    "lossChanceIfDamaged": 0.2,
+    "publicSupportLoss": 20,
+    "description": "A burst of radiation from the Sun is sweeping past the Mission on its way to Mars."
+  }
+}

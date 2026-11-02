@@ -12,7 +12,7 @@
     "name": "Fast",
     "description": "A shorter Duration, so Assets arrive sooner and do more research this Turn. The extra fuel costs money and mass.",
     "transferDays": 150,
-    "costMillions": 200,
+    "costMillions": 40,
     "capacityLossTonnes": 0.5
   },
   {
@@ -20,7 +20,7 @@
     "name": "Free-return",
     "description": "Swings back to Earth if the arrival burn fails, rather than losing the Mission. It costs extra however the Mission goes.",
     "transferDays": 210,
-    "costMillions": 150,
+    "costMillions": 30,
     "capacityLossTonnes": 0.2,
     "freeReturn": {
       "arrivalBurn": "mars-orbit-insertion",

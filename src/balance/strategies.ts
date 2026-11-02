@@ -61,6 +61,11 @@ export const strategies: Strategy[] = [
     surveyingLanders,
   ),
   playStyle(
+    "survey first, Free-return",
+    "As survey first, flying Free-return whenever a Mission has an arrival burn.",
+    { ...surveyingLanders, trajectory: "free-return" },
+  ),
+  playStyle(
     "land straight away",
     "Landers at unsurveyed sites until one lands, and then the same as survey first.",
     {
@@ -236,9 +241,66 @@ export const strategies: Strategy[] = [
     { ...steadyRovers, trajectory: "fast" },
   ),
   playStyle(
+    "steady: Contingency when rich",
+    "As steady: Soil analysis, buying every Contingency it can afford once it has $3B, and using it.",
+    {
+      ...steadyRovers,
+      contingencies: "use",
+      contingenciesWhile: (view) => view.moneyMillions >= 3000,
+    },
+  ),
+  playStyle(
+    "steady: Fast when rich",
+    "As steady: Soil analysis, flying Fast once it has the money for several rovers.",
+    {
+      ...steadyRovers,
+      trajectory: "fast",
+      trajectoryWhile: (view) => view.moneyMillions >= 5000,
+    },
+  ),
+  playStyle(
+    "steady: Free-return first",
+    "As steady: Soil analysis, flying Free-return on its first Mission, the orbiter, while a loss would hurt most.",
+    {
+      ...steadyRovers,
+      trajectory: "free-return",
+      trajectoryWhile: (view) => view.turnNumber === 1,
+    },
+  ),
+  playStyle(
     "steady: Free-return",
     "As steady: Soil analysis, flying Free-return whenever a Mission has an arrival burn.",
     { ...steadyRovers, trajectory: "free-return" },
+  ),
+  playStyle(
+    "steady: carry on through storms",
+    "As steady: Soil analysis, carrying on through every dust storm.",
+    { ...steadyRovers, dustStorms: "carryOn" },
+  ),
+  playStyle(
+    "steady: carry on through radiation",
+    "As steady: Soil analysis, carrying on through every solar particle event.",
+    { ...steadyRovers, solarParticleEvents: "carryOn" },
+  ),
+  playStyle(
+    "steady: land in storms",
+    "As steady: Soil analysis, going ahead with every landing that a dust storm's go/no-go check would hold off.",
+    { ...steadyRovers, goNoGo: "go" },
+  ),
+  playStyle(
+    "steady: Long traverse, carry on through storms",
+    "As steady: Long traverse, carrying on through every dust storm.",
+    { ...steadyRovers, aim: "science", dustStorms: "carryOn" },
+  ),
+  playStyle(
+    "steady: Long traverse, carry on through radiation",
+    "As steady: Long traverse, carrying on through every solar particle event.",
+    { ...steadyRovers, aim: "science", solarParticleEvents: "carryOn" },
+  ),
+  playStyle(
+    "steady: Long traverse, land in storms",
+    "As steady: Long traverse, going ahead with every landing in a dust storm.",
+    { ...steadyRovers, aim: "science", goNoGo: "go" },
   ),
   playStyle(
     "steady: Survey once",

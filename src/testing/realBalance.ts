@@ -1,10 +1,10 @@
 import { parseCatalogue } from "../catalogue/catalogue";
 import { createSimulation, type TurnPlan } from "../simulation/simulation";
-import { realCatalogueFiles } from "./realCatalogue";
+import { calmCatalogueFiles } from "./realCatalogue";
 
 /** The real numbers, with every Mission Event certain to fail or certain to succeed. */
 function realSimulation(failureProbability: 0 | 1) {
-  const files = realCatalogueFiles();
+  const files = calmCatalogueFiles();
   return createSimulation(
     parseCatalogue({
       ...files,
@@ -18,7 +18,7 @@ function realSimulation(failureProbability: 0 | 1) {
 
 export const failing = realSimulation(1);
 export const succeeding = realSimulation(0);
-export const files = realCatalogueFiles();
+export const files = calmCatalogueFiles();
 
 export const mission = {
   launchVehicleId: files.launchVehicles[0]?.id ?? "",

@@ -5,6 +5,7 @@ import {
   landingSitePick,
   startingChoice,
   viewWithSites,
+  viewWithSpacecraft,
   type MissionViewId,
   type SitePick,
   type ViewChoice,
@@ -24,6 +25,8 @@ export function useMissionView(
   entries: readonly TimelineEntry[],
   entriesHappened: number,
   sites: readonly string[],
+  /** Where the spacecraft view hands over to, or null while it has something to show. */
+  spacecraftFallback: MissionViewId | null,
 ): MissionView {
   const [choice, setChoice] = useState<ViewChoice>(startingChoice);
   const [pick, setPick] = useState<SitePick>({
@@ -31,7 +34,13 @@ export function useMissionView(
     entriesHappened: 0,
   });
   return {
-    view: viewWithSites(currentView(entries, entriesHappened, choice), sites),
+    view: viewWithSites(
+      viewWithSpacecraft(
+        currentView(entries, entriesHappened, choice),
+        spacecraftFallback,
+      ),
+      sites,
+    ),
     chooseView: (view) => {
       setChoice({ view, entriesHappened });
     },

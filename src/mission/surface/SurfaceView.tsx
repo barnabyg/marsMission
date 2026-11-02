@@ -14,8 +14,10 @@ import {
   type LandingSequence,
   type SequenceNow,
 } from "./sequence";
+import { DustStormEffect } from "./DustStormEffect";
 import { SequenceParticles } from "./SequenceParticles";
 import {
+  dustStormAt,
   placeOf,
   spotOf,
   surfaceAssetsAt,
@@ -132,7 +134,7 @@ export function SurfaceScene({
   siteName,
   sequence,
 }: {
-  timeline: Pick<Timeline, "assetsAtMars">;
+  timeline: Pick<Timeline, "assetsAtMars" | "dustStorms">;
   day: number;
   siteName: string;
   sequence: SequenceNow | null;
@@ -165,6 +167,7 @@ export function SurfaceScene({
           siteName={siteName}
         />
       )}
+      {dustStormAt(timeline, day, siteName) && <DustStormEffect />}
       {sequenceRunning(here) && (
         <SequenceParticles
           sequence={here.sequence}
