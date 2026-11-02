@@ -102,17 +102,24 @@ export function createRules(catalogue: Catalogue) {
     );
   }
 
+  // Kept for each Mission, because balance runs ask for the day of every Mission Event many times over. Plans are
+  // never changed in place, so a Mission's departure never changes.
+  const departureDays = new WeakMap<PlannedMission, number>();
+
   /** The day a Mission leaves Earth orbit for Mars: the day after the last of its Mission Events timed from launch. */
   function departureDay(mission: PlannedMission | null): number {
-    return (
+    const known = mission && departureDays.get(mission);
+    if (known) return known;
+    const day =
       1 +
       Math.max(
         0,
         ...eventsOf(mission).flatMap(({ timing }) =>
           timing.from === "launch" ? [timing.days] : [],
         ),
-      )
-    );
+      );
+    if (mission) departureDays.set(mission, day);
+    return day;
   }
 
   /** The day of the Turn a Mission Event happens to this Mission. */
