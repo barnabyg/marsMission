@@ -7,13 +7,28 @@ export type Technology =
 
 export type TechnologyReadiness = Technology["technologyReadiness"];
 
-/** How mature a technology is in this Program: as the Catalogue starts it, or Flight-proven once it has been used successfully. */
+/** Whether a technology's Development has finished in this Program, which is at the start of the Turn it was due. */
+export function isDeveloped(program: Program, technology: Technology): boolean {
+  return program.developments.some(
+    ({ technologyId, finishesOnTurn }) =>
+      technologyId === technology.id && finishesOnTurn <= program.turnNumber,
+  );
+}
+
+/**
+ * How mature a technology is in this Program: as the Catalogue starts it, built once its Development has finished,
+ * or Flight-proven once it has been used successfully.
+ */
 export function readinessOf(
   program: Program,
   technology: Technology,
 ): TechnologyReadiness {
-  return program.provenTechnologyIds.includes(technology.id)
-    ? "flight-proven"
+  if (program.provenTechnologyIds.includes(technology.id)) {
+    return "flight-proven";
+  }
+  return technology.technologyReadiness === "not-built" &&
+    isDeveloped(program, technology)
+    ? "built"
     : technology.technologyReadiness;
 }
 

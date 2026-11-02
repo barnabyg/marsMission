@@ -41,6 +41,7 @@ describe("validating a plan", () => {
     const { simulation, program } = setup();
     expect(simulation.validatePlan(program, sendOrbiter)).toEqual({
       costMillions: 500,
+      developmentCostMillions: 0,
       massTonnes: 2,
       capacityTonnes: 5,
       problems: [],

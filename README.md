@@ -79,7 +79,7 @@ The sound effects in `public/sounds` are synthesised by `node scripts/generate-s
 Everything outside `src/simulation` reaches the rules through `createSimulation` in `simulation.ts`. A Turn runs in this order:
 
 1. `simulation.ts`, in `workOutTurn`, checks the plan with `planCheck.ts` and flies the Mission with `flyMission.ts`.
-2. `turnSteps.ts` carries out the rest of the Turn's steps, in `resolveTurn`: Milestones for arriving and for a first landing, technologies that became Flight-proven (`flightProven.ts`), Assets at work (`assetsInService.ts`), dust storms (`dustStorms.ts`), Surveys, Ongoing Research (`ongoingResearch.ts`), Science Milestones (`scienceMilestones.ts`), Funding Thresholds and the fading of Public Support. It builds the next Program, the Timeline and the Turn summary.
+2. `turnSteps.ts` carries out the rest of the Turn's steps, in `resolveTurn`: Milestones for arriving and for a first landing, technologies that became Flight-proven (`flightProven.ts`), Development started and finished (`development.ts`), Assets at work (`assetsInService.ts`), dust storms (`dustStorms.ts`), Surveys, Ongoing Research (`ongoingResearch.ts`), Science Milestones (`scienceMilestones.ts`), Funding Thresholds and the fading of Public Support. It builds the next Program, the Timeline and the Turn summary.
 3. `simulation.ts` stops at the earliest Decision Point that has no answer, from the Mission or a dust storm, and gives the Timeline up to it.
 
 | File                                                          | What it holds                                                                                                                                 |
@@ -93,6 +93,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 | `missionReport.ts`                                            | How the Turn's Mission shows on the Timeline, also up to a Decision Point, and in the Turn summary                                            |
 | `technologyReadiness.ts`                                      | Technology Readiness in a Program: whether a technology is Flight-proven, what it costs and how much it raises failure probabilities          |
 | `flightProven.ts`                                             | The technologies a Mission used successfully for the first time, which become Flight-proven                                                   |
+| `development.ts`                                              | Development: the technologies that need it, starting it in a plan, and what finishes when                                                     |
 | `turnSteps.ts`                                                | The steps of a Turn after the Mission, in order (above), and the next Program, Timeline and Turn summary                                      |
 | `assetsInService.ts`                                          | Which Assets operate for which days of the Turn, their failures and end of Service Life, and Surveys                                          |
 | `ongoingResearch.ts`                                          | What each Activity earns in Science, Public Support and Research Grants                                                                       |

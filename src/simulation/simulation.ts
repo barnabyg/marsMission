@@ -5,6 +5,7 @@ import {
   operatingKey,
   type Activity,
 } from "./rules";
+import { needingDevelopment, plannedDevelopment } from "./development";
 import { flyMission } from "./flyMission";
 import { missionOnTimeline, timelineUpToDecision } from "./missionReport";
 import { earningsPerTurn } from "./ongoingResearch";
@@ -214,6 +215,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         surveyedLandingSiteIds: [],
         fundingThresholdsPaid: [],
         provenTechnologyIds: [],
+        developments: [],
         operatingAssets: [],
         status: { kind: "active" },
       };
@@ -260,6 +262,9 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           daysLeft: Math.max(0, daysUntilServiceEnds(program.date, asset)),
           landingSiteName: landingSiteById(asset.landingSiteId)?.name ?? null,
         })),
+        developments: needingDevelopment(catalogue).map((technology) =>
+          plannedDevelopment(program, technology),
+        ),
         somethingLeftToSurvey: catalogue.landingSites.some(
           ({ id }) => !program.surveyedLandingSiteIds.includes(id),
         ),

@@ -141,7 +141,17 @@ const format7 = format6.extend({
   ),
 });
 
-const newestFormat = format7;
+/** Adds the Developments started. A save from before Development has started none. */
+const format8 = format7.extend({
+  developments: z.array(
+    z.strictObject({
+      technologyId: z.string(),
+      finishesOnTurn: z.number().int().positive(),
+    }),
+  ),
+});
+
+const newestFormat = format8;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -221,6 +231,13 @@ const formats: readonly SaveFormat[] = [
         ...asset,
         flewUnproven: false,
       })),
+    }),
+  },
+  {
+    schema: format7,
+    upgrade: (old: z.output<typeof format7>): z.output<typeof format8> => ({
+      ...old,
+      developments: [],
     }),
   },
   { schema: newestFormat },
