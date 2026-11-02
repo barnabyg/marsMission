@@ -2,12 +2,12 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseCatalogue } from "./catalogue";
 import { createSimulation, type TurnPlan } from "../simulation/simulation";
-import { realCatalogueFiles } from "../testing/realCatalogue";
+import { calmCatalogueFiles } from "../testing/realCatalogue";
 import { files, mission, plainMission } from "../testing/realBalance";
 
 describe("the known seeds in the Phase 4 playtest guide", () => {
   const guide = readFileSync("docs/playtest/phase-4.md", "utf8");
-  const real = createSimulation(parseCatalogue(realCatalogueFiles()));
+  const real = createSimulation(parseCatalogue(calmCatalogueFiles()));
   const vehicle = files.launchVehicles[0]?.id ?? "";
   const rover = (landingSiteId: string): TurnPlan => ({
     mission: {
@@ -105,7 +105,7 @@ describe("the known seeds in the Phase 4 playtest guide", () => {
 
 describe("the known seeds in the Phase 3 playtest guide", () => {
   const guide = readFileSync("docs/playtest/phase-3.md", "utf8");
-  const real = createSimulation(parseCatalogue(realCatalogueFiles()));
+  const real = createSimulation(parseCatalogue(calmCatalogueFiles()));
   const land: TurnPlan = {
     mission: {
       ...mission,
@@ -168,7 +168,7 @@ describe("the known seeds in the Phase 3 playtest guide", () => {
 
 describe("the known seeds in the Phase 2 playtest guide", () => {
   const guide = readFileSync("docs/playtest/phase-2.md", "utf8");
-  const real = createSimulation(parseCatalogue(realCatalogueFiles()));
+  const real = createSimulation(parseCatalogue(calmCatalogueFiles()));
 
   function failuresOverTwoTurns(seed: number) {
     const first = real.runTurn(real.startProgram(seed), plainMission);

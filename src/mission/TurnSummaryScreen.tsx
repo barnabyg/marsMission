@@ -90,6 +90,30 @@ export function TurnSummaryScreen({
           </ul>
         </section>
       )}
+      {summary.dustStorms.length > 0 && (
+        <section data-testid="summary-dust-storms">
+          <h2>
+            <GameText>Hazards</GameText>
+          </h2>
+          <ul>
+            {summary.dustStorms.map(
+              ({ siteName, days, answer, assets, assetsFailed }) => (
+                <li key={siteName}>
+                  <GameText>
+                    {`Dust storm over ${siteName}: ${
+                      answer === "shelter"
+                        ? `${assets.join(", ")} sheltered for ${days} days, with no Ongoing Research`
+                        : assetsFailed.length > 0
+                          ? `carried on through ${days} days, and lost ${assetsFailed.join(", ")}`
+                          : `${assets.join(", ")} carried on through ${days} days, and came through`
+                    }`}
+                  </GameText>
+                </li>
+              ),
+            )}
+          </ul>
+        </section>
+      )}
       {summary.milestones.length > 0 && (
         <section>
           <h2>

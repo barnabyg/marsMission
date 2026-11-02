@@ -5,7 +5,10 @@ import {
   type ProgramView,
   type TurnSummary,
 } from "../simulation/simulation";
-import { realCatalogueFiles } from "../testing/realCatalogue";
+import {
+  calmCatalogueFiles,
+  realCatalogueFiles,
+} from "../testing/realCatalogue";
 import { invalidStates } from "./invalidStates";
 import { planningTools, playProgram } from "./playProgram";
 import { balanceReport } from "./report";
@@ -30,7 +33,7 @@ const strategyCases = strategies.map(
 
 /** With nothing able to fail, so that a test can work out what must happen. */
 const certain: CatalogueFiles = {
-  ...files,
+  ...calmCatalogueFiles(),
   assets: files.assets.map((asset) => ({
     ...asset,
     failureChancePerTurn: 0,

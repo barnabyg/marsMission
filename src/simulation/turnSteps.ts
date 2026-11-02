@@ -1,5 +1,10 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import { carryOutSurvey, operateAssets } from "./assetsInService";
+import {
+  carryOutSurvey,
+  operateAssets,
+  stoppedEntries,
+} from "./assetsInService";
+import { weatherDustStorms } from "./dustStorms";
 import {
   contingenciesAnswered,
   missionFailure,
@@ -25,10 +30,12 @@ import {
 } from "./rules";
 import type {
   AssetAtMars,
+  DecisionAnswers,
   FirstLandingEntry,
   FundingThresholdEntry,
   MilestoneEntry,
   Program,
+  TimelineEntry,
   TurnPlan,
   TurnResult,
 } from "./types";
@@ -150,7 +157,10 @@ function fadePublicSupport(catalogue: Catalogue, publicSupport: number) {
   };
 }
 
-/** Works out a whole Turn from a plan that has already passed validation, and how its Mission flew. */
+/**
+ * Works out a whole Turn from a plan that has already passed validation, how its Mission flew and the answers so far.
+ * It also gives what happened apart from the flight, and the earliest dust storm with no answer, which counts as sheltering.
+ */
 export function resolveTurn(
   catalogue: Catalogue,
   rules: Rules,
@@ -158,7 +168,12 @@ export function resolveTurn(
   plan: TurnPlan,
   costMillions: number,
   flown: MissionOutcome,
-): TurnResult {
+  answers: DecisionAnswers,
+): {
+  result: TurnResult;
+  otherEntries: TimelineEntry[];
+  stormDecision: ReturnType<typeof weatherDustStorms>["decision"];
+} {
   const { launchWindowIntervalDays } = catalogue.program;
 
   const { failedOnDay } = flown;
@@ -170,13 +185,16 @@ export function resolveTurn(
     flown.deliveredAssets,
   );
   const firstLanding = creditFirstLanding(rules, program, plan, flown);
-  const operated = operateAssets(catalogue, rules, program, plan, flown);
-  const survey = carryOutSurvey(catalogue, rules, program, operated.inService);
-  const research = carryOutOngoingResearch(
+  const weather = weatherDustStorms(
     catalogue,
     rules,
-    operated.inService,
+    program,
+    operateAssets(catalogue, rules, program, plan, flown),
+    answers,
   );
+  const { inService } = weather;
+  const survey = carryOutSurvey(catalogue, rules, program, inService);
+  const research = carryOutOngoingResearch(catalogue, rules, inService);
   const scienceAwards = awardScienceMilestones(
     catalogue,
     program.milestoneIds,
@@ -236,7 +254,7 @@ export function resolveTurn(
   const cutServiceLife = new Map(
     [...flown.rescuedServiceLife].map(([asset, days]) => [asset.id, days]),
   );
-  const assetsAtMars = operated.inService.map(
+  const assetsAtMars = inService.map(
     ({ asset, fromDay, untilDay }): AssetAtMars => {
       const cutServiceLifeDays =
         fromDay > 0 ? cutServiceLife.get(asset.assetId) : undefined;
@@ -256,7 +274,17 @@ export function resolveTurn(
     },
   );
 
-  return {
+  const otherEntries = [
+    ...arrivalAwards.map(milestoneEntry),
+    ...(firstLanding ? [firstLanding.entry] : []),
+    ...scienceAwards.map(milestoneEntry),
+    ...(survey.entry ? [survey.entry] : []),
+    ...weather.entries,
+    ...stoppedEntries(rules, inService),
+    ...funding.entries,
+  ];
+
+  const result: TurnResult = {
     program: {
       ...program,
       turnNumber: program.turnNumber + 1,
@@ -277,7 +305,7 @@ export function resolveTurn(
         ...program.fundingThresholdsPaid,
         ...funding.payouts.map(({ publicSupport }) => publicSupport),
       ],
-      operatingAssets: operated.inService
+      operatingAssets: inService
         .filter(({ untilDay }) => untilDay === null)
         .map(({ asset }) => asset),
       status:
@@ -294,16 +322,11 @@ export function resolveTurn(
         ({ name, latitude, longitude }) => ({ name, latitude, longitude }),
       ),
       assetsAtMars,
+      dustStorms: weather.storms,
       // The sort is stable, so an award stays after the arrival or the Science that earned it.
-      entries: [
-        ...flown.entries,
-        ...arrivalAwards.map(milestoneEntry),
-        ...(firstLanding ? [firstLanding.entry] : []),
-        ...scienceAwards.map(milestoneEntry),
-        ...(survey.entry ? [survey.entry] : []),
-        ...operated.entries,
-        ...funding.entries,
-      ].sort((first, second) => first.day - second.day),
+      entries: [...flown.entries, ...otherEntries].sort(
+        (first, second) => first.day - second.day,
+      ),
     },
     summary: {
       missionCostMillions: costMillions,
@@ -326,12 +349,13 @@ export function resolveTurn(
         science: firstLanding.site.science,
       },
       ongoingResearch: research.earned,
-      assetsEnded: operated.inService
+      assetsEnded: inService
         .filter(({ untilDay, failed }) => untilDay !== null && !failed)
         .map(({ asset }) => asset.name),
-      assetsFailed: operated.inService
+      assetsFailed: inService
         .filter(({ failed }) => failed)
         .map(({ asset }) => asset.name),
+      dustStorms: weather.summary,
       survey: survey.summary,
       fundingPayouts: funding.payouts,
       researchGrants: research.researchGrants,
@@ -341,4 +365,5 @@ export function resolveTurn(
       cancellationReason: faded.cancellationReason,
     },
   };
+  return { result, otherEntries, stormDecision: weather.decision };
 }

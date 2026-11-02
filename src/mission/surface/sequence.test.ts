@@ -6,7 +6,7 @@ import {
   type Timeline,
   type TimelineEntry,
 } from "../../simulation/simulation";
-import { realCatalogueFiles } from "../../testing/realCatalogue";
+import { calmCatalogueFiles } from "../../testing/realCatalogue";
 import { viewWithSites } from "../missionViews";
 import { siteShown } from "./surface";
 import {
@@ -359,7 +359,7 @@ describe("what the player reads during a sequence", () => {
 });
 
 describe("a sequence from a real Turn", () => {
-  const catalogue = parseCatalogue(realCatalogueFiles());
+  const catalogue = parseCatalogue(calmCatalogueFiles());
   const simulation = createSimulation(catalogue);
   const plan = {
     mission: {

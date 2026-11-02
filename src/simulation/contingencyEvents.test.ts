@@ -67,7 +67,7 @@ describe("Contingencies for other Mission Events", () => {
   it("gives a rover and a lander on one Mission one Decision Point and one outcome", () => {
     const { simulation, program } = failing(["test-landing"]);
     const stopped = simulation.workOutTurn(program, landerAndRover);
-    expect(stopped.decisionPoint?.use.description).toContain(
+    expect(stopped.decisionPoint?.choices[0].description).toContain(
       "Test Lander, Test Rover",
     );
     const { summary } = simulation.runTurn(program, landerAndRover, {
@@ -157,7 +157,7 @@ describe("Contingencies for other Mission Events", () => {
     expect(stopped.timeline.assetsAtMars.map(({ name }) => name)).toEqual([
       "Test Orbiter",
     ]);
-    expect(stopped.decisionPoint?.decline.description).not.toContain(
+    expect(stopped.decisionPoint?.choices[1].description).not.toContain(
       "Test Orbiter",
     );
     const saved = simulation.runTurn(program, plan, { [landing]: "use" });

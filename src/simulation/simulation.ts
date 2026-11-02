@@ -15,7 +15,9 @@ import { createPlanCheck } from "./planCheck";
 import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
 import { resolveTurn } from "./turnSteps";
 import type {
+  DecisionAnswer,
   DecisionAnswers,
+  DecisionPoint,
   PlanCheck,
   PlannedActivity,
   PlannedAsset,
@@ -82,6 +84,11 @@ export interface Simulation {
   retireProgram(program: Program): Program;
 }
 
+/** The answer that plays a Turn on with nothing rolled for it, for what comes before a Decision Point. */
+function cautiousAnswer({ kind }: DecisionPoint): DecisionAnswer {
+  return kind === "contingency" ? "decline" : "shelter";
+}
+
 export function createSimulation(catalogue: Catalogue): Simulation {
   const rules = createRules(catalogue);
   const {
@@ -141,32 +148,41 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     const fly = (given: DecisionAnswers) =>
       flyMission(catalogue, rules, program, plan, given);
     const flown = fly(answers);
-    const { decisionPoint } = flown;
-    if (!decisionPoint) {
-      const result = resolveTurn(
-        catalogue,
-        rules,
-        program,
-        plan,
-        costMillions,
-        flown,
-      );
-      return { decisionPoint, timeline: result.timeline, result };
-    }
-    const asIfDeclined = resolveTurn(
+    const flightDecision = flown.decisionPoint;
+    // The flight never depends on the rest of the Turn, but what's at stake on a day depends on the flight so far.
+    const asIfCautious = flightDecision
+      ? fly({ ...answers, [flightDecision.id]: cautiousAnswer(flightDecision) })
+      : flown;
+    const { result, otherEntries, stormDecision } = resolveTurn(
       catalogue,
       rules,
       program,
       plan,
       costMillions,
-      fly({ ...answers, [decisionPoint.id]: "decline" }),
+      asIfCautious,
+      answers,
     );
+    const stormComesFirst =
+      stormDecision !== null &&
+      (flightDecision === null ||
+        stormDecision.decisionPoint.day < flightDecision.day);
+    const decisionPoint = stormComesFirst
+      ? stormDecision.decisionPoint
+      : flightDecision;
+    if (!decisionPoint) {
+      return { decisionPoint, timeline: result.timeline, result };
+    }
     return {
       decisionPoint,
       timeline: timelineUpToDecision(
-        asIfDeclined.timeline,
-        { ...flown, decisionPoint },
+        result.timeline,
+        otherEntries,
+        flown.entries,
         missionOnTimeline(rules, plan, flown),
+        {
+          day: decisionPoint.day,
+          entry: stormComesFirst ? stormDecision.entry : null,
+        },
       ),
     };
   }

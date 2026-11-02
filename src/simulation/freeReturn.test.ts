@@ -130,10 +130,14 @@ describe("a Contingency on Free-return", () => {
   it("comes first, with both answers saying what Free-return will do", () => {
     const { simulation, program } = failingEvents(["test-arrival"]);
     const { decisionPoint } = simulation.workOutTurn(program, insured);
-    expect(decisionPoint?.decline.description).toContain("no Public Support");
-    expect(decisionPoint?.decline.description).toContain("$200M");
-    expect(decisionPoint?.use.description).toContain("10 Public Support");
-    expect(decisionPoint?.use.description).toContain("$200M");
+    expect(decisionPoint?.choices[1].description).toContain(
+      "no Public Support",
+    );
+    expect(decisionPoint?.choices[1].description).toContain("$200M");
+    expect(decisionPoint?.choices[0].description).toContain(
+      "10 Public Support",
+    );
+    expect(decisionPoint?.choices[0].description).toContain("$200M");
   });
 
   it("leads to Free-return when it's declined, at no Public Support", () => {

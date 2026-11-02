@@ -241,6 +241,16 @@ export const strategies: Strategy[] = [
     { ...steadyRovers, trajectory: "free-return" },
   ),
   playStyle(
+    "steady: shelter from storms",
+    "As steady: Soil analysis, sheltering from every dust storm.",
+    { ...steadyRovers, dustStorms: "shelter" },
+  ),
+  playStyle(
+    "steady: carry on through storms",
+    "As steady: Soil analysis, carrying on through every dust storm.",
+    { ...steadyRovers, dustStorms: "carryOn" },
+  ),
+  playStyle(
     "steady: Survey once",
     "As steady: Soil analysis, but the orbiter changes to research after its first Survey.",
     {

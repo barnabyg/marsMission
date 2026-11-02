@@ -105,8 +105,7 @@ describe("a Mission Event failing with a Contingency bought", () => {
     expect(decisionPoint).toMatchObject({
       id: arrivalDecision,
       day: 200,
-      missionEventName: "Test arrival",
-      contingencyName: "Reserve fuel",
+      title: "Test arrival",
     });
     expect(timeline.decisionDay).toBe(200);
     expect(timeline.entries.map(({ kind, title }) => [kind, title])).toEqual([
@@ -131,12 +130,16 @@ describe("a Mission Event failing with a Contingency bought", () => {
       rescueFailureProbability: 0.05,
     });
     const { decisionPoint } = simulation.workOutTurn(program, insured);
-    expect(decisionPoint?.use.riskBand).toBe("~5%");
-    expect(decisionPoint?.use.description).toContain("50%");
+    expect(decisionPoint?.choices[0].riskBand).toBe("~5%");
+    expect(decisionPoint?.choices[0].description).toContain("50%");
     // 40 for the arrival, and 10 more for the Reserve fuel failing as well.
-    expect(decisionPoint?.use.description).toContain("50 Public Support");
-    expect(decisionPoint?.decline.description).toContain("40 Public Support");
-    expect(decisionPoint?.decline.description).toContain("Test Orbiter");
+    expect(decisionPoint?.choices[0].description).toContain(
+      "50 Public Support",
+    );
+    expect(decisionPoint?.choices[1].description).toContain(
+      "40 Public Support",
+    );
+    expect(decisionPoint?.choices[1].description).toContain("Test Orbiter");
   });
 
   it("can't be run to its end without an answer", () => {

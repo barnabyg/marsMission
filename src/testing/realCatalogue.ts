@@ -13,3 +13,15 @@ export function realCatalogueFiles(): CatalogueFiles {
     ]),
   ) as unknown as CatalogueFiles;
 }
+
+/** The real numbers with no Hazards, for tests of a part of the balance that Hazards would only get in the way of. */
+export function calmCatalogueFiles(): CatalogueFiles {
+  const files = realCatalogueFiles();
+  return {
+    ...files,
+    hazards: {
+      ...files.hazards,
+      dustStorm: { ...files.hazards.dustStorm, chancePerSitePerTurn: 0 },
+    },
+  };
+}

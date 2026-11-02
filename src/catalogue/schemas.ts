@@ -177,6 +177,21 @@ const contingenciesSchema = z.array(
   }),
 );
 
+const hazardsSchema = z.strictObject({
+  dustStorm: z.strictObject({
+    name: z.string().min(1),
+    // The chance of one over each Landing Site in each Turn.
+    chancePerSitePerTurn: z.number().min(0).max(1),
+    // How long one lasts, somewhere from the first to the second.
+    minDays: z.number().int().positive(),
+    maxDays: z.number().int().positive(),
+    // The chance that each Asset carrying on through one fails.
+    failureChance: z.number().min(0).max(1),
+    // {site} stands for the Landing Site and {days} for how long it lasts.
+    description: z.string().min(1),
+  }),
+});
+
 const milestonesSchema = z.array(
   z.strictObject({
     id,
@@ -237,6 +252,7 @@ export const schemas = {
   landingSites: landingSitesSchema,
   missionEvents: missionEventsSchema,
   contingencies: contingenciesSchema,
+  hazards: hazardsSchema,
   milestones: milestonesSchema,
   fundingThresholds: fundingThresholdsSchema,
   reliabilityLevels: reliabilityLevelsSchema,
@@ -254,6 +270,7 @@ export const catalogueFileNames = {
   landingSites: "landing-sites.json",
   missionEvents: "mission-events.json",
   contingencies: "contingencies.json",
+  hazards: "hazards.json",
   milestones: "milestones.json",
   fundingThresholds: "funding-thresholds.json",
   reliabilityLevels: "reliability-levels.json",
@@ -272,6 +289,7 @@ export interface Catalogue {
   landingSites: z.output<typeof landingSitesSchema>;
   missionEvents: z.output<typeof missionEventsSchema>;
   contingencies: z.output<typeof contingenciesSchema>;
+  hazards: z.output<typeof hazardsSchema>;
   milestones: z.output<typeof milestonesSchema>;
   fundingThresholds: z.output<typeof fundingThresholdsSchema>;
   /** In order, cheapest first. */

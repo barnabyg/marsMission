@@ -242,6 +242,17 @@ export function testCatalogueFiles(): CatalogueFiles {
         longitude: -40,
       },
     ],
+    // None of these happen unless a test says so, so that they can't get in the way of the others.
+    hazards: {
+      dustStorm: {
+        name: "Dust storm",
+        chancePerSitePerTurn: 0,
+        minDays: 100,
+        maxDays: 100,
+        failureChance: 0,
+        description: "A storm over {site} for {days} days.",
+      },
+    },
     fundingThresholds: [
       { publicSupport: 300, payoutMillions: 1000 },
       { publicSupport: 1000, payoutMillions: 7000 },

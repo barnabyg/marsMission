@@ -25,6 +25,10 @@ export interface AssetInService {
   untilDay: number | null;
   /** Whether it stopped by failing, rather than its Service Life ending. */
   failed: boolean;
+  /** The Landing Site of the dust storm it failed in, if that's how it stopped. */
+  failedInStormAt?: string;
+  /** When it sheltered from a dust storm and so earned nothing, if it did. */
+  shelter?: { fromDay: number; toDay: number };
 }
 
 /**
@@ -62,10 +66,7 @@ export function operateAssets(
     landingSite: LandingSite | undefined;
     rescuedServiceLife: Map<Asset, number>;
   },
-): {
-  inService: AssetInService[];
-  entries: (AssetEndedEntry | AssetFailedEntry)[];
-} {
+): AssetInService[] {
   const { launchWindowIntervalDays } = catalogue.program;
   const delivered = flown.deliveredAssets.map((asset) => ({
     asset: {
@@ -82,7 +83,7 @@ export function operateAssets(
     },
     fromDay: rules.deliveryDay(asset, plan.mission),
   }));
-  const inService = [
+  return [
     ...program.operatingAssets.map((asset) => ({
       asset: {
         ...asset,
@@ -112,32 +113,43 @@ export function operateAssets(
       ? { asset, fromDay, untilDay, failed: false }
       : { asset, fromDay, untilDay: failureDay, failed: true };
   });
-  return {
-    inService,
-    entries: inService.flatMap(
-      ({ asset, untilDay, failed }): (AssetEndedEntry | AssetFailedEntry)[] => {
-        if (untilDay === null) return [];
-        const site = rules.landingSiteById(asset.landingSiteId)?.name;
-        const place = site ? `at ${site}` : "at Mars";
-        if (failed) {
-          const entry: AssetFailedEntry = {
-            kind: "assetFailed",
-            day: untilDay,
-            title: `${asset.name} failed`,
-            description: `${asset.name} has broken down and stopped operating ${place}. It costs no Public Support.`,
-          };
-          return [entry];
-        }
-        const entry: AssetEndedEntry = {
-          kind: "assetEnded",
+}
+
+/** The entry for each Asset that stops operating this Turn, however it does. */
+export function stoppedEntries(
+  rules: Rules,
+  inService: AssetInService[],
+): (AssetEndedEntry | AssetFailedEntry)[] {
+  return inService.flatMap(
+    ({
+      asset,
+      untilDay,
+      failed,
+      failedInStormAt,
+    }): (AssetEndedEntry | AssetFailedEntry)[] => {
+      if (untilDay === null) return [];
+      const site = rules.landingSiteById(asset.landingSiteId)?.name;
+      const place = site ? `at ${site}` : "at Mars";
+      if (failed) {
+        const entry: AssetFailedEntry = {
+          kind: "assetFailed",
           day: untilDay,
-          title: `${asset.name}: Service Life ended`,
-          description: `${asset.name} has stopped operating ${place}. It costs no Public Support.`,
+          title: `${asset.name} failed`,
+          description: failedInStormAt
+            ? `The dust storm over ${failedInStormAt} was too much for ${asset.name}, which has stopped operating. It costs no Public Support.`
+            : `${asset.name} has broken down and stopped operating ${place}. It costs no Public Support.`,
         };
         return [entry];
-      },
-    ),
-  };
+      }
+      const entry: AssetEndedEntry = {
+        kind: "assetEnded",
+        day: untilDay,
+        title: `${asset.name}: Service Life ended`,
+        description: `${asset.name} has stopped operating ${place}. It costs no Public Support.`,
+      };
+      return [entry];
+    },
+  );
 }
 
 /**

@@ -1,0 +1,10 @@
+{
+  "dustStorm": {
+    "name": "Dust storm",
+    "chancePerSitePerTurn": 0.3,
+    "minDays": 100,
+    "maxDays": 220,
+    "failureChance": 0.2,
+    "description": "A dust storm has blown up over {site}, and will last {days} days."
+  }
+}

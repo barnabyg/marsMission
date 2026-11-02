@@ -163,23 +163,31 @@ export function flyMission(
       if (answer === undefined) {
         outcome.decisionPoint = {
           id: decisionIdOf(event),
+          kind: "contingency",
           day: dayOf(event),
-          missionEventName: event.name,
-          contingencyName: contingency.name,
+          title: event.name,
           description: filledIn(contingency.troubleDescription),
-          use: {
-            riskBand: rules.riskBandFor(contingency.rescueFailureProbability),
-            description: `A second try. If it works, ${lostNames} carry on with ${contingency.serviceLifeLossPercent}% less Service Life. If it fails, ${
-              comesHomeFrom(event)
-                ? `they swing back to Earth, which costs ${supportCost(lossFor(event, contingency))} and refunds ${formatMoney(refundFor(onBoard))}.`
-                : `they are lost and it costs ${lossFor(event, contingency)} Public Support.`
-            }`,
-          },
-          decline: {
-            description: comesHomeFrom(event)
-              ? `${lostNames} swing back to Earth, which costs ${supportCost(lossFor(event, undefined))} and refunds ${formatMoney(refundFor(onBoard))}.`
-              : `${lostNames} are lost, and it costs ${lossFor(event, undefined)} Public Support.`,
-          },
+          assets: onBoard.map((asset) => asset.name),
+          choices: [
+            {
+              answer: "use",
+              label: `Use ${contingency.name}`,
+              riskBand: rules.riskBandFor(contingency.rescueFailureProbability),
+              description: `A second try. If it works, ${lostNames} carry on with ${contingency.serviceLifeLossPercent}% less Service Life. If it fails, ${
+                comesHomeFrom(event)
+                  ? `they swing back to Earth, which costs ${supportCost(lossFor(event, contingency))} and refunds ${formatMoney(refundFor(onBoard))}.`
+                  : `they are lost and it costs ${lossFor(event, contingency)} Public Support.`
+              }`,
+            },
+            {
+              answer: "decline",
+              label: "Don't use it",
+              riskBand: null,
+              description: comesHomeFrom(event)
+                ? `${lostNames} swing back to Earth, which costs ${supportCost(lossFor(event, undefined))} and refunds ${formatMoney(refundFor(onBoard))}.`
+                : `${lostNames} are lost, and it costs ${lossFor(event, undefined)} Public Support.`,
+            },
+          ],
         };
         outcome.deliveredAssets = assets.filter(
           (asset) => !onBoard.includes(asset),
@@ -351,30 +359,57 @@ export function missionFailure(flown: MissionOutcome): TurnSummary["failure"] {
     : null;
 }
 
-const partOfTheFlight = ({ kind }: TimelineEntry) =>
-  kind === "missionEvent" || kind === "decisionPoint";
+/** The Mission as it stands on a day, with nothing in it of what happens after that. */
+function missionSoFar(
+  mission: Timeline["mission"],
+  day: number,
+): Timeline["mission"] {
+  if (!mission) return null;
+  const { returnsToEarth, ...rest } = mission;
+  const failedSoFar =
+    mission.failedOnDay !== null && mission.failedOnDay <= day;
+  return {
+    ...rest,
+    failedOnDay: failedSoFar ? mission.failedOnDay : null,
+    ...(returnsToEarth && failedSoFar ? { returnsToEarth } : {}),
+    assets: mission.assets.map((asset) => {
+      const lostSoFar = asset.lostOnDay !== null && asset.lostOnDay <= day;
+      return {
+        ...asset,
+        deliveredOnDay:
+          asset.deliveredOnDay !== null && asset.deliveredOnDay <= day
+            ? asset.deliveredOnDay
+            : null,
+        lostOnDay: lostSoFar ? asset.lostOnDay : null,
+        crashed: lostSoFar && asset.crashed,
+      };
+    }),
+  };
+}
 
 /**
  * What Mission Mode plays up to a Decision Point: the flight so far, and what else happens in the Turn before that
- * day, worked out as if the answer were no. The answer can still change one thing already shown: a Funding Threshold's
- * day depends on Public Support later in the Turn, so an answer can move it, and playback carries on from there.
+ * day, worked out as if the answer were the cautious one. The answer can still change one thing already shown: a
+ * Funding Threshold's day depends on Public Support later in the Turn, so an answer can move it, and playback carries
+ * on from there.
  */
 export function timelineUpToDecision(
-  asIfDeclined: Timeline,
-  flown: MissionOutcome & { decisionPoint: DecisionPoint },
+  asIfCautious: Timeline,
+  otherEntries: readonly TimelineEntry[],
+  flightEntries: readonly TimelineEntry[],
   mission: Timeline["mission"],
+  { day, entry }: { day: number; entry: DecisionPointEntry | null },
 ): Timeline {
-  const { day } = flown.decisionPoint;
   return {
-    ...asIfDeclined,
-    mission,
+    ...asIfCautious,
+    mission: missionSoFar(mission, day),
     decisionDay: day,
+    dustStorms: asIfCautious.dustStorms.filter(({ fromDay }) => fromDay <= day),
     // The sort is stable, so the flight stays first on any day, as it does on a finished Turn's Timeline.
     entries: [
-      ...flown.entries,
-      ...asIfDeclined.entries.filter(
-        (entry) => entry.day < day && !partOfTheFlight(entry),
-      ),
+      ...flightEntries.filter((flown) => flown.day <= day),
+      ...otherEntries.filter((other) => other.day < day),
+      ...(entry ? [entry] : []),
     ].sort((first, second) => first.day - second.day),
   };
 }

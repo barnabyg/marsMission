@@ -21,7 +21,7 @@ import { groundHeight } from "./terrain";
 const dotSize = 32;
 
 /** A round, soft-edged dot, as points are otherwise square. Generated here, so it's no art file. */
-function softDot(): DataTexture {
+export function softDot(): DataTexture {
   const pixels = new Uint8Array(dotSize * dotSize * 4);
   for (let row = 0; row < dotSize; row++) {
     for (let column = 0; column < dotSize; column++) {
@@ -55,7 +55,7 @@ function geometryOf({ positions, colors }: ParticlePool): BufferGeometry {
     );
 }
 
-function markChanged(geometry: BufferGeometry) {
+export function markChanged(geometry: BufferGeometry) {
   const { position, color } = geometry.attributes;
   if (position) position.needsUpdate = true;
   if (color) color.needsUpdate = true;

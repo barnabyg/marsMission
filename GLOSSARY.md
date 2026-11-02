@@ -133,6 +133,10 @@ _Avoid_: Shielding (as the general term)
 A random environmental danger that happens during Mission Mode, separate from planned Mission Events, such as a dust storm, a solar particle event or an asteroid strike on a base.
 _Avoid_: Random event, disaster
 
+**Dust storm**:
+A Hazard: a storm over one Landing Site for a stretch of days. If an Asset is operating there when it starts, the player chooses between sheltering, which earns no Ongoing Research for those days, and carrying on, with a chance of each Asset failing.
+_Avoid_: Sandstorm, weather
+
 ## Balance elements
 
 **Science**:

@@ -29,7 +29,7 @@ export interface Strategy {
   name: string;
   description: string;
   plan(view: ProgramView, tools: PlanningTools): TurnPlan;
-  /** What it does at a Decision Point. It uses the Contingency it bought unless it says otherwise. */
+  /** What it does at a Decision Point. It takes the first choice offered unless it says otherwise. */
   answer?(decisionPoint: DecisionPoint, view: ProgramView): DecisionAnswer;
 }
 
@@ -65,6 +65,8 @@ export interface PlayStyle {
   contingencies?: DecisionAnswer;
   /** The Trajectory it flies, when a Mission can have it and afford it. */
   trajectory?: string;
+  /** What it does at a dust storm, which is to shelter unless it says otherwise. */
+  dustStorms?: "shelter" | "carryOn";
 }
 
 const surveyActivity = (activities: PlannedActivity[]) =>
@@ -270,9 +272,10 @@ export function playStyle(
   return {
     name,
     description,
-    ...(chosen.contingencies === "decline"
-      ? { answer: () => "decline" as const }
-      : {}),
+    answer: ({ kind, choices }) => {
+      if (kind === "contingency") return chosen.contingencies ?? "use";
+      return chosen.dustStorms ?? choices[0].answer;
+    },
     plan(view, tools) {
       const { changes, surveying } = operatingActivities(view, chosen);
       const inService = view.operatingAssets.filter(

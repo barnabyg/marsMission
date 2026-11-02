@@ -35,10 +35,45 @@ export function earningsPerTurn(
     : null;
 }
 
+/** What an Activity earns for this many days of a Turn, which is nothing if it isn't research. */
+export function earningsForDays(
+  catalogue: Catalogue,
+  activity: Activity | undefined,
+  days: number,
+): { science: number; publicSupport: number; grantMillions: number } {
+  if (activity?.effect.kind !== "research" || days <= 0) {
+    return { science: 0, publicSupport: 0, grantMillions: 0 };
+  }
+  const { sciencePerTurn, publicSupportPerTurn, researchKind } =
+    activity.effect;
+  const forDays = (perTurn: number) =>
+    Math.ceil((perTurn * days) / catalogue.program.launchWindowIntervalDays);
+  const science = forDays(sciencePerTurn);
+  return {
+    science,
+    publicSupport: forDays(publicSupportPerTurn),
+    grantMillions: researchGrantFor(catalogue, researchKind, science),
+  };
+}
+
+/** The parts of a stay in service that aren't spent sheltering. */
+function daysWorking({
+  fromDay,
+  untilDay,
+  shelter,
+}: AssetInService & { untilDay: number }): { from: number; to: number }[] {
+  const whole = [{ from: fromDay, to: untilDay }];
+  if (!shelter) return whole;
+  return [
+    { from: fromDay, to: Math.min(untilDay, shelter.fromDay) },
+    { from: Math.max(fromDay, shelter.toDay), to: untilDay },
+  ].filter(({ from, to }) => to > from);
+}
+
 /**
- * What each Asset doing research earns this Turn, for its days in service, and the Research Grant that pays. The
- * Science and Public Support are rounded up for each Asset and Turn, so that a short stint still earns something. It
- * uses no roll, so only the seed and the plan decide it.
+ * What each Asset doing research earns this Turn, for its days in service less any it spends sheltering, and the
+ * Research Grant that pays. The Science and Public Support are rounded up for each Asset and Turn, so that a short
+ * stint still earns something. It uses no roll, so only the seed, the plan and the answers decide it.
  */
 export function carryOutOngoingResearch(
   catalogue: Catalogue,
@@ -59,27 +94,29 @@ export function carryOutOngoingResearch(
   }[];
 } {
   const { launchWindowIntervalDays } = catalogue.program;
-  const results = inService.flatMap(({ asset, fromDay, untilDay }) => {
+  const results = inService.flatMap((stay) => {
+    const { asset, untilDay } = stay;
     const activity = rules.activityById(asset.activityId);
-    const days = (untilDay ?? launchWindowIntervalDays) - fromDay;
+    const working = daysWorking({
+      ...stay,
+      untilDay: untilDay ?? launchWindowIntervalDays,
+    });
+    const days = sum(working.map(({ from, to }) => to - from));
     if (activity?.effect.kind !== "research" || days <= 0) return [];
-    const { sciencePerTurn, publicSupportPerTurn, researchKind } =
-      activity.effect;
-    const forDays = (perTurn: number) =>
-      Math.ceil((perTurn * days) / launchWindowIntervalDays);
-    const science = forDays(sciencePerTurn);
+    const { science, publicSupport, grantMillions } = earningsForDays(
+      catalogue,
+      activity,
+      days,
+    );
     const earned: OngoingResearchEarned = {
       assetName: asset.name,
       activityName: activity.name,
       science,
-      publicSupport: forDays(publicSupportPerTurn),
+      publicSupport,
       days,
     };
-    const grant = {
-      name: asset.name,
-      millions: researchGrantFor(catalogue, researchKind, science),
-    };
-    return [{ earned, grant, fromDay }];
+    const grant = { name: asset.name, millions: grantMillions };
+    return [{ earned, grant, working }];
   });
   const earned = results.map((result) => result.earned);
   const researchGrants = results
@@ -91,11 +128,13 @@ export function carryOutOngoingResearch(
     publicSupport: sum(earned.map(({ publicSupport }) => publicSupport)),
     researchGrants,
     researchGrantMillions: sum(researchGrants.map(({ millions }) => millions)),
-    stints: results.map(({ earned, fromDay }) => ({
-      fromDay,
-      toDay: fromDay + earned.days,
-      science: earned.science,
-      publicSupport: earned.publicSupport,
-    })),
+    stints: results.flatMap(({ earned, working }) =>
+      working.map(({ from, to }) => ({
+        fromDay: from,
+        toDay: to,
+        science: (earned.science * (to - from)) / earned.days,
+        publicSupport: (earned.publicSupport * (to - from)) / earned.days,
+      })),
+    ),
   };
 }

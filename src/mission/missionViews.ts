@@ -28,6 +28,9 @@ const viewsOfMissionEvents: Partial<Record<string, MissionViewId>> = {
  * This is the only place that does, and it only reads the Timeline, so it can't change any rules.
  */
 export function viewAskedForBy(entry: TimelineEntry): MissionViewId | null {
+  if (entry.kind === "decisionPoint") {
+    return entry.hazard === "dustStorm" ? "surface" : null;
+  }
   if (entry.kind !== "missionEvent") return null;
   // A failure that swings the Mission back is one to watch on its way home.
   return entry.returningToEarth
@@ -69,16 +72,17 @@ export interface SitePick {
   entriesHappened: number;
 }
 
-/** The player's pick, unless a landing has happened since, which the camera goes to instead. */
+/** The player's pick, unless a landing or a Hazard at a site has happened since, which the camera goes to instead. */
 export function landingSitePick(
   entries: readonly TimelineEntry[],
   entriesHappened: number,
   pick: SitePick,
 ): string | null {
-  const landedSince = entries
+  const latest = entries
     .slice(pick.entriesHappened, entriesHappened)
-    .some((entry) => viewAskedForBy(entry) === "surface");
-  return landedSince ? null : pick.siteName;
+    .findLast((entry) => viewAskedForBy(entry) === "surface");
+  if (!latest) return pick.siteName;
+  return latest.kind === "decisionPoint" ? (latest.siteName ?? null) : null;
 }
 
 /**

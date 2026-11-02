@@ -15,7 +15,7 @@ Phases are defined in the [Build order](#build-order). Phases 1, 2, 3 and 4 are 
 
 - **Phase 4:** Activities, with Survey, research and Nothing as the first ones; Ongoing Research, which also adds a little Public Support; Research Grants, which take over from Funding Thresholds as the main income of a Program that keeps Assets at Mars; a rover, choosing between Science and money; Science Milestones and more Funding Thresholds; the surface view, with generated terrain, landing and crash sequences it moves to by itself, and rovers that move according to their Activity; automated balance runs, and the numbers tuned with them, including longer Service Lives.
 
-- **Phase 5, so far:** Decision Points, with no time limit and End Turn stopping at each one; Contingency, a gamble bought in Planning Mode and used for a second roll when its Mission Event fails; Slow, Fast and Free-return Trajectories.
+- **Phase 5, so far:** Decision Points, with no time limit and End Turn stopping at each one; Contingency, a gamble bought in Planning Mode and used for a second roll when its Mission Event fails; Slow, Fast and Free-return Trajectories; dust storms, the first Hazard.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
@@ -72,6 +72,7 @@ Any rule in this document beyond these is planned, so its absence from the code 
 - All Safety Margin is worth having but expensive.
 - Failure probabilities are shown to the player as rough bands (for example "~5%"), not exact figures.
 - The random seed is fixed when the Program starts, so the same plan gives the same outcome after a reload. A changed plan can avoid a failure already seen, for example by buying more Reliability or by not launching. _Open: whether to keep this gap is to be settled by playtest feedback._
+- A dust storm can blow up over any Landing Site in a Turn, for a stretch of days. Whether it does, when and for how long come from the seed, the Turn and that site alone, so no plan or answer moves it. It raises a Decision Point only if an Asset is operating at that site when it starts: sheltering keeps the Assets there safe but earns no Ongoing Research for the storm's days, and carrying on keeps them earning with a chance of each failing for good. It costs no Public Support, an orbiter isn't affected, and with nothing at stake it is only an entry in the events column.
 - Mission Mode also has Hazards: random environmental dangers such as dust storms (less solar power, risk to Assets) and solar particle events (radiation, reduced by Protection). They are separate from planned Mission Events and can create Decision Points.
 
 ## Mission Mode

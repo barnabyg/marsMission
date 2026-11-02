@@ -117,6 +117,27 @@ export function invalidStates(
       "A Mission Event both failed and was saved.",
     ],
     [
+      summary.dustStorms.some(
+        ({ answer, assetsFailed }) =>
+          answer === "shelter" && assetsFailed.length > 0,
+      ),
+      "An Asset failed while it sheltered from a dust storm.",
+    ],
+    [
+      summary.dustStorms
+        .flatMap(({ assetsFailed }) => assetsFailed)
+        .some((name) => !summary.assetsFailed.includes(name)),
+      "An Asset lost to a dust storm isn't listed as failed.",
+    ],
+    [
+      summary.dustStorms.some(
+        ({ assets, assetsFailed }) =>
+          assets.length === 0 ||
+          assetsFailed.some((name) => !assets.includes(name)),
+      ),
+      "A dust storm raised a Decision Point with nothing at stake, or took an Asset that wasn't there.",
+    ],
+    [
       before.landingSites.some(({ id }) => !siteIds.includes(id)),
       "A known Landing Site was forgotten.",
     ],

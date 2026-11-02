@@ -6,7 +6,12 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
-import { landingSeed, orbiterLastsSeed, successSeed } from "./seeds";
+import {
+  calmSecondTurnSeed,
+  landingSeed,
+  orbiterLastsSeed,
+  successSeed,
+} from "./seeds";
 
 test("sets a research Activity, sees what it earns, and sees the Science in the Turn summary", async ({
   page,
@@ -235,7 +240,7 @@ test("a lander from an old save carries on with Nothing, and can then be set to 
       JSON.stringify({
         formatVersion: 5,
         program: {
-          seed: successSeed,
+          seed: calmSecondTurnSeed,
           turnNumber: 2,
           date: "2031-01-19",
           moneyMillions: 2000,

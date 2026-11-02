@@ -91,7 +91,9 @@ function playTurn(
     const { decisionPoint } = progress;
     answers = {
       ...answers,
-      [decisionPoint.id]: strategy.answer?.(decisionPoint, view) ?? "use",
+      [decisionPoint.id]:
+        strategy.answer?.(decisionPoint, view) ??
+        decisionPoint.choices[0].answer,
     };
     progress = simulation.workOutTurn(program, plan, answers);
   }

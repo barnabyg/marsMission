@@ -11,8 +11,7 @@ export function DecisionPointPanel({
   decisionPoint,
   onAnswer,
 }: DecisionPointPanelProps) {
-  const { missionEventName, contingencyName, description, use, decline } =
-    decisionPoint;
+  const { title, description, choices } = decisionPoint;
   return (
     <section
       className="decision-point"
@@ -21,44 +20,37 @@ export function DecisionPointPanel({
       data-testid="decision-point"
     >
       <h2>
-        <GameText>{`Decision Point: ${missionEventName}`}</GameText>
+        <GameText>{`Decision Point: ${title}`}</GameText>
       </h2>
       <p>
         <GameText>{description}</GameText>
       </p>
       <div className="decision-choices">
-        <div>
-          <button
-            type="button"
-            className="primary"
-            onClick={() => {
-              onAnswer("use");
-            }}
-          >
-            Use {contingencyName}
-          </button>
-          <p>
-            <strong data-testid="decision-risk-band">
-              <GameText>{`Risk Band: ${use.riskBand}`}</GameText>
-            </strong>
-          </p>
-          <p>
-            <GameText>{use.description}</GameText>
-          </p>
-        </div>
-        <div>
-          <button
-            type="button"
-            onClick={() => {
-              onAnswer("decline");
-            }}
-          >
-            Don't use it
-          </button>
-          <p>
-            <GameText>{decline.description}</GameText>
-          </p>
-        </div>
+        {choices.map(
+          ({ answer, label, riskBand, description: what }, index) => (
+            <div key={answer} data-testid={`decision-choice-${answer}`}>
+              <button
+                type="button"
+                className={index === 0 ? "primary" : undefined}
+                onClick={() => {
+                  onAnswer(answer);
+                }}
+              >
+                {label}
+              </button>
+              {riskBand !== null && (
+                <p>
+                  <strong data-testid="decision-risk-band">
+                    <GameText>{`Risk Band: ${riskBand}`}</GameText>
+                  </strong>
+                </p>
+              )}
+              <p>
+                <GameText>{what}</GameText>
+              </p>
+            </div>
+          ),
+        )}
       </div>
     </section>
   );

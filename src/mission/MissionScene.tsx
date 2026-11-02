@@ -11,7 +11,7 @@ import {
 import type { MissionViewId } from "./missionViews";
 import type { CameraPose, SceneLabel } from "./sceneParts";
 import { sequenceRunning, type SequenceNow } from "./surface/sequence";
-import { landingShot, surfaceShot } from "./surface/surface";
+import { dustStormAt, landingShot, surfaceShot } from "./surface/surface";
 import { surfaceLabels, SurfaceScene } from "./surface/SurfaceView";
 import {
   solarSystemLabels,
@@ -164,6 +164,11 @@ export default function MissionScene({
       }
       data-sequence-ms={
         running ? Math.floor(sequence.elapsedMs / 100) * 100 : undefined
+      }
+      data-dust-storm={
+        view === "surface" && site !== null && dustStormAt(timeline, day, site)
+          ? site
+          : undefined
       }
     >
       <Canvas camera={{ position: [...solarSystemShot.position], fov: 45 }}>
