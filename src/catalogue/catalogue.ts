@@ -1,4 +1,11 @@
 import type { z } from "zod";
+import { assetProblems } from "./crossCheckAssets";
+import { hazardProblems } from "./crossCheckHazards";
+import { idProblems } from "./crossCheckIds";
+import { milestoneProblems } from "./crossCheckMilestones";
+import { missionEventProblems } from "./crossCheckMissionEvents";
+import { reliabilityProblems } from "./crossCheckReliability";
+import { trajectoryProblems } from "./crossCheckTrajectories";
 import { catalogueFileNames, schemas, type Catalogue } from "./schemas";
 
 export { catalogueFileNames, isoDate, type Catalogue } from "./schemas";
@@ -25,307 +32,16 @@ function parsePart<T>(
   return undefined;
 }
 
-function findDuplicates(ids: string[]): string[] {
-  return ids.filter((value, index) => ids.indexOf(value) !== index);
-}
-
-function crossCheck(catalogue: Catalogue): string[] {
-  const problems: string[] = [];
-  const {
-    program,
-    activities,
-    researchKinds,
-    launchVehicles,
-    trajectories,
-    assets,
-    landingSites,
-    missionEvents,
-    contingencies,
-    hazards,
-    milestones,
-    fundingThresholds,
-    reliabilityLevels,
-    riskBands,
-  } = catalogue;
-
-  const parts = [
-    [catalogueFileNames.activities, activities],
-    [catalogueFileNames.researchKinds, researchKinds],
-    [catalogueFileNames.launchVehicles, launchVehicles],
-    [catalogueFileNames.trajectories, trajectories],
-    [catalogueFileNames.assets, assets],
-    [catalogueFileNames.landingSites, landingSites],
-    [catalogueFileNames.missionEvents, missionEvents],
-    [catalogueFileNames.contingencies, contingencies],
-    [catalogueFileNames.milestones, milestones],
-    [catalogueFileNames.reliabilityLevels, reliabilityLevels],
-  ] as const;
-  for (const [file, items] of parts) {
-    for (const duplicate of findDuplicates(items.map((item) => item.id))) {
-      problems.push(`${file}: the id "${duplicate}" is used more than once`);
-    }
-  }
-
-  const eventIds = new Set(missionEvents.map((event) => event.id));
-  const eventUsers = [
-    [catalogueFileNames.launchVehicles, launchVehicles],
-    [catalogueFileNames.assets, assets],
-  ] as const;
-  for (const [file, items] of eventUsers) {
-    for (const item of items) {
-      for (const eventId of item.missionEvents) {
-        if (!eventIds.has(eventId)) {
-          problems.push(
-            `${file}: "${item.id}" refers to the Mission Event "${eventId}", which isn't in ${catalogueFileNames.missionEvents}`,
-          );
-        }
-      }
-    }
-  }
-
-  for (const { id: contingencyId, missionEvent } of contingencies) {
-    if (!eventIds.has(missionEvent)) {
-      problems.push(
-        `${catalogueFileNames.contingencies}: "${contingencyId}" refers to the Mission Event "${missionEvent}", which isn't in ${catalogueFileNames.missionEvents}`,
-      );
-    }
-  }
-  for (const duplicate of findDuplicates(
-    contingencies.map(({ missionEvent }) => missionEvent),
-  )) {
-    problems.push(
-      `${catalogueFileNames.contingencies}: the Mission Event "${duplicate}" has more than one Contingency`,
-    );
-  }
-
-  const { dustStorm } = hazards;
-  if (dustStorm.minDays > dustStorm.maxDays) {
-    problems.push(
-      `${catalogueFileNames.hazards}: dustStorm has minDays above maxDays`,
-    );
-  }
-  // It starts after the Turn does and clears before the Turn ends, so a landing held off for it stays within the Turn.
-  if (dustStorm.maxDays > program.launchWindowIntervalDays - 2) {
-    problems.push(
-      `${catalogueFileNames.hazards}: dustStorm has maxDays too long for a storm to clear within a Turn of ${program.launchWindowIntervalDays} days`,
-    );
-  }
-
-  if (dustStorm.landingRiskMultiplier <= 1) {
-    problems.push(
-      `${catalogueFileNames.hazards}: dustStorm must raise a landing's risk with a landingRiskMultiplier above 1, or holding off would never be worth it`,
-    );
-  }
-
-  const { solarParticleEvent } = hazards;
-  const longestTransfer = Math.max(
-    ...trajectories.map(({ transferDays }) => transferDays),
-  );
-  // Above this, every Mission on the longest Trajectory would meet one, so a longer Duration couldn't be more exposed.
-  if (solarParticleEvent.chancePerDayInFlight * longestTransfer > 1) {
-    problems.push(
-      `${catalogueFileNames.hazards}: solarParticleEvent has chancePerDayInFlight too high for the longest Trajectory, of ${longestTransfer} days`,
-    );
-  }
-  if (
-    solarParticleEvent.damageServiceLifeLossPercent <=
-    solarParticleEvent.safeModeServiceLifeLossPercent
-  ) {
-    problems.push(
-      `${catalogueFileNames.hazards}: solarParticleEvent must cost more Service Life in damageServiceLifeLossPercent than in safeModeServiceLifeLossPercent, or safe mode would never be worth it`,
-    );
-  }
-
-  const landingSiteEvents = new Set(
-    missionEvents
-      .filter((event) => event.failureProbability === "landingSite")
-      .map((event) => event.id),
-  );
-  for (const vehicle of launchVehicles) {
-    for (const eventId of vehicle.missionEvents) {
-      if (landingSiteEvents.has(eventId)) {
-        problems.push(
-          `${catalogueFileNames.launchVehicles}: "${vehicle.id}" can't use the Mission Event "${eventId}", which needs a Landing Site`,
-        );
-      }
-    }
-  }
-  for (const asset of assets) {
-    for (const eventId of asset.missionEvents) {
-      if (landingSiteEvents.has(eventId) && asset.landsAtSite !== true) {
-        problems.push(
-          `${catalogueFileNames.assets}: "${asset.id}" uses the Mission Event "${eventId}", which needs a Landing Site, so it must set landsAtSite`,
-        );
-      }
-    }
-  }
-  if (
-    assets.some((asset) => asset.landsAtSite === true) &&
-    !landingSites.some((site) => site.knownFromStart)
-  ) {
-    problems.push(
-      `${catalogueFileNames.landingSites}: an Asset in ${catalogueFileNames.assets} sets landsAtSite, so at least one Landing Site must be known from the start`,
-    );
-  }
-  // An old save's Asset does nothing unless it can survey, so there must be an Activity to give it.
-  if (!activities.some(({ effect }) => effect.kind === "nothing")) {
-    problems.push(
-      `${catalogueFileNames.activities}: there must be at least one Activity with a "nothing" effect`,
-    );
-  }
-  for (const { id: activityId, effect } of activities) {
-    if (
-      effect.kind === "research" &&
-      !researchKinds.some(({ id }) => id === effect.researchKind)
-    ) {
-      problems.push(
-        `${catalogueFileNames.activities}: "${activityId}" refers to the kind of research "${effect.researchKind}", which isn't in ${catalogueFileNames.researchKinds}`,
-      );
-    }
-  }
-  for (const asset of assets) {
-    for (const duplicate of findDuplicates(asset.activities)) {
-      problems.push(
-        `${catalogueFileNames.assets}: "${asset.id}" lists the Activity "${duplicate}" more than once`,
-      );
-    }
-    for (const activityId of asset.activities) {
-      const activity = activities.find(({ id }) => id === activityId);
-      if (!activity) {
-        problems.push(
-          `${catalogueFileNames.assets}: "${asset.id}" refers to the Activity "${activityId}", which isn't in ${catalogueFileNames.activities}`,
-        );
-      } else if (
-        asset.landsAtSite === true &&
-        activity.effect.kind === "survey"
-      ) {
-        problems.push(
-          `${catalogueFileNames.assets}: "${asset.id}" can't both land and survey, because a Survey is made from orbit`,
-        );
-      }
-    }
-  }
-  for (const asset of assets) {
-    asset.serviceLifeOptions.forEach((option, index) => {
-      const shorter = asset.serviceLifeOptions[index - 1];
-      if (!shorter) return;
-      if (option.days <= shorter.days) {
-        problems.push(
-          `${catalogueFileNames.assets}: "${asset.id}" has a Service Life of ${option.days} days after one of ${shorter.days}. They go in ascending order`,
-        );
-      }
-      if (option.costMillions < shorter.costMillions) {
-        problems.push(
-          `${catalogueFileNames.assets}: "${asset.id}" has a Service Life of ${option.days} days that costs less than a shorter one`,
-        );
-      }
-    });
-  }
-  for (const site of landingSites) {
-    if (site.surveyedLandingRisk > site.landingRisk) {
-      problems.push(
-        `${catalogueFileNames.landingSites}: "${site.id}" has a surveyedLandingRisk higher than its landingRisk`,
-      );
-    }
-  }
-
-  const assetKinds = new Set(assets.map((asset) => asset.kind));
-  for (const milestone of milestones) {
-    if ("assetLands" in milestone.trigger) {
-      if (!assets.some((asset) => asset.landsAtSite === true)) {
-        problems.push(
-          `${catalogueFileNames.milestones}: "${milestone.id}" needs an Asset that lands, but none in ${catalogueFileNames.assets} sets landsAtSite`,
-        );
-      }
-      continue;
-    }
-    if ("totalScience" in milestone.trigger) continue;
-    const kind = milestone.trigger.assetKindArrives;
-    if (!assetKinds.has(kind)) {
-      problems.push(
-        `${catalogueFileNames.milestones}: "${milestone.id}" needs an Asset of kind "${kind}", but ${catalogueFileNames.assets} has none`,
-      );
-    }
-  }
-
-  fundingThresholds.forEach(({ publicSupport }, index) => {
-    const previous =
-      fundingThresholds[index - 1]?.publicSupport ??
-      program.startingPublicSupport;
-    if (publicSupport <= previous) {
-      problems.push(
-        `${catalogueFileNames.fundingThresholds}: ${publicSupport} must be higher than ${previous}. Thresholds go in ascending order, above the starting Public Support`,
-      );
-    }
-  });
-
-  reliabilityLevels.forEach((level, index) => {
-    const lower = reliabilityLevels[index - 1];
-    if (!lower) return;
-    if (level.costMillions < lower.costMillions) {
-      problems.push(
-        `${catalogueFileNames.reliabilityLevels}: "${level.id}" costs less than "${lower.id}", the level below it`,
-      );
-    }
-    if (level.failureMultiplier > lower.failureMultiplier) {
-      problems.push(
-        `${catalogueFileNames.reliabilityLevels}: "${level.id}" has a higher failure probability than "${lower.id}", the level below it`,
-      );
-    }
-  });
-
-  riskBands.forEach(({ upTo }, index) => {
-    const previous = riskBands[index - 1]?.upTo ?? 0;
-    if (upTo <= previous) {
-      problems.push(
-        `${catalogueFileNames.riskBands}: ${upTo} must be higher than ${previous}. Bands go in ascending order`,
-      );
-    }
-  });
-  if (riskBands.at(-1)?.upTo !== 1) {
-    problems.push(
-      `${catalogueFileNames.riskBands}: the last band must go up to 1, so that every failure probability has a band`,
-    );
-  }
-
-  const lastAfterArrival = Math.max(
-    0,
-    ...missionEvents.map(({ timing }) =>
-      timing.from === "arrival" ? timing.days : 0,
-    ),
-  );
-  for (const { id: trajectoryId, ...trajectory } of trajectories) {
-    const { freeReturn, transferDays, costMillions, capacityLossTonnes } =
-      trajectory;
-    if (freeReturn) {
-      if (!eventIds.has(freeReturn.arrivalBurn)) {
-        problems.push(
-          `${catalogueFileNames.trajectories}: "${trajectoryId}" refers to the Mission Event "${freeReturn.arrivalBurn}", which isn't in ${catalogueFileNames.missionEvents}`,
-        );
-      }
-      if (costMillions === 0 && capacityLossTonnes === 0) {
-        problems.push(
-          `${catalogueFileNames.trajectories}: "${trajectoryId}" must cost money or mass capacity, or it would always be the right choice`,
-        );
-      }
-      if (
-        transferDays + freeReturn.returnDays >=
-        program.launchWindowIntervalDays
-      ) {
-        problems.push(
-          `${catalogueFileNames.trajectories}: "${trajectoryId}" has returnDays too long for the Mission to be back within a Turn of ${program.launchWindowIntervalDays} days`,
-        );
-      }
-    }
-    if (transferDays + lastAfterArrival >= program.launchWindowIntervalDays) {
-      problems.push(
-        `${catalogueFileNames.trajectories}: "${trajectoryId}" has transferDays too long for its Mission Events to finish within a Turn of ${program.launchWindowIntervalDays} days`,
-      );
-    }
-  }
-
-  return problems;
-}
+/** The checks of the data files against each other, one subject each, in the order their problems are listed. */
+const crossChecks: ((catalogue: Catalogue) => string[])[] = [
+  idProblems,
+  missionEventProblems,
+  hazardProblems,
+  assetProblems,
+  milestoneProblems,
+  reliabilityProblems,
+  trajectoryProblems,
+];
 
 /** Validates the raw contents of the data files and returns the catalogue, or throws a CatalogueError. */
 export function parseCatalogue(files: CatalogueFiles): Catalogue {
@@ -456,7 +172,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     reliabilityLevels,
     riskBands,
   };
-  const crossCheckProblems = crossCheck(catalogue);
+  const crossCheckProblems = crossChecks.flatMap((check) => check(catalogue));
   if (crossCheckProblems.length > 0) {
     throw new CatalogueError(crossCheckProblems.join("\n"));
   }

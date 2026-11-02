@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/* What each data file must look like, one file at a time. catalogue.ts checks them against each other. */
+/* What each data file must look like, one file at a time. The crossCheck files check them against each other. */
 
 const id = z.string().min(1);
 const money = z.number().int().nonnegative();

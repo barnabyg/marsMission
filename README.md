@@ -59,6 +59,20 @@ The browser tests need Chromium, once per machine: `npx.cmd playwright install c
 
 The sound effects in `public/sounds` are synthesised by `node scripts/generate-sounds.mjs`, and the files it makes are committed. Rerun it only to change a sound.
 
+### The Catalogue's files
+
+`parseCatalogue` in `catalogue.ts` checks each data file against its schema in `schemas.ts`, then runs the cross-checks, which check the files against each other, one subject per file. A new field goes in `schemas.ts`. A check that needs another file goes in the cross-check for its subject, or, for a new subject such as Technology, in a new file beside them, added to the `crossChecks` list in `catalogue.ts`.
+
+| File                         | What it cross-checks                                                                                      |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `crossCheckIds.ts`           | That each id is used once in its file                                                                     |
+| `crossCheckMissionEvents.ts` | The Mission Events that Launch Vehicles, Assets and Contingencies refer to, and one Contingency per event |
+| `crossCheckHazards.ts`       | Dust storms and solar particle events against the Turn and the Trajectories                               |
+| `crossCheckAssets.ts`        | Assets: Mission Events that need a Landing Site, Landing Sites, Activities and Service Life               |
+| `crossCheckMilestones.ts`    | Milestones that can be earned, and Funding Thresholds in ascending order                                  |
+| `crossCheckReliability.ts`   | Reliability levels in order, and Risk Bands that cover every failure probability                          |
+| `crossCheckTrajectories.ts`  | Trajectories and Free-returns that finish within a Turn                                                   |
+
 ### The Simulation's files
 
 Everything outside `src/simulation` reaches the rules through `createSimulation` in `simulation.ts`. A Turn runs in this order:
