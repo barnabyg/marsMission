@@ -316,6 +316,25 @@ export const strategies: Strategy[] = [
     { ...steadyRovers, aim: "science", goNoGo: "go" },
   ),
   playStyle(
+    "steady: develop the Endurance Rover",
+    "As steady: Soil analysis, starting Development of the Endurance Rover as soon as it can afford it on top of the Turn's Mission, and sending it in place of the other rover once it is built.",
+    {
+      ...steadyRovers,
+      develops: ["endurance-rover"],
+      prefers: ["endurance-rover"],
+    },
+  ),
+  playStyle(
+    "steady: develop the Endurance Rover when rich",
+    "The same, starting that Development only once it has the money for several rovers.",
+    {
+      ...steadyRovers,
+      develops: ["endurance-rover"],
+      developsWhile: (view) => view.moneyMillions >= 5000,
+      prefers: ["endurance-rover"],
+    },
+  ),
+  playStyle(
     "steady: Survey once",
     "As steady: Soil analysis, but the orbiter changes to research after its first Survey.",
     {

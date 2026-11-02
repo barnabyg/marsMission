@@ -24,6 +24,7 @@ export function invalidStates(
   const newlyProven = provenAfter
     .filter((name) => !provenBefore.includes(name))
     .toSorted();
+  const development = developmentProblems(before, summary, after);
   const checks: [impossible: boolean, problem: string][] = [
     [
       before.status.kind !== "active",
@@ -44,7 +45,8 @@ export function invalidStates(
     ],
     [
       summary.moneyStartMillions -
-        summary.missionCostMillions +
+        summary.missionCostMillions -
+        summary.developmentCostMillions +
         thresholdMillions +
         summary.researchGrantMillions +
         (summary.failure?.refundMillions ?? 0) !==
@@ -184,8 +186,87 @@ export function invalidStates(
       ),
       "An Asset lost with the Mission became Flight-proven.",
     ],
+    ...development,
   ];
   return checks.flatMap(([impossible, problem]) =>
     impossible ? [problem] : [],
   );
+}
+
+/** What's impossible about Development over one Turn. */
+function developmentProblems(
+  before: ProgramView,
+  summary: TurnSummary,
+  after: ProgramView,
+): [impossible: boolean, problem: string][] {
+  const beforeOf = (id: string) =>
+    before.developments.find((development) => development.id === id);
+  const namesWhere = (
+    changed: (
+      was: ProgramView["developments"][number] | undefined,
+      now: ProgramView["developments"][number],
+    ) => boolean,
+  ) =>
+    after.developments
+      .filter((now) => changed(beforeOf(now.id), now))
+      .map(({ name }) => name)
+      .toSorted()
+      .join();
+  const started = after.developments.filter(
+    ({ id, status }) =>
+      status !== "notStarted" && beforeOf(id)?.status === "notStarted",
+  );
+  const notBuiltBefore = [...before.launchVehicles, ...before.assets]
+    .filter(({ technologyReadiness }) => technologyReadiness === "not-built")
+    .map(({ name }) => name);
+  const flown = [
+    ...summary.technologiesProven,
+    ...(summary.failure?.assetsLost ?? []),
+    ...after.operatingAssets.map(({ name }) => name),
+  ];
+  return [
+    [
+      namesWhere(
+        (was, now) =>
+          was?.status === "notStarted" && now.status !== "notStarted",
+      ) !== summary.developmentsStarted.toSorted().join(),
+      "The Developments that started don't match the Turn summary.",
+    ],
+    [
+      namesWhere(
+        (was, now) => was?.status !== "finished" && now.status === "finished",
+      ) !== summary.developmentsFinished.toSorted().join(),
+      "The Developments that finished don't match the Turn summary.",
+    ],
+    [
+      sum(started.map(({ costMillions }) => costMillions)) !==
+        summary.developmentCostMillions,
+      "developmentCostMillions isn't what the Developments started cost.",
+    ],
+    [
+      after.developments.some(
+        ({ id, status, turnsLeft }) =>
+          status !== "notStarted" &&
+          turnsLeft !== Math.max(0, (beforeOf(id)?.turnsLeft ?? 0) - 1),
+      ),
+      "A Development didn't go on by one Turn.",
+    ],
+    [
+      [...after.launchVehicles, ...after.assets].some(
+        ({ id, technologyReadiness }) => {
+          const development = after.developments.find((each) => each.id === id);
+          return (
+            development !== undefined &&
+            (technologyReadiness === "not-built") !==
+              (development.status !== "finished")
+          );
+        },
+      ),
+      "A technology's Technology Readiness doesn't match its Development.",
+    ],
+    [
+      flown.some((name) => notBuiltBefore.includes(name)),
+      "A technology flew before its Development finished.",
+    ],
+  ];
 }

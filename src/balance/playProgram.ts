@@ -20,8 +20,8 @@ export interface TurnRecord {
   publicSupport: number;
   assetsOperating: number;
   cancelled: boolean;
-  /** From the Turn's summary. */
-  missionCostMillions: number;
+  /** From the Turn's summary. What its Mission and any Development cost. */
+  spentMillions: number;
   thresholdMillions: number;
   researchGrantMillions: number;
   thresholdsReached: number[];
@@ -46,7 +46,13 @@ export function planningTools(
     previewMission: (mission) => simulation.previewMission(program, mission),
     previewTrajectories: (mission) => simulation.previewTrajectories(mission),
     problemsWith: (plan) => simulation.validatePlan(program, plan).problems,
-    costOf: (plan) => simulation.validatePlan(program, plan).costMillions,
+    costOf: (plan) => {
+      const { costMillions, developmentCostMillions } = simulation.validatePlan(
+        program,
+        plan,
+      );
+      return costMillions + developmentCostMillions;
+    },
   };
 }
 
@@ -62,7 +68,8 @@ function recordOf(
     publicSupport: after.publicSupport,
     assetsOperating: after.operatingAssets.length,
     cancelled: after.status.kind === "cancelled",
-    missionCostMillions: summary.missionCostMillions,
+    spentMillions:
+      summary.missionCostMillions + summary.developmentCostMillions,
     thresholdMillions: summary.fundingPayouts.reduce(
       (total, { payoutMillions }) => total + payoutMillions,
       0,

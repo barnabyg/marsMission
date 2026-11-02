@@ -56,7 +56,7 @@ function summaryRow(name: string, plays: Play[]): string[] {
     whole(thresholds),
     whole(grants),
     percent(grants, thresholds + grants),
-    whole(perProgram((turn) => turn.missionCostMillions)),
+    whole(perProgram((turn) => turn.spentMillions)),
     tenth(perProgram((turn) => Number(turn.launched))),
     tenth(perProgram((turn) => Number(turn.missionFailed))),
     tenth(perProgram((turn) => turn.assetsFailed)),
@@ -96,7 +96,7 @@ function turnTable(plays: Play[]): string[] {
       whole(mean(turns.map((turn) => turn.science))),
       whole(mean(turns.map((turn) => turn.publicSupport))),
       tenth(mean(turns.map((turn) => turn.assetsOperating))),
-      whole(mean(turns.map((turn) => turn.missionCostMillions))),
+      whole(mean(turns.map((turn) => turn.spentMillions))),
       whole(thresholds),
       whole(grants),
       percent(thresholds, thresholds + grants),
@@ -352,8 +352,8 @@ function howToRead(programs: number): string[] {
     "A strategy's Turn table shows means over the Programs that played that Turn, at the end of it, so cancelled Programs",
     "drop out of later rows. Active% is out of all Programs. Thresh% and Grant% are shares of that Turn's income.",
     "Summary columns are means per Program: Turns played, final Science and Money, total income from Funding Thresholds and",
-    "Research Grants and the Grant% of it, total Spent on Missions, Missions launched, Failed and Assets Lost in service,",
-    "and Assets operating at the end of each Turn played.",
+    "Research Grants and the Grant% of it, total Spent on Missions and Development, Missions launched, Failed and Assets",
+    "Lost in service, and Assets operating at the end of each Turn played.",
   ];
 }
 
