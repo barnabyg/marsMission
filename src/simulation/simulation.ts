@@ -5,6 +5,7 @@ import {
   operatingKey,
   type Activity,
 } from "./rules";
+import { describeBenefit, largestRaise, type Raise } from "./benefits";
 import { needingDevelopment, plannedDevelopment } from "./development";
 import { flyMission } from "./flyMission";
 import { missionOnTimeline, timelineUpToDecision } from "./missionReport";
@@ -111,13 +112,36 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     riskBandFor,
   } = rules;
 
-  const plannedActivity = (activity: Activity): PlannedActivity => ({
-    id: activity.id,
-    name: activity.name,
-    description: activity.description,
-    surveys: activity.effect.kind === "survey",
-    earnsPerTurn: earningsPerTurn(catalogue, activity),
-  });
+  /** An Activity as Planning Mode offers it, raised for an Asset that a Benefit raises. */
+  const plannedActivity =
+    (raise: Raise | null) =>
+    (activity: Activity): PlannedActivity => {
+      const earnsPerTurn = earningsPerTurn(catalogue, activity, raise?.percent);
+      return {
+        id: activity.id,
+        name: activity.name,
+        description: activity.description,
+        surveys: activity.effect.kind === "survey",
+        earnsPerTurn,
+        ...(raise && earnsPerTurn ? { raisedBy: raise } : {}),
+      };
+    };
+
+  /** What raises surface research with these Assets at Mars, if it is raised, going by the ones operating as the Turn starts. */
+  const surfaceRaise = (
+    program: Program,
+    arriving: { assetId: string; name: string }[] = [],
+  ) =>
+    largestRaise(
+      catalogue,
+      [
+        ...program.operatingAssets.filter(
+          (asset) => daysUntilServiceEnds(program.date, asset) > 0,
+        ),
+        ...arriving,
+      ],
+      "surfaceResearch",
+    );
 
   const checkPlan = createPlanCheck(catalogue, rules);
 
@@ -227,6 +251,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     restoreProgram: (saved) => restoreProgram(saved, catalogue),
 
     readProgram(program) {
+      const raised = surfaceRaise(program);
       const nextThreshold = catalogue.fundingThresholds.find(
         ({ publicSupport }) =>
           !program.fundingThresholdsPaid.includes(publicSupport),
@@ -259,7 +284,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           activities: catalogue.assets
             .filter(({ id }) => id === asset.assetId)
             .flatMap(activitiesOf)
-            .map(plannedActivity),
+            .map(plannedActivity(asset.landingSiteId === null ? null : raised)),
           daysLeft: Math.max(0, daysUntilServiceEnds(program.date, asset)),
           landingSiteName: landingSiteById(asset.landingSiteId)?.name ?? null,
         })),
@@ -293,6 +318,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           massTonnes: asset.massTonnes,
           landsAtSite: asset.landsAtSite === true,
           technologyReadiness: readinessOf(program, asset),
+          benefit: asset.benefit ? describeBenefit(asset.benefit) : null,
         })),
       };
     },
@@ -323,35 +349,42 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     },
 
     previewAssets(program, mission) {
-      return catalogue.assets
-        .filter((asset) => mission.assetIds.includes(asset.id))
-        .map((asset) => {
-          const unproven = !isFlightProven(program, asset);
-          return {
-            assetId: asset.id,
-            name: asset.name,
-            serviceLifeDays: serviceLifeFor(mission, asset).days,
-            serviceLifeOptions: asset.serviceLifeOptions,
-            reliabilityLevelId: assetReliabilityFor(mission, asset).id,
-            activityId: activityFor(mission, asset).id,
-            activities: activitiesOf(asset).map(plannedActivity),
-            riskBand: riskBandFor(
-              inServiceFailureChance(
-                asset,
-                assetReliabilityFor(mission, asset),
-                unproven,
-              ),
+      const carried = catalogue.assets.filter((asset) =>
+        mission.assetIds.includes(asset.id),
+      );
+      const raised = surfaceRaise(
+        program,
+        carried.map(({ id, name }) => ({ assetId: id, name })),
+      );
+      return carried.map((asset) => {
+        const unproven = !isFlightProven(program, asset);
+        return {
+          assetId: asset.id,
+          name: asset.name,
+          serviceLifeDays: serviceLifeFor(mission, asset).days,
+          serviceLifeOptions: asset.serviceLifeOptions,
+          reliabilityLevelId: assetReliabilityFor(mission, asset).id,
+          activityId: activityFor(mission, asset).id,
+          activities: activitiesOf(asset).map(
+            plannedActivity(asset.landsAtSite === true ? raised : null),
+          ),
+          riskBand: riskBandFor(
+            inServiceFailureChance(
+              asset,
+              assetReliabilityFor(mission, asset),
+              unproven,
             ),
-            reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
-              id: level.id,
-              name: level.name,
-              costMillions: level.costMillions,
-              riskBand: riskBandFor(
-                inServiceFailureChance(asset, level, unproven),
-              ),
-            })),
-          };
-        });
+          ),
+          reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
+            id: level.id,
+            name: level.name,
+            costMillions: level.costMillions,
+            riskBand: riskBandFor(
+              inServiceFailureChance(asset, level, unproven),
+            ),
+          })),
+        };
+      });
     },
 
     previewTrajectories(mission) {

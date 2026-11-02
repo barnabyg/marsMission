@@ -1,6 +1,7 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { AssetInService } from "./assetsInService";
-import { earningsForDays } from "./ongoingResearch";
+import { earningsOfStay, surfaceResearchRaised } from "./ongoingResearch";
+import type { Stretch } from "./benefits";
 import {
   formatMoney,
   operatingKey,
@@ -49,20 +50,22 @@ export function dustStormOver(
 
 const decisionIdOf = (site: LandingSite) => `dust-storm:${site.id}`;
 
-/** What sheltering gives up, in the player's terms, for the Assets at stake. */
+/** What sheltering gives up, in the player's terms, for the Assets at stake, at the raised rate where a Benefit raises it. */
 function whatSheltering(
   catalogue: Catalogue,
   rules: Rules,
   atStake: AssetInService[],
   { fromDay, toDay }: DustStorm,
+  raised: Stretch[],
 ): string {
-  const { launchWindowIntervalDays } = catalogue.program;
-  const given = atStake.map(({ asset, fromDay: from, untilDay }) => {
-    const activity = rules.activityById(asset.activityId);
-    const end = untilDay ?? launchWindowIntervalDays;
-    const full = earningsForDays(catalogue, activity, end - from);
-    const lost = Math.max(0, Math.min(end, toDay) - Math.max(from, fromDay));
-    const less = earningsForDays(catalogue, activity, end - from - lost);
+  const given = atStake.map((stay) => {
+    const full = earningsOfStay(catalogue, rules, stay, raised).earned;
+    const less = earningsOfStay(
+      catalogue,
+      rules,
+      { ...stay, shelter: { fromDay, toDay } },
+      raised,
+    ).earned;
     return {
       science: full.science - less.science,
       publicSupport: full.publicSupport - less.publicSupport,
@@ -100,6 +103,8 @@ export function resolveDustStorms(
     .flatMap((site) => dustStormOver(catalogue, program, site) ?? [])
     .sort((first, second) => first.fromDay - second.fromDay);
   let inService = operating;
+  // Only Assets on the surface shelter, so a dust storm never changes what raises them.
+  const raised = surfaceResearchRaised(catalogue, operating);
   const entries: (HazardEntry | DecisionPointEntry)[] = [];
   const summary: TurnSummary["dustStorms"] = [];
   let decision: {
@@ -156,7 +161,7 @@ export function resolveDustStorms(
               answer: "shelter",
               label: "Shelter",
               riskBand: null,
-              description: `Sheltering keeps ${names.join(", ")} safe, but nothing there earns Ongoing Research for the storm's ${days} days. That gives up ${whatSheltering(catalogue, rules, atStake, storm)}.`,
+              description: `Sheltering keeps ${names.join(", ")} safe, but nothing there earns Ongoing Research for the storm's ${days} days. That gives up ${whatSheltering(catalogue, rules, atStake, storm, raised)}.`,
             },
             {
               answer: "carryOn",
