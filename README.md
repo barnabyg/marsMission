@@ -73,6 +73,7 @@ The sound effects in `public/sounds` are synthesised by `node scripts/generate-s
 | `crossCheckReliability.ts`   | Reliability levels in order, and Risk Bands that cover every failure probability                                                                 |
 | `crossCheckTrajectories.ts`  | Trajectories and Free-returns that finish within a Turn                                                                                          |
 | `crossCheckTechnology.ts`    | Technology Readiness: unproven costs and risks, Development, and ids unique across Assets and Launch Vehicles                                    |
+| `crossCheckBenefits.ts`      | Benefits between Assets: that each has something to raise                                                                                        |
 
 ### The Simulation's files
 
