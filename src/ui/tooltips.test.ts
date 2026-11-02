@@ -35,6 +35,10 @@ function avoidedWordsIn(text: string, avoided: string[]): string[] {
   );
 }
 
+function tooltipFor(term: string): string | undefined {
+  return (tooltips as Record<string, string | undefined>)[term];
+}
+
 function firstSentence(text: string): string {
   return text.split(/(?<=\.) /)[0] ?? text;
 }
@@ -56,7 +60,7 @@ describe("tooltip content", () => {
   it.each([...glossaryTerms])(
     "has a tooltip in the glossary's wording for %s",
     (term, definition) => {
-      const tooltip = (tooltips as Record<string, string | undefined>)[term];
+      const tooltip = tooltipFor(term);
       expect(tooltip, `no tooltip for ${term}`).toBeDefined();
       expect(tooltip?.startsWith(firstSentence(definition))).toBe(true);
     },
@@ -80,7 +84,7 @@ describe("tooltip content", () => {
   it.each([...avoidedWords])(
     "doesn't define %s with a word it avoids",
     (term, avoided) => {
-      const tooltip = (tooltips as Record<string, string | undefined>)[term];
+      const tooltip = tooltipFor(term);
       expect(avoidedWordsIn(glossaryTerms.get(term) ?? "", avoided)).toEqual(
         [],
       );
