@@ -142,6 +142,15 @@ const assetsSchema = z.array(
     landsAtSite: z.boolean().optional(),
     // What the landing risk is multiplied by when this Asset lands. A landing is as risky as the riskiest Asset in it.
     landingRiskMultiplier: z.number().positive().optional(),
+    // What it raises for other Assets, and by what percentage, on each day it operates at Mars, whatever its Activity.
+    // "surfaceResearch" is the Ongoing Research of every Asset on the surface. Benefits that raise the same thing don't
+    // add up: on each day the largest applies.
+    benefit: z
+      .strictObject({
+        raises: z.enum(["surfaceResearch"]),
+        percent: z.number().int().positive(),
+      })
+      .optional(),
     ...technologyFields,
   }),
 );

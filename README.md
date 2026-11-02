@@ -73,6 +73,7 @@ The sound effects in `public/sounds` are synthesised by `node scripts/generate-s
 | `crossCheckReliability.ts`   | Reliability levels in order, and Risk Bands that cover every failure probability                                                                 |
 | `crossCheckTrajectories.ts`  | Trajectories and Free-returns that finish within a Turn                                                                                          |
 | `crossCheckTechnology.ts`    | Technology Readiness: unproven costs and risks, Development, and ids unique across Assets and Launch Vehicles                                    |
+| `crossCheckBenefits.ts`      | Benefits between Assets: that each has something to raise                                                                                        |
 
 ### The Simulation's files
 
@@ -97,6 +98,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 | `turnSteps.ts`                                                | The steps of a Turn after the Mission, in order (above), and the next Program, Timeline and Turn summary                                      |
 | `assetsInService.ts`                                          | Which Assets operate for which days of the Turn, their failures and end of Service Life, and Surveys                                          |
 | `ongoingResearch.ts`                                          | What each Activity earns in Science, Public Support and Research Grants                                                                       |
+| `benefits.ts`                                                 | Benefits between Assets: the days on which they raise something, and by how much                                                              |
 | `scienceMilestones.ts`                                        | The day a total of Science or Public Support is reached, for Science Milestones and Funding Thresholds                                        |
 | `dustStorms.ts`                                               | Dust storms over Landing Sites, and sheltering or carrying on                                                                                 |
 | `solarParticleEvents.ts`                                      | Solar particle events on the way to Mars, and safe mode or carrying on                                                                        |

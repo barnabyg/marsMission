@@ -343,7 +343,15 @@ function researchScience(plays: Play[]): string {
       ([activityName, total]) =>
         `${activityName} ${whole(total / plays.length)}`,
     );
-  return `Science per Program from Ongoing Research: ${parts.join(", ") || "none"}`;
+  const fromBenefits = plays
+    .flat()
+    .reduce((total, { benefitScience }) => total + benefitScience, 0);
+  // Left out with none, so that strategies that never use a Benefit report as they did before Benefits.
+  const benefits =
+    fromBenefits > 0
+      ? `, of which Benefits added ${whole(fromBenefits / plays.length)}`
+      : "";
+  return `Science per Program from Ongoing Research: ${parts.join(", ") || "none"}${benefits}`;
 }
 
 function howToRead(programs: number): string[] {

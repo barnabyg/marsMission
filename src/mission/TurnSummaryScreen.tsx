@@ -210,13 +210,24 @@ export function TurnSummaryScreen({
           <ul>
             {summary.ongoingResearch.map(
               (
-                { assetName, activityName, science, publicSupport, days },
+                {
+                  assetName,
+                  activityName,
+                  science,
+                  publicSupport,
+                  days,
+                  benefit,
+                },
                 index,
               ) => (
                 // Two copies of an Asset can each earn the same amount, so the position tells them apart.
                 <li key={`${assetName}-${index}`}>
                   <GameText>
-                    {`${assetName}, ${activityName}: ${science} Science and ${publicSupport} Public Support over ${days} ${days === 1 ? "day" : "days"}`}
+                    {`${assetName}, ${activityName}: ${science} Science and ${publicSupport} Public Support over ${days} ${days === 1 ? "day" : "days"}${
+                      benefit
+                        ? `, raised on ${benefit.days} of them by the Benefit from ${benefit.givenBy.join(" and ")}, which added ${benefit.science} Science and ${benefit.publicSupport} Public Support`
+                        : ""
+                    }`}
                   </GameText>
                 </li>
               ),

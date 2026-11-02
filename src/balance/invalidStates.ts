@@ -191,6 +191,28 @@ export function invalidStates(
       "An Asset lost with the Mission became Flight-proven.",
     ],
     ...development,
+    ...summary.ongoingResearch.flatMap(
+      ({ assetName, science, publicSupport, days, benefit }) =>
+        benefit
+          ? ([
+              [
+                benefit.days <= 0 || benefit.days > days,
+                `${assetName}'s research was raised on ${benefit.days} of its ${days} days.`,
+              ],
+              [
+                benefit.science < 0 ||
+                  benefit.science >= science ||
+                  benefit.publicSupport < 0 ||
+                  benefit.publicSupport > publicSupport,
+                `A Benefit added more to ${assetName}'s research than it earned, or took some away.`,
+              ],
+              [
+                benefit.givenBy.length === 0,
+                `No Asset gave the Benefit that raised ${assetName}'s research.`,
+              ],
+            ] satisfies [boolean, string][])
+          : [],
+    ),
   ];
   return checks.flatMap(([impossible, problem]) =>
     impossible ? [problem] : [],

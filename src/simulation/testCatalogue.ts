@@ -207,6 +207,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         missionEvents: ["test-arrival"],
         technologyReadiness: "flight-proven",
         activities: ["test-nothing"],
+        benefit: { raises: "surfaceResearch", percent: 50 },
       },
       {
         id: "test-lander",

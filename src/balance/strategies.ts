@@ -44,6 +44,15 @@ const landThenOrbiter = (kind: string) => (view: ProgramView) => {
     : ["orbiter"];
 };
 
+/** Whether no relay orbiter is operating while something on the surface is, so that a relay would raise its research. */
+const relayWanted = (view: ProgramView) => {
+  const operating = view.operatingAssets.filter(({ daysLeft }) => daysLeft > 0);
+  return (
+    operating.some(({ landingSiteId }) => landingSiteId !== null) &&
+    !operating.some(({ assetId }) => assetId === "courier-relay-orbiter")
+  );
+};
+
 /**
  * Plays as a careful player would: one orbiter to Survey, then rovers, keeping money back for a retry and
  * launching only to keep a few Assets operating. The strategies built on it differ from it in one choice.
@@ -351,6 +360,23 @@ export const strategies: Strategy[] = [
       develops: ["meridian-colossus"],
       developsWhile: (view) => view.moneyMillions >= 5000,
       fillsVehicle: "meridian-colossus",
+    },
+  ),
+  playStyle(
+    "steady: Courier Relay",
+    "As steady: Soil analysis, sending the Courier Relay, a relay orbiter whose Benefit raises surface research, in place of the other orbiter whenever it can afford it.",
+    { ...steadyRovers, prefers: ["courier-relay-orbiter"] },
+  ),
+  playStyle(
+    "steady: relay when rich",
+    "As steady: Courier Relay, also sending another relay orbiter before more rovers once it has the money for several rovers, whenever none is operating and something on the surface is.",
+    {
+      ...steadyRovers,
+      prefers: ["courier-relay-orbiter"],
+      order: (view) =>
+        relayWanted(view) && view.moneyMillions >= 5000
+          ? ["orbiter", "rover", "lander"]
+          : steadyRovers.order(view),
     },
   ),
   playStyle(

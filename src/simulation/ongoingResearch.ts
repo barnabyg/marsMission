@@ -1,11 +1,24 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { AssetInService } from "./assetsInService";
+import { raisedStretches, splitByRaise, type Stretch } from "./benefits";
 import { sum, type Activity, type Rules } from "./rules";
 import type {
   OngoingResearchEarned,
   PlannedActivity,
   TurnSummary,
 } from "./types";
+
+interface Earnings {
+  science: number;
+  publicSupport: number;
+  grantMillions: number;
+}
+
+const nothingEarned: Earnings = {
+  science: 0,
+  publicSupport: 0,
+  grantMillions: 0,
+};
 
 /** The Research Grant for this Science, in whole millions, which can round to nothing. */
 function researchGrantFor(
@@ -17,43 +30,58 @@ function researchGrantFor(
   return Math.round(science * (kind?.grantMillionsPerScience ?? 0));
 }
 
-/** What an Activity earns over a whole Turn in service, if it's research. */
-export function earningsPerTurn(
-  catalogue: Catalogue,
-  { effect }: Activity,
-): PlannedActivity["earnsPerTurn"] {
-  return effect.kind === "research"
-    ? {
-        science: effect.sciencePerTurn,
-        publicSupport: effect.publicSupportPerTurn,
-        researchGrantMillions: researchGrantFor(
-          catalogue,
-          effect.researchKind,
-          effect.sciencePerTurn,
-        ),
-      }
-    : null;
-}
+/** How much a stretch of days counts for: a hundred a day, and a hundred plus its percentage a raised day, so sums stay whole. */
+const weightOf = ({
+  fromDay,
+  toDay,
+  percent,
+}: {
+  fromDay: number;
+  toDay: number;
+  percent: number;
+}) => (toDay - fromDay) * (100 + percent);
 
-/** What an Activity earns for this many days of a Turn, which is nothing if it isn't research. */
-export function earningsForDays(
+/**
+ * What an Activity earns over these stretches of a Turn, each at its usual rate raised by its percentage, which is
+ * nothing if it isn't research. The Science and Public Support are rounded up once for them all.
+ */
+function earningsFor(
   catalogue: Catalogue,
   activity: Activity | undefined,
-  days: number,
-): { science: number; publicSupport: number; grantMillions: number } {
-  if (activity?.effect.kind !== "research" || days <= 0) {
-    return { science: 0, publicSupport: 0, grantMillions: 0 };
+  stretches: { fromDay: number; toDay: number; percent: number }[],
+): Earnings {
+  const weight = sum(stretches.map(weightOf));
+  if (activity?.effect.kind !== "research" || weight <= 0) {
+    return nothingEarned;
   }
   const { sciencePerTurn, publicSupportPerTurn, researchKind } =
     activity.effect;
   const forDays = (perTurn: number) =>
-    Math.ceil((perTurn * days) / catalogue.program.launchWindowIntervalDays);
+    Math.ceil(
+      (perTurn * weight) / (100 * catalogue.program.launchWindowIntervalDays),
+    );
   const science = forDays(sciencePerTurn);
   return {
     science,
     publicSupport: forDays(publicSupportPerTurn),
     grantMillions: researchGrantFor(catalogue, researchKind, science),
   };
+}
+
+/** What an Activity earns over a whole Turn in service if it's research, raised by this percentage. */
+export function earningsPerTurn(
+  catalogue: Catalogue,
+  activity: Activity,
+  percent = 0,
+): PlannedActivity["earnsPerTurn"] {
+  if (activity.effect.kind !== "research") return null;
+  const toDay = catalogue.program.launchWindowIntervalDays;
+  const { science, publicSupport, grantMillions } = earningsFor(
+    catalogue,
+    activity,
+    [{ fromDay: 0, toDay, percent }],
+  );
+  return { science, publicSupport, researchGrantMillions: grantMillions };
 }
 
 /** The parts of a stay in service that aren't spent sheltering. */
@@ -70,10 +98,66 @@ function daysWorking({
   ].filter(({ from, to }) => to > from);
 }
 
+/** The stretches of the Turn on which Benefits raise surface research, for `earningsOfStay`. */
+export function surfaceResearchRaised(
+  catalogue: Catalogue,
+  inService: AssetInService[],
+): Stretch[] {
+  return raisedStretches(catalogue, inService, "surfaceResearch");
+}
+
+/**
+ * What one Asset earns this Turn for its days in service less any it spends sheltering, at the raised rate on days
+ * that `raised` covers if it is on the surface, and what it would have earned with nothing raised.
+ */
+export function earningsOfStay(
+  catalogue: Catalogue,
+  rules: Rules,
+  stay: AssetInService,
+  raised: Stretch[],
+) {
+  const activity = rules.activityById(stay.asset.activityId);
+  const stretches = daysWorking({
+    ...stay,
+    untilDay: stay.untilDay ?? catalogue.program.launchWindowIntervalDays,
+  }).flatMap(({ from, to }) =>
+    splitByRaise(from, to, stay.asset.landingSiteId === null ? [] : raised),
+  );
+  return {
+    activity,
+    stretches,
+    earned: earningsFor(catalogue, activity, stretches),
+    usual: earningsFor(
+      catalogue,
+      activity,
+      stretches.map((stretch) => ({ ...stretch, percent: 0 })),
+    ),
+  };
+}
+
+/** What Benefits added to an Asset's research, which is left out if they raised none of its days. */
+function benefitPart(
+  stretches: Stretch[],
+  earned: Earnings,
+  usual: Earnings,
+): Pick<OngoingResearchEarned, "benefit"> {
+  const raised = stretches.filter(({ percent }) => percent > 0);
+  if (raised.length === 0) return {};
+  return {
+    benefit: {
+      givenBy: [...new Set(raised.flatMap(({ givenBy }) => givenBy))],
+      days: sum(raised.map(({ fromDay, toDay }) => toDay - fromDay)),
+      science: earned.science - usual.science,
+      publicSupport: earned.publicSupport - usual.publicSupport,
+    },
+  };
+}
+
 /**
  * What each Asset doing research earns this Turn, for its days in service less any it spends sheltering, and the
- * Research Grant that pays. The Science and Public Support are rounded up for each Asset and Turn, so that a short
- * stint still earns something. It uses no roll, so only the seed, the plan and the answers decide it.
+ * Research Grant that pays. On the surface, it earns at the raised rate on the days a Benefit raises surface research.
+ * The Science and Public Support are rounded up for each Asset and Turn, so that a short stint still earns something.
+ * It uses no roll, so only the seed, the plan and the answers decide it.
  */
 export function carryOutOngoingResearch(
   catalogue: Catalogue,
@@ -85,7 +169,7 @@ export function carryOutOngoingResearch(
   publicSupport: number;
   researchGrants: TurnSummary["researchGrants"];
   researchGrantMillions: number;
-  /** When each Asset earned what it did, which builds up evenly over its days. */
+  /** When each Asset earned what it did, which builds up evenly over its days, and faster on raised ones. */
   stints: {
     fromDay: number;
     toDay: number;
@@ -93,32 +177,28 @@ export function carryOutOngoingResearch(
     publicSupport: number;
   }[];
 } {
-  const { launchWindowIntervalDays } = catalogue.program;
+  const raised = surfaceResearchRaised(catalogue, inService);
   const results = inService.flatMap((stay) => {
-    const { asset, untilDay } = stay;
-    const activity = rules.activityById(asset.activityId);
-    const working = daysWorking({
-      ...stay,
-      untilDay: untilDay ?? launchWindowIntervalDays,
-    });
-    const days = sum(working.map(({ from, to }) => to - from));
-    if (activity?.effect.kind !== "research" || days <= 0) return [];
-    const { science, publicSupport, grantMillions } = earningsForDays(
+    const { activity, stretches, earned, usual } = earningsOfStay(
       catalogue,
-      activity,
-      days,
+      rules,
+      stay,
+      raised,
     );
-    const earned: OngoingResearchEarned = {
-      assetName: asset.name,
+    const days = sum(stretches.map(({ fromDay, toDay }) => toDay - fromDay));
+    if (activity?.effect.kind !== "research" || days <= 0) return [];
+    const research: OngoingResearchEarned = {
+      assetName: stay.asset.name,
       activityName: activity.name,
-      science,
-      publicSupport,
+      science: earned.science,
+      publicSupport: earned.publicSupport,
       days,
+      ...benefitPart(stretches, earned, usual),
     };
-    const grant = { name: asset.name, millions: grantMillions };
-    return [{ earned, grant, working }];
+    const grant = { name: stay.asset.name, millions: earned.grantMillions };
+    return [{ research, grant, stretches }];
   });
-  const earned = results.map((result) => result.earned);
+  const earned = results.map(({ research }) => research);
   const researchGrants = results
     .map(({ grant }) => grant)
     .filter(({ millions }) => millions > 0);
@@ -128,13 +208,14 @@ export function carryOutOngoingResearch(
     publicSupport: sum(earned.map(({ publicSupport }) => publicSupport)),
     researchGrants,
     researchGrantMillions: sum(researchGrants.map(({ millions }) => millions)),
-    stints: results.flatMap(({ earned, working }) =>
-      working.map(({ from, to }) => ({
-        fromDay: from,
-        toDay: to,
-        science: (earned.science * (to - from)) / earned.days,
-        publicSupport: (earned.publicSupport * (to - from)) / earned.days,
-      })),
-    ),
+    stints: results.flatMap(({ research, stretches }) => {
+      const weight = sum(stretches.map(weightOf));
+      return stretches.map((stretch) => ({
+        fromDay: stretch.fromDay,
+        toDay: stretch.toDay,
+        science: (research.science * weightOf(stretch)) / weight,
+        publicSupport: (research.publicSupport * weightOf(stretch)) / weight,
+      }));
+    }),
   };
 }

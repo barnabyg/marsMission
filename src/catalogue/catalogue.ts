@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import { assetProblems } from "./crossCheckAssets";
+import { benefitProblems } from "./crossCheckBenefits";
 import { hazardProblems } from "./crossCheckHazards";
 import { idProblems } from "./crossCheckIds";
 import { milestoneProblems } from "./crossCheckMilestones";
@@ -43,6 +44,7 @@ const crossChecks: ((catalogue: Catalogue) => string[])[] = [
   reliabilityProblems,
   trajectoryProblems,
   technologyProblems,
+  benefitProblems,
 ];
 
 /** Validates the raw contents of the data files and returns the catalogue, or throws a CatalogueError. */

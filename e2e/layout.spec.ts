@@ -92,7 +92,8 @@ function busyProgram(allSurveyed: boolean) {
       seed: successSeed,
       turnNumber: 9,
       date: "2045-01-01",
-      moneyMillions: 5000,
+      // Enough for every Asset that can fly, so that the only problem with them all is their mass.
+      moneyMillions: 6000,
       publicSupport: 200,
       science: 800,
       milestoneIds: realMilestones.map(({ id }) => id),

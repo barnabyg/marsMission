@@ -74,6 +74,8 @@ export interface PlannedActivity {
     /** The Research Grant it pays for that Science. Zero if it pays none. */
     researchGrantMillions: number;
   } | null;
+  /** The Benefit that earnsPerTurn is raised by, as long as the Assets giving it keep operating. Left out if none raises it. */
+  raisedBy?: { percent: number; givenBy: string[] };
 }
 
 type ProgramStatus =
@@ -147,6 +149,8 @@ export interface ProgramView {
     massTonnes: number;
     landsAtSite: boolean;
     technologyReadiness: TechnologyReadiness;
+    /** What it does for other Assets while it operates at Mars, or null if it gives no Benefit. */
+    benefit: string | null;
   }[];
   /** Each technology that needs Development before it can fly, Launch Vehicles first, whether or not it has started. */
   developments: PlannedDevelopment[];
@@ -193,6 +197,15 @@ export interface OngoingResearchEarned {
   publicSupport: number;
   /** How many days of the Turn it was in service. */
   days: number;
+  /** What other Assets' Benefits added to it, which science and publicSupport include. Left out if they raised none of its days. */
+  benefit?: {
+    /** The Assets that gave the Benefit. */
+    givenBy: string[];
+    /** How many of its days were raised. */
+    days: number;
+    science: number;
+    publicSupport: number;
+  };
 }
 
 /** What changed over a Turn. */

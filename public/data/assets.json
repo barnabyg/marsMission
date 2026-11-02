@@ -120,5 +120,30 @@
       "costMillions": 1500,
       "turns": 2
     }
+  },
+  {
+    "id": "courier-relay-orbiter",
+    "name": "Courier Relay",
+    "kind": "orbiter",
+    "costMillions": 900,
+    "missionEvents": ["mars-orbit-insertion"],
+    "massTonnes": 2.5,
+    "activities": ["survey", "orbital-research", "nothing"],
+    "serviceLifeOptions": [
+      {
+        "days": 1300,
+        "costMillions": 0
+      },
+      {
+        "days": 2100,
+        "costMillions": 150
+      }
+    ],
+    "failureChancePerTurn": 0.13,
+    "technologyReadiness": "flight-proven",
+    "benefit": {
+      "raises": "surfaceResearch",
+      "percent": 50
+    }
   }
 ]
