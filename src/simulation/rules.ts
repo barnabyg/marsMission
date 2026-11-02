@@ -85,14 +85,49 @@ export function createRules(catalogue: Catalogue) {
     return trajectory;
   }
 
+  /** The Mission Events a Mission goes through, in the order the Catalogue lists them. */
+  function eventsOf(mission: PlannedMission | null): MissionEvent[] {
+    const vehicle = catalogue.launchVehicles.find(
+      (candidate) => candidate.id === mission?.launchVehicleId,
+    );
+    const assets = catalogue.assets.filter((asset) =>
+      mission?.assetIds.includes(asset.id),
+    );
+    const eventIds = new Set([
+      ...(vehicle?.missionEvents ?? []),
+      ...assets.flatMap((asset) => asset.missionEvents),
+    ]);
+    return [...eventIds].flatMap((eventId) =>
+      catalogue.missionEvents.filter((event) => event.id === eventId),
+    );
+  }
+
+  /** The day a Mission leaves Earth orbit for Mars: the day after the last of its Mission Events timed from launch. */
+  function departureDay(mission: PlannedMission | null): number {
+    return (
+      1 +
+      Math.max(
+        0,
+        ...eventsOf(mission).flatMap(({ timing }) =>
+          timing.from === "launch" ? [timing.days] : [],
+        ),
+      )
+    );
+  }
+
   /** The day of the Turn a Mission Event happens to this Mission. */
   function dayOf(
     { timing }: MissionEvent,
     mission: PlannedMission | null,
   ): number {
-    return timing.from === "launch"
-      ? timing.days
-      : trajectoryFor(mission).transferDays + timing.days;
+    switch (timing.from) {
+      case "launch":
+        return timing.days;
+      case "departure":
+        return departureDay(mission) + timing.days;
+      case "arrival":
+        return trajectoryFor(mission).transferDays + timing.days;
+    }
   }
 
   /** Whether a Mission can fly this Trajectory, which a Free-return only allows if it has the burn it's for. */
@@ -302,21 +337,9 @@ export function createRules(catalogue: Catalogue) {
 
   /** The Mission Events a Mission goes through, in the order they happen. */
   function missionEventsFor(mission: PlannedMission): MissionEvent[] {
-    const vehicle = catalogue.launchVehicles.find(
-      (candidate) => candidate.id === mission.launchVehicleId,
+    return eventsOf(mission).sort(
+      (first, second) => dayOf(first, mission) - dayOf(second, mission),
     );
-    const assets = catalogue.assets.filter((asset) =>
-      mission.assetIds.includes(asset.id),
-    );
-    const eventIds = new Set([
-      ...(vehicle?.missionEvents ?? []),
-      ...assets.flatMap((asset) => asset.missionEvents),
-    ]);
-    return [...eventIds]
-      .flatMap((eventId) =>
-        catalogue.missionEvents.filter((event) => event.id === eventId),
-      )
-      .sort((first, second) => dayOf(first, mission) - dayOf(second, mission));
   }
 
   return {

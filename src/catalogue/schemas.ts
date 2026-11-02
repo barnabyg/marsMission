@@ -169,8 +169,10 @@ const missionEventsSchema = z.array(
     // In either description, {site} stands for the Mission's Landing Site and {lander}, which starts a sentence, for what is landing there, such as "The rover".
     description: z.string().min(1),
     failureDescription: z.string().min(1),
+    // Departure is when the Mission leaves Earth orbit for Mars: the day after the last of its Mission Events timed from
+    // launch, so a Mission with more to do in Earth orbit, such as orbital refuelling, leaves later.
     timing: z.strictObject({
-      from: z.enum(["launch", "arrival"]),
+      from: z.enum(["launch", "departure", "arrival"]),
       days: z.number().int().nonnegative(),
     }),
     // "landingSite" means the risk of the Mission's Landing Site.

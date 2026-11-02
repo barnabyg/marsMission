@@ -23,6 +23,7 @@ describe("starting a Program", () => {
       "test-heavy",
       "test-prototype",
       "test-future-vehicle",
+      "test-refuelled",
     ]);
     expect(view.assets.map((asset) => asset.id)).toEqual([
       "test-orbiter",

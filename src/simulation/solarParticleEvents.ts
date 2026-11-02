@@ -28,7 +28,7 @@ export function solarParticleEventDay(
     0,
     ...rules
       .missionEventsFor(mission)
-      .filter(({ timing }) => timing.from === "launch")
+      .filter(({ timing }) => timing.from !== "arrival")
       .map((event) => rules.dayOf(event, mission)),
   );
   const day = Math.floor(

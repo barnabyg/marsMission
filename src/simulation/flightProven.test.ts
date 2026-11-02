@@ -31,6 +31,7 @@ describe("Technology Readiness in Planning Mode", () => {
       ["test-heavy", "flight-proven", 300],
       ["test-prototype", "built", 200],
       ["test-future-vehicle", "not-built", 600],
+      ["test-refuelled", "flight-proven", 500],
     ]);
     expect(
       view.assets
