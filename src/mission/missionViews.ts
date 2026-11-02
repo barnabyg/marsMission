@@ -9,6 +9,7 @@ export const missionViews = [
   { id: "solarSystem", name: "Solar system" },
   { id: "marsOrbit", name: "Mars orbit" },
   { id: "surface", name: "Surface" },
+  { id: "spacecraft", name: "Spacecraft" },
 ] as const;
 
 export type MissionViewId = (typeof missionViews)[number]["id"];
@@ -23,19 +24,29 @@ const viewsOfMissionEvents: Partial<Record<string, MissionViewId>> = {
   "entry-descent-landing": "surface",
 };
 
+/** The burn that sends a Mission on its way to Mars, which the spacecraft view shows only when it goes wrong. */
+const transferBurnId = "mars-transfer-burn";
+
 /**
  * Matches a timeline entry to the view it moves Mission Mode to, or null to leave the view alone.
  * This is the only place that does, and it only reads the Timeline, so it can't change any rules.
  */
 export function viewAskedForBy(entry: TimelineEntry): MissionViewId | null {
   if (entry.kind === "decisionPoint") {
-    return entry.hazard === "dustStorm" ? "surface" : null;
+    if (entry.hazard === "dustStorm") return "surface";
+    // Trouble on the way to Mars, close up: a solar particle event, or the transfer burn failing.
+    return entry.hazard === "solarParticleEvent" ||
+      entry.eventId === transferBurnId
+      ? "spacecraft"
+      : null;
   }
   if (entry.kind !== "missionEvent") return null;
   // A failure that swings the Mission back is one to watch on its way home.
-  return entry.returningToEarth
-    ? "solarSystem"
-    : (viewsOfMissionEvents[entry.eventId] ?? null);
+  if (entry.returningToEarth) return "solarSystem";
+  if (entry.eventId === transferBurnId) {
+    return entry.outcome === "failure" ? "spacecraft" : null;
+  }
+  return viewsOfMissionEvents[entry.eventId] ?? null;
 }
 
 /** The view the player last chose, and how many entries had happened when they did. */
@@ -95,4 +106,15 @@ export function viewWithSites(
   sites: readonly string[],
 ): MissionViewId {
   return view === "surface" && sites.length === 0 ? "marsOrbit" : view;
+}
+
+/**
+ * Hands over from the spacecraft view when it has nothing left to show, such as once the Mission has arrived or a
+ * moment after it's lost on the way. `fallback` is where to go then, or null while it still has something to show.
+ */
+export function viewWithSpacecraft(
+  view: MissionViewId,
+  fallback: MissionViewId | null,
+): MissionViewId {
+  return view === "spacecraft" && fallback !== null ? fallback : view;
 }

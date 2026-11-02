@@ -9,7 +9,7 @@ import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { DecisionPointPanel } from "./DecisionPointPanel";
 import { EventsColumn } from "./EventsColumn";
-import { missionViews, viewName } from "./missionViews";
+import { missionViews, viewName, type MissionViewId } from "./missionViews";
 import { atDecisionPoint, speeds } from "./playback";
 import { assetsOperatingOn, describeJourney } from "./journey";
 import {
@@ -22,6 +22,15 @@ import {
   SurfaceControls,
   surfaceUnavailableId,
 } from "./surface/SurfaceControls";
+import {
+  solarParticleEventShowing,
+  spacecraftFallback,
+  spacecraftHasSomethingToShow,
+} from "./spacecraft/spacecraft";
+import {
+  SpacecraftControls,
+  spacecraftUnavailableId,
+} from "./spacecraft/SpacecraftControls";
 import { useMissionView } from "./useMissionView";
 import { usePlayback } from "./usePlayback";
 import { useSounds } from "./useSounds";
@@ -64,11 +73,21 @@ export function MissionMode({
   );
   const sequence = sequenceNow(landingSequence, state);
   const sites = sitesDuring(sitesToShow(timeline, state.day), sequence);
+  const spacecraftAvailable = spacecraftHasSomethingToShow(timeline, state);
+  const particles = solarParticleEventShowing(timeline.entries, state);
   const { view, chooseView, site, pickSite } = useMissionView(
     timeline.entries,
     state.entriesHappened,
     sites,
+    spacecraftAvailable
+      ? null
+      : spacecraftFallback(timeline.mission, state.day),
   );
+  /** The explanation tied to each view's button while it has nothing to show. */
+  const unavailable: Partial<Record<MissionViewId, string>> = {
+    ...(site === null ? { surface: surfaceUnavailableId } : {}),
+    ...(spacecraftAvailable ? {} : { spacecraft: spacecraftUnavailableId }),
+  };
 
   useEffect(() => {
     if (state.finished) onFinished();
@@ -88,6 +107,7 @@ export function MissionMode({
           view={view}
           site={site}
           sequence={sequence}
+          particles={particles}
           operatingAssetCount={operatingAssets.length}
         />
       </Suspense>
@@ -116,25 +136,20 @@ export function MissionMode({
           <span>
             View: <strong data-testid="current-view">{viewName(view)}</strong>
           </span>
-          {missionViews.map(({ id, name }) => {
-            const unavailable = id === "surface" && site === null;
-            return (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={view === id}
-                disabled={unavailable}
-                aria-describedby={
-                  unavailable ? surfaceUnavailableId : undefined
-                }
-                onClick={() => {
-                  chooseView(id);
-                }}
-              >
-                {name}
-              </button>
-            );
-          })}
+          {missionViews.map(({ id, name }) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={view === id}
+              disabled={unavailable[id] !== undefined}
+              aria-describedby={unavailable[id]}
+              onClick={() => {
+                chooseView(id);
+              }}
+            >
+              {name}
+            </button>
+          ))}
         </div>
         <div role="group" aria-label="Speed" className="speed-controls">
           <span>
@@ -188,6 +203,13 @@ export function MissionMode({
           site={site}
           sequence={sequence}
           onPickSite={pickSite}
+        />
+        <SpacecraftControls
+          timeline={timeline}
+          day={state.day}
+          view={view}
+          available={spacecraftAvailable}
+          particles={particles}
         />
         <h2>Operating at Mars</h2>
         <ul data-testid="operating-at-mars">

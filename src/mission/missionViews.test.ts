@@ -8,6 +8,7 @@ import {
   viewAskedForBy,
   viewName,
   viewWithSites,
+  viewWithSpacecraft,
   type ViewChoice,
 } from "./missionViews";
 
@@ -25,6 +26,21 @@ function missionEvent(
   };
 }
 
+function decisionPoint(
+  about: Pick<
+    Extract<TimelineEntry, { kind: "decisionPoint" }>,
+    "eventId" | "hazard" | "siteName"
+  >,
+): TimelineEntry {
+  return {
+    kind: "decisionPoint",
+    day: 1,
+    title: "Decision Point",
+    description: "",
+    ...about,
+  };
+}
+
 const milestone: TimelineEntry = {
   kind: "milestone",
   day: 1,
@@ -39,6 +55,7 @@ describe("Mission Mode's views", () => {
       "solarSystem",
       "marsOrbit",
       "surface",
+      "spacecraft",
     ]);
     expect(startingChoice.view).toBe("solarSystem");
   });
@@ -47,6 +64,7 @@ describe("Mission Mode's views", () => {
     expect(viewName("solarSystem")).toBe("Solar system");
     expect(viewName("marsOrbit")).toBe("Mars orbit");
     expect(viewName("surface")).toBe("Surface");
+    expect(viewName("spacecraft")).toBe("Spacecraft");
   });
 });
 
@@ -63,13 +81,65 @@ describe("which view a timeline entry asks for", () => {
     expect(viewAskedForBy(missionEvent(eventId, "failure"))).toBe("surface");
   });
 
-  it.each(["launch", "mars-transfer-burn"])(
-    "asks for nothing at %s, whether it succeeds or fails",
-    (eventId) => {
-      expect(viewAskedForBy(missionEvent(eventId))).toBeNull();
-      expect(viewAskedForBy(missionEvent(eventId, "failure"))).toBeNull();
-    },
-  );
+  it("asks for nothing at launch, whether it succeeds or fails", () => {
+    expect(viewAskedForBy(missionEvent("launch"))).toBeNull();
+    expect(viewAskedForBy(missionEvent("launch", "failure"))).toBeNull();
+  });
+
+  it("asks for the spacecraft when the transfer burn fails, and for nothing when it works", () => {
+    const eventId = "mars-transfer-burn";
+    expect(viewAskedForBy(missionEvent(eventId))).toBeNull();
+    expect(viewAskedForBy(missionEvent(eventId, "failure"))).toBe("spacecraft");
+  });
+
+  it("asks for the solar system when a failure swings the Mission back to Earth", () => {
+    expect(
+      viewAskedForBy({
+        kind: "missionEvent",
+        day: 210,
+        eventId: "mars-orbit-insertion",
+        title: "Mars orbit insertion failed",
+        description: "",
+        outcome: "failure",
+        returningToEarth: true,
+      }),
+    ).toBe("solarSystem");
+  });
+
+  it("asks for the spacecraft at a Decision Point on the transfer burn", () => {
+    expect(
+      viewAskedForBy(decisionPoint({ eventId: "mars-transfer-burn" })),
+    ).toBe("spacecraft");
+  });
+
+  it("leaves a Decision Point on a later Mission Event to the entry that follows it", () => {
+    expect(
+      viewAskedForBy(decisionPoint({ eventId: "mars-orbit-insertion" })),
+    ).toBeNull();
+  });
+
+  it("asks for the spacecraft at a solar particle event, and for the surface at a dust storm", () => {
+    expect(
+      viewAskedForBy(decisionPoint({ hazard: "solarParticleEvent" })),
+    ).toBe("spacecraft");
+    expect(
+      viewAskedForBy(
+        decisionPoint({ hazard: "dustStorm", siteName: "Alpha Plain" }),
+      ),
+    ).toBe("surface");
+  });
+
+  it("leaves how a solar particle event came out to its Decision Point", () => {
+    expect(
+      viewAskedForBy({
+        kind: "hazard",
+        hazard: "solarParticleEvent",
+        day: 1,
+        title: "Solar particle event: safe mode",
+        description: "",
+      }),
+    ).toBeNull();
+  });
 
   it("asks for nothing at anything that isn't a Mission Event", () => {
     expect(viewAskedForBy(milestone)).toBeNull();
@@ -88,6 +158,22 @@ describe("the surface view with no Landing Site left to show", () => {
   it("leaves the other views alone", () => {
     expect(viewWithSites("solarSystem", [])).toBe("solarSystem");
     expect(viewWithSites("marsOrbit", [])).toBe("marsOrbit");
+  });
+});
+
+describe("the spacecraft view with nothing left to show", () => {
+  it("hands over to where it's told", () => {
+    expect(viewWithSpacecraft("spacecraft", "marsOrbit")).toBe("marsOrbit");
+    expect(viewWithSpacecraft("spacecraft", "solarSystem")).toBe("solarSystem");
+  });
+
+  it("stays while it has something to show", () => {
+    expect(viewWithSpacecraft("spacecraft", null)).toBe("spacecraft");
+  });
+
+  it("leaves the other views alone", () => {
+    expect(viewWithSpacecraft("surface", "marsOrbit")).toBe("surface");
+    expect(viewWithSpacecraft("solarSystem", "marsOrbit")).toBe("solarSystem");
   });
 });
 
@@ -139,6 +225,21 @@ describe("the view showing at any moment", () => {
     const switchedAway: ViewChoice = { view: "marsOrbit", entriesHappened: 5 };
     expect(currentView(entries, 5, switchedAway)).toBe("marsOrbit");
     expect(currentView(entries, 6, switchedAway)).toBe("marsOrbit");
+  });
+
+  it("moves to the spacecraft for a failed transfer burn, and holds a later switch", () => {
+    const failing = [
+      missionEvent("launch"),
+      missionEvent("mars-transfer-burn", "failure"),
+      milestone,
+    ];
+    expect(currentView(failing, 1, startingChoice)).toBe("solarSystem");
+    expect(currentView(failing, 2, startingChoice)).toBe("spacecraft");
+    const switchedAway: ViewChoice = {
+      view: "solarSystem",
+      entriesHappened: 2,
+    };
+    expect(currentView(failing, 3, switchedAway)).toBe("solarSystem");
   });
 
   it("depends only on how many entries have happened, so several in one frame give the same view", () => {
