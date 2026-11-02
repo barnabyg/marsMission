@@ -21,8 +21,8 @@
 .planning-side {
   min-height: 0;
   display: grid;
-  /* Operating at Mars gets the room it needs first, because its rows are taller than the Milestones list's. */
-  grid-template-rows: minmax(0, 1fr) minmax(0, auto);
+  /* Operating at Mars and Development get the room they need first, because their rows are taller than the Milestones list's. */
+  grid-template-rows: minmax(0, 1fr) minmax(0, auto) minmax(0, auto);
   gap: 1.5rem;
 }
 
@@ -172,6 +172,29 @@
 .operating-assets select {
   flex: none;
   min-width: 10rem;
+}
+
+.developments {
+  display: grid;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0;
+  list-style: none;
+}
+
+.developments li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel .developments label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text);
+  white-space: nowrap;
 }
 
 .mission-events {

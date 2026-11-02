@@ -11,7 +11,7 @@ import {
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
-import { readinessLabel, ReadinessTag } from "./ReadinessTag";
+import { canFly, readinessLabel, ReadinessTag } from "./ReadinessTag";
 import {
   isSurveying,
   NothingLeftToSurvey,
@@ -24,6 +24,8 @@ interface MissionPanelProps {
   view: ProgramView;
   /** The new Activities chosen for Assets already operating, which either button sends. */
   operatingActivities: Record<string, string>;
+  /** The Developments chosen to start this Turn, which either button sends. */
+  developmentIds: string[];
   onSubmit: (plan: TurnPlan) => void;
 }
 
@@ -33,13 +35,18 @@ export function MissionPanel({
   program,
   view,
   operatingActivities,
+  developmentIds,
   onSubmit,
 }: MissionPanelProps) {
+  // Each starts on the first that can fly, because one that needs Development can't be chosen.
   const [launchVehicleId, setLaunchVehicleId] = useState(
-    view.launchVehicles[0]?.id ?? "",
+    view.launchVehicles.find(canFly)?.id ?? "",
   );
   const [assetIds, setAssetIds] = useState(
-    view.assets.slice(0, 1).map((asset) => asset.id),
+    view.assets
+      .filter(canFly)
+      .slice(0, 1)
+      .map((asset) => asset.id),
   );
   const [reliability, setReliability] = useState<Record<string, string>>({});
   const [chosenSiteId, setChosenSiteId] = useState(
@@ -81,6 +88,7 @@ export function MissionPanel({
   });
   const plan: TurnPlan = {
     operatingActivities,
+    developmentIds,
     mission: {
       ...mission,
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
@@ -104,8 +112,20 @@ export function MissionPanel({
       ),
     },
   };
-  const { costMillions, massTonnes, capacityTonnes, problems } =
-    simulation.validatePlan(program, plan);
+  const {
+    costMillions,
+    developmentCostMillions,
+    massTonnes,
+    capacityTonnes,
+    problems,
+  } = simulation.validatePlan(program, plan);
+  const withoutLaunching: TurnPlan = {
+    mission: null,
+    operatingActivities,
+    developmentIds,
+  };
+  const canEndWithoutLaunching =
+    simulation.validatePlan(program, withoutLaunching).problems.length === 0;
 
   return (
     <section className="panel">
@@ -135,7 +155,11 @@ export function MissionPanel({
             }}
           >
             {view.launchVehicles.map((option) => (
-              <option key={option.id} value={option.id}>
+              <option
+                key={option.id}
+                value={option.id}
+                disabled={!canFly(option)}
+              >
                 {option.name} ({formatMoney(option.costMillions)},{" "}
                 {option.capacityTonnes} t
                 {option.technologyReadiness === "flight-proven"
@@ -289,12 +313,21 @@ export function MissionPanel({
         ))}
       </ol>
       <p className="total-cost">
-        Total cost:{" "}
+        <GameText>Mission cost</GameText>:{" "}
         <strong data-testid="mission-cost">{formatMoney(costMillions)}</strong>
         {" · "}Mass:{" "}
         <strong data-testid="mission-mass">
           {massTonnes} of {capacityTonnes} tonnes
         </strong>
+        {developmentCostMillions > 0 && (
+          <>
+            {" · "}
+            <GameText>Development</GameText>:{" "}
+            <strong data-testid="development-cost">
+              {formatMoney(developmentCostMillions)}
+            </strong>
+          </>
+        )}
       </p>
       {problems.map((problem) => (
         <p key={problem} className="problem" role="alert">
@@ -313,8 +346,9 @@ export function MissionPanel({
       </button>
       <button
         type="button"
+        disabled={!canEndWithoutLaunching}
         onClick={() => {
-          onSubmit({ mission: null, operatingActivities });
+          onSubmit(withoutLaunching);
         }}
       >
         End Turn without launching
@@ -361,6 +395,8 @@ function MissionAssetChoice({
         <input
           type="checkbox"
           checked={carried}
+          // It can't fly until its Development has finished, which the Development panel shows.
+          disabled={!canFly(asset)}
           onChange={(event) => {
             onCarriedChange(event.target.checked);
           }}

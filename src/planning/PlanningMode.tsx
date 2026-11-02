@@ -10,6 +10,7 @@ import {
 import { Dialog } from "../ui/Dialog";
 import { formatLaunchWindow } from "../ui/format";
 import { GameText } from "../ui/GameText";
+import { DevelopmentPanel } from "./DevelopmentPanel";
 import { MissionPanel } from "./MissionPanel";
 import { OperatingPanel } from "./OperatingPanel";
 
@@ -42,6 +43,7 @@ export function PlanningMode({
   const [operatingActivities, setOperatingActivities] = useState<
     Record<string, string>
   >({});
+  const [developmentIds, setDevelopmentIds] = useState<string[]>([]);
 
   function open(dialog: PlanningDialog) {
     setSavedToSlot(null);
@@ -153,6 +155,7 @@ export function PlanningMode({
           program={program}
           view={view}
           operatingActivities={operatingActivities}
+          developmentIds={developmentIds}
           onSubmit={onSubmit}
         />
 
@@ -184,6 +187,13 @@ export function PlanningMode({
                 [key]: activityId,
               });
             }}
+          />
+
+          <DevelopmentPanel
+            developments={view.developments}
+            moneyMillions={view.moneyMillions}
+            chosenIds={developmentIds}
+            onChosenChange={setDevelopmentIds}
           />
         </div>
       </div>

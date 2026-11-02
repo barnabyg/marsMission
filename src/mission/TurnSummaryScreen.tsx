@@ -188,6 +188,20 @@ export function TurnSummaryScreen({
           </GameText>
         </p>
       )}
+      {summary.developmentsStarted.length > 0 && (
+        <p data-testid="summary-development-started">
+          <GameText>
+            {`Development started: ${summary.developmentsStarted.join(", ")}`}
+          </GameText>
+        </p>
+      )}
+      {summary.developmentsFinished.length > 0 && (
+        <p data-testid="summary-development-finished">
+          <GameText>
+            {`Development finished, so it can be chosen for a Mission from the next Turn: ${summary.developmentsFinished.join(", ")}`}
+          </GameText>
+        </p>
+      )}
       {summary.ongoingResearch.length > 0 && (
         <section data-testid="summary-ongoing-research">
           <h2>
@@ -288,6 +302,16 @@ export function TurnSummaryScreen({
             </th>
             <td>{formatMoney(summary.missionCostMillions)}</td>
           </tr>
+          {summary.developmentCostMillions > 0 && (
+            <tr>
+              <th scope="row">
+                <GameText>Development cost</GameText>
+              </th>
+              <td data-testid="summary-development-cost">
+                {formatMoney(summary.developmentCostMillions)}
+              </td>
+            </tr>
+          )}
           <tr>
             <th scope="row">Money</th>
             <td>

@@ -8,7 +8,7 @@ export type Technology =
 export type TechnologyReadiness = Technology["technologyReadiness"];
 
 /** Whether a technology's Development has finished in this Program, which is at the start of the Turn it was due. */
-export function isDeveloped(program: Program, technology: Technology): boolean {
+function isDeveloped(program: Program, technology: Technology): boolean {
   return program.developments.some(
     ({ technologyId, finishesOnTurn }) =>
       technologyId === technology.id && finishesOnTurn <= program.turnNumber,

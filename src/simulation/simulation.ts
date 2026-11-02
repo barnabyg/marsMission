@@ -39,6 +39,7 @@ export type {
   DecisionPoint,
   PlannedActivity,
   PlannedAsset,
+  PlannedDevelopment,
   PlannedTrajectory,
   Program,
   ProgramView,

@@ -36,7 +36,10 @@ async function onOneLine(elements: Locator[]): Promise<boolean> {
 }
 
 const realFiles = realCatalogueFiles();
-const allAssets = realFiles.assets.map(({ name }) => name);
+/** Every Asset a new Program can choose, leaving out any that need Development first. */
+const allAssets = realFiles.assets
+  .filter(({ technologyReadiness }) => technologyReadiness !== "not-built")
+  .map(({ name }) => name);
 const realMilestones = realFiles.milestones;
 const allLandingSiteIds = realFiles.landingSites.map(({ id }) => id);
 
@@ -236,6 +239,27 @@ for (const size of screenSizes) {
         "Swings back",
       );
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
+      expect(await somethingScrolls(page)).toBe(false);
+      for (const name of ["Launch Mission", "End Turn without launching"]) {
+        await expect(page.getByRole("button", { name })).toBeInViewport({
+          ratio: 1,
+        });
+      }
+    });
+
+    test("Planning Mode fits on one screen with a busy Program, every Asset and every Development chosen", async ({
+      page,
+    }) => {
+      await openBusyProgram(page);
+      await chooseAssets(page, allAssets);
+      const developments = page.getByRole("checkbox", {
+        name: "Start Development",
+      });
+      await expect(developments.first()).toBeVisible();
+      for (const development of await developments.all()) {
+        await development.check();
+      }
+      await expect(page.getByTestId("development-cost")).toBeVisible();
       expect(await somethingScrolls(page)).toBe(false);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
