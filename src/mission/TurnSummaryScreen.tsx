@@ -9,11 +9,11 @@ function describeSolarParticleEvent({
   const names = assets.join(", ");
   switch (outcome) {
     case "protected":
-      return `Safe mode protected ${names}, and each lost ${serviceLifeLossPercent}% of its Service Life`;
+      return `Safe mode protected ${names}, at a cost of ${serviceLifeLossPercent}% of each Asset's Service Life`;
     case "unharmed":
       return `Carried on, and ${names} came through unharmed`;
     case "damaged":
-      return `Carried on, and the radiation damaged ${names}: each lost ${serviceLifeLossPercent}% of its Service Life`;
+      return `Carried on, and the radiation damaged ${names}, which cost each Asset ${serviceLifeLossPercent}% of its Service Life`;
     case "lost":
       return `Carried on, and the radiation lost ${names}`;
   }
@@ -110,7 +110,9 @@ export function TurnSummaryScreen({
       )}
       {summary.goNoGo && (
         <section data-testid="summary-go-no-go">
-          <h2>Go/no-go check</h2>
+          <h2>
+            <GameText>Go/no-go check</GameText>
+          </h2>
           <p>
             <GameText>
               {summary.goNoGo.answer === "holdOff"

@@ -51,6 +51,8 @@ export const tooltips = {
     "One of three places where the player can keep a Program by hand, usable only in Planning Mode. It is separate from the automatic save made at the start of each Planning Mode.",
   "Decision Point":
     "A moment in Mission Mode when play pauses for the player to make a limited choice, such as aborting or using a Contingency.",
+  "Go/no-go check":
+    "A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life.",
   "Mission Event":
     "A discrete, riskable step within a Mission, such as launch, Mars transfer burn, Mars orbit insertion, entry/descent/landing or rendezvous. Each one has a failure probability.",
   "Safety Margin":

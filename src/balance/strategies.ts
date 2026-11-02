@@ -61,6 +61,11 @@ export const strategies: Strategy[] = [
     surveyingLanders,
   ),
   playStyle(
+    "survey first, Free-return",
+    "As survey first, flying Free-return whenever a Mission has an arrival burn.",
+    { ...surveyingLanders, trajectory: "free-return" },
+  ),
+  playStyle(
     "land straight away",
     "Landers at unsurveyed sites until one lands, and then the same as survey first.",
     {
@@ -234,6 +239,33 @@ export const strategies: Strategy[] = [
     "steady: Fast",
     "As steady: Soil analysis, flying Fast whenever it can afford to, for more days of research.",
     { ...steadyRovers, trajectory: "fast" },
+  ),
+  playStyle(
+    "steady: Contingency when rich",
+    "As steady: Soil analysis, buying every Contingency it can afford once it has $3B, and using it.",
+    {
+      ...steadyRovers,
+      contingencies: "use",
+      contingenciesWhile: (view) => view.moneyMillions >= 3000,
+    },
+  ),
+  playStyle(
+    "steady: Fast when rich",
+    "As steady: Soil analysis, flying Fast once it has the money for several rovers.",
+    {
+      ...steadyRovers,
+      trajectory: "fast",
+      trajectoryWhile: (view) => view.moneyMillions >= 5000,
+    },
+  ),
+  playStyle(
+    "steady: Free-return first",
+    "As steady: Soil analysis, flying Free-return on its first Mission, the orbiter, while a loss would hurt most.",
+    {
+      ...steadyRovers,
+      trajectory: "free-return",
+      trajectoryWhile: (view) => view.turnNumber === 1,
+    },
   ),
   playStyle(
     "steady: Free-return",

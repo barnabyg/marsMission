@@ -1,5 +1,7 @@
 import type {
+  DecisionAnswer,
   DecisionAnswers,
+  DecisionPoint,
   Program,
   ProgramView,
   Simulation,
@@ -27,9 +29,11 @@ export interface TurnRecord {
   assetsFailed: number;
   launched: boolean;
   missionFailed: boolean;
-  /** How many Decision Points came up, and how many of them ended with the Assets saved. */
+  /** How many Decision Points came up, and how many Contingencies ended with the Assets saved. */
   decisionPoints: number;
   rescues: number;
+  /** Each Decision Point answered, by kind. */
+  decisions: { kind: DecisionPoint["kind"]; answer: DecisionAnswer }[];
 }
 
 /** What a strategy may ask about the Program it is planning for, which it never sees itself. */
@@ -51,6 +55,7 @@ function recordOf(
   summary: TurnSummary,
   after: ReturnType<Simulation["readProgram"]>,
 ): TurnRecord {
+  const decisions = decisionsIn(summary);
   return {
     moneyMillions: after.moneyMillions,
     science: after.science,
@@ -72,9 +77,35 @@ function recordOf(
     assetsFailed: summary.assetsFailed.length,
     launched,
     missionFailed: summary.failure !== null,
-    decisionPoints: summary.contingencies.length,
+    decisionPoints: decisions.length,
     rescues: summary.contingencies.filter(({ rescued }) => rescued).length,
+    decisions,
   };
+}
+
+/** Every Decision Point a Turn's summary reports, with how it was answered. */
+function decisionsIn(summary: TurnSummary): TurnRecord["decisions"] {
+  return [
+    ...summary.contingencies.map(({ answer }) => ({
+      kind: "contingency" as const,
+      answer,
+    })),
+    ...summary.dustStorms.map(({ answer }) => ({
+      kind: "dustStorm" as const,
+      answer,
+    })),
+    ...(summary.solarParticleEvent
+      ? [
+          {
+            kind: "solarParticleEvent" as const,
+            answer: summary.solarParticleEvent.answer,
+          },
+        ]
+      : []),
+    ...(summary.goNoGo
+      ? [{ kind: "goNoGo" as const, answer: summary.goNoGo.answer }]
+      : []),
+  ];
 }
 
 /** Works out a Turn, answering each Decision Point as the strategy would, one at a time as a player does. */

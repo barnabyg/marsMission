@@ -95,13 +95,13 @@ export function meetSolarParticleEvent(
             answer: "safeMode",
             label: "Safe mode",
             riskBand: null,
-            description: `${names} are protected, but each loses ${safeModeServiceLifeLossPercent}% of its Service Life.`,
+            description: `Safe mode protects ${names}, but costs each Asset ${safeModeServiceLifeLossPercent}% of its Service Life.`,
           },
           {
             answer: "carryOn",
             label: "Carry on",
             riskBand: rules.riskBandFor(damageChance),
-            description: `No cost if all goes well. If they're hit, each loses ${damageServiceLifeLossPercent}% of its Service Life, and there's a chance of losing them all, which costs ${loss} Public Support.`,
+            description: `No cost if all goes well. If the radiation hits, each Asset loses ${damageServiceLifeLossPercent}% of its Service Life, and there's a chance of losing the Mission, which costs ${loss} Public Support.`,
           },
         ],
       },
@@ -130,12 +130,15 @@ export function meetSolarParticleEvent(
   const told: Record<typeof outcome, [title: string, text: string]> = {
     protected: [
       `${name}: safe mode`,
-      `${names} rode it out in safe mode, and each lost ${serviceLifeLossPercent}% of its Service Life.`,
+      `Safe mode protected ${names}, at a cost of ${serviceLifeLossPercent}% of each Asset's Service Life.`,
     ],
-    unharmed: [`${name}: no harm done`, `${names} carried on unharmed.`],
+    unharmed: [
+      `${name}: no harm done`,
+      `The radiation passed without harming ${names}.`,
+    ],
     damaged: [
       `${name}: damage`,
-      `The radiation damaged ${names}, and each lost ${serviceLifeLossPercent}% of its Service Life.`,
+      `The radiation damaged ${names}, which cost each Asset ${serviceLifeLossPercent}% of its Service Life.`,
     ],
     lost: [
       `${name}: Mission lost`,

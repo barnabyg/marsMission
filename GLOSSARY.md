@@ -105,6 +105,10 @@ _Avoid_: Prompt, intervention
 
 ## Risk
 
+**Go/no-go check**:
+A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life.
+_Avoid_: Abort check, landing poll
+
 **Mission Event**:
 A discrete, riskable step within a Mission, such as launch, Mars transfer burn, Mars orbit insertion, entry/descent/landing or rendezvous. Each one has a failure probability.
 _Avoid_: Step, phase

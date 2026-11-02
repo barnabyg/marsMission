@@ -158,13 +158,13 @@ export function weatherDustStorms(
               answer: "shelter",
               label: "Shelter",
               riskBand: null,
-              description: `${names.join(", ")} are safe, but earn no Ongoing Research for the storm's ${days} days. That gives up ${whatSheltering(catalogue, rules, atStake, storm)}.`,
+              description: `Sheltering keeps ${names.join(", ")} safe, but nothing there earns Ongoing Research for the storm's ${days} days. That gives up ${whatSheltering(catalogue, rules, atStake, storm)}.`,
             },
             {
               answer: "carryOn",
               label: "Carry on",
               riskBand: rules.riskBandFor(failureChance),
-              description: `${names.join(", ")} keep earning, and each has this chance of failing for good during the storm.`,
+              description: `Carrying on keeps the research going, and each Asset there has this chance of failing for good during the storm.`,
             },
           ],
         },
@@ -212,8 +212,8 @@ export function weatherDustStorms(
           ? `Carrying on through the storm at ${site.name}`
           : `Sheltering from the storm at ${site.name}`,
         description: carriesOn
-          ? `${names.join(", ")} keep working, at the risk of failing.`
-          : `${names.join(", ")} stop work until the storm has passed.`,
+          ? `Work carries on at ${site.name}, at the risk of losing ${names.join(", ")}.`
+          : `Work stops at ${site.name} until the storm has passed.`,
       },
       {
         kind: "hazard",

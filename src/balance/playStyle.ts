@@ -63,8 +63,12 @@ export interface PlayStyle {
   lastLaunchTurn?: number;
   /** Buys every Contingency this Mission can have and afford, and what it does when one could be used. */
   contingencies?: DecisionAnswer;
+  /** Buys those Contingencies only while this is true. */
+  contingenciesWhile?: (view: ProgramView) => boolean;
   /** The Trajectory it flies, when a Mission can have it and afford it. */
   trajectory?: string;
+  /** Flies that Trajectory only while this is true. */
+  trajectoryWhile?: (view: ProgramView) => boolean;
   /** What it does at a dust storm, which is to shelter unless it says otherwise. */
   dustStorms?: "shelter" | "carryOn";
   /** What it does at a solar particle event, which is safe mode unless it says otherwise. */
@@ -210,21 +214,32 @@ function missionsFor(
         : [planned.reliabilityLevelId];
   const events = tools.previewMission(mission);
 
-  const contingencyIds = playStyle.contingencies
-    ? events.flatMap(({ contingency }) => (contingency ? [contingency.id] : []))
-    : [];
+  const contingencyIds =
+    playStyle.contingencies && (playStyle.contingenciesWhile?.(view) ?? true)
+      ? events.flatMap(({ contingency }) =>
+          contingency ? [contingency.id] : [],
+        )
+      : [];
   const { trajectory } = playStyle;
   const trajectoryChoice =
     trajectory !== undefined &&
+    (playStyle.trajectoryWhile?.(view) ?? true) &&
     tools.previewTrajectories(mission).some(({ id }) => id === trajectory)
       ? { trajectoryId: trajectory }
       : {};
-  const extras: Partial<PlannedMission> = {
-    ...(contingencyIds.length > 0 ? { contingencyIds } : {}),
-    ...trajectoryChoice,
-  };
+  // Every Contingency, then one at a time from the last Mission Event back, for when they don't all fit.
+  const contingencySets =
+    contingencyIds.length > 1
+      ? [contingencyIds, ...contingencyIds.toReversed().map((id) => [id])]
+      : [contingencyIds];
+  const extras = contingencySets
+    .map((ids): Partial<PlannedMission> => ({
+      ...(ids.length > 0 ? { contingencyIds: ids } : {}),
+      ...trajectoryChoice,
+    }))
+    .filter((extra) => Object.keys(extra).length > 0);
   // Without them comes last, for when they cost too much for this Program.
-  const choices = Object.keys(extras).length > 0 ? [extras, {}] : [{}];
+  const choices = [...extras, {}];
   return choices.flatMap((extra) =>
     serviceLives.flatMap((serviceLifeDays) =>
       levels.map((level) => ({

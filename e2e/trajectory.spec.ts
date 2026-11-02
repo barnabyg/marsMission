@@ -31,8 +31,8 @@ test("Planning Mode shows what a Trajectory changes", async ({ page }) => {
   await page.goto(`/?seed=${successSeed}`);
   await expect(trajectory(page).locator("option")).toHaveText([
     "Slow (210 days)",
-    "Fast (150 days, $200M, 0.5 t less)",
-    "Free-return (210 days, $150M, 0.2 t less)",
+    "Fast (150 days, $40M, 0.5 t less)",
+    "Free-return (210 days, $30M, 0.2 t less)",
   ]);
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
   await expect(page.getByTestId("mission-mass")).toHaveText("2.5 of 4 tonnes");
@@ -41,7 +41,7 @@ test("Planning Mode shows what a Trajectory changes", async ({ page }) => {
   );
 
   await trajectory(page).selectOption("fast");
-  await expect(page.getByTestId("mission-cost")).toHaveText("$1.2B");
+  await expect(page.getByTestId("mission-cost")).toHaveText("$1.04B");
   await expect(page.getByTestId("mission-mass")).toHaveText(
     "2.5 of 3.5 tonnes",
   );

@@ -308,8 +308,8 @@ export function flyMission(
           ? `Holding off the landing at ${landingSite.name}`
           : `Go for landing at ${landingSite.name}`,
         description: holdingOff
-          ? `${names} wait ${wait} days for the storm to pass, and each loses ${lifeLost} days of Service Life.`
-          : `${names} are going down through the storm.`,
+          ? `The landing waits ${wait} days for the storm to pass, which costs each Asset being landed ${lifeLost} days of Service Life.`
+          : `Going down through the storm with ${names}.`,
       });
       if (holdingOff) {
         daysHeld += wait;

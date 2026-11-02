@@ -34,7 +34,7 @@ test("a dust storm stops play with its site, its Assets and its costs, and shelt
   await expect(panel).toContainText("Dust storm over Jezero Crater");
   await expect(panel).toContainText("Prospector Lander");
   await expect(page.getByTestId("decision-choice-shelter")).toContainText(
-    "earn no Ongoing Research",
+    "nothing there earns Ongoing Research",
   );
   await expect(page.getByTestId("decision-choice-carryOn")).toContainText(
     "Risk Band",

@@ -387,6 +387,49 @@ describe("the checks for invalid states", () => {
   });
 });
 
+describe("the report on Decision Points", () => {
+  const sheltering = strategies.find(
+    ({ name }) => name === "steady: shelter from storms",
+  );
+  const carryingOn = strategies.find(
+    ({ name }) => name === "steady: carry on through storms",
+  );
+  if (!sheltering || !carryingOn) throw new Error("Expected both strategies");
+  const report = balanceReport(files, 40, [sheltering, carryingOn]);
+
+  it("says how often each kind came up, and in what share of Turns", () => {
+    expect(report).toMatch(
+      /Decision Points: \d+\.\d per Program \(.*dust storm \d+\.\d.*\), in \d+\.\d% of Turns/,
+    );
+  });
+
+  it("shows how Programs ended up according to each answer", () => {
+    const rows = report
+      .split("\n")
+      .filter((line) => line.startsWith("dust storm"))
+      .map((line) => line.trim().split(/\s{2,}/));
+    expect(rows.map((row) => row.slice(0, 3))).toEqual([
+      ["dust storm", "shelter", "steady: shelter from storms"],
+      ["dust storm", "carryOn", "steady: carry on through storms"],
+    ]);
+    for (const row of rows) expect(row).toHaveLength(7);
+  });
+
+  it("records every kind of Decision Point a Turn answered", () => {
+    const decisions = Array.from({ length: 40 }, (_, index) => index + 1)
+      .flatMap((seed) => playProgram(real, carryingOn, seed, turns).turns)
+      .flatMap((turn) => turn.decisions);
+    expect(new Set(decisions.map(({ kind }) => kind))).toEqual(
+      new Set(["dustStorm", "solarParticleEvent", "goNoGo"]),
+    );
+    expect(
+      decisions
+        .filter(({ kind }) => kind === "dustStorm")
+        .every(({ answer }) => answer === "carryOn"),
+    ).toBe(true);
+  });
+});
+
 describe("the report", () => {
   const report = balanceReport(files, 3, [launchNothing]);
 

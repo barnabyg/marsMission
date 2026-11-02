@@ -28,7 +28,7 @@ test("a solar particle event stops play on the way to Mars, and safe mode shorte
   await expect(panel).toContainText("Decision Point: Solar particle event");
   await expect(panel).toContainText("On board: Pathfinder Orbiter");
   await expect(page.getByTestId("decision-choice-safeMode")).toContainText(
-    "10% of its Service Life",
+    "15% of its Service Life",
   );
   await expect(page.getByTestId("decision-choice-carryOn")).toContainText(
     "Risk Band",
@@ -44,13 +44,13 @@ test("a solar particle event stops play on the way to Mars, and safe mode shorte
   await endTurn(page).click();
 
   await expect(page.getByTestId("summary-solar-particle-event")).toContainText(
-    "Safe mode protected Pathfinder Orbiter, and each lost 10% of its Service Life",
+    "Safe mode protected Pathfinder Orbiter, at a cost of 15% of each Asset's Service Life",
   );
   await expect(page.getByTestId("summary-failure")).toHaveCount(0);
   await page.getByRole("button", { name: "Continue" }).click();
-  // The shortest Service Life, 1300 days, less a tenth, from arriving 210 days into a 780-day Turn.
+  // The shortest Service Life, 1300 days, less 15%, from arriving 210 days into a 780-day Turn.
   await expect(page.getByTestId("operating-assets")).toContainText(
-    "600 days of Service Life left",
+    "535 days of Service Life left",
   );
   expect(problems).toEqual([]);
 });
