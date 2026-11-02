@@ -12,6 +12,12 @@ export const tooltips = {
     "The single journey launched in a Turn's Launch Window, carrying one or more Assets and possibly Crew. There is at most one Mission per Turn. It ends when it has delivered what it carries, or has failed.",
   "Launch Vehicle":
     "The vehicle chosen from the catalogue to lift a Mission off Earth. It sets how much mass the Mission can carry.",
+  "Orbital refuelling":
+    "Filling a Mission's tanks in Earth orbit from a Tanker, so that a larger Launch Vehicle can send much more mass to Mars. It adds two Mission Events between launch and the Mars transfer burn: the Tanker's launch and the Rendezvous.",
+  Tanker:
+    "A second launch for a Mission that needs Orbital refuelling, carrying only propellant up to it in Earth orbit. Its launch is a Mission Event of its own.",
+  Rendezvous:
+    "The Mission Event in which a Mission meets its Tanker in Earth orbit, docks and takes on propellant for the journey to Mars.",
   Trajectory:
     "The way a Mission travels to Mars, chosen from a few fixed options such as Slow, Fast or Free-return. It trades fuel and mass against Duration and safety.",
   "Robotic Mission":

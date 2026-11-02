@@ -264,7 +264,9 @@ export function MissionPanel({
       <ol className="mission-events" data-testid="mission-events">
         {plannedEvents.map((event) => (
           <li key={event.eventId} data-testid="mission-event">
-            <span className="mission-event-name">{event.name}</span>
+            <span className="mission-event-name">
+              <GameText>{event.name}</GameText>
+            </span>
             <strong className="risk-band" data-testid="risk-band">
               {event.riskBand}
             </strong>

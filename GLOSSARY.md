@@ -24,6 +24,18 @@ _Avoid_: Expedition, flight (as a name for a Mission; "in flight" for one on its
 The vehicle chosen from the catalogue to lift a Mission off Earth. It sets how much mass the Mission can carry.
 _Avoid_: Rocket, booster
 
+**Orbital refuelling**:
+Filling a Mission's tanks in Earth orbit from a Tanker, so that a larger Launch Vehicle can send much more mass to Mars. It adds two Mission Events between launch and the Mars transfer burn: the Tanker's launch and the Rendezvous.
+_Avoid_: In-orbit refuelling, propellant transfer, refueling
+
+**Tanker**:
+A second launch for a Mission that needs Orbital refuelling, carrying only propellant up to it in Earth orbit. Its launch is a Mission Event of its own.
+_Avoid_: Fuel ship, depot
+
+**Rendezvous**:
+The Mission Event in which a Mission meets its Tanker in Earth orbit, docks and takes on propellant for the journey to Mars.
+_Avoid_: Docking (as the name of the Mission Event)
+
 **Trajectory**:
 The way a Mission travels to Mars, chosen from a few fixed options such as Slow, Fast or Free-return. It trades fuel and mass against Duration and safety.
 _Avoid_: Route, flight path, transfer

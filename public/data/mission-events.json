@@ -14,7 +14,7 @@
   {
     "id": "tanker-launch",
     "name": "Tanker launch",
-    "description": "A Tanker lifts off from Earth, carrying propellant up to the Mission waiting in orbit.",
+    "description": "A Tanker lifts off from Earth with propellant for the Orbital refuelling of the Mission waiting in orbit.",
     "failureDescription": "The Tanker broke up on the way to orbit, so the Mission can't take on the propellant it needs to leave for Mars.",
     "timing": {
       "from": "launch",
