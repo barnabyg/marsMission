@@ -35,13 +35,8 @@ async function onOneLine(elements: Locator[]): Promise<boolean> {
   return lowest >= 0 && Math.max(...middles) - lowest < 10;
 }
 
-const allAssets = [
-  "Pathfinder Orbiter",
-  "Prospector Lander",
-  "Trailblazer Rover",
-];
-
 const realFiles = realCatalogueFiles();
+const allAssets = realFiles.assets.map(({ name }) => name);
 const realMilestones = realFiles.milestones;
 const allLandingSiteIds = realFiles.landingSites.map(({ id }) => id);
 
@@ -186,7 +181,7 @@ for (const size of screenSizes) {
       ).toBeInViewport({ ratio: 1 });
     });
 
-    test("Planning Mode fits on one screen with all three Assets ticked on a new Program", async ({
+    test("Planning Mode fits on one screen with every Asset ticked on a new Program", async ({
       page,
     }) => {
       await page.goto(`/?seed=${successSeed}`);
@@ -199,7 +194,7 @@ for (const size of screenSizes) {
       ).toBeInViewport({ ratio: 1 });
     });
 
-    test("Planning Mode fits on one screen with a busy Program and all three Assets on the Mission", async ({
+    test("Planning Mode fits on one screen with a busy Program and every Asset on the Mission", async ({
       page,
     }) => {
       await openBusyProgram(page);

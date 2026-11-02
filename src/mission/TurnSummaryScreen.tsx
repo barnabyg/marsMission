@@ -181,6 +181,13 @@ export function TurnSummaryScreen({
           </GameText>
         </p>
       )}
+      {summary.technologiesProven.length > 0 && (
+        <p data-testid="summary-flight-proven">
+          <GameText>
+            {`Now Flight-proven: ${summary.technologiesProven.join(", ")}`}
+          </GameText>
+        </p>
+      )}
       {summary.ongoingResearch.length > 0 && (
         <section data-testid="summary-ongoing-research">
           <h2>

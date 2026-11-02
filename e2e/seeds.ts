@@ -79,6 +79,15 @@ export const orbiterSafeSeed = seedWhere(
 /** A seed where an orbiter and lander launched together both arrive. */
 export const orbiterAndLanderSeed = seedWhere(null, orbiterAndLander);
 
+/** A seed whose first Mission lands the Pinpoint Lander, which starts unproven, at the first known Landing Site. */
+export const pinpointLandingSeed = seedWhere(null, {
+  mission: {
+    launchVehicleId: catalogue.launchVehicles[0]?.id ?? "",
+    assetIds: ["pinpoint-lander"],
+    landingSiteId: "jezero-crater",
+  },
+});
+
 /** A seed whose first Mission lands a rover alone at the first known Landing Site. */
 export const roverSeed = seedWhere(null, {
   mission: {

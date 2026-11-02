@@ -66,6 +66,7 @@ export function MissionPanel({
         .previewTrajectories({ launchVehicleId, assetIds })
         .some(({ id }) => id === trajectoryId) && { trajectoryId }),
   };
+  const vehicle = view.launchVehicles.find(({ id }) => id === launchVehicleId);
   const trajectories = simulation.previewTrajectories(mission);
   const trajectory = trajectories.find(({ chosen }) => chosen);
   const plannedEvents = simulation.previewMission(program, {
@@ -113,7 +114,18 @@ export function MissionPanel({
       <div className="mission-launch">
         <label>
           <span>
-            <GameText>Launch Vehicle</GameText>
+            <GameText>
+              {vehicle ? "Launch Vehicle:" : "Launch Vehicle"}
+            </GameText>
+            {vehicle && (
+              <>
+                {" "}
+                <ReadinessTag
+                  readiness={vehicle.technologyReadiness}
+                  testId="launch-vehicle-readiness"
+                />
+              </>
+            )}
           </span>
           <select
             value={launchVehicleId}
@@ -121,10 +133,14 @@ export function MissionPanel({
               setLaunchVehicleId(event.target.value);
             }}
           >
-            {view.launchVehicles.map((vehicle) => (
-              <option key={vehicle.id} value={vehicle.id}>
-                {vehicle.name} ({formatMoney(vehicle.costMillions)},{" "}
-                {vehicle.capacityTonnes} t)
+            {view.launchVehicles.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.name} ({formatMoney(option.costMillions)},{" "}
+                {option.capacityTonnes} t
+                {option.technologyReadiness === "flight-proven"
+                  ? ""
+                  : `, ${readinessLabel(option.technologyReadiness)}`}
+                )
               </option>
             ))}
           </select>
@@ -306,6 +322,37 @@ export function MissionPanel({
   );
 }
 
+type TechnologyReadiness = ProgramView["assets"][number]["technologyReadiness"];
+
+/** How Planning Mode labels a technology's Technology Readiness. */
+function readinessLabel(readiness: TechnologyReadiness): string {
+  return readiness === "flight-proven" ? "Flight-proven" : "Unproven";
+}
+
+/** A technology's Technology Readiness, short enough for a crowded row, with that term's tooltip. */
+function ReadinessTag({
+  readiness,
+  testId,
+}: {
+  readiness: TechnologyReadiness;
+  testId: string;
+}) {
+  return (
+    <span
+      className={
+        readiness === "flight-proven"
+          ? "term technology-readiness"
+          : "term technology-readiness unproven"
+      }
+      data-term="Technology Readiness"
+      data-testid={testId}
+      tabIndex={0}
+    >
+      {readinessLabel(readiness)}
+    </span>
+  );
+}
+
 /** What a Trajectory takes and what it costs, for its place in the list. */
 function describeTrajectory({
   name,
@@ -349,6 +396,10 @@ function MissionAssetChoice({
           }}
         />
         {asset.name} ({formatMoney(asset.costMillions)}, {asset.massTonnes} t)
+        <ReadinessTag
+          readiness={asset.technologyReadiness}
+          testId="technology-readiness"
+        />
       </label>
       {planned && (
         <>
