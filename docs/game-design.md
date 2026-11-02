@@ -17,7 +17,7 @@ Phases are defined in the [Build order](#build-order). Phases 1 to 5 are built:
 
 - **Phase 5:** Decision Points, with no time limit and End Turn stopping at each one; Contingency, a gamble bought in Planning Mode and used for a second roll when its Mission Event fails; Slow, Fast and Free-return Trajectories; dust storms and solar particle events, the first Hazards; go/no-go checks before a landing in a dust storm; the spacecraft view, which Mission Mode moves to for a solar particle event or a failed Mars transfer burn; the balance report on Decision Points, and the numbers tuned with it. With no Crew yet, a solar particle event harms hardware, costing Service Life or losing the Mission, and Protection waits for Phase 7; holding off a landing costs Service Life, as there are no Supplies to spend.
 
-- **Phase 6, so far:** Technology Readiness on every Asset and Launch Vehicle, and Flight-proven status, with the Pinpoint Lander, built but not yet flown, as the first technology that starts unproven; Development, with the Endurance Rover as the first technology that needs it; the Meridian Colossus, a Launch Vehicle that needs Development and carries the most mass, but only with orbital refuelling, whose tanker launch and rendezvous are Mission Events shown for now in the events column and the existing views.
+- **Phase 6, so far:** Technology Readiness on every Asset and Launch Vehicle, and Flight-proven status, with the Pinpoint Lander, built but not yet flown, as the first technology that starts unproven; Development, with the Endurance Rover as the first technology that needs it; the Meridian Colossus, a Launch Vehicle that needs Development and carries the most mass, but only with orbital refuelling, whose tanker launch and rendezvous are Mission Events, shown in Earth orbit in the spacecraft view, which Mission Mode moves to for the rendezvous.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
@@ -92,9 +92,10 @@ Any rule in this document beyond these is planned, so its absence from the code 
   - Solar system: Earth, Mars and the Mission's journey along its Trajectory.
   - Mars orbit: orbiting Assets, arrival, aerocapture.
   - Surface: a Landing Site, with landings, rovers and bases.
-  - Spacecraft: a close-up of the Mission in transit, used when something happens on the way: a solar particle event or a failed Mars transfer burn.
+  - Spacecraft: a close-up of the Mission in transit, used when something happens on the way: a solar particle event or a failed Mars transfer burn. A Mission with orbital refuelling is shown in Earth orbit until it leaves for Mars, with its Tanker climbing from Earth, docking to refuel and pulling away, or colliding with it.
 - The view switches automatically for Mission Events and Hazards, and the player can switch views at any time.
 - A landing or crash plays for a few seconds of real time, the same at every speed, and pausing holds it. It only displays what has already been worked out. After a crash, the view goes back to whichever Landing Site still has something to show, or else to Mars orbit.
+- A rendezvous, and the tanker launch before it, play the same way. Once the rendezvous has played, the view goes back to where it was before, or to the solar system if that was the spacecraft view and the Mission is lost.
 
 ## Art, sound and onboarding
 
