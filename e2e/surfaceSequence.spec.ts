@@ -239,10 +239,15 @@ async function playLanding(page: Page, keepSwitching: boolean) {
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await page.getByRole("button", { name: "10x" }).click();
   const summary = page.getByTestId("turn-summary");
-  const views = ["Surface", "Mars orbit", "Solar system"] as const;
+  const views = [
+    "Surface",
+    "Mars orbit",
+    "Spacecraft",
+    "Solar system",
+  ] as const;
   let next = 0;
   while (keepSwitching && (await summary.count()) === 0) {
-    // The Turn may end before the click lands, which is fine.
+    // The Turn may end before the click lands, or the view may have nothing to show by then, which is fine.
     await viewButton(page, views[next % views.length] ?? "Surface")
       .click({ timeout: 500 })
       .catch(() => undefined);

@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
-import { chooseAssets } from "./helpers";
+import { chooseAssets, viewButton } from "./helpers";
 import { successSeed } from "./seeds";
 
 /** A 4K monitor, at 150% Windows display scaling and at 100% (ADR 0001). */
@@ -295,10 +295,18 @@ for (const size of screenSizes) {
           page.getByRole("heading", { name: "Mission Mode" }),
           page.getByTestId("mission-date"),
           page.getByRole("button", { name: "Mute sound" }),
+          viewButton(page, "Solar system"),
+          viewButton(page, "Mars orbit"),
+          viewButton(page, "Surface"),
+          viewButton(page, "Spacecraft"),
           speeds.first(),
           speeds.last(),
         ]),
       ).toBe(true);
+      const progress = await page
+        .getByRole("progressbar", { name: "Progress through the Turn" })
+        .boundingBox();
+      expect(progress?.width).toBeGreaterThan(100);
       expect(await somethingScrolls(page)).toBe(false);
     });
 

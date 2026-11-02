@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
   chooseAssets,
   eventEntries,
@@ -127,39 +127,6 @@ test("never shows an orbiter whose Mission failed", async ({ page }) => {
   expect(problems).toEqual([]);
 });
 
-/** Plays the first Mission to its Turn summary, leaving the view alone unless told to keep switching. */
-async function summaryAfterFirstTurn(
-  page: Page,
-  seed: number,
-  keepSwitching: boolean,
-): Promise<string> {
-  await launchFirstMission(page, seed);
-  await page.getByRole("button", { name: "10x" }).click();
-  const summary = page.getByTestId("turn-summary");
-  const views = ["Mars orbit", "Spacecraft", "Solar system"] as const;
-  let next = 0;
-  while (keepSwitching && (await summary.count()) === 0) {
-    // The Turn may end before the click lands, or the view may have nothing to show by then, which is fine.
-    await viewButton(page, views[next % views.length] ?? "Solar system")
-      .click({ timeout: 500 })
-      .catch(() => undefined);
-    next++;
-  }
-  await expect(summary).toBeVisible();
-  return (await summary.textContent()) ?? "";
-}
-
-test("gives the same results whichever view is showing", async ({ page }) => {
-  // Over 5 s: plays the same Turn twice to compare them.
-  const untouched = await summaryAfterFirstTurn(page, successSeed, false);
-  await page.evaluate(() => {
-    localStorage.clear();
-  });
-  const switched = await summaryAfterFirstTurn(page, successSeed, true);
-  expect(untouched).toContain("First orbiter at Mars");
-  expect(switched).toBe(untouched);
-});
-
 test("shows a lander coming down and then on the surface", async ({ page }) => {
   // Over 5 s: waits for the landing in real time, because it can't be reached any quicker without skipping the marker.
   const problems = watchForProblems(page);
@@ -244,34 +211,3 @@ test("keeps the controls still as the date changes, even in a window too small f
   );
   expect(places).toHaveLength(1);
 });
-
-for (const size of [
-  { width: 2560, height: 1440 },
-  { width: 3840, height: 2160 },
-]) {
-  test(`keeps the view buttons on the one line of controls at ${size.width}×${size.height}`, async ({
-    page,
-  }) => {
-    await page.setViewportSize(size);
-    await launchFirstMission(page, successSeed);
-    const bar = await page.locator(".mission-bar").boundingBox();
-    const middle = (bar?.y ?? 0) + (bar?.height ?? 0) / 2;
-    for (const control of [
-      page.getByRole("heading", { name: "Mission Mode" }),
-      viewButton(page, "Solar system"),
-      viewButton(page, "Mars orbit"),
-      viewButton(page, "Surface"),
-      viewButton(page, "Spacecraft"),
-      page.getByRole("button", { name: "10x" }),
-    ]) {
-      const box = await control.boundingBox();
-      expect(
-        Math.abs((box?.y ?? 0) + (box?.height ?? 0) / 2 - middle),
-      ).toBeLessThan(10);
-    }
-    const progress = await page
-      .getByRole("progressbar", { name: "Progress through the Turn" })
-      .boundingBox();
-    expect(progress?.width).toBeGreaterThan(100);
-  });
-}
