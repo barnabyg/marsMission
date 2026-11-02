@@ -12,10 +12,7 @@ export interface Stretch {
 }
 
 /** The Benefit an Asset gives, if its design gives one. */
-export function benefitOf(
-  catalogue: Catalogue,
-  assetId: string,
-): Benefit | undefined {
+function benefitOf(catalogue: Catalogue, assetId: string): Benefit | undefined {
   return catalogue.assets.find(({ id }) => id === assetId)?.benefit;
 }
 
