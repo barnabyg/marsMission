@@ -110,7 +110,10 @@ for (const reachedBy of ["10x", "End Turn"] as const) {
   }) => {
     const problems = watchForProblems(page);
     await page.goto(`/?seed=${solarParticleEventSeed}`);
+    // Held from the start, as the event comes too soon after launch at this test speed for a click to beat it.
+    await holdTurnWhenShown(page);
     await page.getByRole("button", { name: "Launch Mission" }).click();
+    await expect(page.getByTestId("current-speed")).toHaveText("Paused");
     await page.getByRole("button", { name: reachedBy, exact: true }).click();
     const decisionPoint = page.getByTestId("decision-point");
     await expect(decisionPoint).toBeVisible();
