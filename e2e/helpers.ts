@@ -76,6 +76,32 @@ export async function openLoadDialog(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Load", exact: true }).click();
 }
 
+/** Records each sound as it starts, with what the events column shows at that moment. */
+export async function listenForSounds(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const log: string[][] = [];
+    (window as unknown as { soundLog: string[][] }).soundLog = log;
+    const play: () => Promise<void> = Reflect.get(
+      HTMLMediaElement.prototype,
+      "play",
+    );
+    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
+      log.push([
+        this.src.split("/").at(-1) ?? "",
+        document.querySelector("[data-testid=events-column]")?.textContent ??
+          "",
+      ]);
+      return play.call(this);
+    };
+  });
+}
+
+export function soundsHeard(page: Page): Promise<string[][]> {
+  return page.evaluate(
+    () => (window as unknown as { soundLog: string[][] }).soundLog,
+  );
+}
+
 /** Mission Mode's events column entries, newest first. */
 export function eventEntries(page: Page): Locator {
   return page.getByTestId("event-entry");

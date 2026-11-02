@@ -315,6 +315,46 @@ export const freeReturnSeed = seedWhere("Mars orbit insertion", {
   mission: { ...firstPlan.mission, trajectoryId: "free-return" },
 });
 
+/** Enough to develop the Meridian Colossus and then fill it, which a real Program can't afford until much later. */
+export const colossusMoney = 7000;
+
+const colossusSimulation = createSimulation(
+  parseCatalogue({
+    ...realCatalogueFiles(),
+    program: { ...catalogue.program, startingMoneyMillions: colossusMoney },
+  }),
+);
+
+/** What the tests launch on the Meridian Colossus once it is built: more mass than any other Launch Vehicle carries. */
+const onColossus: TurnPlan = {
+  mission: {
+    launchVehicleId: "meridian-colossus",
+    assetIds: ["pathfinder-orbiter", "prospector-lander", "trailblazer-rover"],
+    landingSiteId: "jezero-crater",
+  },
+};
+
+/**
+ * A seed where the Meridian Colossus, developed over the first two Turns with nothing launched, carries its first
+ * Mission through the tanker launch and the rendezvous to Mars with nothing going wrong and nothing to answer.
+ */
+export const colossusSeed = (() => {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const developing = colossusSimulation.runTurn(
+      colossusSimulation.startProgram(seed),
+      { mission: null, developmentIds: ["meridian-colossus"] },
+    );
+    const built = colossusSimulation.runTurn(developing.program, {
+      mission: null,
+    });
+    const progress = colossusSimulation.workOutTurn(built.program, onColossus);
+    if (!progress.decisionPoint && !progress.result.summary.failure) {
+      return seed;
+    }
+  }
+  throw new Error("No seed flies the Meridian Colossus to Mars");
+})();
+
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);
 
