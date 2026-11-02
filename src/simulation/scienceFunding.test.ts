@@ -129,6 +129,7 @@ describe("a Funding Threshold crossed by Ongoing Research alone", () => {
           serviceLifeDays: 50_000,
           reliabilityLevelId: "none",
           activityId: "test-research",
+          flewUnproven: false,
         },
       ],
     };

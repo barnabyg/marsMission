@@ -17,6 +17,8 @@ Phases are defined in the [Build order](#build-order). Phases 1 to 5 are built:
 
 - **Phase 5:** Decision Points, with no time limit and End Turn stopping at each one; Contingency, a gamble bought in Planning Mode and used for a second roll when its Mission Event fails; Slow, Fast and Free-return Trajectories; dust storms and solar particle events, the first Hazards; go/no-go checks before a landing in a dust storm; the spacecraft view, which Mission Mode moves to for a solar particle event or a failed Mars transfer burn; the balance report on Decision Points, and the numbers tuned with it. With no Crew yet, a solar particle event harms hardware, costing Service Life or losing the Mission, and Protection waits for Phase 7; holding off a landing costs Service Life, as there are no Supplies to spend.
 
+- **Phase 6, so far:** Technology Readiness on every Asset and Launch Vehicle, and Flight-proven status, with the Pinpoint Lander, built but not yet flown, as the first technology that starts unproven.
+
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
 ## Program and Turns
@@ -162,3 +164,9 @@ The work is split into phases, each ending in a game the player can play and com
 
 - Every technology is visible from the start, labelled with its Technology Readiness. The best technology takes development time and money before it can fly, and is less reliable until it has flown successfully.
 - Development is paid for up front in Planning Mode and takes a set number of Turns. After its first successful use, a technology is Flight-proven: cheaper and more reliable.
+- Each Asset and Launch Vehicle is a technology. Its Technology Readiness in the data files is where it starts: flight-proven, or built but not yet flown. Every one from Phases 1 to 5 starts Flight-proven.
+- A technology that isn't Flight-proven has its own unproven cost, paid in place of its usual cost, and an unproven failure multiplier. The multiplier raises the failure probability of each Mission Event it brings, and of its failing in service, with any Reliability bought applying on top. A Mission Event that several technologies on the Mission bring is raised by the most unproven of them, and no failure probability goes above 100%.
+- An Asset that flew unproven keeps its raised chance of failing in service for the rest of its Service Life, even once its technology is Flight-proven, because it is the one that was built before anything had flown. Those built afterwards have the usual chance.
+- Successful use means being delivered, for an Asset, and getting past its own Mission Events, for a Launch Vehicle, even if the Mission fails later. A Contingency that saves it counts. A failure before that, including a Free-return, leaves it unproven. It becomes Flight-proven on that day, as the events column and the Turn summary say, and its lower cost and risk apply from the next Turn on.
+- A lander can have its own landing risk multiplier, such as one that lands more precisely. A landing is as risky as the riskiest Asset in it, so the Landing Site's risk is multiplied by the highest of them.
+- The Program saves which technologies it has made Flight-proven, and whether each operating Asset flew unproven. A save from before Technology Readiness upgrades with nothing added to either, so everything it holds stays Flight-proven, as it always was.

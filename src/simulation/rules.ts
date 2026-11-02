@@ -1,5 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { PlannedMission, Program } from "./types";
+import { unprovenMultiplier, type Technology } from "./technologyReadiness";
 import type { SurfaceMotion } from "./timeline";
 
 export type MissionEvent = Catalogue["missionEvents"][number];
@@ -199,8 +200,15 @@ export function createRules(catalogue: Catalogue) {
   function inServiceFailureChance(
     asset: Asset,
     level: ReliabilityLevel,
+    flewUnproven: boolean,
   ): number {
-    return asset.failureChancePerTurn * level.failureMultiplier;
+    const unproven = flewUnproven
+      ? (asset.unproven?.failureMultiplier ?? 1)
+      : 1;
+    return Math.min(
+      1,
+      asset.failureChancePerTurn * unproven * level.failureMultiplier,
+    );
   }
 
   /** The Landing Sites that can be chosen so far. */
@@ -221,19 +229,58 @@ export function createRules(catalogue: Catalogue) {
     return catalogue.landingSites.find((site) => site.id === id);
   }
 
-  /** The one calculation behind both a Mission Event's roll and the risk band Planning Mode shows. */
+  /** The Launch Vehicle and Assets a Mission carries, which are skipped if they aren't in the catalogue. */
+  function technologiesOn(mission: PlannedMission | null): Technology[] {
+    return [
+      ...catalogue.launchVehicles.filter(
+        ({ id }) => id === mission?.launchVehicleId,
+      ),
+      ...catalogue.assets.filter(({ id }) => mission?.assetIds.includes(id)),
+    ];
+  }
+
+  /** What a landing's risk is multiplied by for what it lands, which is as risky as the riskiest Asset in it. */
+  function landingRiskMultiplierOf(mission: PlannedMission | null): number {
+    return Math.max(
+      ...catalogue.assets
+        .filter(
+          ({ id, landsAtSite }) =>
+            landsAtSite === true && mission?.assetIds.includes(id),
+        )
+        .map(({ landingRiskMultiplier }) => landingRiskMultiplier ?? 1),
+      // A Mission with nothing that lands has no landing to multiply.
+      0,
+    );
+  }
+
+  /**
+   * The one calculation behind both a Mission Event's roll and the risk band Planning Mode shows. An unproven
+   * technology raises the Mission Events it brings, and the most unproven of those on board sets how much.
+   */
   function failureProbability(
     event: MissionEvent,
     level: ReliabilityLevel,
     program: Program,
     mission: PlannedMission | null,
   ): number {
+    const unproven = Math.max(
+      1,
+      ...technologiesOn(mission)
+        .filter(({ missionEvents }) => missionEvents.includes(event.id))
+        .map((technology) => unprovenMultiplier(program, technology)),
+    );
     if (event.failureProbability !== "landingSite") {
-      return event.failureProbability * level.failureMultiplier;
+      return Math.min(
+        1,
+        event.failureProbability * unproven * level.failureMultiplier,
+      );
     }
     const site = landingSiteById(mission?.landingSiteId);
     // Planning Mode always names a site. A plan that doesn't is refused, so this 1 is never rolled.
-    return (site ? landingRisk(program, site) : 1) * level.failureMultiplier;
+    const risk = site
+      ? landingRisk(program, site) * landingRiskMultiplierOf(mission)
+      : 1;
+    return Math.min(1, risk * unproven * level.failureMultiplier);
   }
 
   /** The day this Mission delivers an Asset, which is when its last Mission Event happens. */

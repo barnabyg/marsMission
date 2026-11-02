@@ -33,10 +33,13 @@ const throughStorage = (simulation: Simulation, program: Program): unknown =>
 describe("choosing an Activity for an Asset on a Mission", () => {
   it("offers what the Asset can do, starting on the first one it lists", () => {
     const { simulation } = setup();
-    const [orbiter, lander] = simulation.previewAssets({
-      launchVehicleId: "test-heavy",
-      assetIds: ["test-orbiter", "test-lander"],
-    });
+    const [orbiter, lander] = simulation.previewAssets(
+      simulation.startProgram(1),
+      {
+        launchVehicleId: "test-heavy",
+        assetIds: ["test-orbiter", "test-lander"],
+      },
+    );
     expect(orbiter?.activityId).toBe("test-survey");
     expect(orbiter?.activities.map(({ name }) => name)).toEqual([
       "Survey",
@@ -55,9 +58,10 @@ describe("choosing an Activity for an Asset on a Mission", () => {
     const { simulation } = setup();
     const { mission } = orbiterDoing("test-nothing");
     if (!mission) throw new Error("The plan has a Mission");
-    expect(simulation.previewAssets(mission)[0]?.activityId).toBe(
-      "test-nothing",
-    );
+    expect(
+      simulation.previewAssets(simulation.startProgram(1), mission)[0]
+        ?.activityId,
+    ).toBe("test-nothing");
   });
 
   it("brings no Survey from an orbiter set to Nothing", () => {

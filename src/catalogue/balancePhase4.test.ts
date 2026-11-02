@@ -19,7 +19,10 @@ import {
 describe("Research Grants in the real data files", () => {
   const paidPerTurn = (assetId: string) =>
     succeeding
-      .previewAssets({ ...mission, assetIds: [assetId] })[0]
+      .previewAssets(succeeding.startProgram(1), {
+        ...mission,
+        assetIds: [assetId],
+      })[0]
       ?.activities.flatMap(
         ({ earnsPerTurn }) => earnsPerTurn?.researchGrantMillions ?? [],
       );
@@ -44,7 +47,7 @@ describe("the rover in the real data files", () => {
     files.assets.find((asset) => asset.kind === kind);
   const earnings = (id: string) =>
     succeeding
-      .previewAssets({
+      .previewAssets(succeeding.startProgram(1), {
         ...mission,
         assetIds: [assetOfKind("rover")?.id ?? ""],
       })[0]
@@ -135,7 +138,7 @@ describe("a productive Program in the real data files", () => {
       ...(asset.landsAtSite ? { landingSiteId: site?.id ?? "" } : {}),
     };
     const best = safe
-      .previewAssets(mission)[0]
+      .previewAssets(safe.startProgram(1), mission)[0]
       ?.activities.toSorted(
         (first, second) =>
           (second.earnsPerTurn?.science ?? 0) -
@@ -267,7 +270,10 @@ describe("the balance of Phase 4", () => {
   it("pays little or nothing for early research, and real money for better kinds", () => {
     const paidFor = (assetId: string, activityId: string) =>
       real
-        .previewAssets({ ...mission, assetIds: [assetId] })[0]
+        .previewAssets(real.startProgram(1), {
+          ...mission,
+          assetIds: [assetId],
+        })[0]
         ?.activities.find(({ id }) => id === activityId)?.earnsPerTurn
         ?.researchGrantMillions ?? 0;
     const orbital = paidFor("pathfinder-orbiter", "orbital-research");

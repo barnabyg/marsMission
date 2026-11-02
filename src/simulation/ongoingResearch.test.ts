@@ -339,7 +339,7 @@ describe("what Planning Mode is told a research Activity earns", () => {
 
   it("gives the whole Turn's rate for an Asset on a Mission, and none for other Activities", () => {
     const { simulation } = setup();
-    const [orbiter] = simulation.previewAssets({
+    const [orbiter] = simulation.previewAssets(simulation.startProgram(1), {
       launchVehicleId: "test-vehicle",
       assetIds: ["test-orbiter"],
     });

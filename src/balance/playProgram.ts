@@ -42,7 +42,7 @@ export function planningTools(
   program: Program,
 ): PlanningTools {
   return {
-    previewAssets: (mission) => simulation.previewAssets(mission),
+    previewAssets: (mission) => simulation.previewAssets(program, mission),
     previewMission: (mission) => simulation.previewMission(program, mission),
     previewTrajectories: (mission) => simulation.previewTrajectories(mission),
     problemsWith: (plan) => simulation.validatePlan(program, plan).problems,

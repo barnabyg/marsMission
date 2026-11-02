@@ -14,6 +14,7 @@ import {
   solarParticleEventDay,
   solarParticleEventId,
 } from "./solarParticleEvents";
+import { costOf } from "./technologyReadiness";
 import type {
   DecisionAnswers,
   DecisionPoint,
@@ -151,7 +152,7 @@ export function flyMission(
     );
   const refundFor = (onBoard: Asset[]) =>
     Math.round(
-      (onBoard.reduce((total, asset) => total + asset.costMillions, 0) *
+      (onBoard.reduce((total, asset) => total + costOf(program, asset), 0) *
         (freeReturn?.refundPercent ?? 0)) /
         100,
     );

@@ -1,5 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { formatMoney, operatingKey, sum, type Rules } from "./rules";
+import { costOf } from "./technologyReadiness";
 import type { PlanCheck, Program, TurnPlan } from "./types";
 
 const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
@@ -77,7 +78,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     const vehicle = catalogue.launchVehicles.find(
       (candidate) => candidate.id === launchVehicleId,
     );
-    if (vehicle) costMillions += vehicle.costMillions;
+    if (vehicle) costMillions += costOf(program, vehicle);
     else
       problems.push(`There is no Launch Vehicle called "${launchVehicleId}".`);
 
@@ -92,7 +93,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
         (candidate) => candidate.id === assetId,
       );
       if (asset) {
-        costMillions += asset.costMillions;
+        costMillions += costOf(program, asset);
         massTonnes += asset.massTonnes;
       } else problems.push(`There is no Asset called "${assetId}".`);
     }

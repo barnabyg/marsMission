@@ -49,7 +49,10 @@ describe("buying Reliability for an Asset", () => {
     const program = simulation.startProgram(1);
     const mission = orbiterWith("tested").mission;
     if (!mission) throw new Error("Expected a Mission");
-    const [asset] = simulation.previewAssets(mission);
+    const [asset] = simulation.previewAssets(
+      simulation.startProgram(1),
+      mission,
+    );
     expect(asset?.riskBand).toBe("~5%");
     expect(asset?.reliabilityLevelId).toBe("tested");
     expect(asset?.reliabilityLevels.map(({ riskBand }) => riskBand)).toEqual([

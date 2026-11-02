@@ -10,6 +10,7 @@ import { missionOnTimeline, timelineUpToDecision } from "./missionReport";
 import { earningsPerTurn } from "./ongoingResearch";
 import { createPlanCheck } from "./planCheck";
 import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
+import { costOf, isFlightProven, readinessOf } from "./technologyReadiness";
 import { resolveTurn } from "./turnSteps";
 import type {
   DecisionAnswer,
@@ -61,7 +62,7 @@ export interface Simulation {
     mission: PlannedMission,
   ): PlannedMissionEvent[];
   /** The choices a Mission can make for each Asset it carries. Ids that aren't in the catalogue are skipped. */
-  previewAssets(mission: PlannedMission): PlannedAsset[];
+  previewAssets(program: Program, mission: PlannedMission): PlannedAsset[];
   /** The Trajectories on offer to a Mission, in the order the Catalogue lists them. */
   previewTrajectories(mission: PlannedMission): PlannedTrajectory[];
   /** Works out a Turn from the seed, the plan and the answers so far, stopping at the first Decision Point with no answer. */
@@ -212,6 +213,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           .map((site) => site.id),
         surveyedLandingSiteIds: [],
         fundingThresholdsPaid: [],
+        provenTechnologyIds: [],
         operatingAssets: [],
         status: { kind: "active" },
       };
@@ -270,24 +272,22 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           riskBand: riskBandFor(landingRisk(program, site)),
           landed: program.landedSiteIds.includes(site.id),
         })),
-        launchVehicles: catalogue.launchVehicles.map(
-          ({ id, name, costMillions, capacityTonnes }) => ({
-            id,
-            name,
-            costMillions,
-            capacityTonnes,
-          }),
-        ),
-        assets: catalogue.assets.map(
-          ({ id, name, kind, costMillions, massTonnes, landsAtSite }) => ({
-            id,
-            name,
-            kind,
-            costMillions,
-            massTonnes,
-            landsAtSite: landsAtSite === true,
-          }),
-        ),
+        launchVehicles: catalogue.launchVehicles.map((vehicle) => ({
+          id: vehicle.id,
+          name: vehicle.name,
+          costMillions: costOf(program, vehicle),
+          capacityTonnes: vehicle.capacityTonnes,
+          technologyReadiness: readinessOf(program, vehicle),
+        })),
+        assets: catalogue.assets.map((asset) => ({
+          id: asset.id,
+          name: asset.name,
+          kind: asset.kind,
+          costMillions: costOf(program, asset),
+          massTonnes: asset.massTonnes,
+          landsAtSite: asset.landsAtSite === true,
+          technologyReadiness: readinessOf(program, asset),
+        })),
       };
     },
 
@@ -316,27 +316,36 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       });
     },
 
-    previewAssets(mission) {
+    previewAssets(program, mission) {
       return catalogue.assets
         .filter((asset) => mission.assetIds.includes(asset.id))
-        .map((asset) => ({
-          assetId: asset.id,
-          name: asset.name,
-          serviceLifeDays: serviceLifeFor(mission, asset).days,
-          serviceLifeOptions: asset.serviceLifeOptions,
-          reliabilityLevelId: assetReliabilityFor(mission, asset).id,
-          activityId: activityFor(mission, asset).id,
-          activities: activitiesOf(asset).map(plannedActivity),
-          riskBand: riskBandFor(
-            inServiceFailureChance(asset, assetReliabilityFor(mission, asset)),
-          ),
-          reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
-            id: level.id,
-            name: level.name,
-            costMillions: level.costMillions,
-            riskBand: riskBandFor(inServiceFailureChance(asset, level)),
-          })),
-        }));
+        .map((asset) => {
+          const unproven = !isFlightProven(program, asset);
+          return {
+            assetId: asset.id,
+            name: asset.name,
+            serviceLifeDays: serviceLifeFor(mission, asset).days,
+            serviceLifeOptions: asset.serviceLifeOptions,
+            reliabilityLevelId: assetReliabilityFor(mission, asset).id,
+            activityId: activityFor(mission, asset).id,
+            activities: activitiesOf(asset).map(plannedActivity),
+            riskBand: riskBandFor(
+              inServiceFailureChance(
+                asset,
+                assetReliabilityFor(mission, asset),
+                unproven,
+              ),
+            ),
+            reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
+              id: level.id,
+              name: level.name,
+              costMillions: level.costMillions,
+              riskBand: riskBandFor(
+                inServiceFailureChance(asset, level, unproven),
+              ),
+            })),
+          };
+        });
     },
 
     previewTrajectories(mission) {

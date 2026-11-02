@@ -73,7 +73,7 @@ export function MissionPanel({
     reliability,
     contingencyIds,
   });
-  const plannedAssets = simulation.previewAssets({
+  const plannedAssets = simulation.previewAssets(program, {
     ...mission,
     assetChoices,
   });

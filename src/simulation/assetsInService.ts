@@ -9,6 +9,7 @@ import {
   type LandingSite,
   type Rules,
 } from "./rules";
+import { isFlightProven } from "./technologyReadiness";
 import type { Program, TurnPlan } from "./types";
 import type {
   AssetEndedEntry,
@@ -49,7 +50,11 @@ function inServiceFailureDay(
   // An Asset with no time left in this Turn has nothing to fail in.
   if (!design || !level || limitDay <= 1) return null;
   const key = `in-service:${asset.assetId}:${asset.arrivedOn}`;
-  const chance = rules.inServiceFailureChance(design, level);
+  const chance = rules.inServiceFailureChance(
+    design,
+    level,
+    asset.flewUnproven,
+  );
   if (roll(program.seed, program.turnNumber, key) >= chance) return null;
   const dayRoll = roll(program.seed, program.turnNumber, `${key}:day`);
   return 1 + Math.floor(dayRoll * (limitDay - 1));
@@ -84,6 +89,7 @@ export function operateAssets(
         rules.serviceLifeFor(plan.mission, asset).days,
       reliabilityLevelId: rules.assetReliabilityFor(plan.mission, asset).id,
       activityId: rules.activityFor(plan.mission, asset).id,
+      flewUnproven: !isFlightProven(program, asset),
     },
     fromDay: deliveryDayOf(rules, plan, flown, asset),
   }));

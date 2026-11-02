@@ -6,6 +6,7 @@ import {
 } from "./assetsInService";
 import { resolveDustStorms } from "./dustStorms";
 import { deliveryDayOf, type MissionOutcome } from "./flyMission";
+import { proveTechnologies } from "./flightProven";
 import {
   contingenciesAnswered,
   missionFailure,
@@ -182,6 +183,7 @@ export function resolveTurn(
     flown,
   );
   const firstLanding = creditFirstLanding(rules, program, plan, flown);
+  const proven = proveTechnologies(catalogue, rules, program, plan, flown);
   const dustStorms = resolveDustStorms(
     catalogue,
     rules,
@@ -274,6 +276,7 @@ export function resolveTurn(
   const otherEntries = [
     ...arrivalAwards.map(milestoneEntry),
     ...(firstLanding ? [firstLanding.entry] : []),
+    ...proven.entries,
     ...scienceAwards.map(milestoneEntry),
     ...(survey.entry ? [survey.entry] : []),
     ...dustStorms.entries,
@@ -301,6 +304,10 @@ export function resolveTurn(
       fundingThresholdsPaid: [
         ...program.fundingThresholdsPaid,
         ...funding.payouts.map(({ publicSupport }) => publicSupport),
+      ],
+      provenTechnologyIds: [
+        ...program.provenTechnologyIds,
+        ...proven.technologies.map(({ id }) => id),
       ],
       operatingAssets: inService
         .filter(({ untilDay }) => untilDay === null)
@@ -346,6 +353,7 @@ export function resolveTurn(
         science: firstLanding.site.science,
       },
       ongoingResearch: research.earned,
+      technologiesProven: proven.technologies.map(({ name }) => name),
       assetsEnded: inService
         .filter(({ untilDay, failed }) => untilDay !== null && !failed)
         .map(({ asset }) => asset.name),

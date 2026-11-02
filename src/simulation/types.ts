@@ -1,3 +1,4 @@
+import type { TechnologyReadiness } from "./technologyReadiness";
 import type { Timeline } from "./timeline";
 
 export interface PlannedMission {
@@ -50,6 +51,8 @@ interface OperatingAsset {
   reliabilityLevelId: string;
   /** What it does each Turn until the player changes it. */
   activityId: string;
+  /** Whether it flew before its technology was Flight-proven, which raises its chance of failing in service for good. */
+  flewUnproven: boolean;
 }
 
 /** An Activity as Planning Mode offers it. */
@@ -90,6 +93,8 @@ export interface Program {
   surveyedLandingSiteIds: string[];
   /** The Public Support levels of the Funding Thresholds already paid. */
   fundingThresholdsPaid: number[];
+  /** The Assets and Launch Vehicles this Program has made Flight-proven by using them successfully. Those the Catalogue starts Flight-proven aren't listed. */
+  provenTechnologyIds: string[];
   operatingAssets: OperatingAsset[];
   status: ProgramStatus;
 }
@@ -121,16 +126,20 @@ export interface ProgramView {
   launchVehicles: {
     id: string;
     name: string;
+    /** What it costs now, which is more until it is Flight-proven. */
     costMillions: number;
     capacityTonnes: number;
+    technologyReadiness: TechnologyReadiness;
   }[];
   assets: {
     id: string;
     name: string;
     kind: string;
+    /** What it costs now, which is more until it is Flight-proven. */
     costMillions: number;
     massTonnes: number;
     landsAtSite: boolean;
+    technologyReadiness: TechnologyReadiness;
   }[];
   /** Whether a Survey would still lower a landing risk or reveal a Landing Site. */
   somethingLeftToSurvey: boolean;
@@ -180,6 +189,8 @@ export interface TurnSummary {
   firstLanding: { siteName: string; science: number } | null;
   /** What each Asset doing research earned, which scienceGained and publicSupportGained include. */
   ongoingResearch: OngoingResearchEarned[];
+  /** The Assets and Launch Vehicles that became Flight-proven this Turn. */
+  technologiesProven: string[];
   /** The Assets whose Service Life ended this Turn. */
   assetsEnded: string[];
   /** The Assets that failed in service this Turn, before their Service Life ended. */

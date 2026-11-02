@@ -61,7 +61,7 @@ describe("planning a rover", () => {
 
   it("offers its Service Lives, Reliability and Activities, starting on the first it lists", () => {
     const { simulation } = setup();
-    const [rover] = simulation.previewAssets({
+    const [rover] = simulation.previewAssets(simulation.startProgram(1), {
       launchVehicleId: "test-vehicle",
       assetIds: ["test-rover"],
     });
@@ -172,14 +172,13 @@ describe("a rover landing", () => {
     expect(milestoneNames(second.summary)).toEqual(["First rover"]);
     expect(second.summary.firstLanding).toBeNull();
 
-    const restored = simulation.restoreProgram({
-      formatVersion: 6,
-      program: {
+    const restored = simulation.restoreProgram(
+      simulation.saveProgram({
         ...program,
         milestoneIds: ["first-landing"],
         landedSiteIds: ["alpha-plain"],
-      },
-    });
+      }),
+    );
     expect(
       milestoneNames(simulation.runTurn(restored, sendRover).summary),
     ).toEqual(["First rover"]);
