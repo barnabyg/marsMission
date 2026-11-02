@@ -198,7 +198,7 @@ _Avoid_: Mission length, time budget
 ## Technology
 
 **Technology Readiness**:
-How mature a technology is, from flight-proven to not yet built. Less mature technology costs more, needs development time before it can fly and fails more often until it has flown successfully.
+How mature a technology is: Flight-proven, built but unproven, or not yet built, when it needs Development before it can fly. Until it is Flight-proven, it costs more and fails more often.
 _Avoid_: TRL (in player-facing text), tech level
 
 **Development**:

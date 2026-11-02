@@ -96,7 +96,7 @@ export const tooltips = {
   Duration:
     "How long a Mission lasts. Longer Missions use more supplies and expose Crew to more radiation.",
   "Technology Readiness":
-    "How mature a technology is, from flight-proven to not yet built. Less mature technology costs more, needs development time before it can fly and fails more often until it has flown successfully.",
+    "How mature a technology is: Flight-proven, built but unproven, or not yet built, when it needs Development before it can fly. Until it is Flight-proven, it costs more and fails more often.",
   Development:
     "Paying up front, in Planning Mode, to bring an immature technology to the point where it can fly. It takes a set number of Turns.",
   "Flight-proven":

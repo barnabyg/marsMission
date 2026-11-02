@@ -113,6 +113,7 @@ test("develops the Endurance Rover over two Turns, then chooses it for a Mission
   await expect(page.getByTestId("summary-development-cost")).toHaveText(
     "$1.2B",
   );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   await page
     .getByTestId("turn-summary")
     .getByRole("button", { name: "Continue" })
@@ -132,6 +133,7 @@ test("develops the Endurance Rover over two Turns, then chooses it for a Mission
   await expect(page.getByTestId("summary-development-finished")).toContainText(
     "Endurance Rover",
   );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   await page
     .getByTestId("turn-summary")
     .getByRole("button", { name: "Continue" })
@@ -144,6 +146,7 @@ test("develops the Endurance Rover over two Turns, then chooses it for a Mission
   await expect(
     enduranceRow(page).getByTestId("technology-readiness"),
   ).toHaveText("Unproven");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   await chooseAssets(page, ["Endurance Rover"]);
   // Its unproven cost and the Launch Vehicle's.
   await expect(page.getByTestId("mission-cost")).toHaveText("$1.7B");
