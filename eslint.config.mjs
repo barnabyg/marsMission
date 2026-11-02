@@ -7,6 +7,11 @@ export default tseslint.config(
   { ignores: ["dist/", "test-results/", "playwright-report/"] },
   js.configs.recommended,
   {
+    // The README's Develop section states this limit. CSS isn't linted, so it keeps to it by hand.
+    files: ["**/*.{ts,tsx,mjs}"],
+    rules: { "max-lines": ["error", { max: 500 }] },
+  },
+  {
     files: ["**/*.{ts,tsx}"],
     extends: [
       ...tseslint.configs.strictTypeChecked,

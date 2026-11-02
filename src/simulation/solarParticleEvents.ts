@@ -3,12 +3,11 @@ import { roll, type Asset, type Rules } from "./rules";
 import type {
   DecisionAnswer,
   DecisionPoint,
-  DecisionPointEntry,
-  HazardEntry,
   PlannedMission,
   Program,
   TurnSummary,
 } from "./types";
+import type { DecisionPointEntry, HazardEntry } from "./timeline";
 
 export const solarParticleEventId = "solar-particle-event";
 

@@ -5,13 +5,12 @@ import {
   stoppedEntries,
 } from "./assetsInService";
 import { resolveDustStorms } from "./dustStorms";
+import { deliveryDayOf, type MissionOutcome } from "./flyMission";
 import {
   contingenciesAnswered,
-  deliveryDayOf,
   missionFailure,
   missionOnTimeline,
-  type MissionOutcome,
-} from "./flyMission";
+} from "./missionReport";
 import { carryOutOngoingResearch } from "./ongoingResearch";
 import {
   awardScienceMilestones,
@@ -28,17 +27,14 @@ import {
   type LandingSite,
   type Rules,
 } from "./rules";
+import type { DecisionAnswers, Program, TurnPlan, TurnResult } from "./types";
 import type {
   AssetAtMars,
-  DecisionAnswers,
   FirstLandingEntry,
   FundingThresholdEntry,
   MilestoneEntry,
-  Program,
   TimelineEntry,
-  TurnPlan,
-  TurnResult,
-} from "./types";
+} from "./timeline";
 
 type Milestone = Catalogue["milestones"][number];
 type FundingThreshold = Catalogue["fundingThresholds"][number];

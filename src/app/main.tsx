@@ -7,7 +7,14 @@ import { openingScreen, type GameServices } from "./screens";
 import { createSaveStore } from "../save/saveStore";
 import { createSimulation } from "../simulation/simulation";
 import { TooltipLayer } from "../ui/TooltipLayer";
+// In cascade order: where two rules are equally specific, the one in a later file wins.
 import "./styles.css";
+import "../planning/planning.css";
+import "../ui/dialog.css";
+import "../save/saveSlots.css";
+import "../mission/mission.css";
+import "./summaryScreens.css";
+import "../ui/tooltips.css";
 
 const container = document.getElementById("root");
 if (!container) throw new Error("The page has no #root element");

@@ -5,11 +5,8 @@ import {
   operatingKey,
   type Activity,
 } from "./rules";
-import {
-  flyMission,
-  missionOnTimeline,
-  timelineUpToDecision,
-} from "./flyMission";
+import { flyMission } from "./flyMission";
+import { missionOnTimeline, timelineUpToDecision } from "./missionReport";
 import { earningsPerTurn } from "./ongoingResearch";
 import { createPlanCheck } from "./planCheck";
 import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
@@ -34,7 +31,6 @@ import type {
 export { addDays, formatMoney } from "./rules";
 export { corruptSave, SaveError } from "./saveFormat";
 export type {
-  AssetAtMars,
   AssetChoices,
   DecisionAnswer,
   DecisionAnswers,
@@ -44,13 +40,12 @@ export type {
   PlannedTrajectory,
   Program,
   ProgramView,
-  Timeline,
-  TimelineEntry,
   TurnPlan,
   TurnProgress,
   TurnResult,
   TurnSummary,
 } from "./types";
+export type { AssetAtMars, Timeline, TimelineEntry } from "./timeline";
 
 export interface Simulation {
   startProgram(seed: number): Program;

@@ -12,12 +12,10 @@ import {
 import type {
   DecisionAnswers,
   DecisionPoint,
-  DecisionPointEntry,
-  HazardEntry,
   Program,
-  Timeline,
   TurnSummary,
 } from "./types";
+import type { DecisionPointEntry, HazardEntry, Timeline } from "./timeline";
 
 export interface DustStorm {
   site: LandingSite;

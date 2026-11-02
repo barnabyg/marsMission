@@ -20,7 +20,7 @@ The Simulation holds all the rules and knows nothing about the browser. Everythi
 
 | Folder           | What it holds                                                                                                                                                                     |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/app`        | The App component that moves between screens and connects them to the Simulation, all styles (`styles.css`), and start-up                                                         |
+| `src/app`        | The App component that moves between screens and connects them to the Simulation, start-up, the base styles (`styles.css`), and the order every style file loads in (`main.tsx`)  |
 | `src/balance`    | Balance runs: strategies that play whole Programs through the Simulation, the checks for invalid states and the report (see [Balance runs](#balance-runs))                        |
 | `src/catalogue`  | The Catalogue: parses and validates the data files in `public/data`, which `src/app` fetches. Also the tests of the tuned balance and of the current playtest guide's known seeds |
 | `src/mission`    | Mission Mode and the Turn summary: playback, sounds, and the views, each in its own subfolder, which `MissionMode.tsx` and `MissionScene.tsx` connect                             |
@@ -41,7 +41,7 @@ A feature with new content touches these folders, in order:
 5. `src/planning` or `src/mission`: displaying it, with styles and wiring in `src/app`, plus `src/ui/tooltips.ts` and `GLOSSARY.md` for a new game term
 6. `e2e`: a browser test of the journey. A test that needs a known outcome, such as a landing that crashes or a dust storm on the second Turn, takes its seed from `e2e/seeds.ts`, which searches the real data files for one rather than pinning a number, so add a search there for a new outcome
 
-A ticket that only changes a screen or dialog starts from its component in `src/planning`, `src/mission` or `src/save`, and usually also touches `src/ui`, `src/app/styles.css` and the `e2e` file for that subject.
+A ticket that only changes a screen or dialog starts from its component in `src/planning`, `src/mission` or `src/save`, and usually also touches `src/ui`, the style file beside its component, such as `src/planning/planning.css`, and the `e2e` file for that subject.
 
 A balance change starts in `public/data` and is judged by comparing `npm.cmd run balance` reports from before and after (see [Balance runs](#balance-runs)). It usually also reaches the tests of the tuned balance and the current playtest guide's known seeds in `src/catalogue`, the current guide in `docs/playtest`, and `src/balance/strategies.ts` if a strategy stops coping. It also reaches `e2e`: browser tests play with the real data files, so money, Public Support and Science figures in them can change with tuning, and a seed found in `e2e/seeds.ts` can change too. Rule tests in `src/simulation` use the test catalogue, so tuning doesn't touch them.
 
@@ -52,6 +52,8 @@ A balance change starts in `public/data` and is judged by comparing `npm.cmd run
 | `npm.cmd run test:e2e` | Runs the browser tests, mostly at 3840×2160                    |
 | `npm.cmd run verify`   | Runs every check (the canonical verification)                  |
 | `npm.cmd run balance`  | Plays thousands of Programs and prints a report on the balance |
+
+No source, test, script or style file is over 500 lines, so that each can be read whole. ESLint's `max-lines` rule enforces this for TypeScript and scripts, and CSS files keep to it by hand. It doesn't cover `package-lock.json`, the data files in `public/data`, the generated art and sounds in `public`, or Markdown. When a file nears the limit, split it at a natural seam, such as by subject for tests or by screen for styles. A new style file is imported from `src/app/main.tsx`, in cascade order.
 
 The browser tests need Chromium, once per machine: `npx.cmd playwright install chromium`.
 
@@ -68,10 +70,12 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 | File                                                          | What it holds                                                                                                                                 |
 | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `simulation.ts`                                               | The Simulation's interface: starting, saving and restoring a Program, what the player sees of it, previews, and working out or running a Turn |
-| `types.ts`                                                    | The shapes the Simulation takes and gives: plans, the Program and what the player sees of it, the Timeline and the Turn summary               |
+| `types.ts`                                                    | The shapes the Simulation takes and gives: plans, the Program and what the player sees of it, and the Turn summary                            |
+| `timeline.ts`                                                 | The Timeline: what happened in a Turn, as Mission Mode plays it                                                                               |
 | `rules.ts`                                                    | `createRules`: looking things up in the Catalogue, such as the Trajectory or Mission Events a Mission has, and failure chances; plus `roll`   |
 | `planCheck.ts`                                                | What a plan costs and weighs, and what's wrong with it, if anything                                                                           |
-| `flyMission.ts`                                               | The Turn's Mission: its Mission Events, Contingencies, go/no-go checks and solar particle events, and how it shows on the Timeline            |
+| `flyMission.ts`                                               | The Turn's Mission: its Mission Events, Contingencies, go/no-go checks and solar particle events                                              |
+| `missionReport.ts`                                            | How the Turn's Mission shows on the Timeline, also up to a Decision Point, and in the Turn summary                                            |
 | `turnSteps.ts`                                                | The steps of a Turn after the Mission, in order (above), and the next Program, Timeline and Turn summary                                      |
 | `assetsInService.ts`                                          | Which Assets operate for which days of the Turn, their failures and end of Service Life, and Surveys                                          |
 | `ongoingResearch.ts`                                          | What each Activity earns in Science, Public Support and Research Grants                                                                       |

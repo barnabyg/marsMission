@@ -1,0 +1,25 @@
+dialog {
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 0.5rem;
+  padding: 1.5rem 2rem;
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 60%);
+}
+
+dialog h2 {
+  margin-bottom: 1rem;
+}
+
+dialog p {
+  margin: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}

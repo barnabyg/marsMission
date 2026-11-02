@@ -9,13 +9,12 @@ import {
   type LandingSite,
   type Rules,
 } from "./rules";
+import type { Program, TurnPlan } from "./types";
 import type {
   AssetEndedEntry,
   AssetFailedEntry,
-  Program,
   SurveyEntry,
-  TurnPlan,
-} from "./types";
+} from "./timeline";
 
 /** One Asset's time at Mars during this Turn. */
 export interface AssetInService {
