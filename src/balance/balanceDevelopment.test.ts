@@ -35,8 +35,12 @@ describe("strategies that develop technology", () => {
       const certainly = simulationOf(certain);
       const { program } = playProgram(certainly, strategy, 1, turns);
       expect(
-        certainly.readProgram(program).developments.map(({ status }) => status),
-      ).toEqual(["notStarted"]);
+        new Set(
+          certainly
+            .readProgram(program)
+            .developments.map(({ status }) => status),
+        ),
+      ).toEqual(new Set(["notStarted"]));
     }
   });
 });

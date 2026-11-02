@@ -14,5 +14,26 @@
     "capacityTonnes": 8,
     "missionEvents": ["launch", "mars-transfer-burn"],
     "technologyReadiness": "flight-proven"
+  },
+  {
+    "id": "meridian-colossus",
+    "name": "Meridian Colossus",
+    "costMillions": 1200,
+    "capacityTonnes": 16,
+    "missionEvents": [
+      "launch",
+      "tanker-launch",
+      "rendezvous",
+      "mars-transfer-burn"
+    ],
+    "technologyReadiness": "not-built",
+    "unproven": {
+      "costMillions": 1600,
+      "failureMultiplier": 1.5
+    },
+    "development": {
+      "costMillions": 2000,
+      "turns": 2
+    }
   }
 ]

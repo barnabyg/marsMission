@@ -2,6 +2,29 @@ import { describe, expect, it } from "vitest";
 import { parseCatalogue } from "./catalogue";
 import { errorFrom } from "./errorFrom";
 import { testCatalogueFiles } from "../simulation/testCatalogue";
+import { realCatalogueFiles } from "../testing/realCatalogue";
+
+describe("orbital refuelling in the real data files", () => {
+  const { launchVehicles } = parseCatalogue(realCatalogueFiles());
+  const refuelled = launchVehicles.filter(({ missionEvents }) =>
+    missionEvents.includes("rendezvous"),
+  );
+
+  it("has one Launch Vehicle that needs it, bringing a tanker launch and a rendezvous between launch and the Mars transfer burn", () => {
+    expect(refuelled.map(({ missionEvents }) => missionEvents)).toEqual([
+      ["launch", "tanker-launch", "rendezvous", "mars-transfer-burn"],
+    ]);
+  });
+
+  it("carries more mass on it than on any other Launch Vehicle, once it has been through Development", () => {
+    const [vehicle] = refuelled;
+    const others = launchVehicles.filter((other) => other !== vehicle);
+    expect(vehicle?.capacityTonnes).toBeGreaterThan(
+      Math.max(...others.map(({ capacityTonnes }) => capacityTonnes)),
+    );
+    expect(vehicle?.technologyReadiness).toBe("not-built");
+  });
+});
 
 describe("Mission Events in Earth orbit", () => {
   it("accepts a Launch Vehicle whose Mission Events in Earth orbit each have a day of their own", () => {
