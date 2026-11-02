@@ -1,5 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import { deliveryDayOf } from "./missionFlight";
+import { deliveryDayOf } from "./flyMission";
 import {
   addDays,
   daysUntilServiceEnds,

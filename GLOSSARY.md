@@ -18,14 +18,14 @@ _Avoid_: Launch opportunity
 
 **Mission**:
 The single journey launched in a Turn's Launch Window, carrying one or more Assets and possibly Crew. There is at most one Mission per Turn. It ends when it has delivered what it carries, or has failed.
-_Avoid_: Expedition, flight
+_Avoid_: Expedition, flight (as a name for a Mission; "in flight" for one on its way is fine)
 
 **Launch Vehicle**:
-The rocket chosen from the catalogue to launch a Mission. It sets how much mass the Mission can carry.
+The vehicle chosen from the catalogue to lift a Mission off Earth. It sets how much mass the Mission can carry.
 _Avoid_: Rocket, booster
 
 **Trajectory**:
-One of a few fixed routes to Mars chosen for a Mission, such as Slow, Fast or Free-return. It trades fuel and mass against Duration and safety.
+The way a Mission travels to Mars, chosen from a few fixed options such as Slow, Fast or Free-return. It trades fuel and mass against Duration and safety.
 _Avoid_: Route, flight path, transfer
 
 **Robotic Mission**:
@@ -48,7 +48,7 @@ A single value for each Crew member. Radiation, time at Mars and failed Mission 
 _Avoid_: Condition, hit points
 
 **Supplies**:
-The food, water and other consumables Crew need to stay alive. When they run out, Health falls quickly.
+The food, water and everything else Crew use up to stay alive. When they run out, Health falls quickly.
 _Avoid_: Consumables, life support (as the general term)
 
 ## Assets
@@ -62,11 +62,11 @@ How long an Asset keeps operating once in place. Longer Service Life costs more.
 _Avoid_: Lifespan, durability
 
 **Activity**:
-The one task given to an Asset, or to all the Crew at one Landing Site, for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.
+What an Asset, or all the Crew at one Landing Site, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.
 _Avoid_: Task, job, assignment
 
 **Landing Site**:
-A named location on Mars where a Mission can land, with its own landing risk and Science value. Apart from a couple of well-known sites, they become available only through a Survey.
+A named place on Mars where a Mission can land, with its own landing risk and Science value. Apart from a couple of well-known sites, they become available only through a Survey.
 _Avoid_: Location, zone, region
 
 **Survey**:
@@ -110,7 +110,7 @@ A Decision Point before a landing due while a dust storm is over its Landing Sit
 _Avoid_: Abort check, landing poll
 
 **Mission Event**:
-A discrete, riskable step within a Mission, such as launch, Mars transfer burn, Mars orbit insertion, entry/descent/landing or rendezvous. Each one has a failure probability.
+A discrete, riskable event within a Mission, such as launch, Mars transfer burn, Mars orbit insertion, entry/descent/landing or rendezvous. Each one has a failure probability.
 _Avoid_: Step, phase
 
 **Safety Margin**:
@@ -152,7 +152,7 @@ The Program's score. It comes from Milestones and Ongoing Research, and is weigh
 _Avoid_: Points, research
 
 **Milestone**:
-A one-off achievement, such as the first orbiter at Mars, reaching a total of Science, or returning a sample to Earth. It awards Science and Public Support.
+A one-off reward for a feat, such as the first orbiter at Mars, reaching a total of Science, or returning a sample to Earth. It awards Science and Public Support.
 _Avoid_: Achievement, goal, objective
 
 **Ongoing Research**:
@@ -168,7 +168,7 @@ Points of public and political backing. Milestones and Ongoing Research add them
 _Avoid_: Popularity, approval, morale
 
 **Funding Threshold**:
-One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached. Reaching it again later pays nothing.
+One of a fixed list of Public Support figures, each paying a fixed sum the first time it is reached. Reaching it again later pays nothing.
 _Avoid_: Tier, level, bracket
 
 **Cancellation Level**:

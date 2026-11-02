@@ -50,7 +50,7 @@ export interface MissionOutcome {
   landingSite: LandingSite | undefined;
   /** What a Free-return brought back, if it did. */
   returned: { refundMillions: number; backOnDay: number } | null;
-  /** The first unanswered Decision Point, which the flight stopped at. */
+  /** The first unanswered Decision Point, which the Mission stopped at. */
   decisionPoint: DecisionPoint | null;
   /** How each Decision Point was answered, in the order they came. */
   contingencies: ContingencyUsed[];
@@ -193,7 +193,7 @@ export function flyMission(
   const particleDay = mission
     ? solarParticleEventDay(catalogue, rules, program, mission)
     : null;
-  /** Meets the solar particle event, and says whether the flight stops there. */
+  /** Meets the solar particle event, and says whether the Mission stops there. */
   const meetParticles = (day: number): boolean => {
     const onBoard = assets.filter(
       (asset) => rules.deliveryDay(asset, mission) > day,
@@ -503,7 +503,7 @@ export function missionOnTimeline(
 }
 
 /**
- * What the Turn summary says about each Decision Point. It goes by how the flight ended, so an Asset saved
+ * What the Turn summary says about each Decision Point. It goes by how the Mission ended, so an Asset saved
  * and then lost to a later Mission Event isn't listed, and one saved twice shows the Service Life it ended with.
  */
 export function contingenciesAnswered(
@@ -569,7 +569,7 @@ function missionSoFar(
 }
 
 /**
- * What Mission Mode plays up to a Decision Point: the flight so far, and what else happens in the Turn before that
+ * What Mission Mode plays up to a Decision Point: the Mission so far, and what else happens in the Turn before that
  * day, worked out as if the answer were the cautious one. The answer can still change one thing already shown: a
  * Funding Threshold's day depends on Public Support later in the Turn, so an answer can move it, and playback carries
  * on from there.
@@ -586,7 +586,7 @@ export function timelineUpToDecision(
     mission: missionSoFar(mission, day),
     decisionDay: day,
     dustStorms: asIfCautious.dustStorms.filter(({ fromDay }) => fromDay <= day),
-    // The sort is stable, so the flight stays first on any day, as it does on a finished Turn's Timeline.
+    // The sort is stable, so the Mission's entries stay first on any day, as it does on a finished Turn's Timeline.
     entries: [
       ...flightEntries.filter((flown) => flown.day <= day),
       ...otherEntries.filter((other) => other.day < day),

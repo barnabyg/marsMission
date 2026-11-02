@@ -18,8 +18,8 @@ import {
   journeyIsReturning,
   orbits,
   planetPosition,
-  returnRoutePosition,
-  routePosition,
+  returnJourneyPosition,
+  outwardJourneyPosition,
   spacecraftPosition,
   type Planet,
 } from "./orbits";
@@ -126,7 +126,7 @@ function PlanetGlobe({
   );
 }
 
-function Route({
+function JourneyPath({
   mission,
   startDate,
   positionAt,
@@ -134,7 +134,7 @@ function Route({
 }: {
   mission: Journey;
   startDate: string;
-  positionAt: typeof routePosition;
+  positionAt: typeof outwardJourneyPosition;
   color: string;
 }) {
   const geometry = useMemo(() => {
@@ -239,18 +239,18 @@ export function SolarSystemScene({
         tiltDegrees={25.2}
       />
       {mission && (
-        <Route
+        <JourneyPath
           mission={mission}
           startDate={startDate}
-          positionAt={routePosition}
+          positionAt={outwardJourneyPosition}
           color="#ffb37a"
         />
       )}
       {mission && failed && mission.returnsToEarth && (
-        <Route
+        <JourneyPath
           mission={mission}
           startDate={startDate}
-          positionAt={returnRoutePosition}
+          positionAt={returnJourneyPosition}
           color="#7fe7ff"
         />
       )}

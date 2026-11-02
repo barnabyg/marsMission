@@ -81,7 +81,7 @@ describe("a failed arrival burn on Free-return", () => {
       assetsLost: ["Test Orbiter"],
       publicSupportLost: 0,
       returnedToEarth: true,
-      // Half of the $400M orbiter, and not of the vehicle or the route.
+      // Half of the $400M orbiter, and not of the Launch Vehicle or the Trajectory.
       refundMillions: 200,
     });
     expect(summary.moneyEndMillions).toBe(2000 - 550 + 200);

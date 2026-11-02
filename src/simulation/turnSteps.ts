@@ -11,7 +11,7 @@ import {
   missionFailure,
   missionOnTimeline,
   type MissionOutcome,
-} from "./missionFlight";
+} from "./flyMission";
 import { carryOutOngoingResearch } from "./ongoingResearch";
 import {
   awardScienceMilestones,
@@ -160,7 +160,7 @@ function fadePublicSupport(catalogue: Catalogue, publicSupport: number) {
 
 /**
  * Works out a whole Turn from a plan that has already passed validation, how its Mission flew and the answers so far.
- * It also gives what happened apart from the flight, and the earliest dust storm with no answer, which counts as sheltering.
+ * It also gives what happened apart from the Mission, and the earliest dust storm with no answer, which counts as sheltering.
  */
 export function resolveTurn(
   catalogue: Catalogue,

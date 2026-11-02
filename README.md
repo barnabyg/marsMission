@@ -61,7 +61,7 @@ The sound effects in `public/sounds` are synthesised by `node scripts/generate-s
 
 Everything outside `src/simulation` reaches the rules through `createSimulation` in `simulation.ts`. A Turn runs in this order:
 
-1. `simulation.ts`, in `workOutTurn`, checks the plan with `planCheck.ts` and flies the Mission with `missionFlight.ts`.
+1. `simulation.ts`, in `workOutTurn`, checks the plan with `planCheck.ts` and flies the Mission with `flyMission.ts`.
 2. `turnSteps.ts` carries out the rest of the Turn's steps, in `resolveTurn`: Milestones for arriving and for a first landing, Assets at work (`assetsInService.ts`), dust storms (`dustStorms.ts`), Surveys, Ongoing Research (`ongoingResearch.ts`), Science Milestones (`scienceMilestones.ts`), Funding Thresholds and the fading of Public Support. It builds the next Program, the Timeline and the Turn summary.
 3. `simulation.ts` stops at the earliest Decision Point that has no answer, from the Mission or a dust storm, and gives the Timeline up to it.
 
@@ -71,7 +71,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 | `types.ts`                                                    | The shapes the Simulation takes and gives: plans, the Program and what the player sees of it, the Timeline and the Turn summary               |
 | `rules.ts`                                                    | `createRules`: looking things up in the Catalogue, such as the Trajectory or Mission Events a Mission has, and failure chances; plus `roll`   |
 | `planCheck.ts`                                                | What a plan costs and weighs, and what's wrong with it, if anything                                                                           |
-| `missionFlight.ts`                                            | The Turn's Mission: its Mission Events, Contingencies, go/no-go checks and solar particle events, and how it shows on the Timeline            |
+| `flyMission.ts`                                               | The Turn's Mission: its Mission Events, Contingencies, go/no-go checks and solar particle events, and how it shows on the Timeline            |
 | `turnSteps.ts`                                                | The steps of a Turn after the Mission, in order (above), and the next Program, Timeline and Turn summary                                      |
 | `assetsInService.ts`                                          | Which Assets operate for which days of the Turn, their failures and end of Service Life, and Surveys                                          |
 | `ongoingResearch.ts`                                          | What each Activity earns in Science, Public Support and Research Grants                                                                       |
@@ -81,7 +81,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 | `saveFormat.ts`                                               | Each released save format and how to upgrade it to the next                                                                                   |
 | `testCatalogue.ts`, `testHelpers.ts`, `scienceTestHelpers.ts` | Fixtures and helpers for the rule tests                                                                                                       |
 
-A new rule usually goes in the file for its step of the Turn, or a new file beside them for a new Hazard, called from `turnSteps.ts` if it happens at Mars and from `missionFlight.ts` if it happens to the Mission. Its tests go in a test file named after the rule.
+A new rule usually goes in the file for its step of the Turn, or a new file beside them for a new Hazard, called from `turnSteps.ts` if it happens at Mars and from `flyMission.ts` if it happens to the Mission. Its tests go in a test file named after the rule.
 
 ### Balance runs
 
