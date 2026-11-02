@@ -97,11 +97,33 @@ test("holds a landing when paused, carries on without a jump at a new speed, and
   expect(await playedMs(page)).toBe(held);
   await expect(page.getByTestId("mission-date")).toHaveText(date ?? "");
 
-  // At a new speed, it goes on from where it was.
-  await page.getByRole("button", { name: "5x" }).click();
-  await expect.poll(() => playedMs(page)).toBeGreaterThan(held);
-  expect(await playedMs(page)).toBeLessThan(held + 3000);
-  await page.getByRole("button", { name: "Pause" }).click();
+  // At a new speed, it goes on from where it was. Paused from inside the page as soon as it moves on, because at 5x a
+  // click from out here can come after the Turn ends. If the landing ends first, the check after this fails at once.
+  const resumed = await page.evaluate(
+    (start) =>
+      new Promise<number>((resolve) => {
+        const button = (name: string) =>
+          [...document.querySelectorAll("button")].find(
+            (button) => button.textContent === name,
+          );
+        button("5x")?.click();
+        requestAnimationFrame(function check() {
+          const played = document.querySelector<HTMLElement>(
+            "[data-testid=mission-scene]",
+          )?.dataset.sequenceMs;
+          if (played !== undefined && Number(played) <= start) {
+            requestAnimationFrame(check);
+            return;
+          }
+          button("Pause")?.click();
+          resolve(Number(played ?? -1));
+        });
+      }),
+    held,
+  );
+  expect(resumed).toBeGreaterThan(held);
+  expect(resumed).toBeLessThan(held + 3000);
+  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
 
   await page.getByRole("button", { name: "End Turn", exact: true }).click();
   await expect(page.getByTestId("turn-summary")).toBeVisible();

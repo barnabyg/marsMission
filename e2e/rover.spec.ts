@@ -155,14 +155,35 @@ test("lands a rover and a lander at one site, each with its own Activity", async
     .getByRole("group", { name: "View" })
     .getByRole("button", { name: "Mars orbit" })
     .click();
-  await page.getByRole("button", { name: "1x" }).click();
+  // Plays at 1x and pauses from inside the page as soon as both labels show, because a click from out here can come
+  // after the Turn ends. If the Turn ends first, the check after this fails at once.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const button = (name: string) =>
+          [...document.querySelectorAll("button")].find(
+            (button) => button.textContent === name,
+          );
+        button("1x")?.click();
+        requestAnimationFrame(function check() {
+          const shown = document.querySelectorAll(
+            "[data-testid=mars-surface-asset]",
+          ).length;
+          if (shown < 2 && button("Pause")) {
+            requestAnimationFrame(check);
+            return;
+          }
+          button("Pause")?.click();
+          resolve();
+        });
+      }),
+  );
+  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
   const landed = page.getByTestId("mars-surface-asset");
-  await expect(landed).toHaveCount(2);
   await expect(landed).toHaveText([
     "Prospector Lander at Jezero Crater",
     "Trailblazer Rover at Jezero Crater",
   ]);
-  await page.getByRole("button", { name: "Pause" }).click();
   await expectApart(landed);
 
   await page.getByRole("button", { name: "End Turn", exact: true }).click();
