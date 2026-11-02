@@ -3,7 +3,7 @@ import { playProgram } from "./playProgram";
 import { balanceReport } from "./report";
 import type { Strategy } from "./playStyle";
 import { strategies } from "./strategies";
-import { certain, files, launchNothing, real, turns } from "./testSetup";
+import { certain, files, launchNothing, real, turns } from "./testHelpers";
 
 describe("the report on Decision Points", () => {
   const sheltering = strategies.find(

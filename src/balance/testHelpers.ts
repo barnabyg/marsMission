@@ -6,7 +6,7 @@ import {
 } from "../testing/realCatalogue";
 import type { Strategy } from "./playStyle";
 
-// Shared by the tests of balance runs and of their report.
+// Fixtures shared by the tests of balance runs and of their report.
 
 export const files = realCatalogueFiles();
 export const simulationOf = (catalogueFiles: CatalogueFiles) =>

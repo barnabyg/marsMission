@@ -12,7 +12,7 @@ import {
   real,
   simulationOf,
   turns,
-} from "./testSetup";
+} from "./testHelpers";
 
 const seeds = Array.from({ length: 20 }, (_, index) => index + 1);
 const strategyCases = strategies.map(
