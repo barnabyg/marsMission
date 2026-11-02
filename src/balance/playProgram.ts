@@ -26,6 +26,8 @@ export interface TurnRecord {
   researchGrantMillions: number;
   thresholdsReached: number[];
   researchScience: { activityName: string; science: number }[];
+  /** The part of that Science that other Assets' Benefits added. */
+  benefitScience: number;
   assetsFailed: number;
   launched: boolean;
   missionFailed: boolean;
@@ -80,6 +82,10 @@ function recordOf(
     ),
     researchScience: summary.ongoingResearch.map(
       ({ activityName, science }) => ({ activityName, science }),
+    ),
+    benefitScience: summary.ongoingResearch.reduce(
+      (total, { benefit }) => total + (benefit?.science ?? 0),
+      0,
     ),
     assetsFailed: summary.assetsFailed.length,
     launched,
