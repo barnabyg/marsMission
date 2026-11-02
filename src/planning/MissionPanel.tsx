@@ -11,6 +11,7 @@ import {
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
+import { readinessLabel, ReadinessTag } from "./ReadinessTag";
 import {
   isSurveying,
   NothingLeftToSurvey,
@@ -319,37 +320,6 @@ export function MissionPanel({
         End Turn without launching
       </button>
     </section>
-  );
-}
-
-type TechnologyReadiness = ProgramView["assets"][number]["technologyReadiness"];
-
-/** How Planning Mode labels a technology's Technology Readiness. */
-function readinessLabel(readiness: TechnologyReadiness): string {
-  return readiness === "flight-proven" ? "Flight-proven" : "Unproven";
-}
-
-/** A technology's Technology Readiness, short enough for a crowded row, with that term's tooltip. */
-function ReadinessTag({
-  readiness,
-  testId,
-}: {
-  readiness: TechnologyReadiness;
-  testId: string;
-}) {
-  return (
-    <span
-      className={
-        readiness === "flight-proven"
-          ? "term technology-readiness"
-          : "term technology-readiness unproven"
-      }
-      data-term="Technology Readiness"
-      data-testid={testId}
-      tabIndex={0}
-    >
-      {readinessLabel(readiness)}
-    </span>
   );
 }
 
