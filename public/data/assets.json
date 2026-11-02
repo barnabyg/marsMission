@@ -17,7 +17,8 @@
         "costMillions": 150
       }
     ],
-    "failureChancePerTurn": 0.13
+    "failureChancePerTurn": 0.13,
+    "technologyReadiness": "flight-proven"
   },
   {
     "id": "prospector-lander",
@@ -38,7 +39,35 @@
         "costMillions": 100
       }
     ],
-    "failureChancePerTurn": 0.12
+    "failureChancePerTurn": 0.12,
+    "technologyReadiness": "flight-proven"
+  },
+  {
+    "id": "pinpoint-lander",
+    "name": "Pinpoint Lander",
+    "kind": "lander",
+    "costMillions": 1000,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "landingRiskMultiplier": 0.5,
+    "activities": ["surface-research", "nothing"],
+    "massTonnes": 3,
+    "serviceLifeOptions": [
+      {
+        "days": 1300,
+        "costMillions": 0
+      },
+      {
+        "days": 2100,
+        "costMillions": 100
+      }
+    ],
+    "failureChancePerTurn": 0.12,
+    "technologyReadiness": "built",
+    "unproven": {
+      "costMillions": 1300,
+      "failureMultiplier": 2
+    }
   },
   {
     "id": "trailblazer-rover",
@@ -59,6 +88,7 @@
         "costMillions": 300
       }
     ],
-    "failureChancePerTurn": 0.14
+    "failureChancePerTurn": 0.14,
+    "technologyReadiness": "flight-proven"
   }
 ]

@@ -33,6 +33,14 @@ export function assetProblems({
         );
       }
     }
+    if (
+      asset.landingRiskMultiplier !== undefined &&
+      asset.landsAtSite !== true
+    ) {
+      problems.push(
+        `${catalogueFileNames.assets}: "${asset.id}" has a landingRiskMultiplier, but doesn't land`,
+      );
+    }
   }
   if (
     assets.some((asset) => asset.landsAtSite === true) &&

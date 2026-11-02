@@ -51,6 +51,20 @@ const trajectoriesSchema = z
   )
   .min(1);
 
+/** How mature an Asset or Launch Vehicle is when a Program starts, and what it costs and risks until it is Flight-proven. */
+const technologyFields = {
+  // "built" hasn't flown yet, so it is Flight-proven only after its first successful use.
+  technologyReadiness: z.enum(["flight-proven", "built"]),
+  // Only for one that doesn't start Flight-proven: its cost in place of costMillions, and what the failure probabilities
+  // of the Mission Events it brings and of its failing in service are multiplied by, until it is Flight-proven.
+  unproven: z
+    .strictObject({
+      costMillions: money,
+      failureMultiplier: z.number().min(1),
+    })
+    .optional(),
+};
+
 const launchVehiclesSchema = z.array(
   z.strictObject({
     id,
@@ -58,6 +72,7 @@ const launchVehiclesSchema = z.array(
     costMillions: money,
     capacityTonnes: z.number().positive(),
     missionEvents: z.array(id),
+    ...technologyFields,
   }),
 );
 
@@ -117,6 +132,9 @@ const assetsSchema = z.array(
     activities: z.array(id).min(1),
     // Whether this Asset lands on Mars, so that a Mission carrying it must name a Landing Site.
     landsAtSite: z.boolean().optional(),
+    // What the landing risk is multiplied by when this Asset lands. A landing is as risky as the riskiest Asset in it.
+    landingRiskMultiplier: z.number().positive().optional(),
+    ...technologyFields,
   }),
 );
 

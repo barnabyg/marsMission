@@ -21,6 +21,7 @@ describe("starting a Program", () => {
     expect(view.launchVehicles.map((vehicle) => vehicle.id)).toEqual([
       "test-vehicle",
       "test-heavy",
+      "test-prototype",
     ]);
     expect(view.assets.map((asset) => asset.id)).toEqual([
       "test-orbiter",
@@ -28,6 +29,7 @@ describe("starting a Program", () => {
       "test-relay",
       "test-lander",
       "test-rover",
+      "test-new-lander",
     ]);
   });
 });
