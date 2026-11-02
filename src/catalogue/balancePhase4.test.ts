@@ -69,10 +69,10 @@ describe("the rover in the real data files", () => {
     expect(traverse?.researchGrantMillions).toBe(0);
   });
 
-  /** A Mission to Jezero Crater on the first Launch Vehicle, carrying the Asset of this kind. */
+  /** The usual Mission, to Jezero Crater, carrying the Asset of this kind instead. */
   const landing = (kind: string): TurnPlan => ({
     mission: {
-      launchVehicleId: files.launchVehicles[0]?.id ?? "",
+      ...mission,
       assetIds: [assetOfKind(kind)?.id ?? ""],
       landingSiteId: "jezero-crater",
     },
