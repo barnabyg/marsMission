@@ -195,7 +195,7 @@ test("plays a crash on the surface without showing it as operating, then moves t
   const current = page.getByTestId("current-view");
   await expect(current).toHaveText("Surface");
   await expect(page.getByTestId("surface-site")).toHaveText("Jezero Crater");
-  await expect(page.getByTestId("solar-system-view")).toHaveAttribute(
+  await expect(page.getByTestId("mission-scene")).toHaveAttribute(
     "data-sequence",
     "crash",
   );

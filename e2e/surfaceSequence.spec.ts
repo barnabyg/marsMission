@@ -13,8 +13,8 @@ import { landingSeed, roverSeed } from "./seeds";
 /** Where the camera is at the surface view's usual shot, as the scene reports it. */
 const surfaceCamera = "0.000 2.200 12.500";
 
-function sceneView(page: Page) {
-  return page.getByTestId("solar-system-view");
+function scene(page: Page) {
+  return page.getByTestId("mission-scene");
 }
 
 async function launchLanding(page: Page): Promise<void> {
@@ -24,7 +24,7 @@ async function launchLanding(page: Page): Promise<void> {
 }
 
 function playedMs(page: Page) {
-  return sceneView(page)
+  return scene(page)
     .getAttribute("data-sequence-ms")
     .then((value) => Number(value));
 }
@@ -35,7 +35,7 @@ test("moves the view to the surface for a landing at 3840×2160, with a smooth c
   // Over 5 s: a landing takes the same real time as it would in play.
   const problems = watchForProblems(page);
   await launchLanding(page);
-  const canvas = sceneView(page).locator("canvas");
+  const canvas = scene(page).locator("canvas");
   await expect(canvas).toBeVisible();
   await expect(page.getByTestId("current-view")).toHaveText("Solar system");
   await canvas.evaluate((element: HTMLCanvasElement) => {
@@ -50,7 +50,7 @@ test("moves the view to the surface for a landing at 3840×2160, with a smooth c
   });
 
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
-  await expect(sceneView(page)).toHaveAttribute("data-sequence", "landing");
+  await expect(scene(page)).toHaveAttribute("data-sequence", "landing");
   await expect(page.getByTestId("surface-site")).toHaveText("Jezero Crater");
   await expect(page.getByTestId("surface-status")).toContainText(
     "Landing: Prospector Lander",
@@ -60,7 +60,7 @@ test("moves the view to the surface for a landing at 3840×2160, with a smooth c
 
   await holdSequence(page);
   await expect(canvas).toHaveAttribute("data-camera-position", surfaceCamera);
-  await expect(sceneView(page)).not.toHaveAttribute("data-sequence");
+  await expect(scene(page)).not.toHaveAttribute("data-sequence");
   await expect(page.getByTestId("surface-status")).not.toContainText(
     "Landing:",
   );
@@ -105,7 +105,7 @@ test("holds a landing when paused, carries on without a jump at a new speed, and
 
   await page.getByRole("button", { name: "End Turn", exact: true }).click();
   await expect(page.getByTestId("turn-summary")).toBeVisible();
-  await expect(sceneView(page)).toHaveCount(0);
+  await expect(scene(page)).toHaveCount(0);
   await page
     .getByTestId("turn-summary")
     .getByRole("button", { name: "Continue" })
@@ -117,7 +117,7 @@ test("holds a landing when paused, carries on without a jump at a new speed, and
     .getByRole("button", { name: "End Turn without launching" })
     .click();
   await expect(page.getByTestId("current-view")).toHaveText("Solar system");
-  await expect(sceneView(page)).not.toHaveAttribute("data-sequence");
+  await expect(scene(page)).not.toHaveAttribute("data-sequence");
   await viewButton(page, "Surface").click();
   await expect(surfaceAssets(page)).toBeInViewport();
   expect(problems).toEqual([]);
@@ -149,7 +149,7 @@ test("lets the player switch away during a landing without pulling them back, an
   await expect(current).toHaveText("Mars orbit");
 
   // Still there after the landing has finished, with nothing else to move it.
-  await expect(sceneView(page)).not.toHaveAttribute("data-sequence");
+  await expect(scene(page)).not.toHaveAttribute("data-sequence");
   await expect(current).toHaveText("Mars orbit");
   expect(problems).toEqual([]);
 });
@@ -183,7 +183,7 @@ test("moves a rover's label across the surface on a Long traverse", async ({
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await holdSequence(page);
   // Only once the camera has stopped can a moving label be down to the rover.
-  await expect(sceneView(page).locator("canvas")).toHaveAttribute(
+  await expect(scene(page).locator("canvas")).toHaveAttribute(
     "data-camera-position",
     surfaceCamera,
   );

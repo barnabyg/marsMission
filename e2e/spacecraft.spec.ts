@@ -18,7 +18,7 @@ function currentView(page: Page) {
 }
 
 function scene(page: Page) {
-  return page.getByTestId("solar-system-view");
+  return page.getByTestId("mission-scene");
 }
 
 function carried(page: Page) {

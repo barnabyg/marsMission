@@ -48,7 +48,7 @@ test("a dust storm stops play with its site, its Assets and its costs, and shelt
 
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
   await expect(page.getByTestId("surface-site")).toHaveText("Jezero Crater");
-  await expect(page.getByTestId("solar-system-view")).toHaveAttribute(
+  await expect(page.getByTestId("mission-scene")).toHaveAttribute(
     "data-dust-storm",
     "Jezero Crater",
   );

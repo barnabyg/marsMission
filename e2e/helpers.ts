@@ -128,17 +128,17 @@ export function holdSequence(page: Page, atMs?: number): Promise<void> {
         // The scene loads a moment after Mission Mode opens, and it goes when the Turn ends.
         let loaded = false;
         requestAnimationFrame(function check() {
-          const view = document.querySelector<HTMLElement>(
-            "[data-testid=solar-system-view]",
+          const scene = document.querySelector<HTMLElement>(
+            "[data-testid=mission-scene]",
           );
-          const playedMs = view?.dataset.sequenceMs;
+          const playedMs = scene?.dataset.sequenceMs;
           seen ||= playedMs !== undefined;
-          loaded ||= view !== null;
+          loaded ||= scene !== null;
           const reached =
             wanted === null
               ? seen && playedMs === undefined
               : Number(playedMs ?? -1) >= wanted;
-          if ((loaded && !view) || reached) {
+          if ((loaded && !scene) || reached) {
             [...document.querySelectorAll("button")]
               .find((button) => button.textContent === "Pause")
               ?.click();
@@ -198,6 +198,6 @@ export async function launchFirstMission(
   await page.goto(`/?seed=${seed}`);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(
-    page.getByTestId("solar-system-view").locator("canvas"),
+    page.getByTestId("mission-scene").locator("canvas"),
   ).toBeVisible();
 }
