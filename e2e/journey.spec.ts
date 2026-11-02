@@ -41,7 +41,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await pauseAtEvent(page, "Launch");
 
   await expect(
-    page.getByTestId("solar-system-view").locator("canvas"),
+    page.getByTestId("mission-scene").locator("canvas"),
   ).toBeVisible();
   await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
   await expect(eventEntries(page).last()).toContainText("1 December 2028");
@@ -184,7 +184,7 @@ test("loads the data files, Mission Mode's view and its art from a production bu
   await page.goto(`${productionBaseURL}/?seed=${successSeed}`);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(
-    page.getByTestId("solar-system-view").locator("canvas"),
+    page.getByTestId("mission-scene").locator("canvas"),
   ).toBeVisible();
   // A failed file is only reported once its request ends, which can be after the canvas appears.
   await page.waitForLoadState("networkidle");
@@ -262,12 +262,12 @@ test("keeps the events column beside the solar system view, scrolling by itself 
   await pauseAtEvent(page, "Launch");
 
   const column = page.getByTestId("events-column");
-  const view = page.getByTestId("solar-system-view");
-  await expect(view.locator("canvas")).toBeVisible();
+  const scene = page.getByTestId("mission-scene");
+  await expect(scene.locator("canvas")).toBeVisible();
   const columnBox = await column.boundingBox();
-  const viewBox = await view.boundingBox();
-  expect(viewBox?.x).toBe(0);
-  expect((viewBox?.x ?? 0) + (viewBox?.width ?? 0)).toBeCloseTo(
+  const sceneBox = await scene.boundingBox();
+  expect(sceneBox?.x).toBe(0);
+  expect((sceneBox?.x ?? 0) + (sceneBox?.width ?? 0)).toBeCloseTo(
     columnBox?.x ?? 0,
   );
   expect((columnBox?.x ?? 0) + (columnBox?.width ?? 0)).toBeCloseTo(3840);

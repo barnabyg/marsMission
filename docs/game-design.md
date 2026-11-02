@@ -89,7 +89,7 @@ Any rule in this document beyond these is planned, so its absence from the code 
   - A go/no-go check before a high-risk Mission Event, where the player can hold off (for example, delay a landing until a dust storm passes, at a cost in Supplies or Service Life).
 - Play pauses at each Decision Point with no time limit.
 - Mission Mode has four views, with smooth camera transitions between them:
-  - Solar system: Earth, Mars and the transfer route.
+  - Solar system: Earth, Mars and the Mission's journey along its Trajectory.
   - Mars orbit: orbiting Assets, arrival, aerocapture.
   - Surface: a Landing Site, with landings, rovers and bases.
   - Spacecraft: a close-up of the Mission in transit, used when something happens on the way, such as a solar particle event or a mechanical failure.

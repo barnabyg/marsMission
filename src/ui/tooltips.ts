@@ -11,9 +11,9 @@ export const tooltips = {
   Mission:
     "The single journey launched in a Turn's Launch Window, carrying one or more Assets and possibly Crew. There is at most one Mission per Turn. It ends when it has delivered what it carries, or has failed.",
   "Launch Vehicle":
-    "The rocket chosen from the catalogue to launch a Mission. It sets how much mass the Mission can carry.",
+    "The vehicle chosen from the catalogue to lift a Mission off Earth. It sets how much mass the Mission can carry.",
   Trajectory:
-    "One of a few fixed routes to Mars chosen for a Mission, such as Slow, Fast or Free-return. It trades fuel and mass against Duration and safety.",
+    "The way a Mission travels to Mars, chosen from a few fixed options such as Slow, Fast or Free-return. It trades fuel and mass against Duration and safety.",
   "Robotic Mission":
     "A Mission with no crew aboard. It is cheaper than a Crewed Mission and risks only hardware and money.",
   "Crewed Mission":
@@ -24,15 +24,15 @@ export const tooltips = {
   Health:
     "A single value for each Crew member. Radiation, time at Mars and failed Mission Events lower it, Protection slows the decline, and at zero the Crew member dies.",
   Supplies:
-    "The food, water and other consumables Crew need to stay alive. When they run out, Health falls quickly.",
+    "The food, water and everything else Crew use up to stay alive. When they run out, Health falls quickly.",
   Asset:
     "A pre-designed piece of hardware chosen from a catalogue, such as an orbiter, lander, rover, drone, habitat or fuel plant. Assets remain in place and keep working after their Mission until their Service Life ends or they fail.",
   "Service Life":
     "How long an Asset keeps operating once in place. Longer Service Life costs more.",
   Activity:
-    "The one task given to an Asset, or to all the Crew at one Landing Site, for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.",
+    "What an Asset, or all the Crew at one Landing Site, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.",
   "Landing Site":
-    "A named location on Mars where a Mission can land, with its own landing risk and Science value. Apart from a couple of well-known sites, they become available only through a Survey.",
+    "A named place on Mars where a Mission can land, with its own landing risk and Science value. Apart from a couple of well-known sites, they become available only through a Survey.",
   Survey:
     "Observing Mars from orbit to reveal Landing Sites and lower their landing risk. It is an Activity, and one surveying Asset is enough.",
   "Orbital research":
@@ -54,7 +54,7 @@ export const tooltips = {
   "Go/no-go check":
     "A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life.",
   "Mission Event":
-    "A discrete, riskable step within a Mission, such as launch, Mars transfer burn, Mars orbit insertion, entry/descent/landing or rendezvous. Each one has a failure probability.",
+    "A discrete, riskable event within a Mission, such as launch, Mars transfer burn, Mars orbit insertion, entry/descent/landing or rendezvous. Each one has a failure probability.",
   "Safety Margin":
     "Everything the player buys to reduce risk. It comes in three kinds (Reliability, Contingency and Protection) and costs money and sometimes mass.",
   "Risk Band":
@@ -74,7 +74,7 @@ export const tooltips = {
   Science:
     "The Program's score. It comes from Milestones and Ongoing Research, and is weighted heavily towards activity at Mars itself.",
   Milestone:
-    "A one-off achievement, such as the first orbiter at Mars, reaching a total of Science, or returning a sample to Earth. It awards Science and Public Support.",
+    "A one-off reward for a feat, such as the first orbiter at Mars, reaching a total of Science, or returning a sample to Earth. It awards Science and Public Support.",
   "Ongoing Research":
     "Science earned at a steady rate for as long as an Asset or Crew is actively doing it, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time. It also adds a small, steady amount of Public Support.",
   "Research Grant":
@@ -82,7 +82,7 @@ export const tooltips = {
   "Public Support":
     "Points of public and political backing. Milestones and Ongoing Research add them, setbacks remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.",
   "Funding Threshold":
-    "One of a fixed list of Public Support levels, each paying a fixed sum the first time it is reached. Reaching it again later pays nothing.",
+    "One of a fixed list of Public Support figures, each paying a fixed sum the first time it is reached. Reaching it again later pays nothing.",
   "Cancellation Level":
     "The Public Support level below which the Program is cancelled.",
   Duration:

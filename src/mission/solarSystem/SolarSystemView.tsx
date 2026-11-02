@@ -18,8 +18,8 @@ import {
   journeyIsReturning,
   orbits,
   planetPosition,
-  returnRoutePosition,
-  routePosition,
+  returnJourneyPosition,
+  outwardJourneyPosition,
   spacecraftPosition,
   type Planet,
 } from "./orbits";
@@ -126,25 +126,25 @@ function PlanetGlobe({
   );
 }
 
-function Route({
-  mission,
+function JourneyPath({
+  journey,
   startDate,
   positionAt,
   color,
 }: {
-  mission: Journey;
+  journey: Journey;
   startDate: string;
-  positionAt: typeof routePosition;
+  positionAt: typeof outwardJourneyPosition;
   color: string;
 }) {
   const geometry = useMemo(() => {
     const points: Vector3[] = [];
     for (let step = 0; step <= 120; step++) {
-      const { x, z } = positionAt(startDate, mission, step / 120);
+      const { x, z } = positionAt(startDate, journey, step / 120);
       points.push(new Vector3(x, 0, z));
     }
     return new TubeGeometry(new CatmullRomCurve3(points), 480, 0.0045, 8);
-  }, [mission, startDate, positionAt]);
+  }, [journey, startDate, positionAt]);
 
   return (
     <mesh geometry={geometry}>
@@ -239,18 +239,18 @@ export function SolarSystemScene({
         tiltDegrees={25.2}
       />
       {mission && (
-        <Route
-          mission={mission}
+        <JourneyPath
+          journey={mission}
           startDate={startDate}
-          positionAt={routePosition}
+          positionAt={outwardJourneyPosition}
           color="#ffb37a"
         />
       )}
       {mission && failed && mission.returnsToEarth && (
-        <Route
-          mission={mission}
+        <JourneyPath
+          journey={mission}
           startDate={startDate}
-          positionAt={returnRoutePosition}
+          positionAt={returnJourneyPosition}
           color="#7fe7ff"
         />
       )}

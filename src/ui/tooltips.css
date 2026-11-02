@@ -1,0 +1,22 @@
+.term {
+  border-bottom: 2px dotted var(--muted);
+  cursor: help;
+}
+
+.tooltip {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: 30rem;
+  background: #0f1320;
+  border: 1px solid var(--accent);
+  border-radius: 0.4rem;
+  padding: 0.8rem 1.1rem;
+  font-weight: 400;
+  color: var(--text);
+  pointer-events: none;
+}
+
+.tooltip p {
+  margin: 0.3rem 0 0;
+}

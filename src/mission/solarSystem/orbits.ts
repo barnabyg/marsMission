@@ -54,7 +54,7 @@ export function angleBetweenDegrees(
   return (Math.acos(dot / lengths) * 180) / Math.PI;
 }
 
-/** How far along its route a Mission is, from 0 at launch to 1 on arrival. A failed Mission stays where it failed. */
+/** How far along its journey a Mission is, from 0 at launch to 1 on arrival. A failed Mission stays where it failed. */
 export function journeyProgress(journey: JourneyDays, day: number): number {
   const { launchDay, arrivalDay, failedOnDay } = journey;
   const lastDay = Math.min(day, failedOnDay ?? day);
@@ -80,7 +80,7 @@ export function journeyIsReturning(journey: JourneyDays, day: number): boolean {
 }
 
 /** A point along the way back: inwards from where Mars was on arrival to where Earth will be on the day it's back. */
-export function returnRoutePosition(
+export function returnJourneyPosition(
   startDate: string,
   journey: JourneyDays,
   progress: number,
@@ -95,8 +95,8 @@ export function returnRoutePosition(
   return fromPolar(radius, from + sweep * progress);
 }
 
-/** A point along the route: outwards from Earth at launch to where Mars will be on arrival. */
-export function routePosition(
+/** A point along the way out: outwards from Earth at launch to where Mars will be on arrival. */
+export function outwardJourneyPosition(
   startDate: string,
   journey: JourneyDays,
   progress: number,
@@ -118,11 +118,15 @@ export function spacecraftPosition(
   const { returnsToEarth } = journey;
   if (returnsToEarth && day >= returnsToEarth.fromDay) {
     const { fromDay, backOnDay } = returnsToEarth;
-    return returnRoutePosition(
+    return returnJourneyPosition(
       startDate,
       journey,
       Math.min(1, (day - fromDay) / (backOnDay - fromDay)),
     );
   }
-  return routePosition(startDate, journey, journeyProgress(journey, day));
+  return outwardJourneyPosition(
+    startDate,
+    journey,
+    journeyProgress(journey, day),
+  );
 }

@@ -18,7 +18,7 @@ function currentView(page: Page) {
 }
 
 function scene(page: Page) {
-  return page.getByTestId("solar-system-view");
+  return page.getByTestId("mission-scene");
 }
 
 function carried(page: Page) {
@@ -108,6 +108,7 @@ for (const reachedBy of ["10x", "End Turn"] as const) {
   test(`moves to the spacecraft view for a solar particle event, reached by ${reachedBy}, and respects a later choice`, async ({
     page,
   }) => {
+    // Over 5 s: waits 7 s on purpose, to show that a Decision Point waiting for an answer holds everything.
     const problems = watchForProblems(page);
     await page.goto(`/?seed=${solarParticleEventSeed}`);
     // Held from the start, as the event comes too soon after launch at this test speed for a click to beat it.

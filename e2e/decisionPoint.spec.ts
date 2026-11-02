@@ -94,6 +94,7 @@ test("using a Contingency that works saves the orbiter with a shorter Service Li
 test("using a Contingency that fails loses the orbiter and costs extra Public Support", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the Decision Point at Mars orbit insertion, then ends the Turn.
   await launch(page, orbitInsertionRescueFailsSeed);
   await decisionPoint(page)
     .getByRole("button", { name: /Use Reserve fuel/ })
@@ -111,6 +112,7 @@ test("using a Contingency that fails loses the orbiter and costs extra Public Su
 });
 
 test("declining a Contingency takes the ordinary loss", async ({ page }) => {
+  // Over 5 s: waits at 1x for the Decision Point at Mars orbit insertion, then ends the Turn.
   await launch(page, orbitInsertionRescuedSeed);
   await decisionPoint(page)
     .getByRole("button", { name: "Don't use it" })
@@ -204,8 +206,8 @@ test("a rescued landing shows its Decision Point first, then plays the landing, 
   await page.getByRole("button", { name: "10x" }).click();
 
   await expect(decisionPoint(page)).toBeVisible();
-  const view = page.getByTestId("solar-system-view");
-  await expect(view).not.toHaveAttribute("data-sequence", /./);
+  const scene = page.getByTestId("mission-scene");
+  await expect(scene).not.toHaveAttribute("data-sequence", /./);
 
   // The test build's Turns are so short that at 10x this one would end before anything could hold it.
   await page.getByRole("button", { name: "1x", exact: true }).click();
@@ -214,7 +216,7 @@ test("a rescued landing shows its Decision Point first, then plays the landing, 
     .getByRole("button", { name: /Use Retro thrusters/ })
     .click();
   await held;
-  await expect(view).toHaveAttribute("data-sequence", "landing");
+  await expect(scene).toHaveAttribute("data-sequence", "landing");
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
 
   await expect(surfaceAssets(page).first()).toContainText("Prospector Lander");

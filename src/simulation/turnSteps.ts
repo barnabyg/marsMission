@@ -5,13 +5,12 @@ import {
   stoppedEntries,
 } from "./assetsInService";
 import { resolveDustStorms } from "./dustStorms";
+import { deliveryDayOf, type MissionOutcome } from "./flyMission";
 import {
   contingenciesAnswered,
-  deliveryDayOf,
   missionFailure,
   missionOnTimeline,
-  type MissionOutcome,
-} from "./missionFlight";
+} from "./missionReport";
 import { carryOutOngoingResearch } from "./ongoingResearch";
 import {
   awardScienceMilestones,
@@ -28,17 +27,14 @@ import {
   type LandingSite,
   type Rules,
 } from "./rules";
+import type { DecisionAnswers, Program, TurnPlan, TurnResult } from "./types";
 import type {
   AssetAtMars,
-  DecisionAnswers,
   FirstLandingEntry,
   FundingThresholdEntry,
   MilestoneEntry,
-  Program,
   TimelineEntry,
-  TurnPlan,
-  TurnResult,
-} from "./types";
+} from "./timeline";
 
 type Milestone = Catalogue["milestones"][number];
 type FundingThreshold = Catalogue["fundingThresholds"][number];
@@ -160,7 +156,7 @@ function fadePublicSupport(catalogue: Catalogue, publicSupport: number) {
 
 /**
  * Works out a whole Turn from a plan that has already passed validation, how its Mission flew and the answers so far.
- * It also gives what happened apart from the flight, and the earliest dust storm with no answer, which counts as sheltering.
+ * It also gives what happened apart from the Mission, and the earliest dust storm with no answer, which counts as sheltering.
  */
 export function resolveTurn(
   catalogue: Catalogue,

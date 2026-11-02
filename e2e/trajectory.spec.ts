@@ -53,6 +53,7 @@ test("Planning Mode shows what a Trajectory changes", async ({ page }) => {
 test("a Fast Mission arrives earlier than a Slow one, with more research", async ({
   page,
 }) => {
+  // Over 5 s: flies two Missions at 1x to their arrival, one on each Trajectory, to compare the dates.
   const problems = watchForProblems(page);
   const slow = await arrivalDate(page, "slow");
   await page.evaluate(() => {

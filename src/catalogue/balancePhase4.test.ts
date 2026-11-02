@@ -9,6 +9,7 @@ import {
 } from "../simulation/simulation";
 import { calmCatalogueFiles } from "../testing/realCatalogue";
 import {
+  failing,
   succeeding,
   files,
   mission,
@@ -66,6 +67,36 @@ describe("the rover in the real data files", () => {
     expect(soil?.science).toBeLessThan(traverse?.science ?? 0);
     expect(soil?.researchGrantMillions).toBeGreaterThan(0);
     expect(traverse?.researchGrantMillions).toBe(0);
+  });
+
+  /** The usual Mission, to Jezero Crater, carrying the Asset of this kind instead. */
+  const landing = (kind: string): TurnPlan => ({
+    mission: {
+      ...mission,
+      assetIds: [assetOfKind(kind)?.id ?? ""],
+      landingSiteId: "jezero-crater",
+    },
+  });
+
+  it("reaches the second Funding Threshold by itself on the first Turn", () => {
+    const { summary } = succeeding.runTurn(
+      succeeding.startProgram(1),
+      landing("rover"),
+    );
+    expect(summary.fundingPayouts).toEqual(files.fundingThresholds.slice(0, 2));
+  });
+
+  it("leaves too little for a retry of anything if it fails on the first Turn", () => {
+    const { program } = failing.runTurn(
+      failing.startProgram(1),
+      landing("rover"),
+    );
+    expect(failing.validatePlan(program, plainMission).problems).toHaveLength(
+      1,
+    );
+    expect(
+      failing.validatePlan(program, landing("lander")).problems,
+    ).toHaveLength(1);
   });
 });
 

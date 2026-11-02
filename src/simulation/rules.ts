@@ -1,5 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import type { PlannedMission, Program, SurfaceMotion } from "./types";
+import type { PlannedMission, Program } from "./types";
+import type { SurfaceMotion } from "./timeline";
 
 export type MissionEvent = Catalogue["missionEvents"][number];
 export type ReliabilityLevel = Catalogue["reliabilityLevels"][number];

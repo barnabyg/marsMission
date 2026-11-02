@@ -5,11 +5,8 @@ import {
   operatingKey,
   type Activity,
 } from "./rules";
-import {
-  flyMission,
-  missionOnTimeline,
-  timelineUpToDecision,
-} from "./missionFlight";
+import { flyMission } from "./flyMission";
+import { missionOnTimeline, timelineUpToDecision } from "./missionReport";
 import { earningsPerTurn } from "./ongoingResearch";
 import { createPlanCheck } from "./planCheck";
 import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
@@ -34,7 +31,6 @@ import type {
 export { addDays, formatMoney } from "./rules";
 export { corruptSave, SaveError } from "./saveFormat";
 export type {
-  AssetAtMars,
   AssetChoices,
   DecisionAnswer,
   DecisionAnswers,
@@ -44,13 +40,12 @@ export type {
   PlannedTrajectory,
   Program,
   ProgramView,
-  Timeline,
-  TimelineEntry,
   TurnPlan,
   TurnProgress,
   TurnResult,
   TurnSummary,
 } from "./types";
+export type { AssetAtMars, Timeline, TimelineEntry } from "./timeline";
 
 export interface Simulation {
   startProgram(seed: number): Program;
@@ -154,10 +149,13 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     const fly = (given: DecisionAnswers) =>
       flyMission(catalogue, rules, program, plan, given);
     const flown = fly(answers);
-    const flightDecision = flown.decisionPoint;
-    // The flight never depends on the rest of the Turn, but what's at stake on a day depends on the flight so far.
-    const asIfCautious = flightDecision
-      ? fly({ ...answers, [flightDecision.id]: cautiousAnswer(flightDecision) })
+    const missionDecision = flown.decisionPoint;
+    // The Mission never depends on the rest of the Turn, but what's at stake on a day depends on the Mission so far.
+    const asIfCautious = missionDecision
+      ? fly({
+          ...answers,
+          [missionDecision.id]: cautiousAnswer(missionDecision),
+        })
       : flown;
     const { result, otherEntries, stormDecision } = resolveTurn(
       catalogue,
@@ -170,11 +168,11 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     );
     const stormComesFirst =
       stormDecision !== null &&
-      (flightDecision === null ||
-        stormDecision.decisionPoint.day < flightDecision.day);
+      (missionDecision === null ||
+        stormDecision.decisionPoint.day < missionDecision.day);
     const decisionPoint = stormComesFirst
       ? stormDecision.decisionPoint
-      : flightDecision;
+      : missionDecision;
     if (!decisionPoint) {
       return { decisionPoint, timeline: result.timeline, result };
     }

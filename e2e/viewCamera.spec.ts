@@ -16,7 +16,7 @@ const marsOrbitCamera = "0.000 4.000 -16.900";
 /** Starts recording every position the camera takes from now on. */
 async function recordCamera(page: Page): Promise<void> {
   await page
-    .getByTestId("solar-system-view")
+    .getByTestId("mission-scene")
     .locator("canvas")
     .evaluate((canvas: HTMLCanvasElement) => {
       const seen: string[] = [];
@@ -38,7 +38,7 @@ function recordedCamera(page: Page): Promise<string[]> {
 }
 
 function cameraPosition(page: Page) {
-  return page.getByTestId("solar-system-view").locator("canvas");
+  return page.getByTestId("mission-scene").locator("canvas");
 }
 
 /** The longest single step in the camera's path, as a share of the distance between the shots. */
@@ -103,6 +103,7 @@ test("moves the view to Mars orbit when orbit insertion fails", async ({
 
 // A failed transfer burn goes to the spacecraft view, which e2e/spacecraft.spec.ts covers.
 test("stays on the solar system when Launch fails", async ({ page }) => {
+  // Over 5 s: plays out the rest of the Turn after the failure.
   await launchFirstMission(page, seedFailingAt("Launch"));
   await pauseAtEvent(page, "Launch failed");
   await expect(page.getByTestId("current-view")).toHaveText("Solar system");

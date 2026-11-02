@@ -162,8 +162,8 @@ export default function MissionScene({
 
   return (
     <div
-      className="solar-system"
-      data-testid="solar-system-view"
+      className="mission-scene"
+      data-testid="mission-scene"
       // The browser tests can't see into the scene, so this is how they follow a sequence.
       data-sequence={
         running ? (sequence.sequence.crashed ? "crash" : "landing") : undefined
