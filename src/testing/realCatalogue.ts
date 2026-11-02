@@ -22,6 +22,10 @@ export function calmCatalogueFiles(): CatalogueFiles {
     hazards: {
       ...files.hazards,
       dustStorm: { ...files.hazards.dustStorm, chancePerSitePerTurn: 0 },
+      solarParticleEvent: {
+        ...files.hazards.solarParticleEvent,
+        chancePerDayInFlight: 0,
+      },
     },
   };
 }

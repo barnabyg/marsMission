@@ -138,6 +138,17 @@ export function invalidStates(
       "A dust storm raised a Decision Point with nothing at stake, or took an Asset that wasn't there.",
     ],
     [
+      (summary.solarParticleEvent?.outcome === "lost") !==
+        (summary.failure?.hazard === true),
+      "A solar particle event and the Mission's failure disagree about whether it was lost.",
+    ],
+    [
+      summary.solarParticleEvent !== null &&
+        (summary.solarParticleEvent.answer === "safeMode") !==
+          (summary.solarParticleEvent.outcome === "protected"),
+      "A solar particle event's outcome doesn't follow from its answer.",
+    ],
+    [
       before.landingSites.some(({ id }) => !siteIds.includes(id)),
       "A known Landing Site was forgotten.",
     ],

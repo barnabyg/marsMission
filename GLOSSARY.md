@@ -137,6 +137,10 @@ _Avoid_: Random event, disaster
 A Hazard: a storm over one Landing Site for a stretch of days. If an Asset is operating there when it starts, the player chooses between sheltering, which earns no Ongoing Research for those days, and carrying on, with a chance of each Asset failing.
 _Avoid_: Sandstorm, weather
 
+**Solar particle event**:
+A Hazard: a burst of radiation from the Sun that hits a Mission on its way to Mars, more likely the longer its Duration. The player chooses between safe mode, which costs each Asset on board some Service Life, and carrying on, with a chance of damage that costs much more or loses the Mission.
+_Avoid_: Solar flare, radiation storm
+
 ## Balance elements
 
 **Science**:

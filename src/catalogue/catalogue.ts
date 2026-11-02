@@ -111,6 +111,25 @@ function crossCheck(catalogue: Catalogue): string[] {
     );
   }
 
+  const { solarParticleEvent } = hazards;
+  const longestTransfer = Math.max(
+    ...trajectories.map(({ transferDays }) => transferDays),
+  );
+  // Above this, every Mission on the longest Trajectory would meet one, so a longer Duration couldn't be more exposed.
+  if (solarParticleEvent.chancePerDayInFlight * longestTransfer > 1) {
+    problems.push(
+      `${catalogueFileNames.hazards}: solarParticleEvent has chancePerDayInFlight too high for the longest Trajectory, of ${longestTransfer} days`,
+    );
+  }
+  if (
+    solarParticleEvent.damageServiceLifeLossPercent <=
+    solarParticleEvent.safeModeServiceLifeLossPercent
+  ) {
+    problems.push(
+      `${catalogueFileNames.hazards}: solarParticleEvent must cost more Service Life in damageServiceLifeLossPercent than in safeModeServiceLifeLossPercent, or safe mode would never be worth it`,
+    );
+  }
+
   const landingSiteEvents = new Set(
     missionEvents
       .filter((event) => event.failureProbability === "landingSite")

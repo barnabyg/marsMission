@@ -1,6 +1,24 @@
 import { formatMoney, type TurnSummary } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 
+function describeSolarParticleEvent({
+  outcome,
+  assets,
+  serviceLifeLossPercent,
+}: NonNullable<TurnSummary["solarParticleEvent"]>): string {
+  const names = assets.join(", ");
+  switch (outcome) {
+    case "protected":
+      return `Safe mode protected ${names}, and each lost ${serviceLifeLossPercent}% of its Service Life`;
+    case "unharmed":
+      return `Carried on, and ${names} came through unharmed`;
+    case "damaged":
+      return `Carried on, and the radiation damaged ${names}: each lost ${serviceLifeLossPercent}% of its Service Life`;
+    case "lost":
+      return `Carried on, and the radiation lost ${names}`;
+  }
+}
+
 interface TurnSummaryScreenProps {
   summary: TurnSummary;
   onContinue: () => void;
@@ -34,7 +52,7 @@ export function TurnSummaryScreen({
           <ul>
             <li>
               <GameText>
-                {`Mission Event that failed: ${summary.failure.missionEventName}`}
+                {`${summary.failure.hazard ? "Lost to" : "Mission Event that failed"}: ${summary.failure.missionEventName}`}
               </GameText>
             </li>
             <li>
@@ -88,6 +106,18 @@ export function TurnSummaryScreen({
               ),
             )}
           </ul>
+        </section>
+      )}
+      {summary.solarParticleEvent && (
+        <section data-testid="summary-solar-particle-event">
+          <h2>
+            <GameText>Solar particle event</GameText>
+          </h2>
+          <p>
+            <GameText>
+              {describeSolarParticleEvent(summary.solarParticleEvent)}
+            </GameText>
+          </p>
         </section>
       )}
       {summary.dustStorms.length > 0 && (

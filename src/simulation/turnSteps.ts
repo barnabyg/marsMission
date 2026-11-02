@@ -252,7 +252,7 @@ export function resolveTurn(
     research.researchGrantMillions +
     (flown.returned?.refundMillions ?? 0);
   const cutServiceLife = new Map(
-    [...flown.rescuedServiceLife].map(([asset, days]) => [asset.id, days]),
+    [...flown.cutServiceLife].map(([asset, days]) => [asset.id, days]),
   );
   const assetsAtMars = inService.map(
     ({ asset, fromDay, untilDay }): AssetAtMars => {
@@ -356,6 +356,7 @@ export function resolveTurn(
         .filter(({ failed }) => failed)
         .map(({ asset }) => asset.name),
       dustStorms: weather.summary,
+      solarParticleEvent: flown.solarParticleEvent?.summary ?? null,
       survey: survey.summary,
       fundingPayouts: funding.payouts,
       researchGrants: research.researchGrants,

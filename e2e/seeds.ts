@@ -257,6 +257,33 @@ export const dustStormSeed = seedWithStormOnTurn2(false);
 /** A seed with a dust storm on Turn 2 that a lander fails in if it carries on. */
 export const dustStormLossSeed = seedWithStormOnTurn2(true);
 
+/** A seed whose first orbiter meets a solar particle event, where carrying on gives this outcome and nothing else stops the Turn. */
+function seedWithParticles(carryingOn: "unharmed" | "lost"): number {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const program = simulation.startProgram(seed);
+    const met = simulation.workOutTurn(program, firstPlan);
+    if (met.decisionPoint?.id !== "solar-particle-event") continue;
+    const answered = (answer: "safeMode" | "carryOn") =>
+      simulation.workOutTurn(program, firstPlan, {
+        "solar-particle-event": answer,
+      });
+    const carriedOn = answered("carryOn");
+    if (answered("safeMode").decisionPoint || carriedOn.decisionPoint) {
+      continue;
+    }
+    if (carriedOn.result.summary.solarParticleEvent?.outcome === carryingOn) {
+      return seed;
+    }
+  }
+  throw new Error("No seed gives that solar particle event");
+}
+
+/** A seed whose first orbiter meets a solar particle event and comes through it whatever the answer. */
+export const solarParticleEventSeed = seedWithParticles("unharmed");
+
+/** A seed whose first orbiter meets a solar particle event, which loses it if it carries on. */
+export const solarParticleLossSeed = seedWithParticles("lost");
+
 /** A seed whose first orbiter fails Mars orbit insertion on a Free-return Trajectory. */
 export const freeReturnSeed = seedWhere("Mars orbit insertion", {
   mission: { ...firstPlan.mission, trajectoryId: "free-return" },

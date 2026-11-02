@@ -252,6 +252,16 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureChance: 0,
         description: "A storm over {site} for {days} days.",
       },
+      solarParticleEvent: {
+        name: "Solar particle event",
+        chancePerDayInFlight: 0,
+        safeModeServiceLifeLossPercent: 10,
+        damageChance: 0,
+        damageServiceLifeLossPercent: 50,
+        lossChanceIfDamaged: 0,
+        publicSupportLoss: 30,
+        description: "A burst of radiation from the Sun.",
+      },
     },
     fundingThresholds: [
       { publicSupport: 300, payoutMillions: 1000 },

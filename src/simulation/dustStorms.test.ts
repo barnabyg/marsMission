@@ -189,6 +189,7 @@ describe("the Decision Point for a dust storm", () => {
           failureProbability: event.id === "test-arrival" ? 1 : 0,
         })),
         hazards: {
+          ...files.hazards,
           dustStorm: {
             ...files.hazards.dustStorm,
             chancePerSitePerTurn: 1,
@@ -276,6 +277,7 @@ describe("answering a dust storm", () => {
             activities: [...asset.activities, "test-paid-research"],
           })),
           hazards: {
+            ...files.hazards,
             dustStorm: { ...files.hazards.dustStorm, ...dustStorm },
           },
         }),
@@ -368,6 +370,7 @@ describe("the Catalogue's dust storm", () => {
       parseCatalogue({
         ...files,
         hazards: {
+          ...files.hazards,
           ...files.hazards,
           dustStorm: { ...files.hazards.dustStorm, ...dustStorm },
         },

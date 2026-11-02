@@ -147,7 +147,7 @@ export interface ProgramView {
   }[];
 }
 
-type HazardKind = "dustStorm";
+type HazardKind = "dustStorm" | "solarParticleEvent";
 
 export interface MissionEventEntry {
   kind: "missionEvent";
@@ -299,6 +299,8 @@ export interface TurnSummary {
     returnedToEarth: boolean;
     /** The share of their cost that came back, which moneyEndMillions includes. */
     refundMillions: number;
+    /** Whether a Hazard did it, which missionEventName then names, rather than a Mission Event. */
+    hazard?: true;
   } | null;
   /** How each Decision Point in this Turn was answered, and what came of it. */
   contingencies: {
@@ -319,6 +321,15 @@ export interface TurnSummary {
     /** Those that failed because they carried on. assetsFailed lists them too. */
     assetsFailed: string[];
   }[];
+  /** The solar particle event that hit the Mission, if one did, how it was answered and what came of it. */
+  solarParticleEvent: {
+    answer: "safeMode" | "carryOn";
+    outcome: "protected" | "unharmed" | "damaged" | "lost";
+    /** The Assets on board. */
+    assets: string[];
+    /** How much shorter it made each one's Service Life. */
+    serviceLifeLossPercent: number;
+  } | null;
   /** Why the Program was cancelled at the end of this Turn, if it was. */
   cancellationReason: string | null;
 }
@@ -356,7 +367,7 @@ export interface AssetAtMars {
   fromDay: number;
   /** The day of the Turn it stops operating, or null if it lasts beyond the Turn. */
   untilDay: number | null;
-  /** Its Service Life, if a Contingency cut it short on this Turn's Mission. */
+  /** Its Service Life, if something on this Turn's Mission cut it short. */
   cutServiceLifeDays?: number;
 }
 
@@ -377,6 +388,8 @@ export interface Timeline {
     failedOnDay: number | null;
     /** The way back, if a Free-return is bringing it home. */
     returnsToEarth?: { fromDay: number; backOnDay: number };
+    /** The day a solar particle event hit it, if one did. */
+    solarParticleEventDay?: number;
   } | null;
   /** Where every Landing Site is, for showing Assets on the globe. */
   landingSites: { name: string; latitude: number; longitude: number }[];
@@ -404,7 +417,8 @@ export interface PlannedTrajectory {
   chosen: boolean;
 }
 
-export type DecisionAnswer = "use" | "decline" | "shelter" | "carryOn";
+export type DecisionAnswer =
+  "use" | "decline" | "shelter" | "carryOn" | "safeMode";
 
 /** The answers to a Turn's Decision Points so far, by each one's `id`. */
 export type DecisionAnswers = Readonly<Record<string, DecisionAnswer>>;
@@ -413,7 +427,7 @@ export type DecisionAnswers = Readonly<Record<string, DecisionAnswer>>;
 export interface DecisionPoint {
   /** How the answers name this one. */
   id: string;
-  kind: "contingency" | "dustStorm";
+  kind: "contingency" | "dustStorm" | "solarParticleEvent";
   day: number;
   /** What it's about, such as a Mission Event or a Hazard. */
   title: string;

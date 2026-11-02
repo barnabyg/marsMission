@@ -86,7 +86,12 @@ export interface Simulation {
 
 /** The answer that plays a Turn on with nothing rolled for it, for what comes before a Decision Point. */
 function cautiousAnswer({ kind }: DecisionPoint): DecisionAnswer {
-  return kind === "contingency" ? "decline" : "shelter";
+  const cautious: Record<DecisionPoint["kind"], DecisionAnswer> = {
+    contingency: "decline",
+    dustStorm: "shelter",
+    solarParticleEvent: "safeMode",
+  };
+  return cautious[kind];
 }
 
 export function createSimulation(catalogue: Catalogue): Simulation {

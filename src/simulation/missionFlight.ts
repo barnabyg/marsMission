@@ -8,10 +8,16 @@ import {
   type MissionEvent,
   type Rules,
 } from "./rules";
+import {
+  meetSolarParticleEvent,
+  solarParticleEventDay,
+  solarParticleEventId,
+} from "./solarParticleEvents";
 import type {
   DecisionAnswers,
   DecisionPoint,
   DecisionPointEntry,
+  HazardEntry,
   MissionAsset,
   MissionEventEntry,
   MissionReturnedEntry,
@@ -32,7 +38,9 @@ export interface MissionOutcome {
   vehicleName: string | null;
   assets: Asset[];
   /** The Mission Events that happened, ending with the one that failed if one did. */
-  entries: (MissionEventEntry | DecisionPointEntry | MissionReturnedEntry)[];
+  entries: (
+    MissionEventEntry | DecisionPointEntry | HazardEntry | MissionReturnedEntry
+  )[];
   failedEvent: MissionEvent | undefined;
   /** The day of the failed Mission Event, if there was one. */
   failedOnDay: number | null;
@@ -45,8 +53,15 @@ export interface MissionOutcome {
   decisionPoint: DecisionPoint | null;
   /** How each Decision Point was answered, in the order they came. */
   contingencies: ContingencyUsed[];
-  /** The Service Life of each Asset that a Contingency saved, which is what's left after every rescue it needed. */
-  rescuedServiceLife: Map<Asset, number>;
+  /** The Service Life of each Asset that something on the way cut short, which is what's left after every cut. */
+  cutServiceLife: Map<Asset, number>;
+  /** The Hazard that lost the Mission, if one did. */
+  lostTo: string | null;
+  /** The solar particle event the Mission met, if it did. */
+  solarParticleEvent: {
+    day: number;
+    summary: TurnSummary["solarParticleEvent"];
+  } | null;
 }
 
 // Slow to create, and balance runs fly a great many Missions.
@@ -121,7 +136,55 @@ export function flyMission(
     returned: null,
     decisionPoint: null,
     contingencies: [],
-    rescuedServiceLife: new Map(),
+    cutServiceLife: new Map(),
+    lostTo: null,
+    solarParticleEvent: null,
+  };
+  /** Shortens the Service Life of each of these Assets by this share. */
+  const cut = (onBoard: Asset[], percent: number) => {
+    for (const asset of onBoard) {
+      const days =
+        outcome.cutServiceLife.get(asset) ??
+        rules.serviceLifeFor(mission, asset).days;
+      outcome.cutServiceLife.set(
+        asset,
+        Math.max(1, Math.round((days * (100 - percent)) / 100)),
+      );
+    }
+  };
+  const particleDay = mission
+    ? solarParticleEventDay(catalogue, rules, program, mission)
+    : null;
+  /** Meets the solar particle event, and says whether the flight stops there. */
+  const meetParticles = (day: number): boolean => {
+    const onBoard = assets.filter(
+      (asset) => rules.deliveryDay(asset, mission) > day,
+    );
+    const met = meetSolarParticleEvent(
+      catalogue,
+      rules,
+      program,
+      answers[solarParticleEventId],
+      day,
+      onBoard,
+    );
+    outcome.entries.push(...met.entries);
+    outcome.solarParticleEvent = { day, summary: met.summary };
+    if (met.decisionPoint || met.lostWithPublicSupport !== null) {
+      outcome.decisionPoint = met.decisionPoint;
+      outcome.deliveredAssets = assets.filter(
+        (asset) => !onBoard.includes(asset),
+      );
+    }
+    if (met.decisionPoint) return true;
+    if (met.lostWithPublicSupport !== null) {
+      outcome.failedOnDay = day;
+      outcome.lostTo = catalogue.hazards.solarParticleEvent.name;
+      outcome.publicSupportLost = met.lostWithPublicSupport;
+      return true;
+    }
+    cut(onBoard, met.serviceLifeLossPercent);
+    return false;
   };
   const happened = (event: MissionEvent) => ({
     kind: "missionEvent" as const,
@@ -130,6 +193,14 @@ export function flyMission(
   });
 
   for (const event of plannedEvents) {
+    if (
+      particleDay !== null &&
+      outcome.solarParticleEvent === null &&
+      dayOf(event) > particleDay &&
+      meetParticles(particleDay)
+    ) {
+      return outcome;
+    }
     const failed =
       roll(program.seed, program.turnNumber, event.id) <
       rules.failureProbability(
@@ -199,20 +270,7 @@ export function flyMission(
         roll(program.seed, program.turnNumber, decisionIdOf(event)) >=
           contingency.rescueFailureProbability
       ) {
-        for (const asset of onBoard) {
-          const days =
-            outcome.rescuedServiceLife.get(asset) ??
-            rules.serviceLifeFor(mission, asset).days;
-          outcome.rescuedServiceLife.set(
-            asset,
-            Math.max(
-              1,
-              Math.round(
-                (days * (100 - contingency.serviceLifeLossPercent)) / 100,
-              ),
-            ),
-          );
-        }
+        cut(onBoard, contingency.serviceLifeLossPercent);
         outcome.contingencies.push({
           missionEventName: event.name,
           contingencyName: contingency.name,
@@ -280,6 +338,10 @@ export function flyMission(
     });
     return outcome;
   }
+  // A Mission with nothing to do on arrival still meets one on the way.
+  if (particleDay !== null && outcome.solarParticleEvent === null) {
+    meetParticles(particleDay);
+  }
   return outcome;
 }
 
@@ -315,6 +377,9 @@ export function missionOnTimeline(
       };
     }),
     failedOnDay: flown.failedOnDay,
+    ...(flown.solarParticleEvent
+      ? { solarParticleEventDay: flown.solarParticleEvent.day }
+      : {}),
     ...(flown.returned && flown.failedOnDay !== null
       ? {
           returnsToEarth: {
@@ -339,16 +404,18 @@ export function contingenciesAnswered(
       .filter((asset) => flown.deliveredAssets.includes(asset))
       .map((asset) => ({
         name: asset.name,
-        serviceLifeDays: flown.rescuedServiceLife.get(asset) ?? 0,
+        serviceLifeDays: flown.cutServiceLife.get(asset) ?? 0,
       })),
   }));
 }
 
 /** What the Turn summary says about a Mission that failed, or null if none did. */
 export function missionFailure(flown: MissionOutcome): TurnSummary["failure"] {
-  return flown.failedEvent
+  const name = flown.failedEvent?.name ?? flown.lostTo;
+  return name !== null
     ? {
-        missionEventName: flown.failedEvent.name,
+        missionEventName: name,
+        ...(flown.lostTo === null ? {} : { hazard: true as const }),
         assetsLost: flown.assets
           .filter((asset) => !flown.deliveredAssets.includes(asset))
           .map((asset) => asset.name),
@@ -365,13 +432,16 @@ function missionSoFar(
   day: number,
 ): Timeline["mission"] {
   if (!mission) return null;
-  const { returnsToEarth, ...rest } = mission;
+  const { returnsToEarth, solarParticleEventDay, ...rest } = mission;
   const failedSoFar =
     mission.failedOnDay !== null && mission.failedOnDay <= day;
   return {
     ...rest,
     failedOnDay: failedSoFar ? mission.failedOnDay : null,
     ...(returnsToEarth && failedSoFar ? { returnsToEarth } : {}),
+    ...(solarParticleEventDay !== undefined && solarParticleEventDay <= day
+      ? { solarParticleEventDay }
+      : {}),
     assets: mission.assets.map((asset) => {
       const lostSoFar = asset.lostOnDay !== null && asset.lostOnDay <= day;
       return {

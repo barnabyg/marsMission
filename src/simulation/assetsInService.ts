@@ -64,7 +64,7 @@ export function operateAssets(
   flown: {
     deliveredAssets: Asset[];
     landingSite: LandingSite | undefined;
-    rescuedServiceLife: Map<Asset, number>;
+    cutServiceLife: Map<Asset, number>;
   },
 ): AssetInService[] {
   const { launchWindowIntervalDays } = catalogue.program;
@@ -76,7 +76,7 @@ export function operateAssets(
       arrivedOn: addDays(program.date, rules.deliveryDay(asset, plan.mission)),
       landingSiteId: asset.landsAtSite ? (flown.landingSite?.id ?? null) : null,
       serviceLifeDays:
-        flown.rescuedServiceLife.get(asset) ??
+        flown.cutServiceLife.get(asset) ??
         rules.serviceLifeFor(plan.mission, asset).days,
       reliabilityLevelId: rules.assetReliabilityFor(plan.mission, asset).id,
       activityId: rules.activityFor(plan.mission, asset).id,

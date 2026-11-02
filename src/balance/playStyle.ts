@@ -67,6 +67,8 @@ export interface PlayStyle {
   trajectory?: string;
   /** What it does at a dust storm, which is to shelter unless it says otherwise. */
   dustStorms?: "shelter" | "carryOn";
+  /** What it does at a solar particle event, which is safe mode unless it says otherwise. */
+  solarParticleEvents?: "safeMode" | "carryOn";
 }
 
 const surveyActivity = (activities: PlannedActivity[]) =>
@@ -272,10 +274,12 @@ export function playStyle(
   return {
     name,
     description,
-    answer: ({ kind, choices }) => {
-      if (kind === "contingency") return chosen.contingencies ?? "use";
-      return chosen.dustStorms ?? choices[0].answer;
-    },
+    answer: ({ kind }) =>
+      ({
+        contingency: chosen.contingencies ?? "use",
+        dustStorm: chosen.dustStorms ?? "shelter",
+        solarParticleEvent: chosen.solarParticleEvents ?? "safeMode",
+      })[kind],
     plan(view, tools) {
       const { changes, surveying } = operatingActivities(view, chosen);
       const inService = view.operatingAssets.filter(

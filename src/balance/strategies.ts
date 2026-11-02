@@ -251,6 +251,16 @@ export const strategies: Strategy[] = [
     { ...steadyRovers, dustStorms: "carryOn" },
   ),
   playStyle(
+    "steady: safe mode",
+    "As steady: Soil analysis, going into safe mode at every solar particle event.",
+    { ...steadyRovers, solarParticleEvents: "safeMode" },
+  ),
+  playStyle(
+    "steady: carry on through radiation",
+    "As steady: Soil analysis, carrying on through every solar particle event.",
+    { ...steadyRovers, solarParticleEvents: "carryOn" },
+  ),
+  playStyle(
     "steady: Survey once",
     "As steady: Soil analysis, but the orbiter changes to research after its first Survey.",
     {

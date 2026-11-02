@@ -6,5 +6,15 @@
     "maxDays": 220,
     "failureChance": 0.2,
     "description": "A dust storm has blown up over {site}, and will last {days} days."
+  },
+  "solarParticleEvent": {
+    "name": "Solar particle event",
+    "chancePerDayInFlight": 0.0012,
+    "safeModeServiceLifeLossPercent": 10,
+    "damageChance": 0.3,
+    "damageServiceLifeLossPercent": 40,
+    "lossChanceIfDamaged": 0.3,
+    "publicSupportLoss": 20,
+    "description": "A burst of radiation from the Sun is sweeping past the Mission on its way to Mars."
   }
 }

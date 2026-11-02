@@ -190,6 +190,20 @@ const hazardsSchema = z.strictObject({
     // {site} stands for the Landing Site and {days} for how long it lasts.
     description: z.string().min(1),
   }),
+  solarParticleEvent: z.strictObject({
+    name: z.string().min(1),
+    // The chance of one on each day a Mission is on its way to Mars, so a longer Duration is more exposed.
+    chancePerDayInFlight: z.number().min(0).max(1),
+    // How much shorter the Service Life of each Asset on board is in safe mode.
+    safeModeServiceLifeLossPercent: z.number().int().min(0).max(99),
+    // Carrying on: the chance of damage, how much Service Life it costs, and the chance that damage loses them all.
+    damageChance: z.number().min(0).max(1),
+    damageServiceLifeLossPercent: z.number().int().min(0).max(99),
+    lossChanceIfDamaged: z.number().min(0).max(1),
+    // Lost if it loses the Mission, as a failed Mission Event's is.
+    publicSupportLoss: z.number().int().nonnegative(),
+    description: z.string().min(1),
+  }),
 });
 
 const milestonesSchema = z.array(
