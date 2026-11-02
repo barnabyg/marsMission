@@ -18,17 +18,17 @@ To try the latest phase, follow the [Phase 5 playtest guide](docs/playtest/phase
 
 The Simulation holds all the rules and knows nothing about the browser. Everything else loads its data, saves its state or displays what it produces.
 
-| Folder           | What it holds                                                                                                                                                   |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/app`        | The App component that moves between screens and connects them to the Simulation, all styles (`styles.css`), and start-up                                       |
-| `src/balance`    | Balance runs: strategies that play whole Programs through the Simulation, the checks for invalid states and the report (see [Balance runs](#balance-runs))      |
-| `src/catalogue`  | The Catalogue: parses and validates the data files in `public/data`, which `src/app` fetches                                                                    |
-| `src/mission`    | Mission Mode and the Turn summary: playback, sounds, and the views, each in its own subfolder, which `MissionMode.tsx` and `MissionScene.tsx` connect           |
-| `src/planning`   | Planning Mode and the Program summary screen                                                                                                                    |
-| `src/save`       | The Save Store, which keeps what the Simulation saves in the browser, and the screens for saving: the opening screen and Save Slots                             |
-| `src/simulation` | The Simulation: all the rules, with most of the tests, plus the small test catalogue and helpers those tests share. A Mission's flight is in `missionFlight.ts` |
-| `src/testing`    | Test support that reads the real data files with Node, which is kept out of `src/simulation` because that folder has no Node types                              |
-| `src/ui`         | Shared UI: dialogs (`Dialog.tsx`), tooltips (`tooltips.ts`, `GameText.tsx`, `TooltipLayer.tsx`) and date formatting                                             |
+| Folder           | What it holds                                                                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app`        | The App component that moves between screens and connects them to the Simulation, all styles (`styles.css`), and start-up                                                 |
+| `src/balance`    | Balance runs: strategies that play whole Programs through the Simulation, the checks for invalid states and the report (see [Balance runs](#balance-runs))                |
+| `src/catalogue`  | The Catalogue: parses and validates the data files in `public/data`, which `src/app` fetches                                                                              |
+| `src/mission`    | Mission Mode and the Turn summary: playback, sounds, and the views, each in its own subfolder, which `MissionMode.tsx` and `MissionScene.tsx` connect                     |
+| `src/planning`   | Planning Mode and the Program summary screen                                                                                                                              |
+| `src/save`       | The Save Store, which keeps what the Simulation saves in the browser, and the screens for saving: the opening screen and Save Slots                                       |
+| `src/simulation` | The Simulation: all the rules, with most of the tests, plus the small test catalogue and helpers those tests share (see [The Simulation's files](#the-simulations-files)) |
+| `src/testing`    | Test support that reads the real data files with Node, which is kept out of `src/simulation` because that folder has no Node types                                        |
+| `src/ui`         | Shared UI: dialogs (`Dialog.tsx`), tooltips (`tooltips.ts`, `GameText.tsx`, `TooltipLayer.tsx`) and date formatting                                                       |
 
 Test fixtures go in `src/simulation/testCatalogue.ts` and `testHelpers.ts` for rule tests, which use round numbers so that balance changes don't break them. Use `src/testing/realCatalogue.ts` for tests of the game's actual balance.
 
@@ -53,6 +53,32 @@ A ticket that only changes a screen or dialog starts from its component in `src/
 The browser tests need Chromium, once per machine: `npx.cmd playwright install chromium`.
 
 The sound effects in `public/sounds` are synthesised by `node scripts/generate-sounds.mjs`, and the files it makes are committed. Rerun it only to change a sound.
+
+### The Simulation's files
+
+Everything outside `src/simulation` reaches the rules through `createSimulation` in `simulation.ts`. A Turn runs in this order:
+
+1. `simulation.ts`, in `workOutTurn`, checks the plan with `planCheck.ts` and flies the Mission with `missionFlight.ts`.
+2. `turnSteps.ts` carries out the rest of the Turn's steps, in `resolveTurn`: Milestones for arriving and for a first landing, Assets at work (`assetsInService.ts`), dust storms (`dustStorms.ts`), Surveys, Ongoing Research (`ongoingResearch.ts`), Science Milestones (`scienceMilestones.ts`), Funding Thresholds and the fading of Public Support. It builds the next Program, the Timeline and the Turn summary.
+3. `simulation.ts` stops at the earliest Decision Point that has no answer, from the Mission or a dust storm, and gives the Timeline up to it.
+
+| File                                                          | What it holds                                                                                                                                 |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `simulation.ts`                                               | The Simulation's interface: starting, saving and restoring a Program, what the player sees of it, previews, and working out or running a Turn |
+| `types.ts`                                                    | The shapes the Simulation takes and gives: plans, the Program and what the player sees of it, the Timeline and the Turn summary               |
+| `rules.ts`                                                    | `createRules`: looking things up in the Catalogue, such as the Trajectory or Mission Events a Mission has, and failure chances; plus `roll`   |
+| `planCheck.ts`                                                | What a plan costs and weighs, and what's wrong with it, if anything                                                                           |
+| `missionFlight.ts`                                            | The Turn's Mission: its Mission Events, Contingencies, go/no-go checks and solar particle events, and how it shows on the Timeline            |
+| `turnSteps.ts`                                                | The steps of a Turn after the Mission, in order (above), and the next Program, Timeline and Turn summary                                      |
+| `assetsInService.ts`                                          | Which Assets operate for which days of the Turn, their failures and end of Service Life, and Surveys                                          |
+| `ongoingResearch.ts`                                          | What each Activity earns in Science, Public Support and Research Grants                                                                       |
+| `scienceMilestones.ts`                                        | The day a total of Science or Public Support is reached, for Science Milestones and Funding Thresholds                                        |
+| `dustStorms.ts`                                               | Dust storms over Landing Sites, and sheltering or carrying on                                                                                 |
+| `solarParticleEvents.ts`                                      | Solar particle events on the way to Mars, and safe mode or carrying on                                                                        |
+| `saveFormat.ts`                                               | Each released save format and how to upgrade it to the next                                                                                   |
+| `testCatalogue.ts`, `testHelpers.ts`, `scienceTestHelpers.ts` | Fixtures and helpers for the rule tests                                                                                                       |
+
+A new rule usually goes in the file for its step of the Turn, or a new file beside them for a new Hazard, called from `turnSteps.ts` if it happens at Mars and from `missionFlight.ts` if it happens to the Mission. Its tests go in a test file named after the rule.
 
 ### Balance runs
 
