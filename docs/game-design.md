@@ -4,7 +4,7 @@ The game rules settled so far, grouped by area. Most describe the finished game,
 
 ## Status
 
-Phases are defined in the [Build order](#build-order). Phases 1 to 5 are built:
+Phases are defined in the [Build order](#build-order). Phases 1 to 6 are built:
 
 - **Phase 1:** Turns running from one Launch Window to the next, with at most one Mission each; Assets that stay operating at Mars; Mission Events listed from what a Mission carries; Planning Mode with one Launch Vehicle and one orbiter; Mission Mode with the solar system view, speed controls and text screens; Science, Milestones, Funding Thresholds, the Public Support drain and Cancellation Level; retiring a Program and the Program summary; tooltips.
 - **Phase 2:** Mission Event failure with Risk Bands; Reliability; the fixed random seed; automatic saves and manual save slots; the first sound effects.
@@ -17,7 +17,7 @@ Phases are defined in the [Build order](#build-order). Phases 1 to 5 are built:
 
 - **Phase 5:** Decision Points, with no time limit and End Turn stopping at each one; Contingency, a gamble bought in Planning Mode and used for a second roll when its Mission Event fails; Slow, Fast and Free-return Trajectories; dust storms and solar particle events, the first Hazards; go/no-go checks before a landing in a dust storm; the spacecraft view, which Mission Mode moves to for a solar particle event or a failed Mars transfer burn; the balance report on Decision Points, and the numbers tuned with it. With no Crew yet, a solar particle event harms hardware, costing Service Life or losing the Mission, and Protection waits for Phase 7; holding off a landing costs Service Life, as there are no Supplies to spend.
 
-- **Phase 6, so far:** Technology Readiness on every Asset and Launch Vehicle, and Flight-proven status, with the Pinpoint Lander, built but not yet flown, as the first technology that starts unproven; Development, with the Endurance Rover as the first technology that needs it; the Meridian Colossus, a Launch Vehicle that needs Development and carries the most mass, but only with orbital refuelling, whose tanker launch and rendezvous are Mission Events, shown in Earth orbit in the spacecraft view, which Mission Mode moves to for the rendezvous; the Courier Relay, a relay orbiter whose Benefit, the first between Assets, raises the Ongoing Research of everything on the surface.
+- **Phase 6:** Technology Readiness on every Asset and Launch Vehicle, and Flight-proven status, with the Pinpoint Lander, built but not yet flown, as the first technology that starts unproven; Development, with the Endurance Rover as the first technology that needs it; the Meridian Colossus, a Launch Vehicle that needs Development and carries the most mass, but only with orbital refuelling, whose tanker launch and rendezvous are Mission Events, shown in Earth orbit in the spacecraft view, which Mission Mode moves to for the rendezvous; the Courier Relay, a relay orbiter whose Benefit, the first between Assets, raises the Ongoing Research of everything on the surface; tooltips for every new term; the balance report on technology, with strategies that develop technology and ones that keep to what is Flight-proven, and the numbers tuned with it.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
