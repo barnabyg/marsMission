@@ -126,6 +126,19 @@ export const landerAndRoverSeed = seedWhere(
   wealthySimulation,
 );
 
+/** A seed where a lander and a relay orbiter launched together both arrive, with the same money as a lander and a rover. */
+export const relayAndLanderSeed = seedWhere(
+  null,
+  {
+    mission: {
+      launchVehicleId: "meridian-heavy",
+      assetIds: ["prospector-lander", "courier-relay-orbiter"],
+      landingSiteId: "jezero-crater",
+    },
+  },
+  wealthySimulation,
+);
+
 /** A seed where a lander and a rover launched together crash. */
 export const landerAndRoverCrashSeed = seedWhere(
   "Entry/descent/landing",
