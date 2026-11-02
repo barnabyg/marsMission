@@ -1,5 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { holdTurnWhenShown, watchForProblems } from "./helpers";
+import {
+  holdTurnWhenShown,
+  termsWithoutTooltips,
+  watchForProblems,
+} from "./helpers";
 import { solarParticleEventSeed, solarParticleLossSeed } from "./seeds";
 
 function decisionPoint(page: Page) {
@@ -40,6 +44,7 @@ test("a solar particle event stops play on the way to Mars, and safe mode shorte
     "of the way to Mars",
   );
 
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   await panel.getByRole("button", { name: "Safe mode" }).click();
   await expect(
     page.getByRole("heading", { name: "Solar particle event: safe mode" }),
@@ -50,6 +55,7 @@ test("a solar particle event stops play on the way to Mars, and safe mode shorte
     "Safe mode protected Pathfinder Orbiter, at a cost of 15% of each Asset's Service Life",
   );
   await expect(page.getByTestId("summary-failure")).toHaveCount(0);
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Continue" }).click();
   // The shortest Service Life, 1300 days, less 15%, from arriving 210 days into a 780-day Turn.
   await expect(page.getByTestId("operating-assets")).toContainText(

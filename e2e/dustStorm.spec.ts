@@ -1,5 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { chooseAssets, watchForProblems } from "./helpers";
+import {
+  chooseAssets,
+  termsWithoutTooltips,
+  watchForProblems,
+} from "./helpers";
 import { dustStormLossSeed, dustStormSeed } from "./seeds";
 
 function decisionPoint(page: Page) {
@@ -40,6 +44,7 @@ test("a dust storm stops play with its site, its Assets and its costs, and shelt
     "Risk Band",
   );
   await expect(endTurn(page)).toBeDisabled();
+  expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
   await expect(page.getByTestId("surface-site")).toHaveText("Jezero Crater");
@@ -68,6 +73,7 @@ test("a dust storm stops play with its site, its Assets and its costs, and shelt
     "over 780 days",
   );
   await expect(page.getByTestId("summary-assets-failed")).toHaveCount(0);
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   expect(problems).toEqual([]);
 });
 

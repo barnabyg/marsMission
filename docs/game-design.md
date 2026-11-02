@@ -4,7 +4,7 @@ The game rules settled so far, grouped by area. Most describe the finished game,
 
 ## Status
 
-Phases are defined in the [Build order](#build-order). Phases 1, 2, 3 and 4 are built:
+Phases are defined in the [Build order](#build-order). Phases 1 to 5 are built:
 
 - **Phase 1:** Turns running from one Launch Window to the next, with at most one Mission each; Assets that stay operating at Mars; Mission Events listed from what a Mission carries; Planning Mode with one Launch Vehicle and one orbiter; Mission Mode with the solar system view, speed controls and text screens; Science, Milestones, Funding Thresholds, the Public Support drain and Cancellation Level; retiring a Program and the Program summary; tooltips.
 - **Phase 2:** Mission Event failure with Risk Bands; Reliability; the fixed random seed; automatic saves and manual save slots; the first sound effects.
@@ -15,7 +15,7 @@ Phases are defined in the [Build order](#build-order). Phases 1, 2, 3 and 4 are 
 
 - **Phase 4:** Activities, with Survey, research and Nothing as the first ones; Ongoing Research, which also adds a little Public Support; Research Grants, which take over from Funding Thresholds as the main income of a Program that keeps Assets at Mars; a rover, choosing between Science and money; Science Milestones and more Funding Thresholds; the surface view, with generated terrain, landing and crash sequences it moves to by itself, and rovers that move according to their Activity; automated balance runs, and the numbers tuned with them, including longer Service Lives.
 
-- **Phase 5, so far:** Decision Points, with no time limit and End Turn stopping at each one; Contingency, a gamble bought in Planning Mode and used for a second roll when its Mission Event fails; Slow, Fast and Free-return Trajectories; dust storms and solar particle events, the first Hazards; go/no-go checks before a landing in a dust storm; the spacecraft view, which Mission Mode moves to for a solar particle event or a failed Mars transfer burn.
+- **Phase 5:** Decision Points, with no time limit and End Turn stopping at each one; Contingency, a gamble bought in Planning Mode and used for a second roll when its Mission Event fails; Slow, Fast and Free-return Trajectories; dust storms and solar particle events, the first Hazards; go/no-go checks before a landing in a dust storm; the spacecraft view, which Mission Mode moves to for a solar particle event or a failed Mars transfer burn; the balance report on Decision Points, and the numbers tuned with it. With no Crew yet, a solar particle event harms hardware, costing Service Life or losing the Mission, and Protection waits for Phase 7; holding off a landing costs Service Life, as there are no Supplies to spend.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 

@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { chooseAssets, watchForProblems } from "./helpers";
+import {
+  chooseAssets,
+  termsWithoutTooltips,
+  watchForProblems,
+} from "./helpers";
 import { holdOffSeed } from "./seeds";
 
 test("holding off a landing in a dust storm lands it later, with a shorter Service Life", async ({
@@ -24,6 +28,7 @@ test("holding off a landing in a dust storm lands it later, with a shorter Servi
     /Land in \d+ days/,
   );
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await panel.getByRole("button", { name: "Hold off" }).click();
   await expect(
@@ -45,6 +50,7 @@ test("holding off a landing in a dust storm lands it later, with a shorter Servi
   // A day and a half of Service Life for each day held.
   expect(Number(lifeLost)).toBe(Math.round(Number(daysHeld) * 1.5));
   await expect(page.getByTestId("summary-first-landing")).toBeVisible();
+  expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await page.getByRole("button", { name: "Continue" }).click();
   // The shortest Service Life is 1300 days, less what waiting cost, counted from the later landing.
