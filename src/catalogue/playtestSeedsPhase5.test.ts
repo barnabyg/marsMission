@@ -103,7 +103,7 @@ describe("the known seeds in the Phase 5 playtest guide", () => {
       "contingency:mars-orbit-insertion": "use",
     });
     expect(summary.contingencies[0]?.rescued).toBe(true);
-    expect(summary.moneyEndMillions).toBe(2180);
+    expect(summary.moneyEndMillions).toBe(2220);
   });
 
   it("has a Mars transfer burn that fails the day after launch", () => {

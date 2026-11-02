@@ -273,19 +273,9 @@ export const strategies: Strategy[] = [
     { ...steadyRovers, trajectory: "free-return" },
   ),
   playStyle(
-    "steady: shelter from storms",
-    "As steady: Soil analysis, sheltering from every dust storm.",
-    { ...steadyRovers, dustStorms: "shelter" },
-  ),
-  playStyle(
     "steady: carry on through storms",
     "As steady: Soil analysis, carrying on through every dust storm.",
     { ...steadyRovers, dustStorms: "carryOn" },
-  ),
-  playStyle(
-    "steady: safe mode",
-    "As steady: Soil analysis, going into safe mode at every solar particle event.",
-    { ...steadyRovers, solarParticleEvents: "safeMode" },
   ),
   playStyle(
     "steady: carry on through radiation",
@@ -298,9 +288,19 @@ export const strategies: Strategy[] = [
     { ...steadyRovers, goNoGo: "go" },
   ),
   playStyle(
-    "steady: hold off landings",
-    "As steady: Soil analysis, holding off every landing in a dust storm until it has passed.",
-    { ...steadyRovers, goNoGo: "holdOff" },
+    "steady: Long traverse, carry on through storms",
+    "As steady: Long traverse, carrying on through every dust storm.",
+    { ...steadyRovers, aim: "science", dustStorms: "carryOn" },
+  ),
+  playStyle(
+    "steady: Long traverse, carry on through radiation",
+    "As steady: Long traverse, carrying on through every solar particle event.",
+    { ...steadyRovers, aim: "science", solarParticleEvents: "carryOn" },
+  ),
+  playStyle(
+    "steady: Long traverse, land in storms",
+    "As steady: Long traverse, going ahead with every landing in a dust storm.",
+    { ...steadyRovers, aim: "science", goNoGo: "go" },
   ),
   playStyle(
     "steady: Survey once",

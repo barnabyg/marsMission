@@ -4,8 +4,8 @@
     "chancePerSitePerTurn": 0.3,
     "minDays": 100,
     "maxDays": 220,
-    "failureChance": 0.1,
-    "landingRiskMultiplier": 1.8,
+    "failureChance": 0.15,
+    "landingRiskMultiplier": 1.5,
     "serviceLifeLostPerDayHeld": 1.5,
     "description": "A dust storm has blown up over {site}, and will last {days} days."
   },

@@ -4,7 +4,7 @@ import {
   operateAssets,
   stoppedEntries,
 } from "./assetsInService";
-import { weatherDustStorms } from "./dustStorms";
+import { resolveDustStorms } from "./dustStorms";
 import {
   contingenciesAnswered,
   deliveryDayOf,
@@ -173,7 +173,7 @@ export function resolveTurn(
 ): {
   result: TurnResult;
   otherEntries: TimelineEntry[];
-  stormDecision: ReturnType<typeof weatherDustStorms>["decision"];
+  stormDecision: ReturnType<typeof resolveDustStorms>["decision"];
 } {
   const { launchWindowIntervalDays } = catalogue.program;
 
@@ -186,14 +186,14 @@ export function resolveTurn(
     flown,
   );
   const firstLanding = creditFirstLanding(rules, program, plan, flown);
-  const weather = weatherDustStorms(
+  const dustStorms = resolveDustStorms(
     catalogue,
     rules,
     program,
     operateAssets(catalogue, rules, program, plan, flown),
     answers,
   );
-  const { inService } = weather;
+  const { inService } = dustStorms;
   const survey = carryOutSurvey(catalogue, rules, program, inService);
   const research = carryOutOngoingResearch(catalogue, rules, inService);
   const scienceAwards = awardScienceMilestones(
@@ -280,7 +280,7 @@ export function resolveTurn(
     ...(firstLanding ? [firstLanding.entry] : []),
     ...scienceAwards.map(milestoneEntry),
     ...(survey.entry ? [survey.entry] : []),
-    ...weather.entries,
+    ...dustStorms.entries,
     ...stoppedEntries(rules, inService),
     ...funding.entries,
   ];
@@ -323,7 +323,7 @@ export function resolveTurn(
         ({ name, latitude, longitude }) => ({ name, latitude, longitude }),
       ),
       assetsAtMars,
-      dustStorms: weather.storms,
+      dustStorms: dustStorms.storms,
       // The sort is stable, so an award stays after the arrival or the Science that earned it.
       entries: [...flown.entries, ...otherEntries].sort(
         (first, second) => first.day - second.day,
@@ -356,7 +356,7 @@ export function resolveTurn(
       assetsFailed: inService
         .filter(({ failed }) => failed)
         .map(({ asset }) => asset.name),
-      dustStorms: weather.summary,
+      dustStorms: dustStorms.summary,
       solarParticleEvent: flown.solarParticleEvent?.summary ?? null,
       goNoGo: flown.goNoGo,
       survey: survey.summary,
@@ -368,5 +368,5 @@ export function resolveTurn(
       cancellationReason: faded.cancellationReason,
     },
   };
-  return { result, otherEntries, stormDecision: weather.decision };
+  return { result, otherEntries, stormDecision: dustStorms.decision };
 }

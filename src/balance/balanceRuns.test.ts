@@ -389,7 +389,7 @@ describe("the checks for invalid states", () => {
 
 describe("the report on Decision Points", () => {
   const sheltering = strategies.find(
-    ({ name }) => name === "steady: shelter from storms",
+    ({ name }) => name === "steady: Soil analysis",
   );
   const carryingOn = strategies.find(
     ({ name }) => name === "steady: carry on through storms",
@@ -409,7 +409,7 @@ describe("the report on Decision Points", () => {
       .filter((line) => line.startsWith("dust storm"))
       .map((line) => line.trim().split(/\s{2,}/));
     expect(rows.map((row) => row.slice(0, 3))).toEqual([
-      ["dust storm", "shelter", "steady: shelter from storms"],
+      ["dust storm", "shelter", "steady: Soil analysis"],
       ["dust storm", "carryOn", "steady: carry on through storms"],
     ]);
     for (const row of rows) expect(row).toHaveLength(7);

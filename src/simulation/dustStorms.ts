@@ -83,7 +83,7 @@ function whatSheltering(
  * Works out each dust storm over a known Landing Site. One raises a Decision Point only if an Asset is operating
  * there when it starts. One with no answer yet counts as sheltering, and `decision` is the earliest of those.
  */
-export function weatherDustStorms(
+export function resolveDustStorms(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
