@@ -82,9 +82,9 @@ export function eventEntries(page: Page): Locator {
 }
 
 /**
- * Does `start`, which sets the Turn going, and holds the Turn on the day a Mission Event, Milestone or Funding Threshold
- * with this title happens, to look at it. The hold is set from inside the page before `start`, as a click on Pause from
- * out here can land days later, or after the Turn has ended.
+ * Does `start`, which sets the Turn going and can then act or check things as it plays, and holds the Turn on the day a
+ * Mission Event, Milestone or Funding Threshold with this title happens, to look at it. The hold is set from inside the
+ * page before `start`, as a click on Pause from out here can land days later, or after the Turn has ended.
  */
 export async function pauseAtEvent(
   page: Page,

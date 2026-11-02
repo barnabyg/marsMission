@@ -59,7 +59,10 @@ test("switches to the Mars orbit view and back during a Turn, at any speed and w
   expect(await eventEntries(page).count()).toBe(happened);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  // At top speed, and the Turn still runs to its end.
+  // At top speed, after the arrival, and the Turn still runs to its end.
+  await pauseAtEvent(page, "Mars orbit insertion", () =>
+    page.getByRole("button", { name: "10x" }).click(),
+  );
   expect(await switchViewWhilePlaying(page, "10x", "Solar system")).toEqual({
     view: "Solar system",
     speed: "10x",
