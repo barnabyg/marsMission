@@ -14,7 +14,6 @@ import { orbiterAndLanderSeed, successSeed } from "./seeds";
 test("saves to a slot, moves on a Turn, loads the slot and sees the earlier state", async ({
   page,
 }) => {
-  // Over 5 s: plays a whole Turn between saving and loading.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
 
@@ -65,7 +64,6 @@ test("saves to a slot, moves on a Turn, loads the slot and sees the earlier stat
 test("keeps Survey progress, sites landed at and time left through saving to a slot and reloading", async ({
   page,
 }) => {
-  // Over 5 s: plays a whole Turn before saving.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterAndLanderSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);

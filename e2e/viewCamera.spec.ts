@@ -103,6 +103,7 @@ test("moves the view to Mars orbit when orbit insertion fails", async ({
 
 // A failed transfer burn goes to the spacecraft view, which e2e/spacecraft.spec.ts covers.
 test("stays on the solar system when Launch fails", async ({ page }) => {
+  // Over 5 s: plays out the rest of the Turn after the failure.
   await launchFirstMission(page, seedFailingAt("Launch"));
   await pauseAtEvent(page, "Launch failed");
   await expect(page.getByTestId("current-view")).toHaveText("Solar system");
@@ -157,7 +158,6 @@ test("a switch away holds until the next Mission Event with a view of its own", 
 test("ends up on the surface when several Mission Events pass at 10x", async ({
   page,
 }) => {
-  // Over 5 s: plays out a whole Turn, which is what the test is about.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);

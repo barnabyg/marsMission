@@ -94,6 +94,7 @@ test("using a Contingency that works saves the orbiter with a shorter Service Li
 test("using a Contingency that fails loses the orbiter and costs extra Public Support", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the Decision Point at Mars orbit insertion, then ends the Turn.
   await launch(page, orbitInsertionRescueFailsSeed);
   await decisionPoint(page)
     .getByRole("button", { name: /Use Reserve fuel/ })
@@ -111,6 +112,7 @@ test("using a Contingency that fails loses the orbiter and costs extra Public Su
 });
 
 test("declining a Contingency takes the ordinary loss", async ({ page }) => {
+  // Over 5 s: waits at 1x for the Decision Point at Mars orbit insertion, then ends the Turn.
   await launch(page, orbitInsertionRescuedSeed);
   await decisionPoint(page)
     .getByRole("button", { name: "Don't use it" })

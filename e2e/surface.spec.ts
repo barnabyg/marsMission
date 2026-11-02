@@ -150,7 +150,6 @@ test("disables the surface view from the start when the lander is lost at launch
 test("moves from the surface to the spacecraft on the day the only landing on its way is lost", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the failure so the pause lands in time.
   const problems = watchForProblems(page);
   // Later, because in real data it's over before anything can be clicked at this test speed.
   await page.route("**/data/mission-events.json", async (route) => {

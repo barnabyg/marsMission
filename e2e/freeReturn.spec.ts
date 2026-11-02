@@ -35,6 +35,7 @@ test("Free-return is offered only for a Mission with Mars orbit insertion, and s
 test("a Free-return Mission whose arrival burn fails comes back, at no Public Support and with a refund", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the arrival burn to fail, then again for the Mission to get back to Earth.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${freeReturnSeed}`);
   await trajectory(page).selectOption("free-return");
@@ -88,6 +89,7 @@ test("a Free-return Mission whose arrival burn fails comes back, at no Public Su
 test("a Contingency's Decision Point comes before the Free-return", async ({
   page,
 }) => {
+  // Over 5 s: waits at 1x for the Decision Point at the arrival burn, then ends the Turn.
   await page.goto(`/?seed=${freeReturnSeed}`);
   await trajectory(page).selectOption("free-return");
   await page.getByRole("checkbox", { name: /Reserve fuel/ }).check();

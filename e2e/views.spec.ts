@@ -128,7 +128,6 @@ test("never shows an orbiter whose Mission failed", async ({ page }) => {
 });
 
 test("shows a lander coming down and then on the surface", async ({ page }) => {
-  // Over 5 s: waits for the landing in real time, because it can't be reached any quicker without skipping the marker.
   const problems = watchForProblems(page);
   // A small window, so that frames are quick enough not to skip past the landing at this test speed.
   await page.setViewportSize({ width: 1280, height: 720 });

@@ -123,7 +123,6 @@ test("remembers the mute setting after the browser closes", async ({
 });
 
 test("keeps playing when the sound files can't be loaded", async ({ page }) => {
-  // Over 5 s: watches a whole Turn, to show that missing sounds never stop it.
   await page.route("**/sounds/*", (route) => route.abort());
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
