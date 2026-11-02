@@ -27,6 +27,8 @@ export function useMissionView(
   sites: readonly string[],
   /** Where the spacecraft view hands over to, or null while it has something to show. */
   spacecraftFallback: MissionViewId | null,
+  /** Whether the entry at this index has finished playing, after which it no longer asks for its view. */
+  hasPlayed: (entryIndex: number) => boolean,
 ): MissionView {
   const [choice, setChoice] = useState<ViewChoice>(startingChoice);
   const [pick, setPick] = useState<SitePick>({
@@ -36,7 +38,7 @@ export function useMissionView(
   return {
     view: viewWithSites(
       viewWithSpacecraft(
-        currentView(entries, entriesHappened, choice),
+        currentView(entries, entriesHappened, choice, hasPlayed),
         spacecraftFallback,
       ),
       sites,

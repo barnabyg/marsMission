@@ -15,6 +15,7 @@ import {
   lossFlash,
   msSinceLoss,
   refuellingOf,
+  rendezvousHasPlayed,
   rendezvousMs,
   tankerAt,
   tankerClimbMs,
@@ -416,5 +417,30 @@ describe("the Earth orbit shot", () => {
       // Outside the widest the shot sees, across a 16:9 screen.
       expect(cosine).toBeLessThan(Math.cos((40 * Math.PI) / 180));
     }
+  });
+});
+
+describe("whether the rendezvous has finished playing", () => {
+  const refuelling = refuellingOf(refuelled);
+  const at = (playedMs: number) => played(30, [0, 0, 1000, 1100], playedMs);
+
+  it("hasn't while it plays, and has once its real time is up", () => {
+    expect(
+      rendezvousHasPlayed(refuelling, at(1000 + rendezvousMs - 1), 2),
+    ).toBe(false);
+    expect(rendezvousHasPlayed(refuelling, at(1000 + rendezvousMs), 2)).toBe(
+      true,
+    );
+  });
+
+  it("is only about the rendezvous's own entry", () => {
+    expect(rendezvousHasPlayed(refuelling, at(99_000), 3)).toBe(false);
+    expect(rendezvousHasPlayed(null, at(99_000), 2)).toBe(false);
+  });
+
+  it("hasn't before it happens", () => {
+    expect(rendezvousHasPlayed(refuelling, played(1, [0, 0], 99_000), 2)).toBe(
+      false,
+    );
   });
 });

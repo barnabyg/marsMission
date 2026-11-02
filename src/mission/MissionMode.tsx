@@ -27,7 +27,11 @@ import {
   spacecraftFallback,
   spacecraftHasSomethingToShow,
 } from "./spacecraft/spacecraft";
-import { earthOrbitNow, refuellingOf } from "./spacecraft/refuelling";
+import {
+  earthOrbitNow,
+  refuellingOf,
+  rendezvousHasPlayed,
+} from "./spacecraft/refuelling";
 import {
   SpacecraftControls,
   spacecraftUnavailableId,
@@ -85,6 +89,7 @@ export function MissionMode({
     spacecraftAvailable
       ? null
       : spacecraftFallback(timeline.mission, state.day),
+    (entryIndex) => rendezvousHasPlayed(refuelling, state, entryIndex),
   );
   /** The explanation tied to each view's button while it has nothing to show. */
   const unavailable: Partial<Record<MissionViewId, string>> = {

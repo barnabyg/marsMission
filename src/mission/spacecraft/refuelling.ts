@@ -73,6 +73,17 @@ const leaveMs = rendezvousMs - approachMs - transferMs;
 /** How long a wrecked Tanker takes to bounce clear. */
 const bounceMs = 1500;
 
+/** Whether this entry is the rendezvous and has finished playing, after which Mission Mode moves back to where it was. */
+export function rendezvousHasPlayed(
+  refuelling: Refuelling | null,
+  played: Pick<PlaybackState, "playedMs" | "entriesPlayedMs">,
+  entryIndex: number,
+): boolean {
+  if (refuelling?.rendezvous?.entryIndex !== entryIndex) return false;
+  const since = msSinceEntry(played, entryIndex);
+  return since !== null && since >= rendezvousMs;
+}
+
 /**
  * - waiting: the Mission alone in orbit, before the Tanker launches
  * - tankerClimbing: the Tanker on its way up, which breaks up at the end of it if its launch failed
