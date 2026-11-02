@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import { dustStormOver } from "./dustStorms";
 import {
   formatMoney,
   roll,
@@ -57,6 +58,9 @@ export interface MissionOutcome {
   cutServiceLife: Map<Asset, number>;
   /** The Hazard that lost the Mission, if one did. */
   lostTo: string | null;
+  /** A landing held off for a dust storm, if one was: its Mission Event, and how long it waited. */
+  heldLanding: { eventId: string; days: number } | null;
+  goNoGo: TurnSummary["goNoGo"];
   /** The solar particle event the Mission met, if it did. */
   solarParticleEvent: {
     day: number;
@@ -77,6 +81,23 @@ function whatLands(catalogue: Catalogue, assets: Asset[]): string {
 }
 
 const decisionIdOf = (event: MissionEvent) => `contingency:${event.id}`;
+const goNoGoIdOf = (event: MissionEvent) => `go-no-go:${event.id}`;
+
+/** The day this Mission delivers an Asset, which a landing held off for a dust storm moves later. */
+export function deliveryDayOf(
+  rules: Rules,
+  plan: TurnPlan,
+  flown: Pick<MissionOutcome, "heldLanding">,
+  asset: Asset,
+): number {
+  const { heldLanding } = flown;
+  return (
+    rules.deliveryDay(asset, plan.mission) +
+    (heldLanding && asset.missionEvents.includes(heldLanding.eventId)
+      ? heldLanding.days
+      : 0)
+  );
+}
 
 /**
  * Rolls each of the Mission's Mission Events in turn, up to the first that fails for good or the first Decision
@@ -102,9 +123,23 @@ export function flyMission(
       .replaceAll("{site}", landingSite?.name ?? "")
       .replaceAll("{lander}", whatLands(catalogue, assets));
   const plannedEvents = mission ? rules.missionEventsFor(mission) : [];
-  const dayOf = (event: MissionEvent) => rules.dayOf(event, mission);
+  /** How long a landing has waited for a dust storm to pass, which moves it and everything after it. */
+  let daysHeld = 0;
+  const dayOf = (event: MissionEvent) => rules.dayOf(event, mission) + daysHeld;
   const stillOnBoard = (event: MissionEvent) =>
-    assets.filter((asset) => rules.deliveryDay(asset, mission) >= dayOf(event));
+    assets.filter(
+      (asset) =>
+        rules.deliveryDay(asset, mission) >= rules.dayOf(event, mission),
+    );
+  const { landingRiskMultiplier, serviceLifeLostPerDayHeld } =
+    catalogue.hazards.dustStorm;
+  /** The dust storm over the Landing Site on the day this Mission Event is due, if it lands and there is one. */
+  const stormOnLanding = (event: MissionEvent) => {
+    if (event.failureProbability !== "landingSite" || !landingSite) return null;
+    const storm = dustStormOver(catalogue, program, landingSite);
+    const due = dayOf(event);
+    return storm && due >= storm.fromDay && due < storm.toDay ? storm : null;
+  };
   const { freeReturn } = rules.trajectoryFor(mission);
   /** Whether failing this Mission Event brings the Mission home. */
   const comesHomeFrom = (event: MissionEvent) =>
@@ -139,18 +174,21 @@ export function flyMission(
     cutServiceLife: new Map(),
     lostTo: null,
     solarParticleEvent: null,
+    heldLanding: null,
+    goNoGo: null,
   };
-  /** Shortens the Service Life of each of these Assets by this share. */
-  const cut = (onBoard: Asset[], percent: number) => {
+  /** Shortens the Service Life of each of these Assets, to no less than a day. */
+  const shorten = (onBoard: Asset[], to: (days: number) => number) => {
     for (const asset of onBoard) {
       const days =
         outcome.cutServiceLife.get(asset) ??
         rules.serviceLifeFor(mission, asset).days;
-      outcome.cutServiceLife.set(
-        asset,
-        Math.max(1, Math.round((days * (100 - percent)) / 100)),
-      );
+      outcome.cutServiceLife.set(asset, Math.max(1, Math.round(to(days))));
     }
+  };
+  /** Shortens the Service Life of each of these Assets by this share. */
+  const cut = (onBoard: Asset[], percent: number) => {
+    shorten(onBoard, (days) => (days * (100 - percent)) / 100);
   };
   const particleDay = mission
     ? solarParticleEventDay(catalogue, rules, program, mission)
@@ -201,14 +239,87 @@ export function flyMission(
     ) {
       return outcome;
     }
-    const failed =
-      roll(program.seed, program.turnNumber, event.id) <
-      rules.failureProbability(
-        event,
-        rules.reliabilityLevelFor(mission, event.id),
-        program,
-        mission,
-      );
+    const usualRisk = rules.failureProbability(
+      event,
+      rules.reliabilityLevelFor(mission, event.id),
+      program,
+      mission,
+    );
+    let risk = usualRisk;
+    const storm = stormOnLanding(event);
+    if (storm && landingSite) {
+      const due = dayOf(event);
+      const wait = storm.toDay - due;
+      const landing = stillOnBoard(event);
+      const names = landing.map((asset) => asset.name).join(", ");
+      const lifeLost = Math.round(wait * serviceLifeLostPerDayHeld);
+      const raisedRisk = Math.min(1, usualRisk * landingRiskMultiplier);
+      outcome.entries.push({
+        kind: "decisionPoint",
+        day: due,
+        eventId: event.id,
+        hazard: "dustStorm",
+        siteName: landingSite.name,
+        title: `Go/no-go check at ${landingSite.name}: Decision Point`,
+        description: `A dust storm is over ${landingSite.name}, with ${wait} days still to go.`,
+      });
+      const answer = answers[goNoGoIdOf(event)];
+      if (answer === undefined) {
+        outcome.decisionPoint = {
+          id: goNoGoIdOf(event),
+          kind: "goNoGo",
+          day: due,
+          title: `Go/no-go check at ${landingSite.name}`,
+          description: `A dust storm is over ${landingSite.name}, with ${wait} days still to go, and ${event.name} is due. Landing: ${names}.`,
+          assets: landing.map((asset) => asset.name),
+          siteName: landingSite.name,
+          choices: [
+            {
+              answer: "go",
+              label: "Go",
+              riskBand: rules.riskBandFor(raisedRisk),
+              description: `Land now, in the storm, at a higher risk than usual.`,
+            },
+            {
+              answer: "holdOff",
+              label: "Hold off",
+              riskBand: rules.riskBandFor(usualRisk),
+              description: `Land in ${wait} days, once the storm has passed, at the usual risk. Waiting costs each Asset being landed ${lifeLost} days of Service Life, and its research starts later.`,
+            },
+          ],
+        };
+        outcome.deliveredAssets = assets.filter(
+          (asset) => !landing.includes(asset),
+        );
+        return outcome;
+      }
+      const holdingOff = answer === "holdOff";
+      outcome.goNoGo = {
+        siteName: landingSite.name,
+        answer: holdingOff ? "holdOff" : "go",
+        daysHeld: holdingOff ? wait : 0,
+        serviceLifeDaysLost: holdingOff ? lifeLost : 0,
+      };
+      outcome.entries.push({
+        kind: "hazard",
+        hazard: "dustStorm",
+        day: due,
+        title: holdingOff
+          ? `Holding off the landing at ${landingSite.name}`
+          : `Go for landing at ${landingSite.name}`,
+        description: holdingOff
+          ? `${names} wait ${wait} days for the storm to pass, and each loses ${lifeLost} days of Service Life.`
+          : `${names} are going down through the storm.`,
+      });
+      if (holdingOff) {
+        daysHeld += wait;
+        outcome.heldLanding = { eventId: event.id, days: wait };
+        shorten(landing, (days) => days - lifeLost);
+      } else {
+        risk = raisedRisk;
+      }
+    }
+    const failed = roll(program.seed, program.turnNumber, event.id) < risk;
     if (!failed) {
       outcome.entries.push({
         ...happened(event),
@@ -366,7 +477,7 @@ export function missionOnTimeline(
           ? (flown.landingSite?.name ?? null)
           : null,
         deliveredOnDay: delivered
-          ? rules.deliveryDay(asset, plan.mission)
+          ? deliveryDayOf(rules, plan, flown, asset)
           : null,
         lostOnDay: delivered ? null : flown.failedOnDay,
         crashed:

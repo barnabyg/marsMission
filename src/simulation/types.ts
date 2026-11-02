@@ -330,6 +330,15 @@ export interface TurnSummary {
     /** How much shorter it made each one's Service Life. */
     serviceLifeLossPercent: number;
   } | null;
+  /** The go/no-go check before a landing in a dust storm, if there was one, and how it was answered. */
+  goNoGo: {
+    siteName: string;
+    answer: "go" | "holdOff";
+    /** How long the landing waited, which is 0 if it went ahead. */
+    daysHeld: number;
+    /** The Service Life each Asset being landed lost by waiting. */
+    serviceLifeDaysLost: number;
+  } | null;
   /** Why the Program was cancelled at the end of this Turn, if it was. */
   cancellationReason: string | null;
 }
@@ -418,7 +427,7 @@ export interface PlannedTrajectory {
 }
 
 export type DecisionAnswer =
-  "use" | "decline" | "shelter" | "carryOn" | "safeMode";
+  "use" | "decline" | "shelter" | "carryOn" | "safeMode" | "go" | "holdOff";
 
 /** The answers to a Turn's Decision Points so far, by each one's `id`. */
 export type DecisionAnswers = Readonly<Record<string, DecisionAnswer>>;
@@ -427,7 +436,7 @@ export type DecisionAnswers = Readonly<Record<string, DecisionAnswer>>;
 export interface DecisionPoint {
   /** How the answers name this one. */
   id: string;
-  kind: "contingency" | "dustStorm" | "solarParticleEvent";
+  kind: "contingency" | "dustStorm" | "solarParticleEvent" | "goNoGo";
   day: number;
   /** What it's about, such as a Mission Event or a Hazard. */
   title: string;

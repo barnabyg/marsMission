@@ -250,6 +250,8 @@ export function testCatalogueFiles(): CatalogueFiles {
         minDays: 100,
         maxDays: 100,
         failureChance: 0,
+        landingRiskMultiplier: 2,
+        serviceLifeLostPerDayHeld: 1,
         description: "A storm over {site} for {days} days.",
       },
       solarParticleEvent: {

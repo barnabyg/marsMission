@@ -149,6 +149,13 @@ export function invalidStates(
       "A solar particle event's outcome doesn't follow from its answer.",
     ],
     [
+      summary.goNoGo !== null &&
+        (summary.goNoGo.answer === "holdOff") !==
+          (summary.goNoGo.daysHeld > 0 &&
+            summary.goNoGo.serviceLifeDaysLost > 0),
+      "A landing was held off with no wait or no cost, or went ahead with one.",
+    ],
+    [
       before.landingSites.some(({ id }) => !siteIds.includes(id)),
       "A known Landing Site was forgotten.",
     ],

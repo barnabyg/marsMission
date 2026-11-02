@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import { deliveryDayOf } from "./missionFlight";
 import {
   addDays,
   daysUntilServiceEnds,
@@ -65,6 +66,7 @@ export function operateAssets(
     deliveredAssets: Asset[];
     landingSite: LandingSite | undefined;
     cutServiceLife: Map<Asset, number>;
+    heldLanding: { eventId: string; days: number } | null;
   },
 ): AssetInService[] {
   const { launchWindowIntervalDays } = catalogue.program;
@@ -73,7 +75,10 @@ export function operateAssets(
       assetId: asset.id,
       name: asset.name,
       kind: asset.kind,
-      arrivedOn: addDays(program.date, rules.deliveryDay(asset, plan.mission)),
+      arrivedOn: addDays(
+        program.date,
+        deliveryDayOf(rules, plan, flown, asset),
+      ),
       landingSiteId: asset.landsAtSite ? (flown.landingSite?.id ?? null) : null,
       serviceLifeDays:
         flown.cutServiceLife.get(asset) ??
@@ -81,7 +86,7 @@ export function operateAssets(
       reliabilityLevelId: rules.assetReliabilityFor(plan.mission, asset).id,
       activityId: rules.activityFor(plan.mission, asset).id,
     },
-    fromDay: rules.deliveryDay(asset, plan.mission),
+    fromDay: deliveryDayOf(rules, plan, flown, asset),
   }));
   return [
     ...program.operatingAssets.map((asset) => ({

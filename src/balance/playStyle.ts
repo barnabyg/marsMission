@@ -69,6 +69,8 @@ export interface PlayStyle {
   dustStorms?: "shelter" | "carryOn";
   /** What it does at a solar particle event, which is safe mode unless it says otherwise. */
   solarParticleEvents?: "safeMode" | "carryOn";
+  /** What it does at a go/no-go check before a landing, which is to hold off unless it says otherwise. */
+  goNoGo?: "go" | "holdOff";
 }
 
 const surveyActivity = (activities: PlannedActivity[]) =>
@@ -279,6 +281,7 @@ export function playStyle(
         contingency: chosen.contingencies ?? "use",
         dustStorm: chosen.dustStorms ?? "shelter",
         solarParticleEvent: chosen.solarParticleEvents ?? "safeMode",
+        goNoGo: chosen.goNoGo ?? "holdOff",
       })[kind],
     plan(view, tools) {
       const { changes, surveying } = operatingActivities(view, chosen);

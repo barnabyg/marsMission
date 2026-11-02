@@ -5,6 +5,8 @@
     "minDays": 100,
     "maxDays": 220,
     "failureChance": 0.2,
+    "landingRiskMultiplier": 2,
+    "serviceLifeLostPerDayHeld": 1.5,
     "description": "A dust storm has blown up over {site}, and will last {days} days."
   },
   "solarParticleEvent": {

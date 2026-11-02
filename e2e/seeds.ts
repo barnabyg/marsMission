@@ -284,6 +284,23 @@ export const solarParticleEventSeed = seedWithParticles("unharmed");
 /** A seed whose first orbiter meets a solar particle event, which loses it if it carries on. */
 export const solarParticleLossSeed = seedWithParticles("lost");
 
+/**
+ * A seed whose first lander reaches the first known Landing Site during a dust storm, and holding off lands it safely
+ * after the storm with nothing else to answer that Turn.
+ */
+export const holdOffSeed = (() => {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const program = simulation.startProgram(seed);
+    const met = simulation.workOutTurn(program, firstLanding);
+    if (met.decisionPoint?.id !== "go-no-go:entry-descent-landing") continue;
+    const held = simulation.workOutTurn(program, firstLanding, {
+      "go-no-go:entry-descent-landing": "holdOff",
+    });
+    if (!held.decisionPoint && !held.result.summary.failure) return seed;
+  }
+  throw new Error("No seed gives a landing to hold off");
+})();
+
 /** A seed whose first orbiter fails Mars orbit insertion on a Free-return Trajectory. */
 export const freeReturnSeed = seedWhere("Mars orbit insertion", {
   mission: { ...firstPlan.mission, trajectoryId: "free-return" },

@@ -261,6 +261,16 @@ export const strategies: Strategy[] = [
     { ...steadyRovers, solarParticleEvents: "carryOn" },
   ),
   playStyle(
+    "steady: land in storms",
+    "As steady: Soil analysis, going ahead with every landing that a dust storm's go/no-go check would hold off.",
+    { ...steadyRovers, goNoGo: "go" },
+  ),
+  playStyle(
+    "steady: hold off landings",
+    "As steady: Soil analysis, holding off every landing in a dust storm until it has passed.",
+    { ...steadyRovers, goNoGo: "holdOff" },
+  ),
+  playStyle(
     "steady: Survey once",
     "As steady: Soil analysis, but the orbiter changes to research after its first Survey.",
     {

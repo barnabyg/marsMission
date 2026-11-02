@@ -7,6 +7,7 @@ import {
 import { weatherDustStorms } from "./dustStorms";
 import {
   contingenciesAnswered,
+  deliveryDayOf,
   missionFailure,
   missionOnTimeline,
   type MissionOutcome,
@@ -24,7 +25,6 @@ import {
   formatMoney,
   operatingKey,
   sum,
-  type Asset,
   type LandingSite,
   type Rules,
 } from "./rules";
@@ -54,8 +54,9 @@ function awardArrivalMilestones(
   rules: Rules,
   program: Program,
   plan: TurnPlan,
-  deliveredAssets: Asset[],
+  flown: MissionOutcome,
 ): MilestoneAward[] {
+  const { deliveredAssets } = flown;
   const earnedBy = ({ trigger }: Milestone) =>
     deliveredAssets.filter((asset) => {
       if ("totalScience" in trigger) return false;
@@ -73,7 +74,7 @@ function awardArrivalMilestones(
       milestone,
       day: Math.min(
         ...earnedBy(milestone).map((asset) =>
-          rules.deliveryDay(asset, plan.mission),
+          deliveryDayOf(rules, plan, flown, asset),
         ),
       ),
     }));
@@ -103,7 +104,7 @@ function creditFirstLanding(
     site,
     entry: {
       kind: "firstLanding",
-      day: rules.deliveryDay(landed, plan.mission),
+      day: deliveryDayOf(rules, plan, flown, landed),
       title: `First landing at ${site.name}`,
       description: `${site.description} It earns ${site.science} Science.`,
     },
@@ -182,7 +183,7 @@ export function resolveTurn(
     rules,
     program,
     plan,
-    flown.deliveredAssets,
+    flown,
   );
   const firstLanding = creditFirstLanding(rules, program, plan, flown);
   const weather = weatherDustStorms(
@@ -357,6 +358,7 @@ export function resolveTurn(
         .map(({ asset }) => asset.name),
       dustStorms: weather.summary,
       solarParticleEvent: flown.solarParticleEvent?.summary ?? null,
+      goNoGo: flown.goNoGo,
       survey: survey.summary,
       fundingPayouts: funding.payouts,
       researchGrants: research.researchGrants,

@@ -130,6 +130,15 @@ test("a switch away holds until the next Mission Event with a view of its own", 
     if (landing) landing.timing.days = 200;
     await route.fulfill({ json: events });
   });
+  // A dust storm on the later day could hold the landing at a go/no-go check, which this test isn't about.
+  await page.route("**/data/hazards.json", async (route) => {
+    const response = await route.fetch();
+    const hazards = (await response.json()) as {
+      dustStorm: { chancePerSitePerTurn: number };
+    };
+    hazards.dustStorm.chancePerSitePerTurn = 0;
+    await route.fulfill({ json: hazards });
+  });
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
   await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");

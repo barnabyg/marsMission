@@ -19,7 +19,7 @@ import type {
   TurnSummary,
 } from "./types";
 
-interface DustStorm {
+export interface DustStorm {
   site: LandingSite;
   /** The day it starts, which is never the Turn's first. */
   fromDay: number;
@@ -31,7 +31,7 @@ interface DustStorm {
  * The dust storm over a Landing Site this Turn, if there is one. Whether it happens, when and for how long depend
  * only on the seed, the Turn and that site's rolls, so no plan or answer can move it.
  */
-function dustStormOver(
+export function dustStormOver(
   catalogue: Catalogue,
   program: Program,
   site: LandingSite,

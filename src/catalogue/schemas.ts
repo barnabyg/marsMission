@@ -187,6 +187,10 @@ const hazardsSchema = z.strictObject({
     maxDays: z.number().int().positive(),
     // The chance that each Asset carrying on through one fails.
     failureChance: z.number().min(0).max(1),
+    // A landing during one over its Landing Site: what its risk is multiplied by if it goes ahead, and the days of
+    // Service Life each Asset being landed loses for each day it's held off instead.
+    landingRiskMultiplier: z.number().min(1),
+    serviceLifeLostPerDayHeld: z.number().positive(),
     // {site} stands for the Landing Site and {days} for how long it lasts.
     description: z.string().min(1),
   }),

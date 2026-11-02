@@ -111,6 +111,12 @@ function crossCheck(catalogue: Catalogue): string[] {
     );
   }
 
+  if (dustStorm.landingRiskMultiplier <= 1) {
+    problems.push(
+      `${catalogueFileNames.hazards}: dustStorm must raise a landing's risk with a landingRiskMultiplier above 1, or holding off would never be worth it`,
+    );
+  }
+
   const { solarParticleEvent } = hazards;
   const longestTransfer = Math.max(
     ...trajectories.map(({ transferDays }) => transferDays),

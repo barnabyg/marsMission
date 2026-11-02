@@ -90,6 +90,7 @@ function cautiousAnswer({ kind }: DecisionPoint): DecisionAnswer {
     contingency: "decline",
     dustStorm: "shelter",
     solarParticleEvent: "safeMode",
+    goNoGo: "holdOff",
   };
   return cautious[kind];
 }

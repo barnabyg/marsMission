@@ -108,6 +108,18 @@ export function TurnSummaryScreen({
           </ul>
         </section>
       )}
+      {summary.goNoGo && (
+        <section data-testid="summary-go-no-go">
+          <h2>Go/no-go check</h2>
+          <p>
+            <GameText>
+              {summary.goNoGo.answer === "holdOff"
+                ? `Held off the landing at ${summary.goNoGo.siteName} for ${summary.goNoGo.daysHeld} days, until the dust storm had passed. Each Asset landed lost ${summary.goNoGo.serviceLifeDaysLost} days of Service Life.`
+                : `Landed at ${summary.goNoGo.siteName} in a dust storm, at a higher risk.`}
+            </GameText>
+          </p>
+        </section>
+      )}
       {summary.solarParticleEvent && (
         <section data-testid="summary-solar-particle-event">
           <h2>
