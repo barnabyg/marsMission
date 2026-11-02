@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ProgramView, TurnSummary } from "../simulation/simulation";
 import { invalidStates } from "./invalidStates";
-import { playProgram } from "./playProgram";
+import { planningTools, playProgram } from "./playProgram";
 import { strategies } from "./strategies";
 import { certain, real, simulationOf, turns } from "./testHelpers";
 
@@ -12,21 +12,49 @@ describe("strategies that develop technology", () => {
     expect(developing.length).toBeGreaterThan(0);
   });
 
+  /** What each one develops, by the name it is reported under. */
+  const technologyOf = (name: string) =>
+    name.includes("Meridian Colossus")
+      ? "meridian-colossus"
+      : "endurance-rover";
+
   it.each(developing.map((strategy) => [strategy.name, strategy] as const))(
-    "%s develops the Endurance Rover, then sends it once it is built, which makes it Flight-proven",
-    (_, strategy) => {
+    "%s develops its technology, then flies it once it is built, which makes it Flight-proven",
+    (name, strategy) => {
       const certainly = simulationOf(certain);
       const { program } = playProgram(certainly, strategy, 1, turns);
       const view = certainly.readProgram(program);
+      const id = technologyOf(name);
+      expect(view.developments.find((each) => each.id === id)?.status).toBe(
+        "finished",
+      );
       expect(
-        view.developments.find(({ id }) => id === "endurance-rover")?.status,
-      ).toBe("finished");
-      expect(
-        view.assets.find(({ id }) => id === "endurance-rover")
+        [...view.assets, ...view.launchVehicles].find((each) => each.id === id)
           ?.technologyReadiness,
       ).toBe("flight-proven");
     },
   );
+
+  it("fly more than one Asset at once on the Meridian Colossus once it is built", () => {
+    const strategy = developing.find(({ name }) =>
+      name.endsWith("develop the Meridian Colossus"),
+    );
+    if (!strategy) throw new Error("Expected the strategy");
+    const certainly = simulationOf(certain);
+    let program = certainly.startProgram(1);
+    const launched: string[][] = [];
+    for (let turn = 1; turn <= turns; turn++) {
+      const plan = strategy.plan(
+        certainly.readProgram(program),
+        planningTools(certainly, program),
+      );
+      if (plan.mission?.launchVehicleId === "meridian-colossus") {
+        launched.push(plan.mission.assetIds);
+      }
+      program = certainly.runTurn(program, plan).program;
+    }
+    expect(launched.some((assetIds) => assetIds.length > 1)).toBe(true);
+  });
 
   it("are the only ones that start Development", () => {
     for (const strategy of strategies.filter(

@@ -335,6 +335,25 @@ export const strategies: Strategy[] = [
     },
   ),
   playStyle(
+    "steady: develop the Meridian Colossus",
+    "As steady: Soil analysis, starting Development of the Meridian Colossus as soon as it can afford it on top of the Turn's Mission, and once it is built flying it with one more Asset of each kind, with the Activity each lists first, as many as it can afford.",
+    {
+      ...steadyRovers,
+      develops: ["meridian-colossus"],
+      fillsVehicle: "meridian-colossus",
+    },
+  ),
+  playStyle(
+    "steady: develop the Meridian Colossus when rich",
+    "The same, starting that Development only once it has the money for several rovers.",
+    {
+      ...steadyRovers,
+      develops: ["meridian-colossus"],
+      developsWhile: (view) => view.moneyMillions >= 5000,
+      fillsVehicle: "meridian-colossus",
+    },
+  ),
+  playStyle(
     "steady: Survey once",
     "As steady: Soil analysis, but the orbiter changes to research after its first Survey.",
     {

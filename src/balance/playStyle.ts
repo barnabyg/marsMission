@@ -43,6 +43,11 @@ export interface PlayStyle {
   prefers?: string[];
   /** What Assets on the surface and orbiters doing research aim for, which can change as the Program goes on. */
   aim: Aim | ((view: ProgramView) => Aim);
+  /**
+   * A Launch Vehicle, by id, to fly once it is built, carrying one more Asset of each other kind it would send this
+   * Turn, as many as fit and it can afford, in place of a Mission with one Asset on the cheapest that can carry it.
+   */
+  fillsVehicle?: string;
   /** Technologies, by id, whose Development it starts as soon as it can afford it on top of the Turn's Mission, keeping any reserve. */
   develops?: string[];
   /** Starts that Development only while this is true. */
@@ -318,6 +323,49 @@ function missionsForAsset(
   );
 }
 
+/**
+ * The Mission on the PlayStyle's big Launch Vehicle, once it is built, with one more Asset of each other kind it sends,
+ * most first, then with fewer as they stop fitting. None if it has no such Launch Vehicle.
+ */
+function fuller(
+  mission: PlannedMission,
+  view: ProgramView,
+  playStyle: PlayStyle,
+): PlannedMission[] {
+  const vehicle = view.launchVehicles.find(
+    ({ id }) => id === playStyle.fillsVehicle,
+  );
+  if (!vehicle || !canFly(vehicle)) return [];
+  const onBoard = view.assets.filter(({ id }) => mission.assetIds.includes(id));
+  const site =
+    mission.landingSiteId ?? landingSiteFor(view, playStyle)?.id ?? null;
+  const extras = playStyle.order(view).flatMap((kind) => {
+    if (onBoard.some((asset) => asset.kind === kind)) return [];
+    const ofKind = view.assets.filter(
+      (asset) =>
+        asset.kind === kind &&
+        canFly(asset) &&
+        (!asset.landsAtSite || site !== null),
+    );
+    const asset =
+      ofKind.find(({ id }) => playStyle.prefers?.includes(id)) ?? ofKind[0];
+    return asset ? [asset] : [];
+  });
+  return extras
+    .map((_, index) => extras.slice(0, extras.length - index))
+    .map((added) => {
+      const lands = [...onBoard, ...added].some(
+        ({ landsAtSite }) => landsAtSite,
+      );
+      return {
+        ...mission,
+        launchVehicleId: vehicle.id,
+        assetIds: [...mission.assetIds, ...added.map(({ id }) => id)],
+        ...(lands && site !== null ? { landingSiteId: site } : {}),
+      };
+    });
+}
+
 /** The Research Grants the Assets operating now would pay over a whole Turn. */
 const grantsPerTurn = (view: ProgramView) =>
   view.operatingAssets
@@ -364,7 +412,7 @@ function missionPlan(
         tools,
         playStyle,
         surveying,
-      )) {
+      ).flatMap((each) => [...fuller(each, view, playStyle), each])) {
         const plan = { mission, operatingActivities: changes };
         if (
           tools.problemsWith(plan).length === 0 &&
