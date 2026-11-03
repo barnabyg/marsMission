@@ -3,14 +3,22 @@ import { storageKeyFor } from "../src/save/saveStore";
 import { tooltips, type Term } from "../src/ui/tooltips";
 import {
   chooseAssets,
+  endTurnWithoutLaunching,
   eventEntries,
   holdTurnWhenShown,
+  overrideProgramData,
   pauseAtEvent,
   playToNextTurn,
   termsInButtons,
   termsWithoutTooltips,
 } from "./helpers";
-import { landingSeed, pinpointLandingSeed, successSeed } from "./seeds";
+import {
+  colossusMoney,
+  crewSeed,
+  landingSeed,
+  pinpointLandingSeed,
+  successSeed,
+} from "./seeds";
 
 test("explains a game term on hover and on keyboard focus", async ({
   page,
@@ -230,6 +238,95 @@ test("explains the terms of technology in Planning Mode, Mission Mode and the Tu
     page,
     proven.locator("[data-term='Flight-proven']"),
     "Flight-proven",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+});
+
+test("explains the terms of Crew in Planning Mode, Mission Mode and the Turn summary", async ({
+  page,
+}) => {
+  // Over 5 s: two Turns of Development, then a Turn of a Crewed Mission played at 10x.
+  await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
+  await page.goto(`/?seed=${crewSeed}`);
+  await page
+    .getByTestId("development")
+    .filter({ hasText: "Meridian Colossus" })
+    .getByRole("checkbox", { name: "Start Development" })
+    .check();
+  await endTurnWithoutLaunching(page);
+  await endTurnWithoutLaunching(page);
+
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-colossus");
+  await page.getByRole("checkbox", { name: /Crewed Mission/ }).check();
+  const crewChoice = page.locator(".crew-choice");
+  for (const term of [
+    "Crewed Mission",
+    "Crew size",
+    "Supplies",
+    "Protection",
+  ] as const) {
+    await expectTooltip(
+      page,
+      crewChoice.locator(`[data-term='${term}']`),
+      term,
+    );
+  }
+  await expectTooltip(page, page.getByTestId("crew-names"), "Health");
+  const activity = page.getByRole("combobox", {
+    name: "Activity for the Crew",
+    exact: true,
+  });
+  await expectTooltip(page, activity, "Crew research");
+  await page
+    .getByRole("combobox", { name: "Crew destination" })
+    .selectOption("landingSite");
+  await expectTooltip(page, activity, "Field research");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await page
+    .getByRole("combobox", { name: "Crew destination" })
+    .selectOption("marsOrbit");
+
+  await pauseAtEvent(page, "Crew in Mars orbit", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
+  const arrived = eventEntries(page).filter({ hasText: "Crew in Mars orbit" });
+  await expectTooltip(
+    page,
+    arrived.locator("[data-term='Crew']").first(),
+    "Crew",
+  );
+  await expectTooltip(
+    page,
+    arrived.locator("[data-term='Crew research']"),
+    "Crew research",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.getByRole("button", { name: "10x" }).click();
+  const summary = page.getByTestId("turn-summary");
+  await expectTooltip(
+    page,
+    summary
+      .getByTestId("summary-health-lost")
+      .locator("[data-term='Health']")
+      .first(),
+    "Health",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await summary.getByRole("button", { name: "Continue" }).click();
+
+  const atMars = page.getByTestId("crew-at-mars");
+  await expectTooltip(
+    page,
+    atMars.locator("[data-term='Supplies']"),
+    "Supplies",
+  );
+  await expectTooltip(
+    page,
+    page.getByRole("combobox", { name: "Activity for the Crew in Mars orbit" }),
+    "Crew research",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 });
