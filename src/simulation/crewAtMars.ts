@@ -378,8 +378,9 @@ export function crewShipOnMission(
 }
 
 /**
- * Each place's Crew as Mission Mode shows them at Mars: their ship, for now, in orbit or standing at their Landing
- * Site, from the day the first of them is there. Crew of their own in the views are still to come.
+ * Each place's Crew as Mission Mode shows them at Mars: their ship, in orbit or standing at their Landing Site, from
+ * the day the first of them is there until the last of them dies, with each Crew member's own days there. They get
+ * about as their Activity has them do.
  */
 export function crewShipsAtMars(
   catalogue: Catalogue,
@@ -387,22 +388,29 @@ export function crewShipsAtMars(
   program: Program,
   atWork: CrewAtWork[],
 ): AssetAtMars[] {
-  return atWork.map(({ key, place, locationName, activityId, stays }) => ({
-    key: `crew:${key}`,
-    name: catalogue.crew.vehicleName,
-    kind: "crew",
-    landingSiteName: place.kind === "landingSite" ? locationName : null,
-    activityName: rules.activityNameOf({ activityId }),
-    surfaceMotion: "still",
-    arrivedOnDay: Math.min(
-      ...stays.map(({ member }) => daysBetween(program.date, member.arrivedOn)),
-    ),
-    fromDay: Math.min(...stays.map(({ fromDay }) => fromDay)),
-    // The ship stands in for its Crew, so it goes when the last of them dies.
-    untilDay: stays.every(({ untilDay }) => untilDay !== null)
-      ? Math.max(...stays.map(({ untilDay }) => untilDay ?? 0))
-      : null,
-  }));
+  return atWork.map(({ key, place, locationName, activityId, stays }) => {
+    const crew = stays.map(({ member, fromDay, untilDay, shelter }) => ({
+      name: member.name,
+      arrivedOnDay: daysBetween(program.date, member.arrivedOn),
+      fromDay,
+      untilDay,
+      ...(shelter ? { shelter } : {}),
+    }));
+    return {
+      key: `crew:${key}`,
+      name: catalogue.crew.vehicleName,
+      kind: "crew",
+      landingSiteName: place.kind === "landingSite" ? locationName : null,
+      activityName: rules.activityNameOf({ activityId }),
+      surfaceMotion: rules.surfaceMotionOf({ activityId }),
+      arrivedOnDay: Math.min(...crew.map(({ arrivedOnDay }) => arrivedOnDay)),
+      fromDay: Math.min(...crew.map(({ fromDay }) => fromDay)),
+      untilDay: crew.every(({ untilDay }) => untilDay !== null)
+        ? Math.max(...crew.map(({ untilDay }) => untilDay ?? 0))
+        : null,
+      crew,
+    };
+  });
 }
 
 /** Every Crew member at Mars at the end of the Turn, with their Health, for the Turn summary. */

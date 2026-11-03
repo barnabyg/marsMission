@@ -8,7 +8,9 @@ import {
 } from "three";
 import { addDays, type Timeline } from "../../simulation/simulation";
 import {
+  crewColor,
   degreesToRadians,
+  isCrew,
   useTexture,
   type CameraPose,
   type SceneLabel,
@@ -165,11 +167,21 @@ function Spacecraft({
   lost: boolean;
 }) {
   const { x, z } = spacecraftPosition(startDate, mission, day);
+  const color = lost ? "#ff5a44" : "#ffffff";
   return (
-    <mesh position={[x, 0, z]}>
-      <sphereGeometry args={[0.022, 24, 24]} />
-      <meshBasicMaterial color={lost ? "#ff5a44" : "#ffffff"} />
-    </mesh>
+    <group position={[x, 0, z]}>
+      <mesh>
+        <sphereGeometry args={[0.022, 24, 24]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+      {/* A Crewed Mission is ringed, so that it reads apart from a robotic one. */}
+      {mission.assets.some(isCrew) && (
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.04, 0.005, 8, 40]} />
+          <meshBasicMaterial color={lost ? color : crewColor} />
+        </mesh>
+      )}
+    </group>
   );
 }
 
@@ -294,7 +306,9 @@ export function solarSystemLabels(
     labels.push({
       text: mission.assetNames.join(", "),
       position: [spacecraft.x, 0, spacecraft.z - 0.04],
-      className: "spacecraft-label",
+      className: mission.assets.some(isCrew)
+        ? "crew-label"
+        : "spacecraft-label",
     });
   }
   if (mission && journeyIsReturning(mission, day)) {

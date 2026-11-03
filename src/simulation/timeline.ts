@@ -151,6 +151,19 @@ export interface MissionAsset {
 /** How an Asset gets about on the surface while doing its Activity. */
 export type SurfaceMotion = "traverse" | "nearby" | "still";
 
+/** One Crew member at Mars at some point in a Turn, as Mission Mode shows them. */
+export interface CrewMemberAtMarsOnTimeline {
+  name: string;
+  /** The day of the Turn they arrived, which is negative if that was in an earlier Turn. */
+  arrivedOnDay: number;
+  /** The day of the Turn they are there from, which is 0 if they already were. */
+  fromDay: number;
+  /** The day of the Turn they died, or null if they are still there at its end. */
+  untilDay: number | null;
+  /** The days they shelter from a dust storm, indoors, if they do. */
+  shelter?: { fromDay: number; toDay: number };
+}
+
 /** An Asset operating at Mars at some point in a Turn, or the ship of the Crew in one place there. */
 export interface AssetAtMars {
   /** Names this Asset and no other, and stays the same from Turn to Turn. */
@@ -170,6 +183,8 @@ export interface AssetAtMars {
   untilDay: number | null;
   /** Its Service Life, if something on this Turn's Mission cut it short. */
   cutServiceLifeDays?: number;
+  /** For the Crew's ship, every Crew member in its place during the Turn, in the order they came. */
+  crew?: CrewMemberAtMarsOnTimeline[];
 }
 
 /** What happened in a Turn, for Mission Mode to display. */

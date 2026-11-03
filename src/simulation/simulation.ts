@@ -67,7 +67,12 @@ export type {
   PlannedTrajectory,
 } from "./previews";
 export type { TurnSummary } from "./turnSummary";
-export type { AssetAtMars, Timeline, TimelineEntry } from "./timeline";
+export type {
+  AssetAtMars,
+  CrewMemberAtMarsOnTimeline,
+  Timeline,
+  TimelineEntry,
+} from "./timeline";
 
 export interface Simulation {
   startProgram(seed: number): Program;

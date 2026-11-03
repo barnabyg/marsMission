@@ -121,6 +121,28 @@ describe("a dust storm over Crew at their Landing Site", () => {
     ).toEqual([100, 100]);
   });
 
+  it("shows Crew who shelter indoors for the storm's days in Mission Mode", () => {
+    const { timeline } = stormy.runTurn(crewLanded(), skipTurn, {
+      [stormDecision]: "shelter",
+    });
+    const [storm] = timeline.dustStorms;
+    const shelter = { fromDay: storm?.fromDay, toDay: storm?.toDay };
+    expect(
+      timeline.assetsAtMars.find(({ kind }) => kind === "crew")?.crew,
+    ).toEqual([
+      expect.objectContaining({ name: "Ann Able", shelter }),
+      expect.objectContaining({ name: "Ben Baker", shelter }),
+    ]);
+    const carryingOn = stormy.runTurn(crewLanded(), skipTurn, {
+      [stormDecision]: "carryOn",
+    }).timeline;
+    expect(
+      carryingOn.assetsAtMars
+        .find(({ kind }) => kind === "crew")
+        ?.crew?.some((member) => "shelter" in member),
+    ).toBe(false);
+  });
+
   it("keeps the Crew earning if they carry on, at the chance in the data files of each losing Health", () => {
     const { summary, program, timeline } = stormy.runTurn(
       crewLanded(),

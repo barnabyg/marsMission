@@ -102,6 +102,24 @@ function rendezvous() {
   });
 }
 
+function crewLost() {
+  // A slow, low toll: two deep notes falling a fourth, each with a soft overtone, ringing a long way out.
+  return render(3, (time) =>
+    [
+      [196, 0],
+      [146.83, 0.7],
+    ].reduce(
+      (total, [note, start]) =>
+        total +
+        (bell(time, note, start, 1.1) * 0.45 +
+          bell(time, note * 2.01, start, 0.6) * 0.15 +
+          bell(time, note * 3, start, 0.3) * 0.06) *
+          Math.min(1, (3 - time) / 0.6),
+      0,
+    ),
+  );
+}
+
 /** Mono 16-bit PCM, which every browser can play. */
 function toWav(samples) {
   const dataSize = samples.length * 2;
@@ -131,6 +149,7 @@ const sounds = {
   "milestone.wav": milestone,
   "funding-threshold.wav": fundingThreshold,
   "rendezvous.wav": rendezvous,
+  "crew-lost.wav": crewLost,
 };
 
 for (const [fileName, make] of Object.entries(sounds)) {

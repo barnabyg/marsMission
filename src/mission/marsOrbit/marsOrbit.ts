@@ -13,6 +13,8 @@ const goldenAngle = 2.39996;
 
 interface Orbiter {
   name: string;
+  /** The Asset's kind, or "crew" for the Crew's ship. */
+  kind: string;
   /** Its place among the Turn's Assets at Mars, which stays the same all Turn. */
   slot: number;
 }
@@ -26,6 +28,7 @@ export function orbitersOn(
     .filter((asset) => asset.landingSiteName === null)
     .map((asset) => ({
       name: asset.name,
+      kind: asset.kind,
       slot: timeline.assetsAtMars.indexOf(asset),
     }));
 }
@@ -68,6 +71,7 @@ function landingDayOf(asset: Mission["assets"][number]): number | null {
 
 interface LandingMarker {
   name: string;
+  kind: string;
   siteName: string;
   /** How far it still has to come down, from 1 in orbit to 0 on the surface. */
   altitude: number;
@@ -89,6 +93,7 @@ export function landingMarkersOn(
     return [
       {
         name: asset.name,
+        kind: asset.kind,
         siteName: asset.landingSiteName,
         altitude: Math.max(0, 1 - (day - start) / (end - start)),
         crashed: asset.crashed && day >= landingDay,
@@ -101,13 +106,13 @@ export function landingMarkersOn(
 export function landedOn(
   timeline: Pick<Timeline, "assetsAtMars">,
   day: number,
-): { name: string; siteName: string }[] {
+): { name: string; kind: string; siteName: string }[] {
   return assetsAtMarsOn(timeline, day).flatMap(
-    ({ name, landingSiteName, fromDay }) =>
+    ({ name, kind, landingSiteName, fromDay }) =>
       landingSiteName === null ||
       (fromDay > 0 && day < fromDay + descentDaysAfter)
         ? []
-        : [{ name, siteName: landingSiteName }],
+        : [{ name, kind, siteName: landingSiteName }],
   );
 }
 

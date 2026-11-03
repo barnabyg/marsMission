@@ -11,6 +11,7 @@ import {
 import {
   earthOrbitCentre,
   earthOrbitLayout,
+  onBoardLabelClass,
   stackLayout,
   tankerLength,
   upperStageLength,
@@ -301,11 +302,11 @@ export function earthOrbitLabels(
   const lost = now.missionLost;
   const tanker = tankerAt(now);
   return [
-    ...assets.map(({ name }, index) => ({
+    ...assets.map(({ name, kind }, index) => ({
       text: lost ? `${name}: lost` : name,
       position: inTheShot([layout.stack + (along[index] ?? 0), labelHeight, 0]),
       testId: lost ? "spacecraft-lost" : "spacecraft-asset",
-      className: lost ? "crashed-label" : "spacecraft-label",
+      className: onBoardLabelClass(kind, lost),
     })),
     ...(tanker
       ? [

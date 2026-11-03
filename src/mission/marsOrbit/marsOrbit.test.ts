@@ -117,7 +117,7 @@ describe("a landing in the Mars orbit view", () => {
     expect(landedOn({ assetsAtMars }, 214.9)).toEqual([]);
     expect(landingMarkersOn(flying, 215)).toEqual([]);
     expect(landedOn({ assetsAtMars }, 215)).toEqual([
-      { name: "Lander", siteName: "Jezero Crater" },
+      { name: "Lander", kind: "orbiter", siteName: "Jezero Crater" },
     ]);
   });
 
@@ -126,7 +126,7 @@ describe("a landing in the Mars orbit view", () => {
       asset({ name: "Old Lander", landingSiteName: "Gale Crater" }),
     ];
     expect(landedOn({ assetsAtMars }, 0)).toEqual([
-      { name: "Old Lander", siteName: "Gale Crater" },
+      { name: "Old Lander", kind: "orbiter", siteName: "Gale Crater" },
     ]);
   });
 

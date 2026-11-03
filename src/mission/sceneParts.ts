@@ -21,6 +21,14 @@ export interface SceneLabel {
 
 export const degreesToRadians = Math.PI / 180;
 
+/** The Crew's colour in every view, which the labels' style matches. */
+export const crewColor = "#9effa0";
+
+/** Whether a Mission, an Asset or a place's Crew is the Crew's, which every view shows in a way of its own. */
+export function isCrew({ kind }: { kind: string }): boolean {
+  return kind === "crew";
+}
+
 export function useTexture(fileName: string) {
   return useMemo(() => {
     const texture = new TextureLoader().load(

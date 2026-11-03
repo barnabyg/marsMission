@@ -65,6 +65,12 @@
   color: #6fe6d4;
 }
 
+/* The Crew, in every view. */
+.crewLander-label > span,
+.crew-label > span {
+  color: #9effa0;
+}
+
 .surface-site-choice {
   display: flex;
   align-items: center;

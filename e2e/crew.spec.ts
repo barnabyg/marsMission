@@ -2,9 +2,13 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   endTurnWithoutLaunching,
   eventEntries,
+  holdSequence,
+  listenForSounds,
   overrideProgramData,
   pauseAtEvent,
   playToNextTurn,
+  soundsHeard,
+  surfaceAssets,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -217,6 +221,26 @@ test("lands a Crewed Mission at a Landing Site, and sees its Crew at work there 
   ).toBeVisible();
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
+  // Mission Mode has moved to the surface for a Crew landing of its own, with the Crew aboard until it touches down.
+  const scene = page.getByTestId("mission-scene");
+  await expect(page.getByTestId("current-view")).toHaveText("Surface");
+  await expect(scene).toHaveAttribute("data-sequence", "crew-landing");
+  await expect(scene).toHaveAttribute("data-crew-outside", "0");
+  await expect(page.getByTestId("surface-status")).toContainText(
+    "Crew landing: Odyssey",
+  );
+  const landed = holdSequence(page);
+  await page.getByRole("button", { name: "1x" }).click();
+  await landed;
+  await expect(scene).not.toHaveAttribute("data-sequence");
+  // Then they're out at work.
+  await expect(scene).toHaveAttribute("data-crew-outside", "2");
+  await expect(page.getByTestId("surface-status")).toContainText(
+    "Crew (Odyssey): Amara Okafor, Lena Petrova: Field research",
+  );
+  await expect(surfaceAssets(page)).toHaveText(["Odyssey"]);
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
   await page.getByRole("button", { name: "10x" }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-ongoing-research")).toContainText(
@@ -270,6 +294,7 @@ test("loses the Crew in a failed launch, and sees the drop in Public Support in 
   page,
 }) => {
   const problems = watchForProblems(page);
+  await listenForSounds(page);
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
   await page.goto(`/?seed=${crewLossSeed}`);
   await page
@@ -292,6 +317,11 @@ test("loses the Crew in a failed launch, and sees the drop in Public Support in 
     "Amara Okafor and Lena Petrova were lost when Launch failed. Losing Crew costs 52 Public Support.",
   );
   await expect(lost).toHaveClass(/failed/);
+  // Losing Crew has a sound of its own, after the failure's.
+  expect((await soundsHeard(page)).map(([file]) => file)).toEqual([
+    "failure.wav",
+    "crew-lost.wav",
+  ]);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await page.getByRole("button", { name: "10x" }).click();

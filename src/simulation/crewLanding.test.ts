@@ -279,6 +279,55 @@ describe("Crew at a Landing Site in Mission Mode", () => {
       }),
     );
   });
+
+  it("show each Crew member there, getting about as their Activity does", () => {
+    const { simulation, program } = lasting();
+    const { timeline } = simulation.runTurn(program, landCrew);
+    expect(
+      timeline.assetsAtMars.find(({ kind }) => kind === "crew"),
+    ).toMatchObject({
+      surfaceMotion: "traverse",
+      crew: [
+        { name: "Ann Able", arrivedOnDay: 205, fromDay: 205, untilDay: null },
+        { name: "Ben Baker", arrivedOnDay: 205, fromDay: 205, untilDay: null },
+      ],
+    });
+  });
+
+  it("show Crew who land where Crew already are beside them, each with the day they arrived", () => {
+    const { simulation, program } = wealthy();
+    const first = simulation.runTurn(program, landCrew);
+    const { timeline } = simulation.runTurn(first.program, landCrew);
+    const ships = timeline.assetsAtMars.filter(({ kind }) => kind === "crew");
+    expect(ships).toHaveLength(1);
+    // The Turn is 780 days long, so the first Crew arrived 575 days before it started.
+    expect(
+      ships[0]?.crew?.map(({ name, arrivedOnDay, fromDay }) => [
+        name,
+        arrivedOnDay,
+        fromDay,
+      ]),
+    ).toEqual([
+      ["Ann Able", -575, 0],
+      ["Ben Baker", -575, 0],
+      ["Cal Cole", 205, 205],
+      ["Dee Dunn", 205, 205],
+    ]);
+  });
+
+  it("show each Crew member until the day they die there", () => {
+    const { simulation, program } = withFailures([]);
+    const landed = simulation.runTurn(program, landCrew).program;
+    const { timeline } = simulation.runTurn(landed, skipTurn);
+    const died = timeline.entries.find(({ kind }) => kind === "crewLost");
+    expect(died?.day).toBeGreaterThan(0);
+    const [ship] = timeline.assetsAtMars.filter(({ kind }) => kind === "crew");
+    expect(ship?.crew?.map(({ untilDay }) => untilDay)).toEqual([
+      died?.day,
+      died?.day,
+    ]);
+    expect(ship?.untilDay).toBe(died?.day);
+  });
 });
 
 describe("saving Crew at a Landing Site", () => {
