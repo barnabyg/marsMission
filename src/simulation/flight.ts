@@ -12,9 +12,12 @@ import type { CrewLoss } from "./lostCrew";
 import { protectionOf } from "./protection";
 import {
   kilogramsOf,
+  settleSupplies,
   suppliesCourse,
   suppliesOptionOf,
   type Outage,
+  type SettledSupplies,
+  type SuppliesUser,
 } from "./supplies";
 import type {
   Asset,
@@ -262,33 +265,37 @@ export function startFlight(
     crew.length > 0 ? kilogramsOf(suppliesOptionOf(catalogue, mission)) : 0;
   const blowsTo = (name: string) =>
     outcome.crewBlows.filter(({ names }) => names.includes(name));
-  // Only Crew still alive use Supplies, and no one dies of having none before they run out, so the days each would
-  // die of everything else say when they do.
-  const suppliesTo = (day: number) =>
-    suppliesCourse(
-      catalogue,
-      suppliesKg,
-      crew.map((name) => ({
-        fromDay: 0,
-        untilDay: healthCourse(
-          catalogue.crew.maxHealth,
-          drainsInFlight(catalogue, turnDays, radiationCutPercent),
-          blowsTo(name),
-        ).diedOn,
-      })),
-      [],
-      day,
+  const healthWith = (name: string, toDay: number, outages: Outage[]) =>
+    healthCourse(
+      catalogue.crew.maxHealth,
+      [
+        ...drainsInFlight(catalogue, toDay, radiationCutPercent),
+        ...drainsWithoutSupplies(catalogue, outages, 0, toDay),
+      ],
+      blowsTo(name),
     );
-  // Health in flight is asked for often, and the outages change only with a new blow.
-  let outagesSoFar: { blows: number; outages: Outage[] } | null = null;
-  const suppliesOutages = () => {
-    if (outagesSoFar?.blows !== outcome.crewBlows.length) {
-      outagesSoFar = {
+  // Health in flight is asked for often, and the Supplies change only with a new blow.
+  let settledSoFar: {
+    blows: number;
+    supplies: SettledSupplies<SuppliesUser>;
+  } | null = null;
+  const settled = () => {
+    if (settledSoFar?.blows !== outcome.crewBlows.length) {
+      settledSoFar = {
         blows: outcome.crewBlows.length,
-        outages: suppliesTo(turnDays).outages,
+        supplies: settleSupplies(
+          catalogue,
+          { startKg: suppliesKg, refills: [] },
+          turnDays,
+          (outages) =>
+            crew.map((name) => ({
+              fromDay: 0,
+              untilDay: healthWith(name, turnDays, outages).diedOn,
+            })),
+        ),
       };
     }
-    return outagesSoFar.outages;
+    return settledSoFar.supplies;
   };
   const flight: Flight = {
     catalogue,
@@ -316,17 +323,10 @@ export function startFlight(
         ? flight.aliveOn(crew, day)
         : [];
     },
-    healthInFlight: (name, toDay) =>
-      healthCourse(
-        catalogue.crew.maxHealth,
-        [
-          ...drainsInFlight(catalogue, toDay, radiationCutPercent),
-          ...drainsWithoutSupplies(catalogue, suppliesOutages(), 0, toDay),
-        ],
-        blowsTo(name),
-      ),
-    suppliesOutages,
-    suppliesLeftOn: (day) => suppliesTo(day).leftKg,
+    healthInFlight: (name, toDay) => healthWith(name, toDay, settled().outages),
+    suppliesOutages: () => settled().outages,
+    suppliesLeftOn: (day) =>
+      suppliesCourse(catalogue, suppliesKg, settled().users, [], day).leftKg,
     aliveOn: (names, day) =>
       names.filter((name) => flight.healthInFlight(name, day).diedOn === null),
     stopWith: (onBoard, crewOnBoard) => {

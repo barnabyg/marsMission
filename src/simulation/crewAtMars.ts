@@ -20,7 +20,7 @@ import {
 import { healthRanOut, type CrewLoss } from "./lostCrew";
 import { protectionIdOf, radiationCutOf } from "./protection";
 import { addDays, daysBetween, type Rules } from "./rules";
-import { sameOutages, suppliesCourse, type Outage } from "./supplies";
+import { settleSupplies, type Outage } from "./supplies";
 import type { AssetAtMars, CrewArrivedEntry, MissionAsset } from "./timeline";
 import type { TurnSummary } from "./turnSummary";
 import type { PlaceAtMars, Program, TurnPlan } from "./types";
@@ -113,32 +113,35 @@ export function hurt(
 }
 
 /**
- * The Crew in one place with their shared Supplies worked out from their stays, and their stays from their Supplies.
- * Only Crew alive use Supplies, and running out lowers Health faster, so each pass starts from the days the last pass
- * said were out. The days up to the first refill are settled by the second pass, and a Turn has at most one refill.
+ * The Crew in one place with their shared Supplies settled against their stays (`settleSupplies`), the same way as on
+ * the way to Mars.
  */
 export function withSupplies(
   catalogue: Catalogue,
   crew: CrewAtWork,
 ): CrewAtWork {
-  const turnDays = catalogue.program.launchWindowIntervalDays;
   const { startKg, refills } = crew.supplies;
-  let outages: Outage[] = [];
-  for (let pass = 0; ; pass += 1) {
-    const stays = crew.stays.map((stay) => ({
-      ...stay,
-      ...stayOf(catalogue, stay.member, stay.fromDay, stay.blows, outages),
-    }));
-    const course = suppliesCourse(catalogue, startKg, stays, refills, turnDays);
-    if (sameOutages(course.outages, outages) || pass === 3) {
-      return {
-        ...crew,
-        stays,
-        supplies: { startKg, refills, leftKg: course.leftKg, outages },
-      };
-    }
-    outages = course.outages;
-  }
+  const { users, leftKg, outages } = settleSupplies(
+    catalogue,
+    crew.supplies,
+    catalogue.program.launchWindowIntervalDays,
+    (outagesSoFar) =>
+      crew.stays.map((stay) => ({
+        ...stay,
+        ...stayOf(
+          catalogue,
+          stay.member,
+          stay.fromDay,
+          stay.blows,
+          outagesSoFar,
+        ),
+      })),
+  );
+  return {
+    ...crew,
+    stays: users,
+    supplies: { startKg, refills, leftKg, outages },
+  };
 }
 
 /**

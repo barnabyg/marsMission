@@ -137,7 +137,7 @@ export const diedWithoutSupplies = (
   outages.some(({ fromDay, toDay }) => fromDay < diedOn && diedOn <= toDay);
 
 /** Whether two lists of outages are the same. */
-export const sameOutages = (
+const sameOutages = (
   first: readonly Outage[],
   second: readonly Outage[],
 ): boolean =>
@@ -146,6 +146,52 @@ export const sameOutages = (
     ({ fromDay, toDay }, index) =>
       second[index]?.fromDay === fromDay && second[index].toDay === toDay,
   );
+
+/**
+ * The most times `settleSupplies` works a store out. Each pass works out the Crew's Health from the days the pass
+ * before said the Supplies were out (none, for the first), then the Supplies from who was alive to use them. With no
+ * refill, the first pass already finds when they run out, since no one dies of having none before then, and the second
+ * confirms it. A Turn brings at most one refill, when its Mission's Crew arrive, which can end a run-out, and when the
+ * refill runs out in turn depends on who died before then. The first pass finds the first run-out, and the second who
+ * died during it. Crew who die too soon leave more Supplies for the rest, never fewer, so the second pass can find the
+ * next run-out later than it is but never earlier, the third finds it, and the fourth confirms it.
+ */
+const passesToSettle = 4;
+
+/** A store of Supplies and the Crew who share it, settled against each other. */
+export interface SettledSupplies<User extends SuppliesUser> {
+  users: User[];
+  /** What is left at the end, in kilograms. */
+  leftKg: number;
+  /** The days the Supplies were out, which the users' Health was worked out with. */
+  outages: Outage[];
+}
+
+/**
+ * A store of Supplies shared by Crew, settled against their Health: only Crew alive use Supplies, and running out makes
+ * Health fall faster, so each depends on the other. `usersWith` gives the Crew, with the day each dies, if these were
+ * the days the Supplies were out. Gives the Crew and the days out that agree with each other, and what is left. Used
+ * the same way on the way to Mars and at Mars, so the two can't settle them differently.
+ */
+export function settleSupplies<User extends SuppliesUser>(
+  catalogue: Catalogue,
+  {
+    startKg,
+    refills,
+  }: { startKg: number; refills: readonly { day: number; kg: number }[] },
+  toDay: number,
+  usersWith: (outages: Outage[]) => User[],
+): SettledSupplies<User> {
+  let outages: Outage[] = [];
+  for (let pass = 1; ; pass += 1) {
+    const users = usersWith(outages);
+    const course = suppliesCourse(catalogue, startKg, users, refills, toDay);
+    if (sameOutages(course.outages, outages) || pass === passesToSettle) {
+      return { users, leftKg: course.leftKg, outages };
+    }
+    outages = course.outages;
+  }
+}
 
 /**
  * When Supplies ran out this Turn, on the way or in each place at Mars, for the events column and the Turn summary.
