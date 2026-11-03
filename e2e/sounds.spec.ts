@@ -1,37 +1,13 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
   eventEntries,
+  listenForSounds,
   pauseAtEvent,
   playToNextTurn,
+  soundsHeard,
   watchForProblems,
 } from "./helpers";
 import { seedFailingAt, successSeed } from "./seeds";
-
-/** Records each sound as it starts, with what the events column shows at that moment. */
-async function listenForSounds(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    const log: string[][] = [];
-    (window as unknown as { soundLog: string[][] }).soundLog = log;
-    const play: () => Promise<void> = Reflect.get(
-      HTMLMediaElement.prototype,
-      "play",
-    );
-    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
-      log.push([
-        this.src.split("/").at(-1) ?? "",
-        document.querySelector("[data-testid=events-column]")?.textContent ??
-          "",
-      ]);
-      return play.call(this);
-    };
-  });
-}
-
-function soundsHeard(page: Page): Promise<string[][]> {
-  return page.evaluate(
-    () => (window as unknown as { soundLog: string[][] }).soundLog,
-  );
-}
 
 for (const speed of ["1x", "10x"]) {
   test(`plays each sound with what is on screen at ${speed}`, async ({

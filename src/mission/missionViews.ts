@@ -20,6 +20,8 @@ export function viewName(view: MissionViewId): string {
 
 /** The Mission Events with a view of their own, whether they succeed or fail. */
 const viewsOfMissionEvents: Partial<Record<string, MissionViewId>> = {
+  // Only while it plays: Mission Mode then moves back to where it was, as the Mission leaves Earth orbit.
+  rendezvous: "spacecraft",
   "mars-orbit-insertion": "marsOrbit",
   "entry-descent-landing": "surface",
 };
@@ -62,17 +64,22 @@ export const startingChoice: ViewChoice = {
 
 /**
  * The view showing now: that of the latest entry to ask for one since the player's last choice,
- * or else that choice. It depends only on how many entries have happened, so it comes out the
- * same at every speed, however many of them happen in one frame.
+ * or else that choice. It depends only on how many entries have happened, and on which of them
+ * have finished playing, which goes by real time played, so it comes out the same at every speed,
+ * however many of them happen in one frame.
  */
 export function currentView(
   entries: readonly TimelineEntry[],
   entriesHappened: number,
   choice: ViewChoice,
+  /** Whether the entry at this index has finished playing, such as a rendezvous, which then no longer asks for its view. */
+  hasPlayed: (entryIndex: number) => boolean = () => false,
 ): MissionViewId {
   const asked = entries
     .slice(choice.entriesHappened, entriesHappened)
-    .map(viewAskedForBy)
+    .map((entry, index) =>
+      hasPlayed(choice.entriesHappened + index) ? null : viewAskedForBy(entry),
+    )
     .findLast((view) => view !== null);
   return asked ?? choice.view;
 }

@@ -12,13 +12,37 @@
     "publicSupportLoss": 20
   },
   {
+    "id": "tanker-launch",
+    "name": "Tanker launch",
+    "description": "A Tanker lifts off from Earth with propellant for the Orbital refuelling of the Mission waiting in orbit.",
+    "failureDescription": "The Tanker broke up on the way to orbit, so the Mission can't take on the propellant it needs to leave for Mars.",
+    "timing": {
+      "from": "launch",
+      "days": 1
+    },
+    "failureProbability": 0.04,
+    "publicSupportLoss": 20
+  },
+  {
+    "id": "rendezvous",
+    "name": "Rendezvous",
+    "description": "The Mission meets the Tanker in Earth orbit, docks and fills its tanks for the journey to Mars.",
+    "failureDescription": "The Mission and the Tanker collided as they docked, wrecking the Mission.",
+    "timing": {
+      "from": "launch",
+      "days": 2
+    },
+    "failureProbability": 0.05,
+    "publicSupportLoss": 20
+  },
+  {
     "id": "mars-transfer-burn",
     "name": "Mars transfer burn",
     "description": "The upper stage fires and sends the Mission out of Earth orbit towards Mars.",
     "failureDescription": "The upper stage shut down early, leaving the spacecraft on a path that will never reach Mars.",
     "timing": {
-      "from": "launch",
-      "days": 1
+      "from": "departure",
+      "days": 0
     },
     "failureProbability": 0.04,
     "publicSupportLoss": 20

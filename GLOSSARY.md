@@ -24,6 +24,18 @@ _Avoid_: Expedition, flight (as a name for a Mission; "in flight" for one on its
 The vehicle chosen from the catalogue to lift a Mission off Earth. It sets how much mass the Mission can carry.
 _Avoid_: Rocket, booster
 
+**Orbital refuelling**:
+Filling a Mission's tanks in Earth orbit from a Tanker, so that a larger Launch Vehicle can send much more mass to Mars. It adds two Mission Events between launch and the Mars transfer burn: the Tanker's launch and the Rendezvous.
+_Avoid_: In-orbit refuelling, propellant transfer, refueling
+
+**Tanker**:
+A second launch for a Mission that needs Orbital refuelling, carrying only propellant up to it in Earth orbit. Its launch is a Mission Event of its own.
+_Avoid_: Fuel ship, depot
+
+**Rendezvous**:
+The Mission Event in which a Mission meets its Tanker in Earth orbit, docks and takes on propellant for the journey to Mars.
+_Avoid_: Docking (as the name of the Mission Event)
+
 **Trajectory**:
 The way a Mission travels to Mars, chosen from a few fixed options such as Slow, Fast or Free-return. It trades fuel and mass against Duration and safety.
 _Avoid_: Route, flight path, transfer
@@ -60,6 +72,10 @@ _Avoid_: Part, module, component, unit
 **Service Life**:
 How long an Asset keeps operating once in place. Longer Service Life costs more.
 _Avoid_: Lifespan, durability
+
+**Benefit**:
+What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset on the surface. A second Asset giving the same Benefit adds nothing.
+_Avoid_: Bonus, buff, synergy
 
 **Activity**:
 What an Asset, or all the Crew at one Landing Site, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.
@@ -182,7 +198,7 @@ _Avoid_: Mission length, time budget
 ## Technology
 
 **Technology Readiness**:
-How mature a technology is, from flight-proven to not yet built. Less mature technology costs more, needs development time before it can fly and fails more often until it has flown successfully.
+How mature a technology is: Flight-proven, built but unproven, or not yet built, when it needs Development before it can fly. Until it is Flight-proven, it costs more and fails more often.
 _Avoid_: TRL (in player-facing text), tech level
 
 **Development**:

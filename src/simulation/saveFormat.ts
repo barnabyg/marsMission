@@ -130,7 +130,24 @@ function activityBeforeActivities(
   return activity.id;
 }
 
-const newestFormat = format6;
+/** Adds Technology Readiness and Development: the technologies the Program has made Flight-proven, whether each Asset flew unproven, and the Developments started. Everything a save from before it holds started Flight-proven, and it has started no Development. */
+const format7 = format6.extend({
+  provenTechnologyIds: z.array(z.string()),
+  developments: z.array(
+    z.strictObject({
+      technologyId: z.string(),
+      finishesOnTurn: z.number().int().positive(),
+    }),
+  ),
+  operatingAssets: z.array(
+    z.strictObject({
+      ...format6.shape.operatingAssets.element.shape,
+      flewUnproven: z.boolean(),
+    }),
+  ),
+});
+
+const newestFormat = format7;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -198,6 +215,18 @@ const formats: readonly SaveFormat[] = [
       operatingAssets: old.operatingAssets.map((asset) => ({
         ...asset,
         activityId: activityBeforeActivities(asset, catalogue),
+      })),
+    }),
+  },
+  {
+    schema: format6,
+    upgrade: (old: z.output<typeof format6>): z.output<typeof format7> => ({
+      ...old,
+      provenTechnologyIds: [],
+      developments: [],
+      operatingAssets: old.operatingAssets.map((asset) => ({
+        ...asset,
+        flewUnproven: false,
       })),
     }),
   },

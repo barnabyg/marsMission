@@ -82,6 +82,26 @@ function fundingThreshold() {
   );
 }
 
+function rendezvous() {
+  const noise = noiseSource();
+  let hiss = 0;
+  return render(1.4, (time) => {
+    // Two dull metallic clunks as the craft dock, then a soft hiss of propellant flowing.
+    const clunks = [0, 0.18].reduce(
+      (total, start) =>
+        total +
+        (bell(time, 180, start, 0.07) + bell(time, 433, start, 0.04)) * 0.5,
+      0,
+    );
+    hiss += (noise() - hiss) * 0.3;
+    const flow =
+      time < 0.35
+        ? 0
+        : Math.min(1, (time - 0.35) / 0.2) * ((1.4 - time) / 1.05);
+    return clunks + hiss * flow * 0.5;
+  });
+}
+
 /** Mono 16-bit PCM, which every browser can play. */
 function toWav(samples) {
   const dataSize = samples.length * 2;
@@ -110,6 +130,7 @@ const sounds = {
   "failure.wav": failure,
   "milestone.wav": milestone,
   "funding-threshold.wav": fundingThreshold,
+  "rendezvous.wav": rendezvous,
 };
 
 for (const [fileName, make] of Object.entries(sounds)) {

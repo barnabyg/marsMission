@@ -28,6 +28,11 @@ import {
   spacecraftHasSomethingToShow,
 } from "./spacecraft/spacecraft";
 import {
+  earthOrbitNow,
+  refuellingOf,
+  rendezvousHasPlayed,
+} from "./spacecraft/refuelling";
+import {
   SpacecraftControls,
   spacecraftUnavailableId,
 } from "./spacecraft/SpacecraftControls";
@@ -75,6 +80,8 @@ export function MissionMode({
   const sites = sitesDuring(sitesToShow(timeline, state.day), sequence);
   const spacecraftAvailable = spacecraftHasSomethingToShow(timeline, state);
   const particles = solarParticleEventShowing(timeline.entries, state);
+  const refuelling = useMemo(() => refuellingOf(timeline.entries), [timeline]);
+  const earthOrbit = earthOrbitNow(refuelling, state);
   const { view, chooseView, site, pickSite } = useMissionView(
     timeline.entries,
     state.entriesHappened,
@@ -82,6 +89,7 @@ export function MissionMode({
     spacecraftAvailable
       ? null
       : spacecraftFallback(timeline.mission, state.day),
+    (entryIndex) => rendezvousHasPlayed(refuelling, state, entryIndex),
   );
   /** The explanation tied to each view's button while it has nothing to show. */
   const unavailable: Partial<Record<MissionViewId, string>> = {
@@ -108,6 +116,7 @@ export function MissionMode({
           site={site}
           sequence={sequence}
           particles={particles}
+          earthOrbit={earthOrbit}
           operatingAssetCount={operatingAssets.length}
         />
       </Suspense>
@@ -210,6 +219,7 @@ export function MissionMode({
           view={view}
           available={spacecraftAvailable}
           particles={particles}
+          earthOrbit={earthOrbit}
         />
         <h2>Operating at Mars</h2>
         <ul data-testid="operating-at-mars">

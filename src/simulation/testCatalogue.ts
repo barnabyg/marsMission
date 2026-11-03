@@ -3,6 +3,7 @@ import {
   type Catalogue,
   type CatalogueFiles,
 } from "../catalogue/catalogue";
+import { testTechnologies } from "./testTechnology";
 
 /** Long enough that an Asset outlasts the rule tests that aren't about Service Life. */
 const longLife = [
@@ -12,6 +13,7 @@ const longLife = [
 
 /** A small catalogue with round numbers, so balance changes to the real data files don't break rule tests. */
 export function testCatalogueFiles(): CatalogueFiles {
+  const technologies = testTechnologies(longLife);
   return {
     program: {
       firstLaunchWindow: "2028-12-01",
@@ -96,6 +98,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         costMillions: 100,
         capacityTonnes: 5,
         missionEvents: ["test-launch", "test-burn"],
+        technologyReadiness: "flight-proven",
       },
       {
         id: "test-heavy",
@@ -103,7 +106,9 @@ export function testCatalogueFiles(): CatalogueFiles {
         costMillions: 300,
         capacityTonnes: 10,
         missionEvents: ["test-launch", "test-burn"],
+        technologyReadiness: "flight-proven",
       },
+      ...technologies.launchVehicles,
     ],
     trajectories: [
       {
@@ -147,6 +152,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureChancePerTurn: 0,
         serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
+        technologyReadiness: "flight-proven",
         activities: ["test-survey", "test-nothing", "test-research"],
       },
       {
@@ -158,6 +164,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureChancePerTurn: 0,
         serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
+        technologyReadiness: "flight-proven",
         activities: ["test-survey", "test-nothing"],
       },
       {
@@ -169,7 +176,9 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureChancePerTurn: 0,
         serviceLifeOptions: longLife,
         missionEvents: ["test-arrival"],
+        technologyReadiness: "flight-proven",
         activities: ["test-nothing"],
+        benefit: { raises: "surfaceResearch", percent: 50 },
       },
       {
         id: "test-lander",
@@ -180,6 +189,7 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureChancePerTurn: 0,
         serviceLifeOptions: longLife,
         missionEvents: ["test-landing"],
+        technologyReadiness: "flight-proven",
         activities: ["test-nothing", "test-research"],
         landsAtSite: true,
       },
@@ -192,9 +202,11 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureChancePerTurn: 0,
         serviceLifeOptions: longLife,
         missionEvents: ["test-landing"],
+        technologyReadiness: "flight-proven",
         activities: ["test-soil", "test-traverse", "test-nothing"],
         landsAtSite: true,
       },
+      ...technologies.assets,
     ],
     landingSites: [
       {
@@ -334,12 +346,13 @@ export function testCatalogueFiles(): CatalogueFiles {
         failureProbability: 0,
         publicSupportLoss: 20,
       },
+      ...technologies.refuellingEvents,
       {
         id: "test-burn",
         name: "Test burn",
         description: "Burns.",
         failureDescription: "The engine cut out.",
-        timing: { from: "launch", days: 1 },
+        timing: { from: "departure", days: 0 },
         failureProbability: 0,
         publicSupportLoss: 30,
       },

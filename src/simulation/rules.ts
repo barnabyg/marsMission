@@ -1,5 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { PlannedMission, Program } from "./types";
+import { technologiesOn, unprovenMultiplier } from "./technologyReadiness";
 import type { SurfaceMotion } from "./timeline";
 
 export type MissionEvent = Catalogue["missionEvents"][number];
@@ -84,14 +85,51 @@ export function createRules(catalogue: Catalogue) {
     return trajectory;
   }
 
+  /** The Mission Events a Mission goes through, in the order the Catalogue lists them. */
+  function eventsOf(mission: PlannedMission | null): MissionEvent[] {
+    const eventIds = new Set(
+      technologiesOn(catalogue, mission).flatMap(
+        ({ missionEvents }) => missionEvents,
+      ),
+    );
+    return [...eventIds].flatMap((eventId) =>
+      catalogue.missionEvents.filter((event) => event.id === eventId),
+    );
+  }
+
+  // Kept for each Mission, because balance runs ask for the day of every Mission Event many times over. Plans are
+  // never changed in place, so a Mission's departure never changes.
+  const departureDays = new WeakMap<PlannedMission, number>();
+
+  /** The day a Mission leaves Earth orbit for Mars: the day after the last of its Mission Events timed from launch. */
+  function departureDay(mission: PlannedMission | null): number {
+    const known = mission ? departureDays.get(mission) : undefined;
+    if (known !== undefined) return known;
+    const day =
+      1 +
+      Math.max(
+        0,
+        ...eventsOf(mission).flatMap(({ timing }) =>
+          timing.from === "launch" ? [timing.days] : [],
+        ),
+      );
+    if (mission) departureDays.set(mission, day);
+    return day;
+  }
+
   /** The day of the Turn a Mission Event happens to this Mission. */
   function dayOf(
     { timing }: MissionEvent,
     mission: PlannedMission | null,
   ): number {
-    return timing.from === "launch"
-      ? timing.days
-      : trajectoryFor(mission).transferDays + timing.days;
+    switch (timing.from) {
+      case "launch":
+        return timing.days;
+      case "departure":
+        return departureDay(mission) + timing.days;
+      case "arrival":
+        return trajectoryFor(mission).transferDays + timing.days;
+    }
   }
 
   /** Whether a Mission can fly this Trajectory, which a Free-return only allows if it has the burn it's for. */
@@ -199,8 +237,15 @@ export function createRules(catalogue: Catalogue) {
   function inServiceFailureChance(
     asset: Asset,
     level: ReliabilityLevel,
+    flewUnproven: boolean,
   ): number {
-    return asset.failureChancePerTurn * level.failureMultiplier;
+    const unproven = flewUnproven
+      ? (asset.unproven?.failureMultiplier ?? 1)
+      : 1;
+    return Math.min(
+      1,
+      asset.failureChancePerTurn * unproven * level.failureMultiplier,
+    );
   }
 
   /** The Landing Sites that can be chosen so far. */
@@ -221,19 +266,48 @@ export function createRules(catalogue: Catalogue) {
     return catalogue.landingSites.find((site) => site.id === id);
   }
 
-  /** The one calculation behind both a Mission Event's roll and the risk band Planning Mode shows. */
+  /** What a landing's risk is multiplied by for what it lands, which is as risky as the riskiest Asset in it. */
+  function landingRiskMultiplierOf(mission: PlannedMission | null): number {
+    return Math.max(
+      ...catalogue.assets
+        .filter(
+          ({ id, landsAtSite }) =>
+            landsAtSite === true && mission?.assetIds.includes(id),
+        )
+        .map(({ landingRiskMultiplier }) => landingRiskMultiplier ?? 1),
+      // A Mission with nothing that lands has no landing to multiply.
+      0,
+    );
+  }
+
+  /**
+   * The one calculation behind both a Mission Event's roll and the risk band Planning Mode shows. An unproven
+   * technology raises the Mission Events it brings, and the most unproven of those on board sets how much.
+   */
   function failureProbability(
     event: MissionEvent,
     level: ReliabilityLevel,
     program: Program,
     mission: PlannedMission | null,
   ): number {
+    const unproven = Math.max(
+      1,
+      ...technologiesOn(catalogue, mission)
+        .filter(({ missionEvents }) => missionEvents.includes(event.id))
+        .map((technology) => unprovenMultiplier(program, technology)),
+    );
     if (event.failureProbability !== "landingSite") {
-      return event.failureProbability * level.failureMultiplier;
+      return Math.min(
+        1,
+        event.failureProbability * unproven * level.failureMultiplier,
+      );
     }
     const site = landingSiteById(mission?.landingSiteId);
     // Planning Mode always names a site. A plan that doesn't is refused, so this 1 is never rolled.
-    return (site ? landingRisk(program, site) : 1) * level.failureMultiplier;
+    const risk = site
+      ? landingRisk(program, site) * landingRiskMultiplierOf(mission)
+      : 1;
+    return Math.min(1, risk * unproven * level.failureMultiplier);
   }
 
   /** The day this Mission delivers an Asset, which is when its last Mission Event happens. */
@@ -255,21 +329,9 @@ export function createRules(catalogue: Catalogue) {
 
   /** The Mission Events a Mission goes through, in the order they happen. */
   function missionEventsFor(mission: PlannedMission): MissionEvent[] {
-    const vehicle = catalogue.launchVehicles.find(
-      (candidate) => candidate.id === mission.launchVehicleId,
+    return eventsOf(mission).sort(
+      (first, second) => dayOf(first, mission) - dayOf(second, mission),
     );
-    const assets = catalogue.assets.filter((asset) =>
-      mission.assetIds.includes(asset.id),
-    );
-    const eventIds = new Set([
-      ...(vehicle?.missionEvents ?? []),
-      ...assets.flatMap((asset) => asset.missionEvents),
-    ]);
-    return [...eventIds]
-      .flatMap((eventId) =>
-        catalogue.missionEvents.filter((event) => event.id === eventId),
-      )
-      .sort((first, second) => dayOf(first, mission) - dayOf(second, mission));
   }
 
   return {

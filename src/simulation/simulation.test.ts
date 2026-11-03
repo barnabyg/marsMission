@@ -21,6 +21,9 @@ describe("starting a Program", () => {
     expect(view.launchVehicles.map((vehicle) => vehicle.id)).toEqual([
       "test-vehicle",
       "test-heavy",
+      "test-prototype",
+      "test-future-vehicle",
+      "test-refuelled",
     ]);
     expect(view.assets.map((asset) => asset.id)).toEqual([
       "test-orbiter",
@@ -28,6 +31,8 @@ describe("starting a Program", () => {
       "test-relay",
       "test-lander",
       "test-rover",
+      "test-new-lander",
+      "test-future-orbiter",
     ]);
   });
 });
@@ -37,6 +42,7 @@ describe("validating a plan", () => {
     const { simulation, program } = setup();
     expect(simulation.validatePlan(program, sendOrbiter)).toEqual({
       costMillions: 500,
+      developmentCostMillions: 0,
       massTonnes: 2,
       capacityTonnes: 5,
       problems: [],

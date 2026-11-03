@@ -48,6 +48,14 @@ export interface SurveyEntry {
   description: string;
 }
 
+/** A technology has been used successfully for the first time. */
+export interface FlightProvenEntry {
+  kind: "flightProven";
+  day: number;
+  title: string;
+  description: string;
+}
+
 export interface AssetEndedEntry {
   kind: "assetEnded";
   day: number;
@@ -92,6 +100,7 @@ export type TimelineEntry =
   | AssetFailedEntry
   | AssetEndedEntry
   | SurveyEntry
+  | FlightProvenEntry
   | MissionEventEntry
   | MilestoneEntry
   | FundingThresholdEntry

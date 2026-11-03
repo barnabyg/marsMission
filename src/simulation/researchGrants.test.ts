@@ -229,7 +229,7 @@ describe("what Planning Mode is told about Research Grants", () => {
   const grantsFor = (simulation: Simulation) =>
     Object.fromEntries(
       simulation
-        .previewAssets({
+        .previewAssets(simulation.startProgram(1), {
           launchVehicleId: "test-vehicle",
           assetIds: ["test-orbiter"],
         })[0]

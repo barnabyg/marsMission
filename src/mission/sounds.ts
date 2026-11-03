@@ -5,12 +5,17 @@ export const soundFileNames = {
   failure: "failure.wav",
   milestone: "milestone.wav",
   fundingThreshold: "funding-threshold.wav",
+  rendezvous: "rendezvous.wav",
 } as const;
 
 export type SoundName = keyof typeof soundFileNames;
 
-/** The Mission Events with a sound of their own when they succeed. */
-const successSounds: Partial<Record<string, SoundName>> = { launch: "launch" };
+/** The Mission Events with a sound of their own when they succeed. A tanker lifts off as the Mission did. */
+const successSounds: Partial<Record<string, SoundName>> = {
+  launch: "launch",
+  "tanker-launch": "launch",
+  rendezvous: "rendezvous",
+};
 
 /**
  * Matches each timeline entry to its sound, or null to play silently. This is the only place that

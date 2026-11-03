@@ -4,35 +4,14 @@ import { playProgram, type TurnRecord } from "./playProgram";
 import type { Strategy } from "./playStyle";
 import { strategies as allStrategies } from "./strategies";
 import { sum } from "./sum";
+import { mean, percent, table, tenth, whole } from "./reportFormat";
+import { technology } from "./technologyReport";
 
 /** How many Turns each Program plays at most. */
 const turnHorizon = 20;
 const barWidth = 40;
 
 type Play = TurnRecord[];
-
-const mean = (values: number[]) =>
-  values.length > 0 ? sum(values) / values.length : 0;
-const percent = (part: number, whole: number) =>
-  whole > 0 ? ((100 * part) / whole).toFixed(1) : "-";
-const whole = (value: number) => String(Math.round(value));
-const tenth = (value: number) => value.toFixed(1);
-
-/** Lines of a fixed-width table: the first column on the left and the rest on the right. */
-function table(headers: string[], rows: string[][]): string[] {
-  const widths = headers.map((header, column) =>
-    Math.max(header.length, ...rows.map((row) => row[column]?.length ?? 0)),
-  );
-  return [headers, ...rows].map((row) =>
-    row
-      .map((cell, column) =>
-        column === 0
-          ? cell.padEnd(widths[column] ?? 0)
-          : cell.padStart(widths[column] ?? 0),
-      )
-      .join("  "),
-  );
-}
 
 const totalOf = (play: Play, read: (turn: TurnRecord) => number) =>
   sum(play.map(read));
@@ -56,7 +35,7 @@ function summaryRow(name: string, plays: Play[]): string[] {
     whole(thresholds),
     whole(grants),
     percent(grants, thresholds + grants),
-    whole(perProgram((turn) => turn.missionCostMillions)),
+    whole(perProgram((turn) => turn.spentMillions)),
     tenth(perProgram((turn) => Number(turn.launched))),
     tenth(perProgram((turn) => Number(turn.missionFailed))),
     tenth(perProgram((turn) => turn.assetsFailed)),
@@ -96,7 +75,7 @@ function turnTable(plays: Play[]): string[] {
       whole(mean(turns.map((turn) => turn.science))),
       whole(mean(turns.map((turn) => turn.publicSupport))),
       tenth(mean(turns.map((turn) => turn.assetsOperating))),
-      whole(mean(turns.map((turn) => turn.missionCostMillions))),
+      whole(mean(turns.map((turn) => turn.spentMillions))),
       whole(thresholds),
       whole(grants),
       percent(thresholds, thresholds + grants),
@@ -343,7 +322,15 @@ function researchScience(plays: Play[]): string {
       ([activityName, total]) =>
         `${activityName} ${whole(total / plays.length)}`,
     );
-  return `Science per Program from Ongoing Research: ${parts.join(", ") || "none"}`;
+  const fromBenefits = plays
+    .flat()
+    .reduce((total, { benefitScience }) => total + benefitScience, 0);
+  // Left out with none, so that strategies that never use a Benefit report as they did before Benefits.
+  const benefits =
+    fromBenefits > 0
+      ? `, of which Benefits added ${whole(fromBenefits / plays.length)}`
+      : "";
+  return `Science per Program from Ongoing Research: ${parts.join(", ") || "none"}${benefits}`;
 }
 
 function howToRead(programs: number): string[] {
@@ -352,8 +339,8 @@ function howToRead(programs: number): string[] {
     "A strategy's Turn table shows means over the Programs that played that Turn, at the end of it, so cancelled Programs",
     "drop out of later rows. Active% is out of all Programs. Thresh% and Grant% are shares of that Turn's income.",
     "Summary columns are means per Program: Turns played, final Science and Money, total income from Funding Thresholds and",
-    "Research Grants and the Grant% of it, total Spent on Missions, Missions launched, Failed and Assets Lost in service,",
-    "and Assets operating at the end of each Turn played.",
+    "Research Grants and the Grant% of it, total Spent on Missions and Development, Missions launched, Failed and Assets",
+    "Lost in service, and Assets operating at the end of each Turn played.",
   ];
 }
 
@@ -391,6 +378,10 @@ export function balanceReport(
     "Programs that gave each answer at least once, and how they ended: Gave% of the strategy's Programs, then their means.",
     "",
     ...decisionOutcomes(results),
+    "",
+    "== Technology ==",
+    "",
+    ...technology(results),
   ];
   for (const { strategy, plays } of results) {
     lines.push(

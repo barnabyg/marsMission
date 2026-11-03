@@ -35,6 +35,7 @@ describe("the mass a Launch Vehicle can carry", () => {
     const { simulation, program } = setup();
     expect(simulation.validatePlan(program, both)).toEqual({
       costMillions: 1000,
+      developmentCostMillions: 0,
       massTonnes: 5,
       capacityTonnes: 10,
       problems: [],

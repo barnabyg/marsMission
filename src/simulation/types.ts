@@ -1,3 +1,5 @@
+import type { Raise } from "./benefits";
+import type { TechnologyReadiness } from "./technologyReadiness";
 import type { Timeline } from "./timeline";
 
 export interface PlannedMission {
@@ -27,10 +29,15 @@ export interface TurnPlan {
   mission: PlannedMission | null;
   /** New Activities for Assets already operating, by their `key`. Any left out keep the one they have. */
   operatingActivities?: Record<string, string>;
+  /** The technologies whose Development starts this Turn, by id. It is paid for in full this Turn, with or without a Mission. */
+  developmentIds?: string[];
 }
 
 export interface PlanCheck {
+  /** What the Mission costs, which is 0 with no Mission. */
   costMillions: number;
+  /** What the Developments started this Turn cost, on top of the Mission's cost. */
+  developmentCostMillions: number;
   /** What the Mission's Assets weigh, against what its Launch Vehicle can carry. */
   massTonnes: number;
   capacityTonnes: number;
@@ -50,6 +57,8 @@ interface OperatingAsset {
   reliabilityLevelId: string;
   /** What it does each Turn until the player changes it. */
   activityId: string;
+  /** Whether it flew before its technology was Flight-proven, which raises its chance of failing in service for good. */
+  flewUnproven: boolean;
 }
 
 /** An Activity as Planning Mode offers it. */
@@ -66,6 +75,8 @@ export interface PlannedActivity {
     /** The Research Grant it pays for that Science. Zero if it pays none. */
     researchGrantMillions: number;
   } | null;
+  /** The Benefit that earnsPerTurn is raised by, as long as the Assets giving it keep operating. Left out if none raises it. */
+  raisedBy?: Raise;
 }
 
 type ProgramStatus =
@@ -90,6 +101,10 @@ export interface Program {
   surveyedLandingSiteIds: string[];
   /** The Public Support levels of the Funding Thresholds already paid. */
   fundingThresholdsPaid: number[];
+  /** The Assets and Launch Vehicles this Program has made Flight-proven by using them successfully. Those the Catalogue starts Flight-proven aren't listed. */
+  provenTechnologyIds: string[];
+  /** The Developments started, each with the Turn at whose start it finishes. One that has finished stays listed. */
+  developments: { technologyId: string; finishesOnTurn: number }[];
   operatingAssets: OperatingAsset[];
   status: ProgramStatus;
 }
@@ -121,17 +136,25 @@ export interface ProgramView {
   launchVehicles: {
     id: string;
     name: string;
+    /** What it costs now, which is more until it is Flight-proven. */
     costMillions: number;
     capacityTonnes: number;
+    technologyReadiness: TechnologyReadiness;
   }[];
   assets: {
     id: string;
     name: string;
     kind: string;
+    /** What it costs now, which is more until it is Flight-proven. */
     costMillions: number;
     massTonnes: number;
     landsAtSite: boolean;
+    technologyReadiness: TechnologyReadiness;
+    /** What it does for other Assets while it operates at Mars, or null if it gives no Benefit. */
+    benefit: string | null;
   }[];
+  /** Each technology that needs Development before it can fly, Launch Vehicles first, whether or not it has started. */
+  developments: PlannedDevelopment[];
   /** Whether a Survey would still lower a landing risk or reveal a Landing Site. */
   somethingLeftToSurvey: boolean;
   /** The Landing Sites the player can choose. */
@@ -149,6 +172,18 @@ export interface ProgramView {
   }[];
 }
 
+/** A technology's Development as Planning Mode shows it. */
+export interface PlannedDevelopment {
+  /** The id of the Asset or Launch Vehicle, which is how a plan names it to start its Development. */
+  id: string;
+  name: string;
+  costMillions: number;
+  turns: number;
+  status: "notStarted" | "inProgress" | "finished";
+  /** How many Turns until it finishes, at the start of a Turn: all of them before it starts, and 0 once it has finished. */
+  turnsLeft: number;
+}
+
 interface AwardedMilestone {
   name: string;
   science: number;
@@ -163,11 +198,22 @@ export interface OngoingResearchEarned {
   publicSupport: number;
   /** How many days of the Turn it was in service. */
   days: number;
+  /** What other Assets' Benefits added to it, which science and publicSupport include. Left out if they raised none of its days. */
+  benefit?: {
+    /** The Assets that gave the Benefit. */
+    givenBy: string[];
+    /** How many of its days were raised. */
+    days: number;
+    science: number;
+    publicSupport: number;
+  };
 }
 
 /** What changed over a Turn. */
 export interface TurnSummary {
   missionCostMillions: number;
+  /** What the Developments started this Turn cost, which moneyEndMillions takes off as well as the Mission's cost. */
+  developmentCostMillions: number;
   moneyStartMillions: number;
   moneyEndMillions: number;
   scienceGained: number;
@@ -180,6 +226,12 @@ export interface TurnSummary {
   firstLanding: { siteName: string; science: number } | null;
   /** What each Asset doing research earned, which scienceGained and publicSupportGained include. */
   ongoingResearch: OngoingResearchEarned[];
+  /** The Assets and Launch Vehicles that became Flight-proven this Turn. */
+  technologiesProven: string[];
+  /** The technologies whose Development started this Turn. */
+  developmentsStarted: string[];
+  /** The technologies whose Development finishes as the next Turn starts, which can then be chosen for a Mission. */
+  developmentsFinished: string[];
   /** The Assets whose Service Life ended this Turn. */
   assetsEnded: string[];
   /** The Assets that failed in service this Turn, before their Service Life ended. */

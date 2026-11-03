@@ -3,6 +3,7 @@ import {
   chooseAssets,
   eventEntries,
   holdSequence,
+  pauseAtEvent,
   surfaceAssets,
   watchForProblems,
 } from "./helpers";
@@ -133,10 +134,10 @@ test("a failure with no Contingency bought raises no Decision Point", async ({
   page,
 }) => {
   await launch(page, orbitInsertionRescuedSeed, false);
-  await page.getByRole("button", { name: "10x" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Mars orbit insertion failed" }),
-  ).toBeVisible();
+  // Held from inside the page as the failure shows, as at 10x a busy machine can reach the Turn's end before a check.
+  await pauseAtEvent(page, "Mars orbit insertion failed", () =>
+    page.getByRole("button", { name: "10x" }).click(),
+  );
   await expect(decisionPoint(page)).toHaveCount(0);
 });
 

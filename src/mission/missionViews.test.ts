@@ -92,6 +92,18 @@ describe("which view a timeline entry asks for", () => {
     expect(viewAskedForBy(missionEvent(eventId, "failure"))).toBe("spacecraft");
   });
 
+  it("asks for the spacecraft at the rendezvous, whether it succeeds or fails", () => {
+    expect(viewAskedForBy(missionEvent("rendezvous"))).toBe("spacecraft");
+    expect(viewAskedForBy(missionEvent("rendezvous", "failure"))).toBe(
+      "spacecraft",
+    );
+  });
+
+  it("asks for nothing at the tanker launch, as at launch", () => {
+    expect(viewAskedForBy(missionEvent("tanker-launch"))).toBeNull();
+    expect(viewAskedForBy(missionEvent("tanker-launch", "failure"))).toBeNull();
+  });
+
   it("asks for the solar system when a failure swings the Mission back to Earth", () => {
     expect(
       viewAskedForBy({
@@ -284,5 +296,40 @@ describe("the player's pick of Landing Site", () => {
     expect(
       landingSitePick(entries, 3, { siteName: null, entriesHappened: 0 }),
     ).toBeNull();
+  });
+});
+
+describe("the view for a moment that plays for a while", () => {
+  const entries = [
+    missionEvent("launch"),
+    missionEvent("tanker-launch"),
+    missionEvent("rendezvous"),
+    missionEvent("mars-transfer-burn"),
+    missionEvent("mars-orbit-insertion"),
+  ];
+  const rendezvousIndex = 2;
+  const playing = () => false;
+  const played = (entryIndex: number) => entryIndex === rendezvousIndex;
+
+  it("moves to the spacecraft for the rendezvous while it plays", () => {
+    expect(currentView(entries, 4, startingChoice, playing)).toBe("spacecraft");
+  });
+
+  it("moves back to where it was once the rendezvous has played", () => {
+    expect(currentView(entries, 4, startingChoice, played)).toBe("solarSystem");
+    const watchingMars: ViewChoice = { view: "marsOrbit", entriesHappened: 1 };
+    expect(currentView(entries, 4, watchingMars, played)).toBe("marsOrbit");
+  });
+
+  it("still moves on for a later entry with a view of its own", () => {
+    expect(currentView(entries, 5, startingChoice, played)).toBe("marsOrbit");
+    expect(currentView(entries, 5, startingChoice, playing)).toBe("marsOrbit");
+  });
+
+  it("keeps a choice the player makes while it plays", () => {
+    const lookedAway: ViewChoice = { view: "solarSystem", entriesHappened: 3 };
+    expect(currentView(entries, 4, lookedAway, playing)).toBe("solarSystem");
+    const lookedBack: ViewChoice = { view: "spacecraft", entriesHappened: 3 };
+    expect(currentView(entries, 4, lookedBack, played)).toBe("spacecraft");
   });
 });

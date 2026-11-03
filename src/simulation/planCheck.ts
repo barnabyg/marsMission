@@ -1,6 +1,8 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { formatMoney, operatingKey, sum, type Rules } from "./rules";
-import type { PlanCheck, Program, TurnPlan } from "./types";
+import { costOf, readinessOf, type Technology } from "./technologyReadiness";
+import { developmentsStarting } from "./development";
+import type { PlanCheck, PlannedMission, Program, TurnPlan } from "./types";
 
 const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
 
@@ -30,6 +32,16 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
       : [`${assetName} can't do the Activity "${activity.name}".`];
   }
 
+  /** What's wrong with flying a technology, which is nothing once it is built. */
+  function notBuiltProblems(
+    program: Program,
+    technology: Technology,
+  ): string[] {
+    return readinessOf(program, technology) === "not-built"
+      ? [`${technology.name} can't fly until it has been through Development.`]
+      : [];
+  }
+
   function operatingActivityProblems(
     program: Program,
     plan: TurnPlan,
@@ -52,15 +64,52 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
 
   function checkPlan(program: Program, plan: TurnPlan): PlanCheck {
     if (program.status.kind !== "active") {
-      return { ...noMission, problems: ["This Program has ended."] };
-    }
-    if (!plan.mission) {
       return {
         ...noMission,
-        problems: operatingActivityProblems(program, plan),
+        developmentCostMillions: 0,
+        problems: ["This Program has ended."],
       };
     }
+    const mission = plan.mission
+      ? checkMission(program, plan.mission)
+      : { ...noMission, problems: [] };
+    const developments = developmentsStarting(
+      catalogue,
+      program,
+      plan.developmentIds ?? [],
+    );
+    const problems = [
+      ...operatingActivityProblems(program, plan),
+      ...mission.problems,
+      ...developments.problems,
+    ];
+    const totalMillions = mission.costMillions + developments.costMillions;
+    if (totalMillions > program.moneyMillions) {
+      const paying = !plan.mission
+        ? developments.technologies.length > 1
+          ? "These Developments cost"
+          : "This Development costs"
+        : developments.technologies.length === 0
+          ? "This Mission costs"
+          : developments.technologies.length > 1
+            ? "This Mission and these Developments cost"
+            : "This Mission and Development cost";
+      problems.push(
+        `${paying} ${formatMoney(totalMillions)}, but the Program only has ${formatMoney(program.moneyMillions)}.`,
+      );
+    }
+    return {
+      ...mission,
+      developmentCostMillions: developments.costMillions,
+      problems,
+    };
+  }
 
+  /** What a Mission costs and weighs, and what's wrong with it apart from what the whole plan costs. */
+  function checkMission(
+    program: Program,
+    planned: PlannedMission,
+  ): Omit<PlanCheck, "developmentCostMillions"> {
     const {
       launchVehicleId,
       assetIds,
@@ -69,16 +118,18 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
       assetChoices = {},
       contingencyIds = [],
       trajectoryId,
-    } = plan.mission;
-    const problems = operatingActivityProblems(program, plan);
+    } = planned;
+    const problems: string[] = [];
     let costMillions = 0;
     let massTonnes = 0;
 
     const vehicle = catalogue.launchVehicles.find(
       (candidate) => candidate.id === launchVehicleId,
     );
-    if (vehicle) costMillions += vehicle.costMillions;
-    else
+    if (vehicle) {
+      costMillions += costOf(program, vehicle);
+      problems.push(...notBuiltProblems(program, vehicle));
+    } else
       problems.push(`There is no Launch Vehicle called "${launchVehicleId}".`);
 
     if (assetIds.length === 0) {
@@ -92,11 +143,12 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
         (candidate) => candidate.id === assetId,
       );
       if (asset) {
-        costMillions += asset.costMillions;
+        costMillions += costOf(program, asset);
         massTonnes += asset.massTonnes;
+        problems.push(...notBuiltProblems(program, asset));
       } else problems.push(`There is no Asset called "${assetId}".`);
     }
-    const plannedEvents = missionEventsFor(plan.mission);
+    const plannedEvents = missionEventsFor(planned);
     if (new Set(contingencyIds).size < contingencyIds.length) {
       problems.push("A Mission can't buy the same Contingency twice.");
     }
@@ -124,8 +176,8 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     ) {
       problems.push(`There is no Trajectory called "${trajectoryId}".`);
     }
-    const trajectory = trajectoryFor(plan.mission);
-    if (!trajectoryOffered(trajectory, plan.mission)) {
+    const trajectory = trajectoryFor(planned);
+    if (!trajectoryOffered(trajectory, planned)) {
       const burn = catalogue.missionEvents.find(
         ({ id }) => id === trajectory.freeReturn?.arrivalBurn,
       );
@@ -198,8 +250,8 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     }
     for (const asset of catalogue.assets) {
       if (assetIds.includes(asset.id)) {
-        costMillions += serviceLifeFor(plan.mission, asset).costMillions;
-        costMillions += assetReliabilityFor(plan.mission, asset).costMillions;
+        costMillions += serviceLifeFor(planned, asset).costMillions;
+        costMillions += assetReliabilityFor(planned, asset).costMillions;
       }
     }
 
@@ -213,15 +265,10 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     }
     costMillions += sum(
       plannedEvents.map(
-        (event) => reliabilityLevelFor(plan.mission, event.id).costMillions,
+        (event) => reliabilityLevelFor(planned, event.id).costMillions,
       ),
     );
 
-    if (costMillions > program.moneyMillions) {
-      problems.push(
-        `This Mission costs ${formatMoney(costMillions)}, but the Program only has ${formatMoney(program.moneyMillions)}.`,
-      );
-    }
     return { costMillions, massTonnes, capacityTonnes, problems };
   }
 

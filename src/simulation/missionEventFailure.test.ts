@@ -45,6 +45,7 @@ describe("a Mission Event failing", () => {
             costMillions: 100,
             capacityTonnes: 10,
             missionEvents: ["test-burn", "test-launch"],
+            technologyReadiness: "flight-proven",
           },
         ],
         missionEvents: files.missionEvents.map((event) => ({

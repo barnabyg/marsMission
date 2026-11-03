@@ -12,6 +12,12 @@ export const tooltips = {
     "The single journey launched in a Turn's Launch Window, carrying one or more Assets and possibly Crew. There is at most one Mission per Turn. It ends when it has delivered what it carries, or has failed.",
   "Launch Vehicle":
     "The vehicle chosen from the catalogue to lift a Mission off Earth. It sets how much mass the Mission can carry.",
+  "Orbital refuelling":
+    "Filling a Mission's tanks in Earth orbit from a Tanker, so that a larger Launch Vehicle can send much more mass to Mars. It adds two Mission Events between launch and the Mars transfer burn: the Tanker's launch and the Rendezvous.",
+  Tanker:
+    "A second launch for a Mission that needs Orbital refuelling, carrying only propellant up to it in Earth orbit. Its launch is a Mission Event of its own.",
+  Rendezvous:
+    "The Mission Event in which a Mission meets its Tanker in Earth orbit, docks and takes on propellant for the journey to Mars.",
   Trajectory:
     "The way a Mission travels to Mars, chosen from a few fixed options such as Slow, Fast or Free-return. It trades fuel and mass against Duration and safety.",
   "Robotic Mission":
@@ -29,6 +35,8 @@ export const tooltips = {
     "A pre-designed piece of hardware chosen from a catalogue, such as an orbiter, lander, rover, drone, habitat or fuel plant. Assets remain in place and keep working after their Mission until their Service Life ends or they fail.",
   "Service Life":
     "How long an Asset keeps operating once in place. Longer Service Life costs more.",
+  Benefit:
+    "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset on the surface. A second Asset giving the same Benefit adds nothing.",
   Activity:
     "What an Asset, or all the Crew at one Landing Site, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.",
   "Landing Site":
@@ -88,7 +96,7 @@ export const tooltips = {
   Duration:
     "How long a Mission lasts. Longer Missions use more supplies and expose Crew to more radiation.",
   "Technology Readiness":
-    "How mature a technology is, from flight-proven to not yet built. Less mature technology costs more, needs development time before it can fly and fails more often until it has flown successfully.",
+    "How mature a technology is: Flight-proven, built but unproven, or not yet built, when it needs Development before it can fly. Until it is Flight-proven, it costs more and fails more often.",
   Development:
     "Paying up front, in Planning Mode, to bring an immature technology to the point where it can fly. It takes a set number of Turns.",
   "Flight-proven":

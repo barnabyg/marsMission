@@ -181,6 +181,27 @@ export function TurnSummaryScreen({
           </GameText>
         </p>
       )}
+      {summary.technologiesProven.length > 0 && (
+        <p data-testid="summary-flight-proven">
+          <GameText>
+            {`Now Flight-proven: ${summary.technologiesProven.join(", ")}`}
+          </GameText>
+        </p>
+      )}
+      {summary.developmentsStarted.length > 0 && (
+        <p data-testid="summary-development-started">
+          <GameText>
+            {`Development started: ${summary.developmentsStarted.join(", ")}`}
+          </GameText>
+        </p>
+      )}
+      {summary.developmentsFinished.length > 0 && (
+        <p data-testid="summary-development-finished">
+          <GameText>
+            {`Development finished, so it can be chosen for a Mission from the next Turn: ${summary.developmentsFinished.join(", ")}`}
+          </GameText>
+        </p>
+      )}
       {summary.ongoingResearch.length > 0 && (
         <section data-testid="summary-ongoing-research">
           <h2>
@@ -189,13 +210,24 @@ export function TurnSummaryScreen({
           <ul>
             {summary.ongoingResearch.map(
               (
-                { assetName, activityName, science, publicSupport, days },
+                {
+                  assetName,
+                  activityName,
+                  science,
+                  publicSupport,
+                  days,
+                  benefit,
+                },
                 index,
               ) => (
                 // Two copies of an Asset can each earn the same amount, so the position tells them apart.
                 <li key={`${assetName}-${index}`}>
                   <GameText>
-                    {`${assetName}, ${activityName}: ${science} Science and ${publicSupport} Public Support over ${days} ${days === 1 ? "day" : "days"}`}
+                    {`${assetName}, ${activityName}: ${science} Science and ${publicSupport} Public Support over ${days} ${days === 1 ? "day" : "days"}${
+                      benefit
+                        ? `, raised on ${benefit.days} of them by the Benefit from ${benefit.givenBy.join(" and ")}, which added ${benefit.science} Science and ${benefit.publicSupport} Public Support`
+                        : ""
+                    }`}
                   </GameText>
                 </li>
               ),
@@ -281,6 +313,16 @@ export function TurnSummaryScreen({
             </th>
             <td>{formatMoney(summary.missionCostMillions)}</td>
           </tr>
+          {summary.developmentCostMillions > 0 && (
+            <tr>
+              <th scope="row">
+                <GameText>Development cost</GameText>
+              </th>
+              <td data-testid="summary-development-cost">
+                {formatMoney(summary.developmentCostMillions)}
+              </td>
+            </tr>
+          )}
           <tr>
             <th scope="row">Money</th>
             <td>

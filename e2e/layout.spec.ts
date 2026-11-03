@@ -35,13 +35,11 @@ async function onOneLine(elements: Locator[]): Promise<boolean> {
   return lowest >= 0 && Math.max(...middles) - lowest < 10;
 }
 
-const allAssets = [
-  "Pathfinder Orbiter",
-  "Prospector Lander",
-  "Trailblazer Rover",
-];
-
 const realFiles = realCatalogueFiles();
+/** Every Asset a new Program can choose, leaving out any that need Development first. */
+const allAssets = realFiles.assets
+  .filter(({ technologyReadiness }) => technologyReadiness !== "not-built")
+  .map(({ name }) => name);
 const realMilestones = realFiles.milestones;
 const allLandingSiteIds = realFiles.landingSites.map(({ id }) => id);
 
@@ -51,67 +49,92 @@ const allLandingSiteIds = realFiles.landingSites.map(({ id }) => id);
  */
 async function openBusyProgram(
   page: Page,
-  { allSurveyed = false } = {},
+  { allSurveyed = false, colossusBuilt = false } = {},
 ): Promise<void> {
+  const saved = busyProgram(allSurveyed);
   await page.addInitScript(
     ([key, value]) => {
       localStorage.setItem(key, value);
     },
     [
       storageKeyFor("automatic"),
-      JSON.stringify({
-        formatVersion: 6,
-        program: {
-          seed: successSeed,
-          turnNumber: 9,
-          date: "2045-01-01",
-          moneyMillions: 5000,
-          publicSupport: 200,
-          science: 800,
-          milestoneIds: realMilestones.map(({ id }) => id),
-          landedSiteIds: ["jezero-crater"],
-          knownLandingSiteIds: allSurveyed
-            ? allLandingSiteIds
-            : ["jezero-crater", "gale-crater"],
-          surveyedLandingSiteIds: allSurveyed ? allLandingSiteIds : [],
-          fundingThresholdsPaid: [250],
-          // A lander and a rover at a Landing Site too, whose rows are the longest and whose research lengthens the panel's text.
-          operatingAssets: Array.from({ length: 8 }, (_, index) => ({
-            ...(index < 6
-              ? {
-                  assetId: "pathfinder-orbiter",
-                  name: "Pathfinder Orbiter",
-                  kind: "orbiter",
-                  landingSiteId: null,
-                  activityId: "survey",
-                }
-              : index < 7
-                ? {
-                    assetId: "prospector-lander",
-                    name: "Prospector Lander",
-                    kind: "lander",
-                    landingSiteId: "jezero-crater",
-                    activityId: "surface-research",
-                  }
-                : {
-                    assetId: "trailblazer-rover",
-                    name: "Trailblazer Rover",
-                    kind: "rover",
-                    landingSiteId: "jezero-crater",
-                    activityId: "long-traverse",
-                  }),
-            arrivedOn: `203${index}-08-01`,
-            serviceLifeDays: 9000,
-            reliabilityLevelId: "none",
-          })),
-          status: { kind: "active" },
-        },
-      }),
+      JSON.stringify(
+        colossusBuilt
+          ? {
+              // Format 7 holds Development, here with the Meridian Colossus built.
+              formatVersion: 7,
+              program: {
+                ...saved.program,
+                provenTechnologyIds: [],
+                developments: [
+                  { technologyId: "meridian-colossus", finishesOnTurn: 9 },
+                ],
+                operatingAssets: saved.program.operatingAssets.map((asset) => ({
+                  ...asset,
+                  flewUnproven: false,
+                })),
+              },
+            }
+          : saved,
+      ),
     ] as const,
   );
   await page.goto("/");
   await page.getByRole("button", { name: "Continue this Program" }).click();
   await expect(page.getByTestId("turn-number")).toHaveText("9");
+}
+
+/** A Program in save format 6 with every Milestone earned and several operating Assets. */
+function busyProgram(allSurveyed: boolean) {
+  return {
+    formatVersion: 6,
+    program: {
+      seed: successSeed,
+      turnNumber: 9,
+      date: "2045-01-01",
+      // Enough for every Asset that can fly, so that the only problem with them all is their mass.
+      moneyMillions: 6000,
+      publicSupport: 200,
+      science: 800,
+      milestoneIds: realMilestones.map(({ id }) => id),
+      landedSiteIds: ["jezero-crater"],
+      knownLandingSiteIds: allSurveyed
+        ? allLandingSiteIds
+        : ["jezero-crater", "gale-crater"],
+      surveyedLandingSiteIds: allSurveyed ? allLandingSiteIds : [],
+      fundingThresholdsPaid: [250],
+      // A lander and a rover at a Landing Site too, whose rows are the longest and whose research lengthens the panel's text.
+      operatingAssets: Array.from({ length: 8 }, (_, index) => ({
+        ...(index < 6
+          ? {
+              assetId: "pathfinder-orbiter",
+              name: "Pathfinder Orbiter",
+              kind: "orbiter",
+              landingSiteId: null,
+              activityId: "survey",
+            }
+          : index < 7
+            ? {
+                assetId: "prospector-lander",
+                name: "Prospector Lander",
+                kind: "lander",
+                landingSiteId: "jezero-crater",
+                activityId: "surface-research",
+              }
+            : {
+                assetId: "trailblazer-rover",
+                name: "Trailblazer Rover",
+                kind: "rover",
+                landingSiteId: "jezero-crater",
+                activityId: "long-traverse",
+              }),
+        arrivedOn: `203${index}-08-01`,
+        serviceLifeDays: 9000,
+        reliabilityLevelId: "none",
+      })),
+      status: { kind: "active" },
+    },
+  };
 }
 
 for (const size of screenSizes) {
@@ -186,7 +209,7 @@ for (const size of screenSizes) {
       ).toBeInViewport({ ratio: 1 });
     });
 
-    test("Planning Mode fits on one screen with all three Assets ticked on a new Program", async ({
+    test("Planning Mode fits on one screen with every Asset ticked on a new Program", async ({
       page,
     }) => {
       await page.goto(`/?seed=${successSeed}`);
@@ -199,7 +222,7 @@ for (const size of screenSizes) {
       ).toBeInViewport({ ratio: 1 });
     });
 
-    test("Planning Mode fits on one screen with a busy Program and all three Assets on the Mission", async ({
+    test("Planning Mode fits on one screen with a busy Program and every Asset on the Mission", async ({
       page,
     }) => {
       await openBusyProgram(page);
@@ -241,6 +264,60 @@ for (const size of screenSizes) {
         "Swings back",
       );
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
+      expect(await somethingScrolls(page)).toBe(false);
+      for (const name of ["Launch Mission", "End Turn without launching"]) {
+        await expect(page.getByRole("button", { name })).toBeInViewport({
+          ratio: 1,
+        });
+      }
+    });
+
+    test("Planning Mode fits on one screen with the Meridian Colossus, its refuelling and everything else chosen", async ({
+      page,
+    }) => {
+      await openBusyProgram(page, { colossusBuilt: true });
+      await page
+        .getByRole("combobox", { name: "Launch Vehicle" })
+        .selectOption("meridian-colossus");
+      await chooseAssets(page, allAssets);
+      await expect(
+        page.getByTestId("mission-event").filter({ hasText: "Rendezvous" }),
+      ).toBeVisible();
+      for (const contingency of await page
+        .getByRole("checkbox", { name: /Contingency/ })
+        .all()) {
+        await contingency.check();
+      }
+      for (const development of await page
+        .getByRole("checkbox", { name: "Start Development" })
+        .all()) {
+        await development.check();
+      }
+      await page
+        .getByRole("combobox", { name: "Trajectory" })
+        .selectOption("free-return");
+      await expect(page.getByTestId("landing-site-details")).toBeVisible();
+      expect(await somethingScrolls(page)).toBe(false);
+      for (const name of ["Launch Mission", "End Turn without launching"]) {
+        await expect(page.getByRole("button", { name })).toBeInViewport({
+          ratio: 1,
+        });
+      }
+    });
+
+    test("Planning Mode fits on one screen with a busy Program, every Asset and every Development chosen", async ({
+      page,
+    }) => {
+      await openBusyProgram(page);
+      await chooseAssets(page, allAssets);
+      const developments = page.getByRole("checkbox", {
+        name: "Start Development",
+      });
+      await expect(developments.first()).toBeVisible();
+      for (const development of await developments.all()) {
+        await development.check();
+      }
+      await expect(page.getByTestId("development-cost")).toBeVisible();
       expect(await somethingScrolls(page)).toBe(false);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({

@@ -79,6 +79,15 @@ export const orbiterSafeSeed = seedWhere(
 /** A seed where an orbiter and lander launched together both arrive. */
 export const orbiterAndLanderSeed = seedWhere(null, orbiterAndLander);
 
+/** A seed whose first Mission lands the Pinpoint Lander, which starts unproven, at the first known Landing Site. */
+export const pinpointLandingSeed = seedWhere(null, {
+  mission: {
+    launchVehicleId: catalogue.launchVehicles[0]?.id ?? "",
+    assetIds: ["pinpoint-lander"],
+    landingSiteId: "jezero-crater",
+  },
+});
+
 /** A seed whose first Mission lands a rover alone at the first known Landing Site. */
 export const roverSeed = seedWhere(null, {
   mission: {
@@ -114,6 +123,19 @@ const landerAndRover: TurnPlan = {
 export const landerAndRoverSeed = seedWhere(
   null,
   landerAndRover,
+  wealthySimulation,
+);
+
+/** A seed where a lander and a relay orbiter launched together both arrive, with the same money as a lander and a rover. */
+export const relayAndLanderSeed = seedWhere(
+  null,
+  {
+    mission: {
+      launchVehicleId: "meridian-heavy",
+      assetIds: ["prospector-lander", "courier-relay-orbiter"],
+      landingSiteId: "jezero-crater",
+    },
+  },
   wealthySimulation,
 );
 
@@ -305,6 +327,58 @@ export const holdOffSeed = (() => {
 export const freeReturnSeed = seedWhere("Mars orbit insertion", {
   mission: { ...firstPlan.mission, trajectoryId: "free-return" },
 });
+
+/** Enough to develop the Meridian Colossus and then fill it, which a real Program can't afford until later. */
+export const colossusMoney = 7000;
+
+const colossusSimulation = createSimulation(
+  parseCatalogue({
+    ...realCatalogueFiles(),
+    program: { ...catalogue.program, startingMoneyMillions: colossusMoney },
+  }),
+);
+
+/** What the tests launch on the Meridian Colossus once it is built: more mass than any other Launch Vehicle carries. */
+const onColossus: TurnPlan = {
+  mission: {
+    launchVehicleId: "meridian-colossus",
+    assetIds: ["pathfinder-orbiter", "prospector-lander", "trailblazer-rover"],
+    landingSiteId: "jezero-crater",
+  },
+};
+
+/**
+ * A seed where the Meridian Colossus, developed over the first two Turns with nothing launched, carries its first
+ * Mission with nothing to answer, and the only Mission Event to fail, if any, is the named one.
+ */
+function colossusSeedWhere(failedEvent: string | null): number {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const developing = colossusSimulation.runTurn(
+      colossusSimulation.startProgram(seed),
+      { mission: null, developmentIds: ["meridian-colossus"] },
+    );
+    const built = colossusSimulation.runTurn(developing.program, {
+      mission: null,
+    });
+    const progress = colossusSimulation.workOutTurn(built.program, onColossus);
+    if (
+      !progress.decisionPoint &&
+      (progress.result.summary.failure?.missionEventName ?? null) ===
+        failedEvent
+    ) {
+      return seed;
+    }
+  }
+  throw new Error(
+    `No seed gives the Meridian Colossus's first Mission the outcome ${failedEvent}`,
+  );
+}
+
+/** A seed where the Meridian Colossus carries its first Mission through the tanker launch and the rendezvous to Mars. */
+export const colossusSeed = colossusSeedWhere(null);
+
+/** A seed where the Meridian Colossus's first Mission collides with its Tanker at the rendezvous. */
+export const rendezvousFailureSeed = colossusSeedWhere("Rendezvous");
 
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);

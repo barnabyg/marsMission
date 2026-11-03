@@ -38,7 +38,7 @@ describe("whether anything is left to Survey", () => {
     const { simulation, program } = withFailures({});
     const surveys = (activities: { id: string; surveys: boolean }[] = []) =>
       activities.filter((activity) => activity.surveys).map(({ id }) => id);
-    const planned = simulation.previewAssets({
+    const planned = simulation.previewAssets(simulation.startProgram(1), {
       launchVehicleId: "test-vehicle",
       assetIds: ["test-orbiter"],
     });

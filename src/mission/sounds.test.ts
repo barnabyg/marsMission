@@ -23,6 +23,12 @@ describe("matching sounds to timeline entries", () => {
     expect(soundFor(missionEvent("launch", "success"))).toBe("launch");
   });
 
+  it("plays the launch sound for a tanker launch, and a sound of its own for a rendezvous", () => {
+    expect(soundFor(missionEvent("tanker-launch", "success"))).toBe("launch");
+    expect(soundFor(missionEvent("rendezvous", "success"))).toBe("rendezvous");
+    expect(soundFor(missionEvent("rendezvous", "failure"))).toBe("failure");
+  });
+
   it("plays the failure sound for any Mission Event failing, launch included", () => {
     expect(soundFor(missionEvent("launch", "failure"))).toBe("failure");
     expect(soundFor(missionEvent("anything-else", "failure"))).toBe("failure");
@@ -42,11 +48,13 @@ describe("matching sounds to timeline entries", () => {
     expect(soundFor(missionEvent("mars-transfer-burn", "success"))).toBeNull();
   });
 
-  it("matches the launch sound to a Mission Event that exists in the real data files", () => {
+  it("matches each success sound to a Mission Event that exists in the real data files", () => {
     const { missionEvents } = realCatalogueFiles();
-    expect(
-      missionEvents.map(({ id }) => soundFor(missionEvent(id, "success"))),
-    ).toContain("launch");
+    const sounds = missionEvents.map(({ id }) =>
+      soundFor(missionEvent(id, "success")),
+    );
+    expect(sounds.filter((sound) => sound === "launch")).toHaveLength(2);
+    expect(sounds).toContain("rendezvous");
   });
 
   it("gives each sound its own file", () => {

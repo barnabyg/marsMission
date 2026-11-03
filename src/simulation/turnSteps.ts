@@ -4,8 +4,10 @@ import {
   operateAssets,
   stoppedEntries,
 } from "./assetsInService";
+import { carryOutDevelopment } from "./development";
 import { resolveDustStorms } from "./dustStorms";
 import { deliveryDayOf, type MissionOutcome } from "./flyMission";
+import { proveTechnologies } from "./flightProven";
 import {
   contingenciesAnswered,
   missionFailure,
@@ -182,6 +184,8 @@ export function resolveTurn(
     flown,
   );
   const firstLanding = creditFirstLanding(rules, program, plan, flown);
+  const proven = proveTechnologies(catalogue, rules, program, plan, flown);
+  const development = carryOutDevelopment(catalogue, program, plan);
   const dustStorms = resolveDustStorms(
     catalogue,
     rules,
@@ -244,7 +248,8 @@ export function resolveTurn(
 
   const moneyEndMillions =
     program.moneyMillions -
-    costMillions +
+    costMillions -
+    development.costMillions +
     sum(funding.payouts.map(({ payoutMillions }) => payoutMillions)) +
     research.researchGrantMillions +
     (flown.returned?.refundMillions ?? 0);
@@ -274,6 +279,7 @@ export function resolveTurn(
   const otherEntries = [
     ...arrivalAwards.map(milestoneEntry),
     ...(firstLanding ? [firstLanding.entry] : []),
+    ...proven.entries,
     ...scienceAwards.map(milestoneEntry),
     ...(survey.entry ? [survey.entry] : []),
     ...dustStorms.entries,
@@ -302,6 +308,11 @@ export function resolveTurn(
         ...program.fundingThresholdsPaid,
         ...funding.payouts.map(({ publicSupport }) => publicSupport),
       ],
+      provenTechnologyIds: [
+        ...program.provenTechnologyIds,
+        ...proven.technologies.map(({ id }) => id),
+      ],
+      developments: development.developments,
       operatingAssets: inService
         .filter(({ untilDay }) => untilDay === null)
         .map(({ asset }) => asset),
@@ -327,6 +338,7 @@ export function resolveTurn(
     },
     summary: {
       missionCostMillions: costMillions,
+      developmentCostMillions: development.costMillions,
       moneyStartMillions: program.moneyMillions,
       moneyEndMillions,
       scienceGained,
@@ -346,6 +358,9 @@ export function resolveTurn(
         science: firstLanding.site.science,
       },
       ongoingResearch: research.earned,
+      technologiesProven: proven.technologies.map(({ name }) => name),
+      developmentsStarted: development.started,
+      developmentsFinished: development.finished,
       assetsEnded: inService
         .filter(({ untilDay, failed }) => untilDay !== null && !failed)
         .map(({ asset }) => asset.name),

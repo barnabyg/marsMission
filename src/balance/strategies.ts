@@ -14,6 +14,16 @@ const surveyingLanders: PlayStyle = {
   onlySurveyedSites: true,
 };
 
+/** Landers at unsurveyed sites until one lands, and then the same as surveyingLanders. */
+const landingStraightAway: PlayStyle = {
+  ...surveyingLanders,
+  onlySurveyedSites: false,
+  order: (view) =>
+    view.landingSites.some(({ landed }) => landed)
+      ? surveyThenLand(["lander"])(view)
+      : ["lander", "orbiter"],
+};
+
 const surveyingRovers: PlayStyle = {
   ...surveyingLanders,
   order: surveyThenLand(["rover", "lander"]),
@@ -34,6 +44,21 @@ const landThenOrbiter = (kind: string) => (view: ProgramView) => {
     : ["orbiter"];
 };
 
+/** Whether no relay orbiter is operating while something on the surface is, so that a relay would raise its research. */
+const relayWanted = (view: ProgramView) => {
+  const operating = view.operatingAssets.filter(({ daysLeft }) => daysLeft > 0);
+  return (
+    operating.some(({ landingSiteId }) => landingSiteId !== null) &&
+    !operating.some(({ assetId }) => assetId === "courier-relay-orbiter")
+  );
+};
+
+/** How many Assets are operating on the surface with Service Life left. */
+const onSurface = (view: ProgramView) =>
+  view.operatingAssets.filter(
+    ({ daysLeft, landingSiteId }) => daysLeft > 0 && landingSiteId !== null,
+  ).length;
+
 /**
  * Plays as a careful player would: one orbiter to Survey, then rovers, keeping money back for a retry and
  * launching only to keep a few Assets operating. The strategies built on it differ from it in one choice.
@@ -47,6 +72,23 @@ const steadyRovers: PlayStyle = {
   assetLimit: 3,
   reserveMillions: 1000,
 };
+
+/** Whether a relay orbiter would raise the research of two or more Assets on the surface, with none operating. */
+const relayForRovers = (view: ProgramView) =>
+  relayWanted(view) && onSurface(view) >= 2;
+
+/** As steadyRovers, with the Courier Relay sent before more rovers whenever relayForRovers. */
+const relayBesideRovers: PlayStyle = {
+  ...steadyRovers,
+  prefers: (view) => (relayForRovers(view) ? ["courier-relay-orbiter"] : []),
+  order: (view) =>
+    relayForRovers(view)
+      ? ["orbiter", "rover", "lander"]
+      : steadyRovers.order(view),
+};
+
+/** As relayBesideRovers, keeping more Assets, so that one Mission a Turn can hold it back once it is rich. */
+const bigProgram: PlayStyle = { ...relayBesideRovers, assetLimit: 6 };
 
 /** Every strategy the report covers. Add one here and it needs nothing else. */
 export const strategies: Strategy[] = [
@@ -68,14 +110,17 @@ export const strategies: Strategy[] = [
   playStyle(
     "land straight away",
     "Landers at unsurveyed sites until one lands, and then the same as survey first.",
-    {
-      ...surveyingLanders,
-      onlySurveyedSites: false,
-      order: (view) =>
-        view.landingSites.some(({ landed }) => landed)
-          ? surveyThenLand(["lander"])(view)
-          : ["lander", "orbiter"],
-    },
+    landingStraightAway,
+  ),
+  playStyle(
+    "survey first, Pinpoint Lander",
+    "As survey first, sending the Pinpoint Lander, which starts unproven, in place of the other lander whenever it can afford it.",
+    { ...surveyingLanders, prefers: ["pinpoint-lander"] },
+  ),
+  playStyle(
+    "land straight away, Pinpoint Lander",
+    "As land straight away, sending the Pinpoint Lander in place of the other lander whenever it can afford it.",
+    { ...landingStraightAway, prefers: ["pinpoint-lander"] },
   ),
   playStyle(
     "favour Science",
@@ -301,6 +346,91 @@ export const strategies: Strategy[] = [
     "steady: Long traverse, land in storms",
     "As steady: Long traverse, going ahead with every landing in a dust storm.",
     { ...steadyRovers, aim: "science", goNoGo: "go" },
+  ),
+  playStyle(
+    "steady: develop the Endurance Rover",
+    "As steady: Soil analysis, starting Development of the Endurance Rover as soon as it can afford it on top of the Turn's Mission, and sending it in place of the other rover once it is built.",
+    {
+      ...steadyRovers,
+      develops: ["endurance-rover"],
+      prefers: ["endurance-rover"],
+    },
+  ),
+  playStyle(
+    "steady: develop the Endurance Rover when rich",
+    "The same, starting that Development only once it has the money for several rovers.",
+    {
+      ...steadyRovers,
+      develops: ["endurance-rover"],
+      developsWhile: (view) => view.moneyMillions >= 5000,
+      prefers: ["endurance-rover"],
+    },
+  ),
+  playStyle(
+    "steady: develop the Meridian Colossus",
+    "As steady: Soil analysis, starting Development of the Meridian Colossus as soon as it can afford it on top of the Turn's Mission, and once it is built flying it with one more Asset of each kind, with the Activity each lists first, as many as it can afford.",
+    {
+      ...steadyRovers,
+      develops: ["meridian-colossus"],
+      fillsVehicle: "meridian-colossus",
+    },
+  ),
+  playStyle(
+    "steady: develop the Meridian Colossus when rich",
+    "The same, starting that Development only once it has the money for several rovers.",
+    {
+      ...steadyRovers,
+      develops: ["meridian-colossus"],
+      developsWhile: (view) => view.moneyMillions >= 5000,
+      fillsVehicle: "meridian-colossus",
+    },
+  ),
+  playStyle(
+    "steady: Courier Relay",
+    "As steady: Soil analysis, sending the Courier Relay, a relay orbiter whose Benefit raises surface research, in place of the other orbiter whenever it can afford it.",
+    { ...steadyRovers, prefers: ["courier-relay-orbiter"] },
+  ),
+  playStyle(
+    "steady: relay when rich",
+    "As steady: Courier Relay, also sending another relay orbiter before more rovers once it has the money for several rovers, whenever none is operating and something on the surface is.",
+    {
+      ...steadyRovers,
+      prefers: ["courier-relay-orbiter"],
+      order: (view) =>
+        relayWanted(view) && view.moneyMillions >= 5000
+          ? ["orbiter", "rover", "lander"]
+          : steadyRovers.order(view),
+    },
+  ),
+  playStyle(
+    "steady: relay beside rovers",
+    "As steady: Soil analysis, also sending the Courier Relay before more rovers whenever none is operating and two or more Assets are on the surface.",
+    relayBesideRovers,
+  ),
+  playStyle(
+    "big Program: one Asset per Mission",
+    "As steady: relay beside rovers, keeping up to six Assets, and keeping to what is Flight-proven: one Asset per Mission.",
+    bigProgram,
+  ),
+  playStyle(
+    "big Program: fill the Meridian Heavy when rich",
+    "The same, flying the Meridian Heavy with one more Asset of each kind once it has the money for several rovers, as many as fit and it can afford.",
+    {
+      ...bigProgram,
+      fillsVehicle: "meridian-heavy",
+      fillsWhile: (view) => view.moneyMillions >= 5000,
+    },
+  ),
+  playStyle(
+    "big Program: develop the Meridian Colossus when rich",
+    "The same, starting Development of the Meridian Colossus once it has the money for several rovers, and filling the Meridian Colossus once it is built: a relay orbiter, a rover and a lander can go together.",
+    {
+      ...bigProgram,
+      develops: ["meridian-colossus"],
+      developsWhile: (view) => view.moneyMillions >= 5000,
+      fillsVehicle: "meridian-colossus",
+      fillsWhile: (view) => view.moneyMillions >= 5000,
+    },
   ),
   playStyle(
     "steady: Survey once",

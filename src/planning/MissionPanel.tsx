@@ -1,8 +1,8 @@
 import { useState } from "react";
 import {
+  canFly,
   formatMoney,
   type AssetChoices,
-  type PlannedAsset,
   type PlannedTrajectory,
   type Program,
   type ProgramView,
@@ -10,7 +10,8 @@ import {
   type TurnPlan,
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
-import { ActivitySelect } from "./ActivitySelect";
+import { MissionAssetChoice } from "./MissionAssetChoice";
+import { readinessLabel, ReadinessTag } from "./ReadinessTag";
 import {
   isSurveying,
   NothingLeftToSurvey,
@@ -23,6 +24,8 @@ interface MissionPanelProps {
   view: ProgramView;
   /** The new Activities chosen for Assets already operating, which either button sends. */
   operatingActivities: Record<string, string>;
+  /** The Developments chosen to start this Turn, which either button sends. */
+  developmentIds: string[];
   onSubmit: (plan: TurnPlan) => void;
 }
 
@@ -32,13 +35,18 @@ export function MissionPanel({
   program,
   view,
   operatingActivities,
+  developmentIds,
   onSubmit,
 }: MissionPanelProps) {
+  // Each starts on the first that can fly, because one that needs Development can't be chosen.
   const [launchVehicleId, setLaunchVehicleId] = useState(
-    view.launchVehicles[0]?.id ?? "",
+    view.launchVehicles.find(canFly)?.id ?? "",
   );
   const [assetIds, setAssetIds] = useState(
-    view.assets.slice(0, 1).map((asset) => asset.id),
+    view.assets
+      .filter(canFly)
+      .slice(0, 1)
+      .map((asset) => asset.id),
   );
   const [reliability, setReliability] = useState<Record<string, string>>({});
   const [chosenSiteId, setChosenSiteId] = useState(
@@ -66,6 +74,7 @@ export function MissionPanel({
         .previewTrajectories({ launchVehicleId, assetIds })
         .some(({ id }) => id === trajectoryId) && { trajectoryId }),
   };
+  const vehicle = view.launchVehicles.find(({ id }) => id === launchVehicleId);
   const trajectories = simulation.previewTrajectories(mission);
   const trajectory = trajectories.find(({ chosen }) => chosen);
   const plannedEvents = simulation.previewMission(program, {
@@ -73,12 +82,13 @@ export function MissionPanel({
     reliability,
     contingencyIds,
   });
-  const plannedAssets = simulation.previewAssets({
+  const plannedAssets = simulation.previewAssets(program, {
     ...mission,
     assetChoices,
   });
   const plan: TurnPlan = {
     operatingActivities,
+    developmentIds,
     mission: {
       ...mission,
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
@@ -102,8 +112,20 @@ export function MissionPanel({
       ),
     },
   };
-  const { costMillions, massTonnes, capacityTonnes, problems } =
-    simulation.validatePlan(program, plan);
+  const {
+    costMillions,
+    developmentCostMillions,
+    massTonnes,
+    capacityTonnes,
+    problems,
+  } = simulation.validatePlan(program, plan);
+  const withoutLaunching: TurnPlan = {
+    mission: null,
+    operatingActivities,
+    developmentIds,
+  };
+  const canEndWithoutLaunching =
+    simulation.validatePlan(program, withoutLaunching).problems.length === 0;
 
   return (
     <section className="panel">
@@ -113,7 +135,18 @@ export function MissionPanel({
       <div className="mission-launch">
         <label>
           <span>
-            <GameText>Launch Vehicle</GameText>
+            <GameText>
+              {vehicle ? "Launch Vehicle:" : "Launch Vehicle"}
+            </GameText>
+            {vehicle && (
+              <>
+                {" "}
+                <ReadinessTag
+                  readiness={vehicle.technologyReadiness}
+                  testId="launch-vehicle-readiness"
+                />
+              </>
+            )}
           </span>
           <select
             value={launchVehicleId}
@@ -121,10 +154,18 @@ export function MissionPanel({
               setLaunchVehicleId(event.target.value);
             }}
           >
-            {view.launchVehicles.map((vehicle) => (
-              <option key={vehicle.id} value={vehicle.id}>
-                {vehicle.name} ({formatMoney(vehicle.costMillions)},{" "}
-                {vehicle.capacityTonnes} t)
+            {view.launchVehicles.map((option) => (
+              <option
+                key={option.id}
+                value={option.id}
+                disabled={!canFly(option)}
+              >
+                {option.name} ({formatMoney(option.costMillions)},{" "}
+                {option.capacityTonnes} t
+                {option.technologyReadiness === "flight-proven"
+                  ? ""
+                  : `, ${readinessLabel(option.technologyReadiness)}`}
+                )
               </option>
             ))}
           </select>
@@ -224,7 +265,9 @@ export function MissionPanel({
       <ol className="mission-events" data-testid="mission-events">
         {plannedEvents.map((event) => (
           <li key={event.eventId} data-testid="mission-event">
-            <span className="mission-event-name">{event.name}</span>
+            <span className="mission-event-name">
+              <GameText>{event.name}</GameText>
+            </span>
             <strong className="risk-band" data-testid="risk-band">
               {event.riskBand}
             </strong>
@@ -272,36 +315,48 @@ export function MissionPanel({
         ))}
       </ol>
       <p className="total-cost">
-        Total cost:{" "}
+        <GameText>Mission cost</GameText>:{" "}
         <strong data-testid="mission-cost">{formatMoney(costMillions)}</strong>
         {" · "}Mass:{" "}
         <strong data-testid="mission-mass">
           {massTonnes} of {capacityTonnes} tonnes
         </strong>
+        {developmentCostMillions > 0 && (
+          <>
+            {" · "}
+            <GameText>Development</GameText>:{" "}
+            <strong data-testid="development-cost">
+              {formatMoney(developmentCostMillions)}
+            </strong>
+          </>
+        )}
       </p>
       {problems.map((problem) => (
         <p key={problem} className="problem" role="alert">
           <GameText>{problem}</GameText>
         </p>
       ))}
-      <button
-        type="button"
-        className="primary"
-        disabled={problems.length > 0}
-        onClick={() => {
-          onSubmit(plan);
-        }}
-      >
-        Launch Mission
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          onSubmit({ mission: null, operatingActivities });
-        }}
-      >
-        End Turn without launching
-      </button>
+      <div className="mission-buttons">
+        <button
+          type="button"
+          className="primary"
+          disabled={problems.length > 0}
+          onClick={() => {
+            onSubmit(plan);
+          }}
+        >
+          Launch Mission
+        </button>
+        <button
+          type="button"
+          disabled={!canEndWithoutLaunching}
+          onClick={() => {
+            onSubmit(withoutLaunching);
+          }}
+        >
+          End Turn without launching
+        </button>
+      </div>
     </section>
   );
 }
@@ -319,88 +374,4 @@ function describeTrajectory({
     ...(capacityLossTonnes > 0 ? [`${capacityLossTonnes} t less`] : []),
   ];
   return `${name} (${costs.join(", ")})`;
-}
-
-interface MissionAssetChoiceProps {
-  asset: ProgramView["assets"][number];
-  /** The choices for this Asset, which only an Asset on the Mission has. */
-  planned: PlannedAsset | undefined;
-  carried: boolean;
-  onCarriedChange: (carried: boolean) => void;
-  onChoicesChange: (choices: AssetChoices) => void;
-}
-
-/** One Asset the Mission can carry and, if it does, the choices for that Asset. */
-function MissionAssetChoice({
-  asset,
-  planned,
-  carried,
-  onCarriedChange,
-  onChoicesChange,
-}: MissionAssetChoiceProps) {
-  return (
-    <div className="asset-choice">
-      <label>
-        <input
-          type="checkbox"
-          checked={carried}
-          onChange={(event) => {
-            onCarriedChange(event.target.checked);
-          }}
-        />
-        {asset.name} ({formatMoney(asset.costMillions)}, {asset.massTonnes} t)
-      </label>
-      {planned && (
-        <>
-          <span>
-            <GameText>Activity</GameText>
-          </span>
-          <ActivitySelect
-            assetName={asset.name}
-            activityId={planned.activityId}
-            activities={planned.activities}
-            onChange={(activityId) => {
-              onChoicesChange({ activityId });
-            }}
-          />
-          <span>
-            <GameText>Service Life</GameText>
-          </span>
-          <select
-            aria-label={`Service Life for ${asset.name}`}
-            value={planned.serviceLifeDays}
-            onChange={(event) => {
-              onChoicesChange({ serviceLifeDays: Number(event.target.value) });
-            }}
-          >
-            {planned.serviceLifeOptions.map((option) => (
-              <option key={option.days} value={option.days}>
-                {option.days} days ({formatMoney(option.costMillions)})
-              </option>
-            ))}
-          </select>
-          <span>
-            <GameText>Reliability</GameText>
-          </span>
-          <select
-            aria-label={`Reliability for ${asset.name} in service`}
-            value={planned.reliabilityLevelId}
-            onChange={(event) => {
-              onChoicesChange({ reliabilityLevelId: event.target.value });
-            }}
-          >
-            {planned.reliabilityLevels.map((level) => (
-              <option key={level.id} value={level.id}>
-                {level.name} ({formatMoney(level.costMillions)},{" "}
-                {level.riskBand})
-              </option>
-            ))}
-          </select>
-          <strong data-testid="asset-risk-band">
-            <GameText>{`${planned.riskBand} per Turn`}</GameText>
-          </strong>
-        </>
-      )}
-    </div>
-  );
 }

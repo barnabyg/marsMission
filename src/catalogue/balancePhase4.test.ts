@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { playProgram, type TurnRecord } from "../balance/playProgram";
-import { strategies } from "../balance/strategies";
+import type { TurnRecord } from "../balance/playProgram";
 import { parseCatalogue } from "./catalogue";
 import {
   createSimulation,
@@ -15,11 +14,15 @@ import {
   mission,
   plainMission,
 } from "../testing/realBalance";
+import { played } from "../testing/playedStrategies";
 
 describe("Research Grants in the real data files", () => {
   const paidPerTurn = (assetId: string) =>
     succeeding
-      .previewAssets({ ...mission, assetIds: [assetId] })[0]
+      .previewAssets(succeeding.startProgram(1), {
+        ...mission,
+        assetIds: [assetId],
+      })[0]
       ?.activities.flatMap(
         ({ earnsPerTurn }) => earnsPerTurn?.researchGrantMillions ?? [],
       );
@@ -44,7 +47,7 @@ describe("the rover in the real data files", () => {
     files.assets.find((asset) => asset.kind === kind);
   const earnings = (id: string) =>
     succeeding
-      .previewAssets({
+      .previewAssets(succeeding.startProgram(1), {
         ...mission,
         assetIds: [assetOfKind("rover")?.id ?? ""],
       })[0]
@@ -135,7 +138,7 @@ describe("a productive Program in the real data files", () => {
       ...(asset.landsAtSite ? { landingSiteId: site?.id ?? "" } : {}),
     };
     const best = safe
-      .previewAssets(mission)[0]
+      .previewAssets(safe.startProgram(1), mission)[0]
       ?.activities.toSorted(
         (first, second) =>
           (second.earnsPerTurn?.science ?? 0) -
@@ -208,49 +211,6 @@ describe("a productive Program in the real data files", () => {
 
 describe("the balance of Phase 4", () => {
   const real = createSimulation(parseCatalogue(files));
-  const programs = 300;
-
-  /** Means over many seeds of a strategy from the balance runs, so these tests read like the balance report. */
-  function played(name: string) {
-    const strategy = strategies.find((candidate) => candidate.name === name);
-    if (!strategy) throw new Error(`Expected the strategy "${name}"`);
-    const plays = Array.from(
-      { length: programs },
-      (_, index) => playProgram(real, strategy, index + 1, 20).turns,
-    );
-    const meanOf = (values: number[]) =>
-      values.reduce((total, value) => total + value, 0) / values.length;
-    const ends = (read: (turn: TurnRecord) => number) =>
-      meanOf(plays.flatMap((play) => play.at(-1) ?? []).map(read));
-    const firstReached = (level: number) =>
-      meanOf(
-        plays.flatMap((play) => {
-          const index = play.findIndex(({ thresholdsReached }) =>
-            thresholdsReached.includes(level),
-          );
-          return index < 0 ? [] : [index + 1];
-        }),
-      );
-    return {
-      plays,
-      science: ends(({ science }) => science),
-      money: ends(({ moneyMillions }) => moneyMillions),
-      cancelled: ends(({ cancelled }) => Number(cancelled)),
-      firstReached,
-      /** The income from each source over these Turns, counted from 1. */
-      income(turnNumbers: number[]) {
-        const turns = plays.flatMap((play) =>
-          turnNumbers.flatMap((number) => play[number - 1] ?? []),
-        );
-        const total = (read: (turn: TurnRecord) => number) =>
-          turns.reduce((sum, turn) => sum + read(turn), 0);
-        return {
-          thresholds: total(({ thresholdMillions }) => thresholdMillions),
-          grants: total(({ researchGrantMillions }) => researchGrantMillions),
-        };
-      },
-    };
-  }
   const steady = played("steady: Soil analysis");
   const upToTurn = (last: number) =>
     Array.from({ length: last }, (_, index) => index + 1);
@@ -267,7 +227,10 @@ describe("the balance of Phase 4", () => {
   it("pays little or nothing for early research, and real money for better kinds", () => {
     const paidFor = (assetId: string, activityId: string) =>
       real
-        .previewAssets({ ...mission, assetIds: [assetId] })[0]
+        .previewAssets(real.startProgram(1), {
+          ...mission,
+          assetIds: [assetId],
+        })[0]
         ?.activities.find(({ id }) => id === activityId)?.earnsPerTurn
         ?.researchGrantMillions ?? 0;
     const orbital = paidFor("pathfinder-orbiter", "orbital-research");

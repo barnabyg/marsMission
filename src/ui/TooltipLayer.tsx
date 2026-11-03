@@ -4,6 +4,8 @@ import { tooltips, type Term } from "./tooltips";
 interface ShownTooltip {
   term: Term;
   anchor: Element;
+  /** What this particular one is, after what the term means, such as one Asset's Benefit. */
+  detail: string | null;
 }
 
 function termElementFrom(target: EventTarget | null): Element | null {
@@ -23,7 +25,11 @@ export function TooltipLayer() {
     const show = (event: Event) => {
       const anchor = termElementFrom(event.target);
       const term = anchor?.getAttribute("data-term") as Term | undefined;
-      setShown(anchor && term ? { term, anchor } : null);
+      setShown(
+        anchor && term
+          ? { term, anchor, detail: anchor.getAttribute("data-detail") }
+          : null,
+      );
     };
     const hide = () => {
       setShown(null);
@@ -68,6 +74,7 @@ export function TooltipLayer() {
     >
       <strong>{shown.term}</strong>
       <p>{tooltips[shown.term]}</p>
+      {shown.detail && <p data-testid="tooltip-detail">{shown.detail}</p>}
     </div>
   );
 }

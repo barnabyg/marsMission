@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/* What each data file must look like, one file at a time. catalogue.ts checks them against each other. */
+/* What each data file must look like, one file at a time. The crossCheck files check them against each other. */
 
 const id = z.string().min(1);
 const money = z.number().int().nonnegative();
@@ -51,6 +51,28 @@ const trajectoriesSchema = z
   )
   .min(1);
 
+/** How mature an Asset or Launch Vehicle is when a Program starts, and what it costs and risks until it is Flight-proven. */
+const technologyFields = {
+  // "built" hasn't flown yet, so it is Flight-proven only after its first successful use. "not-built" can't fly until
+  // it has been through Development, and is then built.
+  technologyReadiness: z.enum(["flight-proven", "built", "not-built"]),
+  // Only for one that doesn't start Flight-proven: its cost in place of costMillions, and what the failure probabilities
+  // of the Mission Events it brings and of its failing in service are multiplied by, until it is Flight-proven.
+  unproven: z
+    .strictObject({
+      costMillions: money,
+      failureMultiplier: z.number().min(1),
+    })
+    .optional(),
+  // Only for one that isn't built yet: what its Development costs, paid when it starts, and how many Turns it takes.
+  development: z
+    .strictObject({
+      costMillions: money,
+      turns: z.number().int().positive(),
+    })
+    .optional(),
+};
+
 const launchVehiclesSchema = z.array(
   z.strictObject({
     id,
@@ -58,6 +80,7 @@ const launchVehiclesSchema = z.array(
     costMillions: money,
     capacityTonnes: z.number().positive(),
     missionEvents: z.array(id),
+    ...technologyFields,
   }),
 );
 
@@ -117,6 +140,18 @@ const assetsSchema = z.array(
     activities: z.array(id).min(1),
     // Whether this Asset lands on Mars, so that a Mission carrying it must name a Landing Site.
     landsAtSite: z.boolean().optional(),
+    // What the landing risk is multiplied by when this Asset lands. A landing is as risky as the riskiest Asset in it.
+    landingRiskMultiplier: z.number().positive().optional(),
+    // What it raises for other Assets, and by what percentage, on each day it operates at Mars, whatever its Activity.
+    // "surfaceResearch" is the Ongoing Research of every Asset on the surface. Benefits that raise the same thing don't
+    // add up: on each day the largest applies.
+    benefit: z
+      .strictObject({
+        raises: z.enum(["surfaceResearch"]),
+        percent: z.number().int().positive(),
+      })
+      .optional(),
+    ...technologyFields,
   }),
 );
 
@@ -143,8 +178,10 @@ const missionEventsSchema = z.array(
     // In either description, {site} stands for the Mission's Landing Site and {lander}, which starts a sentence, for what is landing there, such as "The rover".
     description: z.string().min(1),
     failureDescription: z.string().min(1),
+    // Departure is when the Mission leaves Earth orbit for Mars: the day after the last of its Mission Events timed from
+    // launch, so a Mission with more to do in Earth orbit, such as orbital refuelling, leaves later.
     timing: z.strictObject({
-      from: z.enum(["launch", "arrival"]),
+      from: z.enum(["launch", "departure", "arrival"]),
       days: z.number().int().nonnegative(),
     }),
     // "landingSite" means the risk of the Mission's Landing Site.

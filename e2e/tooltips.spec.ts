@@ -3,12 +3,14 @@ import { storageKeyFor } from "../src/save/saveStore";
 import { tooltips, type Term } from "../src/ui/tooltips";
 import {
   chooseAssets,
+  eventEntries,
   holdTurnWhenShown,
+  pauseAtEvent,
   playToNextTurn,
   termsInButtons,
   termsWithoutTooltips,
 } from "./helpers";
-import { landingSeed, successSeed } from "./seeds";
+import { landingSeed, pinpointLandingSeed, successSeed } from "./seeds";
 
 test("explains a game term on hover and on keyboard focus", async ({
   page,
@@ -182,6 +184,51 @@ test("explains each research Activity wherever Mission Mode names it", async ({
   ] as const) {
     await expectTooltip(page, surface.locator(`[data-term='${term}']`), term);
   }
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+});
+
+test("explains the terms of technology in Planning Mode, Mission Mode and the Turn summary", async ({
+  page,
+}) => {
+  // Over 5 s: waits at 1x for the landing, then plays on to the Turn summary.
+  await page.goto(`/?seed=${pinpointLandingSeed}`);
+  const pinpoint = page.locator(".asset-choice", {
+    hasText: "Pinpoint Lander",
+  });
+  await expectTooltip(
+    page,
+    pinpoint.getByTestId("technology-readiness"),
+    "Technology Readiness",
+  );
+  await expectTooltip(
+    page,
+    page.locator("h2 [data-term='Development']"),
+    "Development",
+  );
+  await chooseAssets(page, ["Pinpoint Lander"]);
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await pauseAtEvent(page, "Pinpoint Lander is Flight-proven", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
+  await expectTooltip(
+    page,
+    eventEntries(page)
+      .filter({ hasText: "Pinpoint Lander is Flight-proven" })
+      .locator("[data-term='Flight-proven']")
+      .first(),
+    "Flight-proven",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.getByRole("button", { name: "10x" }).click();
+  const proven = page.getByTestId("summary-flight-proven");
+  await expect(proven).toHaveText("Now Flight-proven: Pinpoint Lander");
+  await expectTooltip(
+    page,
+    proven.locator("[data-term='Flight-proven']"),
+    "Flight-proven",
+  );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 });
 

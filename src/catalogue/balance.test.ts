@@ -252,7 +252,7 @@ describe("the balance of Phase 3", () => {
   });
 
   it("makes Reliability for an Asset lower its risk, for a price, without being needed to play", () => {
-    const [asset] = real.previewAssets({
+    const [asset] = real.previewAssets(real.startProgram(1), {
       launchVehicleId: medium?.id ?? "",
       assetIds: [orbiterId],
     });

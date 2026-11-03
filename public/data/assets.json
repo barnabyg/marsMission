@@ -17,7 +17,8 @@
         "costMillions": 150
       }
     ],
-    "failureChancePerTurn": 0.13
+    "failureChancePerTurn": 0.13,
+    "technologyReadiness": "flight-proven"
   },
   {
     "id": "prospector-lander",
@@ -38,7 +39,35 @@
         "costMillions": 100
       }
     ],
-    "failureChancePerTurn": 0.12
+    "failureChancePerTurn": 0.12,
+    "technologyReadiness": "flight-proven"
+  },
+  {
+    "id": "pinpoint-lander",
+    "name": "Pinpoint Lander",
+    "kind": "lander",
+    "costMillions": 900,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "landingRiskMultiplier": 0.5,
+    "activities": ["surface-research", "nothing"],
+    "massTonnes": 3,
+    "serviceLifeOptions": [
+      {
+        "days": 1300,
+        "costMillions": 0
+      },
+      {
+        "days": 2100,
+        "costMillions": 100
+      }
+    ],
+    "failureChancePerTurn": 0.12,
+    "technologyReadiness": "built",
+    "unproven": {
+      "costMillions": 1100,
+      "failureMultiplier": 1.5
+    }
   },
   {
     "id": "trailblazer-rover",
@@ -59,6 +88,62 @@
         "costMillions": 300
       }
     ],
-    "failureChancePerTurn": 0.14
+    "failureChancePerTurn": 0.14,
+    "technologyReadiness": "flight-proven"
+  },
+  {
+    "id": "endurance-rover",
+    "name": "Endurance Rover",
+    "kind": "rover",
+    "costMillions": 1100,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "activities": ["soil-analysis", "long-traverse", "nothing"],
+    "massTonnes": 3.5,
+    "serviceLifeOptions": [
+      {
+        "days": 2100,
+        "costMillions": 0
+      },
+      {
+        "days": 3600,
+        "costMillions": 300
+      }
+    ],
+    "failureChancePerTurn": 0.08,
+    "technologyReadiness": "not-built",
+    "unproven": {
+      "costMillions": 1400,
+      "failureMultiplier": 1.5
+    },
+    "development": {
+      "costMillions": 1200,
+      "turns": 2
+    }
+  },
+  {
+    "id": "courier-relay-orbiter",
+    "name": "Courier Relay",
+    "kind": "orbiter",
+    "costMillions": 900,
+    "missionEvents": ["mars-orbit-insertion"],
+    "massTonnes": 2.5,
+    "activities": ["survey", "orbital-research", "nothing"],
+    "serviceLifeOptions": [
+      {
+        "days": 1300,
+        "costMillions": 0
+      },
+      {
+        "days": 2100,
+        "costMillions": 150
+      }
+    ],
+    "failureChancePerTurn": 0.13,
+    "technologyReadiness": "flight-proven",
+    "benefit": {
+      "raises": "surfaceResearch",
+      "percent": 75
+    }
   }
 ]

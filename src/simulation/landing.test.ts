@@ -150,6 +150,7 @@ describe("a successful landing", () => {
         serviceLifeDays: 50_000,
         reliabilityLevelId: "none",
         activityId: "test-nothing",
+        flewUnproven: false,
         key: "test-lander:2029-06-24",
         activityName: "Nothing",
         activities: [
