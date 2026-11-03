@@ -61,8 +61,8 @@ async function openBusyProgram(
       JSON.stringify(
         colossusBuilt
           ? {
-              // Format 8 holds Development, here with the Meridian Colossus built.
-              formatVersion: 8,
+              // Format 7 holds Development, here with the Meridian Colossus built.
+              formatVersion: 7,
               program: {
                 ...saved.program,
                 provenTechnologyIds: [],

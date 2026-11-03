@@ -250,9 +250,9 @@ describe("saving Development", () => {
 
   it("upgrades a save from before Development with none started, and everything that needs it not built", () => {
     const { simulation } = setup();
-    // A literal copy of what format 7 looks like. Don't change this: it's a compatibility contract.
-    const formatSeven = {
-      formatVersion: 7,
+    // A literal copy of what format 6 looks like. Don't change this: it's a compatibility contract.
+    const formatSix = {
+      formatVersion: 6,
       program: {
         seed: 1,
         turnNumber: 2,
@@ -265,27 +265,22 @@ describe("saving Development", () => {
         knownLandingSiteIds: ["alpha-plain", "beta-crater"],
         surveyedLandingSiteIds: [],
         fundingThresholdsPaid: [],
-        provenTechnologyIds: ["test-new-lander"],
         operatingAssets: [
           {
-            assetId: "test-new-lander",
-            name: "Test New Lander",
+            assetId: "test-lander",
+            name: "Test Lander",
             kind: "lander",
             arrivedOn: "2029-06-24",
             landingSiteId: "alpha-plain",
             serviceLifeDays: 50_000,
             reliabilityLevelId: "none",
             activityId: "test-research",
-            flewUnproven: true,
           },
         ],
         status: { kind: "active" },
       },
     };
-    const view = simulation.readProgram(simulation.restoreProgram(formatSeven));
-    expect(
-      view.operatingAssets.map(({ flewUnproven }) => flewUnproven),
-    ).toEqual([true]);
+    const view = simulation.readProgram(simulation.restoreProgram(formatSix));
     expect(view.developments.map(({ status }) => status)).toEqual([
       "notStarted",
       "notStarted",

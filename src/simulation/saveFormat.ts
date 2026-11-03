@@ -130,9 +130,15 @@ function activityBeforeActivities(
   return activity.id;
 }
 
-/** Adds the technologies the Program has made Flight-proven, and whether each Asset flew unproven. Everything a save from before it holds started Flight-proven. */
+/** Adds Technology Readiness and Development: the technologies the Program has made Flight-proven, whether each Asset flew unproven, and the Developments started. Everything a save from before it holds started Flight-proven, and it has started no Development. */
 const format7 = format6.extend({
   provenTechnologyIds: z.array(z.string()),
+  developments: z.array(
+    z.strictObject({
+      technologyId: z.string(),
+      finishesOnTurn: z.number().int().positive(),
+    }),
+  ),
   operatingAssets: z.array(
     z.strictObject({
       ...format6.shape.operatingAssets.element.shape,
@@ -141,17 +147,7 @@ const format7 = format6.extend({
   ),
 });
 
-/** Adds the Developments started. A save from before Development has started none. */
-const format8 = format7.extend({
-  developments: z.array(
-    z.strictObject({
-      technologyId: z.string(),
-      finishesOnTurn: z.number().int().positive(),
-    }),
-  ),
-});
-
-const newestFormat = format8;
+const newestFormat = format7;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -227,17 +223,11 @@ const formats: readonly SaveFormat[] = [
     upgrade: (old: z.output<typeof format6>): z.output<typeof format7> => ({
       ...old,
       provenTechnologyIds: [],
+      developments: [],
       operatingAssets: old.operatingAssets.map((asset) => ({
         ...asset,
         flewUnproven: false,
       })),
-    }),
-  },
-  {
-    schema: format7,
-    upgrade: (old: z.output<typeof format7>): z.output<typeof format8> => ({
-      ...old,
-      developments: [],
     }),
   },
   { schema: newestFormat },
