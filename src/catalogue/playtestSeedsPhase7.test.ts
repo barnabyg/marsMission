@@ -81,7 +81,7 @@ describe("the known seeds in the Phase 7 playtest guide", () => {
         mission: { ...crewed().mission, launchVehicleId: "meridian-heavy" },
       } as TurnPlan).problems,
     ).toEqual([
-      "This Mission weighs 10.5 tonnes, but its Launch Vehicle can only carry 8 tonnes.",
+      "This Mission weighs 11.5 tonnes, but its Launch Vehicle can only carry 8 tonnes.",
     ]);
     expect(real.validatePlan(ready, crewed()).costMillions).toBe(4200);
     const mission = crewed().mission;
@@ -103,7 +103,7 @@ describe("the known seeds in the Phase 7 playtest guide", () => {
     );
     expect(fifth.summary.crew.map(({ health }) => health)).toEqual([45, 45]);
     expect(real.readProgram(fifth.program).crew).toMatchObject([
-      { locationName: "Mars orbit", suppliesDaysLeft: 1095 },
+      { locationName: "Mars orbit", suppliesDaysLeft: 2345 },
     ]);
 
     const sixth = turnWithNoDecision(fifth.program, { mission: null });

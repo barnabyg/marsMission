@@ -29,6 +29,12 @@ describe("the balance of Phase 7", () => {
   const landing = played(
     "big Program: develop the Meridian Colossus and land Crew when rich",
   );
+  // Played here, as the test that compares them all would take longer than a test may.
+  const leastSupplies = played("big Program: land Crew, least Supplies");
+  const noProtection = played("big Program: land Crew, no Protection");
+  const neither = played(
+    "big Program: land Crew, no Protection, least Supplies",
+  );
 
   it("makes flying Crew the better choice in some strategies and not in others", () => {
     // Crew who land, with Field research and the Milestones, are worth what they cost.
@@ -43,7 +49,7 @@ describe("the balance of Phase 7", () => {
     expect(landing.money).toBeLessThan(robotic.money);
   });
 
-  it("makes the Meridian Colossus do better than filling the Meridian Heavy in a big Program that flies Crew", () => {
+  it("makes the Meridian Colossus do better than filling the Meridian Heavy in a big Program that lands Crew", () => {
     const heavy = played("big Program: fill the Meridian Heavy when rich");
     expect(landing.science).toBeGreaterThan(1.03 * heavy.science);
     expect(landing.cancelled).toBeLessThan(heavy.cancelled + 0.02);
@@ -69,20 +75,24 @@ describe("the balance of Phase 7", () => {
   });
 
   it("makes Supplies and Protection each worth buying, without either being an obvious yes", () => {
-    // Each is worth its mass and money: Crew without it earn less.
-    const leastSupplies = played("big Program: land Crew, least Supplies");
-    const noProtection = played("big Program: land Crew, no Protection");
-    expect(landing.science).toBeGreaterThan(1.05 * leastSupplies.science);
-    expect(landing.science).toBeGreaterThan(1.02 * noProtection.science);
-    // The largest Crew can't have the most of both. With the least Supplies, which leaves room for the most
-    // Protection, the Supplies run out before Health does, so that Protection is wasted.
+    // The largest Crew can't have the most of both. With Protection, Crew live long enough to use the most Supplies,
+    // which pay for themselves: the least Supplies run out before Health does, so they earn less Science and money.
+    expect(landing.science).toBeGreaterThan(1.03 * leastSupplies.science);
+    expect(landing.money).toBeGreaterThan(leastSupplies.money);
     expect(crewLostTo(leastSupplies.plays, "supplies")).toBeGreaterThan(
-      5 * crewLostTo(leastSupplies.plays, "health"),
+      3 * crewLostTo(leastSupplies.plays, "health"),
     );
-    // With the most Supplies, Health runs out before the Supplies do, so some of them are wasted.
     expect(crewLostTo(landing.plays, "health")).toBeGreaterThan(
       5 * crewLostTo(landing.plays, "supplies"),
     );
+    // Without Protection, Health runs out about when the least Supplies do, so more Supplies are money wasted.
+    expect(neither.science).toBeGreaterThan(noProtection.science);
+    expect(neither.money).toBeGreaterThan(noProtection.money);
+    // The same goes for Protection: worth it with the Supplies to live on, and wasted without them.
+    expect(landing.science).toBeGreaterThan(1.02 * noProtection.science);
+    expect(landing.money).toBeGreaterThan(noProtection.money);
+    expect(neither.science).toBeGreaterThan(leastSupplies.science);
+    expect(neither.money).toBeGreaterThan(leastSupplies.money);
   });
 
   it("keeps Crew out of the opening: no Crewed Mission can fly before the Meridian Colossus is developed", () => {

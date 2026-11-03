@@ -462,6 +462,14 @@ export const strategies: Strategy[] = [
     { ...colossusWhenRich, fliesCrew: { ...crewLanding, noProtection: true } },
   ),
   playStyle(
+    "big Program: land Crew, no Protection, least Supplies",
+    "As big Program: land Crew, no Protection, also with the least Supplies, which last about as long as Health without Protection does.",
+    {
+      ...colossusWhenRich,
+      fliesCrew: { ...crewLanding, noProtection: true, leastSupplies: true },
+    },
+  ),
+  playStyle(
     "big Program: land Crew, carry on through radiation",
     "As big Program: develop the Meridian Colossus and land Crew when rich, carrying on through every solar particle event with Crew aboard.",
     {

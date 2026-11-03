@@ -30,7 +30,7 @@ function crewedMission(page: Page) {
 test("develops the Meridian Colossus, launches a Crewed Mission on it and sees its named Crew at Mars in the next Planning Mode", async ({
   page,
 }) => {
-  // Over 5 s: two Turns of Development, then a Turn played at 10x.
+  // Over 5 s: two Turns of Development, a Turn played at 10x, then two more Turns.
   const problems = watchForProblems(page);
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
   await page.goto(`/?seed=${crewSeed}`);
@@ -52,13 +52,13 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await expect(page.getByRole("combobox", { name: "Supplies" })).toHaveValue(
     "supplies-lean",
   );
-  await expect(page.getByTestId("mission-mass")).toHaveText("10.5 of 8 tonnes");
+  await expect(page.getByTestId("mission-mass")).toHaveText("11.5 of 8 tonnes");
   await expect(page.getByRole("alert")).toHaveText(
-    "This Mission weighs 10.5 tonnes, but its Launch Vehicle can only carry 8 tonnes.",
+    "This Mission weighs 11.5 tonnes, but its Launch Vehicle can only carry 8 tonnes.",
   );
   // A larger Crew weighs and costs more, and earns more.
   await page.getByRole("combobox", { name: "Crew size" }).selectOption("3");
-  await expect(page.getByTestId("mission-mass")).toHaveText("12 of 8 tonnes");
+  await expect(page.getByTestId("mission-mass")).toHaveText("13 of 8 tonnes");
   await expect(page.getByTestId("research-earnings")).toContainText(
     "Crew research earns 240 Science",
   );
@@ -66,9 +66,9 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await expect(
     page.getByRole("combobox", { name: "Supplies" }).getByRole("option"),
   ).toHaveText([
-    "1,250 days ($100M, 1.5 t)",
-    "2,083 days ($150M, 2.5 t)",
-    "2,916 days ($200M, 3.5 t)",
+    "2,083 days ($100M, 2.5 t)",
+    "2,500 days ($200M, 3 t)",
+    "2,916 days ($300M, 3.5 t)",
   ]);
   await page.getByRole("combobox", { name: "Crew size" }).selectOption("2");
   await page
@@ -87,20 +87,19 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
     "Heavy shielding, radiation −50% ($300M, 1 t)",
   ]);
   await protection.selectOption("protection-heavy-shielding");
-  await expect(page.getByTestId("mission-mass")).toHaveText("11.5 of 8 tonnes");
-  await protection.selectOption("protection-none");
-  // Three Crew with the least Supplies, which run out at Mars before their Health does.
+  await expect(page.getByTestId("mission-mass")).toHaveText("12.5 of 8 tonnes");
+  // Three Crew with the least Supplies and Heavy shielding, which keeps them alive until their Supplies run out.
   await page.getByRole("combobox", { name: "Crew size" }).selectOption("3");
 
   await launchVehicle(page).selectOption("meridian-colossus");
   await expect(page.getByRole("alert")).toHaveCount(0);
-  await expect(page.getByTestId("mission-mass")).toHaveText("12 of 16 tonnes");
-  // The Meridian Colossus, still unproven, the Crew and their Supplies.
-  await expect(page.getByTestId("mission-cost")).toHaveText("$4.45B");
+  await expect(page.getByTestId("mission-mass")).toHaveText("14 of 16 tonnes");
+  // The Meridian Colossus, still unproven, the Crew, their Supplies and their Protection.
+  await expect(page.getByTestId("mission-cost")).toHaveText("$4.75B");
   await expect(page.getByTestId("crew-names")).toHaveText("Health 100 each");
   await expect(page.getByTestId("crew-names")).toHaveAttribute(
     "data-detail",
-    "Flying: Amara Okafor, Lena Petrova, Kenji Sato, each starting at Health 100. Radiation on the way leaves them 79 as they reach Mars (with Protection: None 79, Light shielding 85, Heavy shielding 90).",
+    "Flying: Amara Okafor, Lena Petrova, Kenji Sato, each starting at Health 100. Radiation on the way leaves them 90 as they reach Mars (with Protection: None 79, Light shielding 85, Heavy shielding 90).",
   );
   await expect(page.getByTestId("research-earnings")).toContainText(
     "Crew research earns 240 Science",
@@ -123,10 +122,10 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await page.getByRole("button", { name: "10x" }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-crew")).toContainText(
-    "Amara Okafor, in Mars orbit from this Turn: Health 45 of 100",
+    "Amara Okafor, in Mars orbit from this Turn: Health 65 of 100",
   );
   await expect(summary.getByTestId("summary-health-lost")).toContainText(
-    "Amara Okafor lost 55 Health: 21 to radiation in flight, 17 to radiation at Mars, 17 to time at Mars",
+    "Amara Okafor lost 35 Health: 10 to radiation in flight, 8 to radiation at Mars, 17 to time at Mars. Protection saved 20 more",
   );
   await expect(summary.getByTestId("summary-ongoing-research")).toContainText(
     "Crew in Mars orbit, Crew research",
@@ -136,16 +135,21 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
 
   await expect(page.getByTestId("turn-number")).toHaveText("4");
   const crew = page.getByTestId("crew-at-mars").getByRole("listitem");
-  // 1,500 kg, less 1.2 kg a day for the 780 days since launch.
+  // 2,500 kg, less 1.2 kg a day for the 780 days since launch.
   await expect(crew).toHaveText([
-    /^Crew in Mars orbit: Amara Okafor \(Health 45\), Lena Petrova \(Health 45\), Kenji Sato \(Health 45\)\. Supplies for 470 days/,
+    /^Crew in Mars orbit: Amara Okafor \(Health 65\), Lena Petrova \(Health 65\), Kenji Sato \(Health 65\)\. Supplies for 1,303 days/,
   ]);
   await expect(
     page.getByRole("combobox", { name: "Activity for the Crew in Mars orbit" }),
   ).toHaveValue("crew-research");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  // Their Supplies run out 470 days into the next Turn, after which their Health falls quickly.
+  // Their Supplies last this Turn, and run out 523 days into the next, after which their Health falls quickly.
+  await endTurnWithoutLaunching(page);
+  await expect(page.getByTestId("turn-number")).toHaveText("5");
+  await expect(crew).toHaveText([
+    /^Crew in Mars orbit: Amara Okafor \(Health 31\), Lena Petrova \(Health 31\), Kenji Sato \(Health 31\)\. Supplies for 523 days/,
+  ]);
   await pauseAtEvent(page, "Supplies out in Mars orbit", () =>
     page.getByRole("button", { name: "End Turn without launching" }).click(),
   );

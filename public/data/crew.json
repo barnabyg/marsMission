@@ -45,20 +45,20 @@
       {
         "id": "supplies-lean",
         "name": "Lean",
-        "massTonnes": 1.5,
+        "massTonnes": 2.5,
         "costMillions": 100
       },
       {
         "id": "supplies-standard",
         "name": "Standard",
-        "massTonnes": 2.5,
-        "costMillions": 150
+        "massTonnes": 3,
+        "costMillions": 200
       },
       {
         "id": "supplies-ample",
         "name": "Ample",
         "massTonnes": 3.5,
-        "costMillions": 200
+        "costMillions": 300
       }
     ]
   },
