@@ -3,7 +3,15 @@ import { playProgram } from "./playProgram";
 import { balanceReport } from "./report";
 import type { Strategy } from "./playStyle";
 import { strategies } from "./strategies";
-import { certain, files, launchNothing, real, turns } from "./testHelpers";
+import {
+  certain,
+  colossusFromTheStart,
+  files,
+  launchNothing,
+  real,
+  simulationOf,
+  turns,
+} from "./testHelpers";
 
 describe("the report on Decision Points", () => {
   const sheltering = strategies.find(
@@ -209,5 +217,85 @@ describe("the report on technology", () => {
     expect(text).toContain("== Technology ==");
     expect(text).toContain("Developments: none");
     expect(text).toContain("First flights of unproven technology: none");
+  });
+});
+
+describe("the report on Crew", () => {
+  /** Flies the smallest Crew to Mars orbit on the first Turn, on this Trajectory, and then nothing. */
+  const flyCrewOnce = (trajectoryId?: string): Strategy => ({
+    name: "test: fly Crew once",
+    description: "Flies two Crew to Mars orbit on the first Turn.",
+    plan: (view) => ({
+      mission:
+        view.turnNumber === 1
+          ? {
+              launchVehicleId: "meridian-colossus",
+              assetIds: [],
+              crew: { size: 2 },
+              ...(trajectoryId ? { trajectoryId } : {}),
+            }
+          : null,
+    }),
+  });
+  /** As colossusFromTheStart, but Mars orbit insertion always fails. */
+  const failingArrival = {
+    ...colossusFromTheStart,
+    missionEvents: colossusFromTheStart.missionEvents.map((event) => ({
+      ...event,
+      failureProbability: event.id === "mars-orbit-insertion" ? 1 : 0,
+    })),
+  };
+  /** The cells after the strategy's name in its row of Crew flown. */
+  const crewRow = (text: string) =>
+    text
+      .slice(text.indexOf("== Crew =="))
+      .split("\n")
+      .find((line) => /^test: fly Crew once +\d/.test(line))
+      ?.replace("test: fly Crew once", "")
+      .trim()
+      .split(/\s+/);
+
+  it("counts Crewed Missions and their Crew, and how Programs ended by whether they flew Crew", () => {
+    const text = balanceReport(colossusFromTheStart, 2, [flyCrewOnce()]);
+    expect(text).toContain("== Crew ==");
+    const [flew, missions, flown, event, health, supplies, spe, home, atEnd] =
+      crewRow(text) ?? [];
+    expect([flew, missions, flown, event, spe, home]).toEqual(
+      "100.0 1.0 2.0 0.0 0.0 0.0".split(" "),
+    );
+    // With nothing able to fail, their Health or Supplies run out in the end, or they are still at Mars.
+    expect(Number(health) + Number(supplies) + Number(atEnd)).toBeCloseTo(2);
+    expect(text).toMatch(
+      /^test: fly Crew once +yes +100\.0 +\d+ +\d+ +\d+\.\d$/m,
+    );
+    expect(text).not.toMatch(/^test: fly Crew once +no /m);
+  });
+
+  it("counts Crew lost to a failed Mission Event, and Crew a Free-return brings home", () => {
+    expect(crewRow(balanceReport(failingArrival, 2, [flyCrewOnce()]))).toEqual(
+      "100.0 1.0 2.0 2.0 0.0 0.0 0.0 0.0 0.0".split(" "),
+    );
+    expect(
+      crewRow(balanceReport(failingArrival, 2, [flyCrewOnce("free-return")])),
+    ).toEqual("100.0 1.0 2.0 0.0 0.0 0.0 0.0 2.0 0.0".split(" "));
+  });
+
+  it("records each Crew member lost once, and a Crew member who flew is lost, home or still at Mars", () => {
+    const simulation = simulationOf(colossusFromTheStart);
+    const { turns: played } = playProgram(simulation, flyCrewOnce(), 1, turns);
+    const lost = played.flatMap(({ crewLost }) => Object.values(crewLost));
+    const total = (values: number[]) =>
+      values.reduce((sum, value) => sum + value, 0);
+    expect(
+      total(lost) +
+        total(played.map(({ crewHome }) => crewHome)) +
+        (played.at(-1)?.crewAtMars ?? 0),
+    ).toBe(total(played.map(({ crewFlown }) => crewFlown)));
+  });
+
+  it("says so when no strategy flew Crew", () => {
+    expect(balanceReport(files, 3, [launchNothing])).toContain(
+      "Crewed Missions: none",
+    );
   });
 });

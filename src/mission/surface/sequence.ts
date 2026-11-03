@@ -1,7 +1,7 @@
 import type { Timeline } from "../../simulation/simulation";
 import { viewAskedForBy } from "../missionViews";
 import { msSinceEntry, type PlaybackState } from "../playback";
-import { modelOf, type SurfaceModel } from "./surface";
+import { crewLandersOf, modelOf, type SurfaceModel } from "./surface";
 
 /**
  * A landing or crash takes this long in real time, leaving out pauses, at every speed. At 10x a span
@@ -27,6 +27,8 @@ interface SequenceAsset {
   model: SurfaceModel;
   /** Where it comes down among the Assets at the site. */
   place: number;
+  /** Which of the landers in its place it is, which is only ever more than 0 for Crew joining Crew already there. */
+  lander: number;
 }
 
 /** The landing or crash in a Turn. There's at most one, as a Turn has at most one Mission, going to one Landing Site. */
@@ -35,6 +37,8 @@ export interface LandingSequence {
   /** The same day as its entry in the events column. */
   day: number;
   crashed: boolean;
+  /** Whether Crew are coming down, which makes it a Crew landing or a Crew crash. */
+  crewed: boolean;
   /** Which of the Timeline's entries sets it off. */
   entryIndex: number;
   assets: SequenceAsset[];
@@ -66,18 +70,34 @@ export function landingSequenceOf({
     siteName,
     day: entry.day,
     crashed: entry.outcome === "failure",
+    crewed: landing.some(({ kind }) => kind === "crew"),
     entryIndex,
-    assets: landing.map(({ name, kind, deliveredOnDay }, index) => ({
-      name,
-      model: modelOf(kind),
-      place:
-        deliveredOnDay === null
-          ? atSite.length + index
-          : atSite.findIndex(
-              (asset) =>
-                asset.name === name && asset.arrivedOnDay === deliveredOnDay,
-            ),
-    })),
+    assets: landing.map(({ name, kind, deliveredOnDay }, index) => {
+      const crashedPlace = { place: atSite.length + index, lander: 0 };
+      if (deliveredOnDay === null) {
+        return { name, model: modelOf(kind), ...crashedPlace };
+      }
+      if (kind === "crew") {
+        // Crew landing where Crew already are join them, in their place, so there's only ever one such place.
+        const place = atSite.findIndex((asset) => asset.kind === "crew");
+        const landers = crewLandersOf(atSite[place]?.crew ?? []);
+        return {
+          name,
+          model: modelOf(kind),
+          place,
+          lander: Math.max(landers.indexOf(deliveredOnDay), 0),
+        };
+      }
+      return {
+        name,
+        model: modelOf(kind),
+        place: atSite.findIndex(
+          (asset) =>
+            asset.name === name && asset.arrivedOnDay === deliveredOnDay,
+        ),
+        lander: 0,
+      };
+    }),
   };
 }
 
@@ -136,12 +156,26 @@ export function sitesDuring(
   return [...new Set([now.sequence.siteName, ...sites])];
 }
 
+/** Which of the four sequences this is, as the browser tests read it. */
+export function sequenceKind({
+  crashed,
+  crewed,
+}: Pick<LandingSequence, "crashed" | "crewed">):
+  "landing" | "crash" | "crew-landing" | "crew-crash" {
+  const what = crashed ? "crash" : "landing";
+  return crewed ? `crew-${what}` : what;
+}
+
 /** What the player reads about a sequence running at a Landing Site. */
 export function sequenceStatus(
   now: SequenceNow | null,
   siteName: string,
 ): string | null {
   if (!sequenceRunning(now) || now.sequence.siteName !== siteName) return null;
-  const names = now.sequence.assets.map(({ name }) => name).join(", ");
-  return `${now.sequence.crashed ? "Crash" : "Landing"}: ${names}`;
+  const { assets, crashed, crewed } = now.sequence;
+  const names = assets.map(({ name }) => name).join(", ");
+  const what = crashed ? "crash" : "landing";
+  return `${crewed ? "Crew " : ""}${what}: ${names}`.replace(/^./, (first) =>
+    first.toUpperCase(),
+  );
 }

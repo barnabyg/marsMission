@@ -83,7 +83,42 @@ function Aeroshell({ lost, color }: { lost: boolean; color: string }) {
   );
 }
 
+/**
+ * The Crew's ship: a white habitat drum with a band of windows, a capsule at its front for the descent, and a radiator
+ * above and below, so that it reads apart from any robot on board.
+ */
+function CrewVehicle({ lost }: { lost: boolean }) {
+  return (
+    <>
+      <group rotation={[0, 0, Math.PI / 2]}>
+        <Part color="#eceef2" lost={lost}>
+          <cylinderGeometry args={[0.3, 0.3, 0.5, 24]} />
+        </Part>
+        <group position={[0, 0.02, 0]}>
+          <Part color="#26324a" lost={lost}>
+            <cylinderGeometry args={[0.305, 0.305, 0.07, 24]} />
+          </Part>
+        </group>
+        {/* The capsule, narrowing ahead of the drum. */}
+        <group position={[0, -0.36, 0]} rotation={[Math.PI, 0, 0]}>
+          <Part color="#d7dae0" lost={lost}>
+            <cylinderGeometry args={[0.12, 0.27, 0.22, 24]} />
+          </Part>
+        </group>
+      </group>
+      {[1, -1].map((side) => (
+        <group key={side} position={[-0.05, side * 0.46, 0]}>
+          <Part color="#f4f5f7" lost={lost}>
+            <boxGeometry args={[0.34, 0.3, 0.03]} />
+          </Part>
+        </group>
+      ))}
+    </>
+  );
+}
+
 function AssetModel({ kind, lost }: { kind: string; lost: boolean }) {
+  if (kind === "crew") return <CrewVehicle lost={lost} />;
   if (kind === "lander") return <Aeroshell lost={lost} color="#d9d6cf" />;
   if (kind === "rover") return <Aeroshell lost={lost} color="#eef0f4" />;
   return <Orbiter lost={lost} />;

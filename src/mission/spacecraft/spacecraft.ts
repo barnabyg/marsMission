@@ -153,6 +153,12 @@ export function spacecraftFallback(
   return lostOnTheWay || returning ? "solarSystem" : "marsOrbit";
 }
 
+/** How a label on board looks: lost, the Crew's ship, or anything else on board. */
+export function onBoardLabelClass(kind: string, lost: boolean): string {
+  if (lost) return "crashed-label";
+  return kind === "crew" ? "crew-label" : "spacecraft-label";
+}
+
 /** The cruise stage's length along the stack, and each Asset's, with the gap between them. */
 const cruiseLength = 0.7;
 const assetLength = 0.9;

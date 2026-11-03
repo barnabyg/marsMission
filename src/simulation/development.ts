@@ -1,7 +1,8 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { sum } from "./rules";
 import { everyTechnology, type Technology } from "./technologyReadiness";
-import type { PlannedDevelopment, Program, TurnPlan } from "./types";
+import type { PlannedDevelopment } from "./previews";
+import type { Program, TurnPlan } from "./types";
 
 /** A technology that isn't built yet, with what its Development costs and takes. */
 type NeedsDevelopment = Technology & {

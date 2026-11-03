@@ -1,4 +1,8 @@
-import type { AssetAtMars, Timeline } from "../../simulation/simulation";
+import type {
+  AssetAtMars,
+  CrewMemberAtMarsOnTimeline as CrewMember,
+  Timeline,
+} from "../../simulation/simulation";
 import { assetsAtMarsOn } from "../journey";
 import type { CameraPose, Point } from "../sceneParts";
 import { roverSpot, type RoverAtWork, type RoverSpot } from "./motion";
@@ -23,20 +27,23 @@ export const landingShot: CameraPose = {
 
 type Mission = Pick<NonNullable<Timeline["mission"]>, "assets">;
 
-export type SurfaceModel = "lander" | "rover";
+export type SurfaceModel = "lander" | "rover" | "crewLander";
 
-/** Everything else that lands stands still until it has a model of its own. */
+/** Everything else that lands stands still until it has a model of its own. The Crew come down in a lander of their own. */
 export function modelOf(kind: string): SurfaceModel {
+  if (kind === "crew") return "crewLander";
   return kind === "rover" ? "rover" : "lander";
 }
 
-interface SurfaceAsset extends RoverAtWork {
+export interface SurfaceAsset extends RoverAtWork {
   name: string;
   kind: string;
   model: SurfaceModel;
   activityName: string;
   /** Its place among the Turn's Assets at this Landing Site, which stays the same all Turn. */
   place: number;
+  /** For the Crew's ship, every Crew member at the site during the Turn. */
+  crew: readonly CrewMember[];
 }
 
 /** The Assets operating at a Landing Site on a given day. A crash never starts operating, so it is never here. */
@@ -59,6 +66,7 @@ export function surfaceAssetsAt(
     model: modelOf(asset.kind),
     activityName: asset.activityName,
     place: atSite.indexOf(asset),
+    crew: asset.crew ?? [],
   }));
 }
 
@@ -67,6 +75,50 @@ export function placeOf(place: number): { x: number; z: number } {
   const side = place % 2 === 0 ? -1 : 1;
   const row = Math.floor(place / 2);
   return { x: side * (1.5 + row * 1.8), z: row * 2 };
+}
+
+/** Whether a Crew member is at their place at Mars on a given day: arrived, and not yet lost. */
+export function isThere(
+  { fromDay, untilDay }: CrewMember,
+  day: number,
+): boolean {
+  return day >= fromDay && (untilDay === null || day < untilDay);
+}
+
+/** Whether a Crew member is sheltering indoors from a dust storm on a given day. */
+export function isIndoors({ shelter }: CrewMember, day: number): boolean {
+  return shelter !== undefined && day >= shelter.fromDay && day < shelter.toDay;
+}
+
+/** What the player reads about the Crew at a Landing Site on a given day: who is there, and what they're doing. */
+function describeCrew(
+  { name, crew, activityName }: SurfaceAsset,
+  day: number,
+): string {
+  const there = crew.filter((member) => isThere(member, day));
+  const doing = there.some((member) => isIndoors(member, day))
+    ? "sheltering from the dust storm"
+    : activityName;
+  return `Crew (${name}): ${there.map((member) => member.name).join(", ")}: ${doing}`;
+}
+
+/**
+ * The Crew's landers at a Landing Site: one for each day Crew landed there, earliest first, by that day. Crew who land
+ * where Crew already are join them, so they share one place, and each lander stands a little further back.
+ */
+export function crewLandersOf(crew: readonly CrewMember[]): number[] {
+  return [...new Set(crew.map(({ arrivedOnDay }) => arrivedOnDay))].toSorted(
+    (first, second) => first - second,
+  );
+}
+
+/** Where one of the landers in a place is on the ground. The first stands on the place itself. */
+export function landerSpot(
+  place: number,
+  lander: number,
+): { x: number; z: number } {
+  const { x, z } = placeOf(place);
+  return { x, z: z + lander * 1.4 };
 }
 
 /** Where an Asset is on the ground on a given day. Only a rover goes anywhere. */
@@ -151,8 +203,10 @@ export function describeSite(
   day: number,
   siteName: string,
 ): string[] {
-  const here = surfaceAssetsAt(timeline, day, siteName).map(
-    ({ name, kind, activityName }) => `${name} (${kind}): ${activityName}`,
+  const here = surfaceAssetsAt(timeline, day, siteName).map((asset) =>
+    asset.model === "crewLander"
+      ? describeCrew(asset, day)
+      : `${asset.name} (${asset.kind}): ${asset.activityName}`,
   );
   const coming = landingsOnTheirWay(timeline.mission, day)
     .filter((landing) => landing.siteName === siteName)

@@ -1,19 +1,32 @@
 import { formatMoney, type TurnSummary } from "../simulation/simulation";
+import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
+import { SummaryHealthLost } from "./SummaryHealthLost";
 
 function describeSolarParticleEvent({
   outcome,
   assets,
   serviceLifeLossPercent,
+  crew,
+  crewHealthLoss,
 }: NonNullable<TurnSummary["solarParticleEvent"]>): string {
-  const names = assets.join(", ");
+  const names = [...assets, ...crew].join(", ");
+  // What it cost those on board, such as "15% of each Asset's Service Life and 5 Health for each Crew member".
+  const cost = [
+    ...(assets.length > 0
+      ? [`${serviceLifeLossPercent}% of each Asset's Service Life`]
+      : []),
+    ...(crew.length > 0
+      ? [`${crewHealthLoss} Health for each Crew member`]
+      : []),
+  ].join(" and ");
   switch (outcome) {
     case "protected":
-      return `Safe mode protected ${names}, at a cost of ${serviceLifeLossPercent}% of each Asset's Service Life`;
+      return `Safe mode protected ${names}, at a cost of ${cost}`;
     case "unharmed":
       return `Carried on, and ${names} came through unharmed`;
     case "damaged":
-      return `Carried on, and the radiation damaged ${names}, which cost each Asset ${serviceLifeLossPercent}% of its Service Life`;
+      return `Carried on, and the radiation hit ${names}, which cost ${cost}`;
     case "lost":
       return `Carried on, and the radiation lost ${names}`;
   }
@@ -70,6 +83,29 @@ export function TurnSummaryScreen({
             )}
           </ul>
         </section>
+      )}
+      {summary.crewLost.length > 0 && (
+        <section data-testid="summary-crew-lost">
+          <h2 className="problem">
+            <GameText>Crew lost</GameText>
+          </h2>
+          <ul>
+            {summary.crewLost.map(({ description, publicSupportLost }) => (
+              <li key={description} className="problem">
+                <GameText>
+                  {`${description} Public Support lost: ${publicSupportLost}`}
+                </GameText>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {summary.crewHome.length > 0 && (
+        <p data-testid="summary-crew-home">
+          <GameText>
+            {`Crew home safe, who won't fly again: ${summary.crewHome.join(", ")}`}
+          </GameText>
+        </p>
       )}
       {summary.contingencies.length > 0 && (
         <section data-testid="summary-contingencies">
@@ -141,19 +177,29 @@ export function TurnSummaryScreen({
           </h2>
           <ul>
             {summary.dustStorms.map(
-              ({ siteName, days, answer, assets, assetsFailed }) => (
-                <li key={siteName}>
-                  <GameText>
-                    {`Dust storm over ${siteName}: ${
-                      answer === "shelter"
-                        ? `${assets.join(", ")} sheltered for ${days} days, with no Ongoing Research`
-                        : assetsFailed.length > 0
-                          ? `carried on through ${days} days, and lost ${assetsFailed.join(", ")}`
-                          : `${assets.join(", ")} carried on through ${days} days, and came through`
-                    }`}
-                  </GameText>
-                </li>
-              ),
+              ({ siteName, days, answer, assets, assetsFailed, crewHurt }) => {
+                const harm = [
+                  ...(assetsFailed.length > 0
+                    ? [`lost ${assetsFailed.join(", ")}`]
+                    : []),
+                  ...(crewHurt.length > 0
+                    ? [`${crewHurt.join(", ")} lost Health`]
+                    : []),
+                ];
+                return (
+                  <li key={siteName}>
+                    <GameText>
+                      {`Dust storm over ${siteName}: ${
+                        answer === "shelter"
+                          ? `${assets.join(", ")} sheltered for ${days} days, with no Ongoing Research`
+                          : harm.length > 0
+                            ? `carried on through ${days} days, and ${harm.join(", and ")}`
+                            : `${assets.join(", ")} carried on through ${days} days, and came through`
+                      }`}
+                    </GameText>
+                  </li>
+                );
+              },
             )}
           </ul>
         </section>
@@ -174,6 +220,34 @@ export function TurnSummaryScreen({
           </ul>
         </section>
       )}
+      {summary.crew.length > 0 && (
+        <section data-testid="summary-crew">
+          <h2>
+            <GameText>Crew at Mars</GameText>
+          </h2>
+          <ul>
+            {summary.crew.map(
+              ({ name, locationName, health, maxHealth, arrived }) => (
+                <li key={name}>
+                  <GameText>
+                    {`${name}, in ${locationName}${arrived ? " from this Turn" : ""}: Health ${health} of ${maxHealth}`}
+                  </GameText>
+                </li>
+              ),
+            )}
+          </ul>
+        </section>
+      )}
+      {summary.suppliesRanOut.length > 0 && (
+        <p className="problem" data-testid="summary-supplies-out">
+          <GameText>
+            {`Supplies ran out: ${summary.suppliesRanOut
+              .map(({ crew, on }) => `${crew} on ${formatDate(on)}`)
+              .join(", ")}`}
+          </GameText>
+        </p>
+      )}
+      <SummaryHealthLost healthLost={summary.healthLost} />
       {summary.firstLanding && (
         <p data-testid="summary-first-landing">
           <GameText>

@@ -18,7 +18,14 @@ export function milestoneProblems({
       }
       continue;
     }
-    if ("totalScience" in milestone.trigger) continue;
+    // Every catalogue has a Crewed Mission, which can land, so Crew can always arrive and land.
+    if (
+      "totalScience" in milestone.trigger ||
+      "crewArrives" in milestone.trigger ||
+      "crewLands" in milestone.trigger
+    ) {
+      continue;
+    }
     const kind = milestone.trigger.assetKindArrives;
     if (!assetKinds.has(kind)) {
       problems.push(

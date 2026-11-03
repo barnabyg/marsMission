@@ -106,7 +106,8 @@ export function largestRaise(
 /** What a Benefit does, as Planning Mode describes it. */
 export function describeBenefit({ raises, percent }: Benefit): string {
   const what: Record<Benefit["raises"], string> = {
-    surfaceResearch: "the Ongoing Research of every Asset on the surface",
+    surfaceResearch:
+      "the Ongoing Research of every Asset and Crew on the surface",
   };
   return `Raises ${what[raises]} by ${percent}% on each day it operates at Mars, whatever its Activity. A second one adds nothing.`;
 }

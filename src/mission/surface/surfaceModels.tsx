@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Quaternion, Vector3 } from "three";
 import type { Point } from "../sceneParts";
+import { CrewLander, CrewLanderWreck } from "./crewModels";
 import type { SurfaceModel } from "./surface";
 
 const landerGold = "#f2c14e";
@@ -25,7 +26,11 @@ function Part({
   );
 }
 
-const shadowRadii: Record<SurfaceModel, number> = { lander: 0.7, rover: 0.62 };
+const shadowRadii: Record<SurfaceModel, number> = {
+  lander: 0.7,
+  rover: 0.62,
+  crewLander: 0.9,
+};
 
 /** A low shadow to stand a model on, leaning away from the Sun. It stays on the ground while the model comes down. */
 export function Shadow({ model }: { model: SurfaceModel }) {
@@ -135,6 +140,7 @@ const Rover = memo(function Rover() {
 export const models: Record<SurfaceModel, typeof Lander> = {
   lander: Lander,
   rover: Rover,
+  crewLander: CrewLander,
 };
 
 function Scorch() {
@@ -230,4 +236,5 @@ const RoverWreck = memo(function RoverWreck() {
 export const wrecks: Record<SurfaceModel, typeof LanderWreck> = {
   lander: LanderWreck,
   rover: RoverWreck,
+  crewLander: CrewLanderWreck,
 };

@@ -6,6 +6,7 @@ export const soundFileNames = {
   milestone: "milestone.wav",
   fundingThreshold: "funding-threshold.wav",
   rendezvous: "rendezvous.wav",
+  crewLost: "crew-lost.wav",
 } as const;
 
 export type SoundName = keyof typeof soundFileNames;
@@ -27,6 +28,7 @@ export function soundFor(entry: TimelineEntry): SoundName | null {
       ? "failure"
       : (successSounds[entry.eventId] ?? null);
   }
+  if (entry.kind === "crewLost") return "crewLost";
   if (entry.kind === "assetFailed" || entry.kind === "decisionPoint") {
     return "failure";
   }

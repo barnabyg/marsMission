@@ -1,5 +1,7 @@
 import type { Timeline } from "../../simulation/simulation";
 import {
+  crewColor,
+  isCrew,
   useTexture,
   type CameraPose,
   type Point,
@@ -55,7 +57,7 @@ function surfaceMarkers(timeline: Timeline, day: number) {
     placesTaken.set(siteName, place + 1);
     return place;
   };
-  const landed = landedOn(timeline, day).map(({ name, siteName }) => {
+  const landed = landedOn(timeline, day).map(({ name, kind, siteName }) => {
     const facing = surfacePoint(
       landingSites,
       siteName,
@@ -66,13 +68,14 @@ function surfaceMarkers(timeline: Timeline, day: number) {
       text: `${name} at ${siteName}`,
       position: facing,
       facing,
-      color: surfaceColor,
+      crew: isCrew({ kind }),
+      color: isCrew({ kind }) ? crewColor : surfaceColor,
       testId: "mars-surface-asset",
-      className: "surface-label",
+      className: isCrew({ kind }) ? "crew-label" : "surface-label",
     };
   });
   const landings = landingMarkersOn(timeline.mission, day).map(
-    ({ name, siteName, altitude, crashed }) => {
+    ({ name, kind, siteName, altitude, crashed }) => {
       const facing = surfacePoint(
         landingSites,
         siteName,
@@ -85,13 +88,46 @@ function surfaceMarkers(timeline: Timeline, day: number) {
           : `${name}: landing at ${siteName}`,
         position: scaled(facing, 1 + (orbitRadius - 1) * altitude),
         facing,
-        color: crashed ? crashedColor : surfaceColor,
+        crew: isCrew({ kind }),
+        color: crashed
+          ? crashedColor
+          : isCrew({ kind })
+            ? crewColor
+            : surfaceColor,
         testId: "mars-landing",
-        className: crashed ? "crashed-label" : "surface-label",
+        className: crashed
+          ? "crashed-label"
+          : isCrew({ kind })
+            ? "crew-label"
+            : "surface-label",
       };
     },
   );
   return [...landed, ...landings];
+}
+
+/** The Crew's ship, larger than an Asset's marker and ringed, so that it reads apart from them at this distance. */
+function CrewShipMarker({
+  position,
+  color,
+}: {
+  position: Point;
+  color: string;
+}) {
+  return (
+    <group position={position}>
+      <mesh>
+        <octahedronGeometry args={[markerRadius * 1.5]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry
+          args={[markerRadius * 2.2, markerRadius * 0.25, 8, 32]}
+        />
+        <meshBasicMaterial color={color} />
+      </mesh>
+    </group>
+  );
 }
 
 export function MarsOrbitScene({
@@ -120,28 +156,41 @@ export function MarsOrbitScene({
         <torusGeometry args={[orbitRadius, 0.004, 8, 240]} />
         <meshBasicMaterial color="#7fe7ff" transparent opacity={0.35} />
       </mesh>
-      {orbitersOn(timeline, day).map(({ slot }) => (
-        <mesh key={slot} position={orbiterPosition(slot, day)}>
-          <sphereGeometry args={[markerRadius, 24, 24]} />
-          <meshBasicMaterial color="#7fe7ff" />
-        </mesh>
-      ))}
-      {surfaceMarkers(timeline, day).map(({ position, color }, index) => (
-        <mesh key={index} position={position}>
-          <sphereGeometry args={[markerRadius, 24, 24]} />
-          <meshBasicMaterial color={color} />
-        </mesh>
-      ))}
+      {orbitersOn(timeline, day).map(({ slot, kind }) =>
+        isCrew({ kind }) ? (
+          <CrewShipMarker
+            key={slot}
+            position={orbiterPosition(slot, day)}
+            color={crewColor}
+          />
+        ) : (
+          <mesh key={slot} position={orbiterPosition(slot, day)}>
+            <sphereGeometry args={[markerRadius, 24, 24]} />
+            <meshBasicMaterial color="#7fe7ff" />
+          </mesh>
+        ),
+      )}
+      {surfaceMarkers(timeline, day).map(({ position, color, crew }, index) =>
+        crew ? (
+          <CrewShipMarker key={index} position={position} color={color} />
+        ) : (
+          <mesh key={index} position={position}>
+            <sphereGeometry args={[markerRadius, 24, 24]} />
+            <meshBasicMaterial color={color} />
+          </mesh>
+        ),
+      )}
     </group>
   );
 }
 
 export function marsOrbitLabels(timeline: Timeline, day: number): SceneLabel[] {
   return [
-    ...orbitersOn(timeline, day).map(({ name, slot }) => ({
+    ...orbitersOn(timeline, day).map(({ name, kind, slot }) => ({
       text: name,
       position: fromMarsCentre(aboveMarker(orbiterPosition(slot, day))),
       testId: "mars-orbit-asset",
+      ...(isCrew({ kind }) ? { className: "crew-label" } : {}),
     })),
     ...surfaceMarkers(timeline, day).map(
       ({ text, position, facing, testId, className }) => ({

@@ -1,6 +1,12 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { AssetInService } from "./assetsInService";
-import { earningsOfStay } from "./ongoingResearch";
+import {
+  hurt,
+  withSupplies,
+  type CrewAtWork,
+  type CrewStay,
+} from "./crewAtMars";
+import { crewResearch, earningsOfStay } from "./ongoingResearch";
 import { raisedStretches, type Stretch } from "./benefits";
 import {
   formatMoney,
@@ -10,13 +16,12 @@ import {
   type LandingSite,
   type Rules,
 } from "./rules";
-import type {
-  DecisionAnswers,
-  DecisionPoint,
-  Program,
-  TurnSummary,
-} from "./types";
+import type { DecisionAnswers, DecisionPoint, Program } from "./types";
+import type { TurnSummary } from "./turnSummary";
 import type { DecisionPointEntry, HazardEntry, Timeline } from "./timeline";
+
+// Slow to create, and balance runs meet a great many storms.
+const listOfNames = new Intl.ListFormat("en");
 
 export interface DustStorm {
   site: LandingSite;
@@ -50,15 +55,44 @@ export function dustStormOver(
 
 const decisionIdOf = (site: LandingSite) => `dust-storm:${site.id}`;
 
-/** What sheltering gives up, in the player's terms, for the Assets at stake, at the raised rate where a Benefit raises it. */
+/** The Crew at a Landing Site with these stays sheltering from a storm. */
+const sheltering = (
+  crew: CrewAtWork,
+  atStake: CrewStay[],
+  shelter: { fromDay: number; toDay: number },
+): CrewAtWork => ({
+  ...crew,
+  stays: crew.stays.map((stay) =>
+    atStake.includes(stay) ? { ...stay, shelter } : stay,
+  ),
+});
+
+/**
+ * What sheltering gives up, in the player's terms, for the Assets and Crew at stake, at the raised rate where a Benefit
+ * raises it.
+ */
 function whatSheltering(
   catalogue: Catalogue,
   rules: Rules,
   atStake: AssetInService[],
+  crewAtStake: { crew: CrewAtWork; stays: CrewStay[] }[],
   { fromDay, toDay }: DustStorm,
   raised: Stretch[],
 ): string {
-  const given = atStake.map((stay) => {
+  const crewGiven = crewAtStake.map(({ crew, stays }) => {
+    const earned = (group: CrewAtWork) =>
+      crewResearch(catalogue, rules, group, raised)[0];
+    const full = earned(crew);
+    const less = earned(sheltering(crew, stays, { fromDay, toDay }));
+    return {
+      science: (full?.research.science ?? 0) - (less?.research.science ?? 0),
+      publicSupport:
+        (full?.research.publicSupport ?? 0) -
+        (less?.research.publicSupport ?? 0),
+      grantMillions: (full?.grant.millions ?? 0) - (less?.grant.millions ?? 0),
+    };
+  });
+  const assetsGiven = atStake.map((stay) => {
     const full = earningsOfStay(catalogue, rules, stay, raised).earned;
     const less = earningsOfStay(
       catalogue,
@@ -72,6 +106,7 @@ function whatSheltering(
       grantMillions: full.grantMillions - less.grantMillions,
     };
   });
+  const given = [...assetsGiven, ...crewGiven];
   const science = sum(given.map((part) => part.science));
   const publicSupport = sum(given.map((part) => part.publicSupport));
   const grantMillions = sum(given.map((part) => part.grantMillions));
@@ -81,17 +116,21 @@ function whatSheltering(
 }
 
 /**
- * Works out each dust storm over a known Landing Site. One raises a Decision Point only if an Asset is operating
- * there when it starts. One with no answer yet counts as sheltering, and `decision` is the earliest of those.
+ * Works out each dust storm over a known Landing Site. One raises a Decision Point only if an Asset or Crew are
+ * operating there when it starts. One with no answer yet counts as sheltering, and `decision` is the earliest of those.
+ * Sheltering earns nothing for the storm's days. Carrying on risks each Asset failing for good, and each Crew member
+ * being hurt, which costs them Health.
  */
 export function resolveDustStorms(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
   operating: AssetInService[],
+  crewOperating: CrewAtWork[],
   answers: DecisionAnswers,
 ): {
   inService: AssetInService[];
+  crewAtWork: CrewAtWork[];
   entries: (HazardEntry | DecisionPointEntry)[];
   decision: { decisionPoint: DecisionPoint; entry: DecisionPointEntry } | null;
   summary: TurnSummary["dustStorms"];
@@ -102,7 +141,9 @@ export function resolveDustStorms(
     .knownLandingSites(program)
     .flatMap((site) => dustStormOver(catalogue, program, site) ?? [])
     .sort((first, second) => first.fromDay - second.fromDay);
+  const crewHarm = catalogue.crew.health.dustStorm;
   let inService = operating;
+  let crewAtWork = crewOperating;
   // Only Assets on the surface shelter, so a dust storm never changes what raises them.
   const raised = raisedStretches(catalogue, operating, "surfaceResearch");
   const entries: (HazardEntry | DecisionPointEntry)[] = [];
@@ -124,7 +165,21 @@ export function resolveDustStorms(
         from < fromDay &&
         (untilDay === null || untilDay > fromDay),
     );
-    if (atStake.length === 0) {
+    const crewAtStake = crewAtWork.flatMap((crew) => {
+      const stays = crew.stays.filter(
+        ({ fromDay: from, untilDay }) =>
+          from < fromDay && (untilDay === null || untilDay > fromDay),
+      );
+      return crew.place.kind === "landingSite" &&
+        crew.place.landingSiteId === site.id &&
+        stays.length > 0
+        ? [{ crew, stays }]
+        : [];
+    });
+    const crewNames = crewAtStake.flatMap(({ stays }) =>
+      stays.map(({ member }) => member.name),
+    );
+    if (atStake.length === 0 && crewNames.length === 0) {
       entries.push({
         kind: "hazard",
         hazard: "dustStorm",
@@ -135,7 +190,19 @@ export function resolveDustStorms(
       continue;
     }
 
-    const names = atStake.map(({ asset }) => asset.name);
+    const names = [...atStake.map(({ asset }) => asset.name), ...crewNames];
+    const risks = [
+      ...(atStake.length > 0
+        ? [
+            `each Asset there has a ${rules.riskBandFor(failureChance)} chance of failing for good`,
+          ]
+        : []),
+      ...(crewNames.length > 0
+        ? [
+            `each Crew member a ${rules.riskBandFor(crewHarm.chance)} chance of being hurt, which costs ${crewHarm.loss} Health`,
+          ]
+        : []),
+    ];
     const entry: DecisionPointEntry = {
       kind: "decisionPoint",
       hazard: "dustStorm",
@@ -161,13 +228,18 @@ export function resolveDustStorms(
               answer: "shelter",
               label: "Shelter",
               riskBand: null,
-              description: `Sheltering keeps ${names.join(", ")} safe, but nothing there earns Ongoing Research for the storm's ${days} days. That gives up ${whatSheltering(catalogue, rules, atStake, storm, raised)}.`,
+              description: `Sheltering keeps ${names.join(", ")} safe, but nothing there earns Ongoing Research for the storm's ${days} days. That gives up ${whatSheltering(catalogue, rules, atStake, crewAtStake, storm, raised)}.`,
             },
             {
               answer: "carryOn",
               label: "Carry on",
-              riskBand: rules.riskBandFor(failureChance),
-              description: `Carrying on keeps the research going, and each Asset there has this chance of failing for good during the storm.`,
+              riskBand: rules.riskBandFor(
+                Math.max(
+                  atStake.length > 0 ? failureChance : 0,
+                  crewNames.length > 0 ? crewHarm.chance : 0,
+                ),
+              ),
+              description: `Carrying on keeps the research going, and ${risks.join(", and ")} during the storm.`,
             },
           ],
         },
@@ -197,6 +269,40 @@ export function resolveDustStorms(
         failedInStormAt: site.name,
       };
     });
+    const hurtHere: string[] = [];
+    crewAtWork = crewAtWork.map((crew) => {
+      const here = crewAtStake.find((group) => group.crew === crew);
+      if (!here) return crew;
+      if (!carriesOn) return sheltering(crew, here.stays, { fromDay, toDay });
+      // Crew who die sooner leave more Supplies for the rest.
+      return withSupplies(catalogue, {
+        ...crew,
+        stays: crew.stays.map((stay) => {
+          if (!here.stays.includes(stay)) return stay;
+          const key = `dust-storm:${site.id}:crew:${stay.member.name}`;
+          const harmed =
+            roll(program.seed, program.turnNumber, key) < crewHarm.chance;
+          const day =
+            fromDay +
+            Math.floor(
+              roll(program.seed, program.turnNumber, `${key}:day`) * days,
+            );
+          if (!harmed || (stay.untilDay !== null && stay.untilDay <= day)) {
+            return stay;
+          }
+          const after = hurt(catalogue, stay, {
+            cause: "dustStorm",
+            day,
+            health: crewHarm.loss,
+          });
+          // Someone whose Health runs out that day anyway lost nothing to the storm.
+          if (after.health.lost.some(({ cause }) => cause === "dustStorm")) {
+            hurtHere.push(stay.member.name);
+          }
+          return after;
+        }),
+      });
+    });
     if (answer === undefined) continue;
 
     summary.push({
@@ -205,7 +311,16 @@ export function resolveDustStorms(
       answer: carriesOn ? "carryOn" : "shelter",
       assets: names,
       assetsFailed: failedHere,
+      crewHurt: hurtHere,
     });
+    const atRisk = [
+      ...(atStake.length > 0
+        ? [`losing ${atStake.map(({ asset }) => asset.name).join(", ")}`]
+        : []),
+      ...(crewNames.length > 0
+        ? [`hurting ${listOfNames.format(crewNames)}`]
+        : []),
+    ];
     entries.push(
       {
         kind: "hazard",
@@ -215,7 +330,7 @@ export function resolveDustStorms(
           ? `Carrying on through the storm at ${site.name}`
           : `Sheltering from the storm at ${site.name}`,
         description: carriesOn
-          ? `Work carries on at ${site.name}, at the risk of losing ${names.join(", ")}.`
+          ? `Work carries on at ${site.name}, at the risk of ${atRisk.join(" and ")}.`
           : `Work stops at ${site.name} until the storm has passed.`,
       },
       {
@@ -224,14 +339,24 @@ export function resolveDustStorms(
         day: toDay,
         title: `Storm over ${site.name} has passed`,
         description:
-          failedHere.length > 0
-            ? `Lost to it: ${failedHere.join(", ")}.`
+          failedHere.length > 0 || hurtHere.length > 0
+            ? [
+                ...(failedHere.length > 0
+                  ? [`Lost to it: ${failedHere.join(", ")}.`]
+                  : []),
+                ...(hurtHere.length > 0
+                  ? [
+                      `Hurt by it: ${listOfNames.format(hurtHere)}, who lost ${crewHarm.loss} Health${hurtHere.length > 1 ? " each" : ""}.`,
+                    ]
+                  : []),
+              ].join(" ")
             : `It lasted ${days} days.`,
       },
     );
   }
   return {
     inService,
+    crewAtWork,
     entries,
     decision,
     summary,

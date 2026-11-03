@@ -1,0 +1,94 @@
+{
+  "vehicleName": "Odyssey",
+  "missionEvents": ["mars-orbit-insertion"],
+  "landingMissionEvents": ["mars-orbit-insertion", "entry-descent-landing"],
+  "sizes": [
+    { "crew": 2, "costMillions": 3000, "massTonnes": 9 },
+    { "crew": 3, "costMillions": 3250, "massTonnes": 10.5 },
+    { "crew": 4, "costMillions": 3500, "massTonnes": 12 }
+  ],
+  "maxHealth": 100,
+  "health": {
+    "radiationPerDay": { "inFlight": 0.1, "atMars": 0.03 },
+    "timeAtMarsPerDay": 0.03,
+    "contingencyRescueLoss": 15,
+    "dustStorm": { "chance": 0.25, "loss": 20 },
+    "noSuppliesPerDay": 2,
+    "solarParticleEvent": { "safeModeLoss": 5, "hitLoss": 35 }
+  },
+  "protection": [
+    {
+      "id": "protection-none",
+      "name": "None",
+      "massTonnes": 0,
+      "costMillions": 0,
+      "radiationCutPercent": 0
+    },
+    {
+      "id": "protection-light-shielding",
+      "name": "Light shielding",
+      "massTonnes": 0.5,
+      "costMillions": 150,
+      "radiationCutPercent": 25
+    },
+    {
+      "id": "protection-heavy-shielding",
+      "name": "Heavy shielding",
+      "massTonnes": 1,
+      "costMillions": 300,
+      "radiationCutPercent": 50
+    }
+  ],
+  "supplies": {
+    "usePerMemberPerDayKg": 0.4,
+    "options": [
+      {
+        "id": "supplies-lean",
+        "name": "Lean",
+        "massTonnes": 2.5,
+        "costMillions": 100
+      },
+      {
+        "id": "supplies-standard",
+        "name": "Standard",
+        "massTonnes": 3,
+        "costMillions": 200
+      },
+      {
+        "id": "supplies-ample",
+        "name": "Ample",
+        "massTonnes": 3.5,
+        "costMillions": 300
+      }
+    ]
+  },
+  "publicSupportLossPerMember": 75,
+  "orbitActivities": ["crew-research", "nothing"],
+  "surfaceActivities": ["crew-field-research", "nothing"],
+  "names": [
+    "Amara Okafor",
+    "Lena Petrova",
+    "Kenji Sato",
+    "Diego Morales",
+    "Priya Raman",
+    "Tom Gallagher",
+    "Ingrid Solberg",
+    "Malik Haddad",
+    "Wei Lin",
+    "Sofia Rossi",
+    "Kwame Mensah",
+    "Hannah Becker",
+    "Arjun Mehta",
+    "Chloe Martin",
+    "Yusuf Demir",
+    "Elena Vargas",
+    "Noah Fischer",
+    "Aiko Tanaka",
+    "Samuel Adeyemi",
+    "Maja Nowak",
+    "Rafael Costa",
+    "Freya Lund",
+    "Omar Farouk",
+    "Grace O'Neill"
+  ]
+}

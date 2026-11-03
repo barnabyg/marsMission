@@ -20,6 +20,8 @@ export function EventsColumn({ timeline, entriesHappened }: EventsColumnProps) {
           .map((entry, index) => {
             const failed =
               entry.kind === "assetFailed" ||
+              entry.kind === "crewLost" ||
+              entry.kind === "suppliesOut" ||
               entry.kind === "decisionPoint" ||
               (entry.kind === "missionEvent" && entry.outcome === "failure");
             return (

@@ -6,6 +6,12 @@ import {
   type Activity,
 } from "./rules";
 import { describeBenefit, largestRaise, type Raise } from "./benefits";
+import {
+  crewAtMarsView,
+  crewedMissionView,
+  previewCrew,
+  type PlannedCrew,
+} from "./crew";
 import { needingDevelopment, plannedDevelopment } from "./development";
 import { flyMission } from "./flyMission";
 import { missionOnTimeline, timelineUpToDecision } from "./missionReport";
@@ -15,15 +21,17 @@ import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
 import { costOf, isFlightProven, readinessOf } from "./technologyReadiness";
 import { resolveTurn } from "./turnSteps";
 import type {
-  DecisionAnswer,
-  DecisionAnswers,
-  DecisionPoint,
   PlanCheck,
   PlannedActivity,
   PlannedAsset,
-  PlannedMission,
   PlannedMissionEvent,
   PlannedTrajectory,
+} from "./previews";
+import type {
+  DecisionAnswer,
+  DecisionAnswers,
+  DecisionPoint,
+  PlannedMission,
   Program,
   ProgramView,
   TurnPlan,
@@ -31,7 +39,7 @@ import type {
   TurnResult,
 } from "./types";
 
-export { addDays, formatMoney } from "./rules";
+export { addDays, daysBetween, formatMoney } from "./rules";
 export { corruptSave, SaveError } from "./saveFormat";
 export {
   canFly,
@@ -39,23 +47,33 @@ export {
   technologiesOn,
   type TechnologyReadiness,
 } from "./technologyReadiness";
+export type { PlannedCrew } from "./crew";
+export { healthLossCauses } from "./health";
 export type {
   AssetChoices,
+  CrewLossCause,
   DecisionAnswer,
   DecisionAnswers,
   DecisionPoint,
-  PlannedActivity,
-  PlannedAsset,
-  PlannedDevelopment,
-  PlannedTrajectory,
   Program,
   ProgramView,
   TurnPlan,
   TurnProgress,
   TurnResult,
-  TurnSummary,
 } from "./types";
-export type { AssetAtMars, Timeline, TimelineEntry } from "./timeline";
+export type {
+  PlannedActivity,
+  PlannedAsset,
+  PlannedDevelopment,
+  PlannedTrajectory,
+} from "./previews";
+export type { TurnSummary } from "./turnSummary";
+export type {
+  AssetAtMars,
+  CrewMemberAtMarsOnTimeline,
+  Timeline,
+  TimelineEntry,
+} from "./timeline";
 
 export interface Simulation {
   startProgram(seed: number): Program;
@@ -74,6 +92,8 @@ export interface Simulation {
   previewAssets(program: Program, mission: PlannedMission): PlannedAsset[];
   /** The Trajectories on offer to a Mission, in the order the Catalogue lists them. */
   previewTrajectories(mission: PlannedMission): PlannedTrajectory[];
+  /** The Crew a Mission would carry, who they are and what they could do, or null if it carries none. */
+  previewCrew(program: Program, mission: PlannedMission): PlannedCrew | null;
   /** Works out a Turn from the seed, the plan and the answers so far, stopping at the first Decision Point with no answer. */
   workOutTurn(
     program: Program,
@@ -215,7 +235,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         result.timeline,
         otherEntries,
         flown.entries,
-        missionOnTimeline(rules, plan, flown),
+        missionOnTimeline(catalogue, rules, plan, flown),
         {
           day: decisionPoint.day,
           entry: stormComesFirst ? stormDecision.entry : null,
@@ -248,6 +268,9 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         provenTechnologyIds: [],
         developments: [],
         operatingAssets: [],
+        crew: [],
+        crewActivities: {},
+        crewSupplies: {},
         status: { kind: "active" },
       };
     },
@@ -294,6 +317,8 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           daysLeft: Math.max(0, daysUntilServiceEnds(program.date, asset)),
           landingSiteName: landingSiteById(asset.landingSiteId)?.name ?? null,
         })),
+        crewedMission: crewedMissionView(catalogue, program),
+        crew: crewAtMarsView(catalogue, rules, program, raised),
         developments: needingDevelopment(catalogue).map((technology) =>
           plannedDevelopment(program, technology),
         ),
@@ -408,6 +433,21 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         chosen: trajectory === chosen,
       }));
     },
+
+    previewCrew: (program, mission) =>
+      previewCrew(
+        catalogue,
+        rules,
+        program,
+        mission,
+        // An Asset on the same Mission that raises research on the surface raises the Crew's too.
+        surfaceRaise(
+          program,
+          catalogue.assets
+            .filter(({ id }) => mission.assetIds.includes(id))
+            .map(({ id, name }) => ({ assetId: id, name })),
+        ),
+      ),
 
     workOutTurn,
 

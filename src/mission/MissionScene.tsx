@@ -15,7 +15,12 @@ import { earthOrbitLabels, EarthOrbitScene } from "./spacecraft/EarthOrbitView";
 import type { EarthOrbitNow } from "./spacecraft/refuelling";
 import { earthOrbitShot, spacecraftShot } from "./spacecraft/spacecraft";
 import { spacecraftLabels, SpacecraftScene } from "./spacecraft/SpacecraftView";
-import { sequenceRunning, type SequenceNow } from "./surface/sequence";
+import { crewOutsideAt } from "./surface/crewAtSite";
+import {
+  sequenceKind,
+  sequenceRunning,
+  type SequenceNow,
+} from "./surface/sequence";
 import { dustStormAt, landingShot, surfaceShot } from "./surface/surface";
 import { surfaceLabels, SurfaceScene } from "./surface/SurfaceView";
 import {
@@ -175,15 +180,18 @@ export default function MissionScene({
       className="mission-scene"
       data-testid="mission-scene"
       // The browser tests can't see into the scene, so this is how they follow a sequence.
-      data-sequence={
-        running ? (sequence.sequence.crashed ? "crash" : "landing") : undefined
-      }
+      data-sequence={running ? sequenceKind(sequence.sequence) : undefined}
       data-sequence-ms={
         running ? Math.floor(sequence.elapsedMs / 100) * 100 : undefined
       }
       data-dust-storm={
         view === "surface" && site !== null && dustStormAt(timeline, day, site)
           ? site
+          : undefined
+      }
+      data-crew-outside={
+        view === "surface" && site !== null
+          ? crewOutsideAt(timeline, day, site, sequence).length
           : undefined
       }
       data-solar-particle-event={

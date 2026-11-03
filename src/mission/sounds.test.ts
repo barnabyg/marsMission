@@ -44,6 +44,17 @@ describe("matching sounds to timeline entries", () => {
     );
   });
 
+  it("plays a sound of its own when Crew are lost, whatever the cause", () => {
+    expect(
+      soundFor({
+        kind: "crewLost",
+        day: 0,
+        title: "Crew lost",
+        description: "",
+      }),
+    ).toBe("crewLost");
+  });
+
   it("leaves any other entry silent", () => {
     expect(soundFor(missionEvent("mars-transfer-burn", "success"))).toBeNull();
   });

@@ -6,6 +6,7 @@ import { strategies as allStrategies } from "./strategies";
 import { sum } from "./sum";
 import { mean, percent, table, tenth, whole } from "./reportFormat";
 import { technology } from "./technologyReport";
+import { crew } from "./crewReport";
 
 /** How many Turns each Program plays at most. */
 const turnHorizon = 20;
@@ -229,6 +230,7 @@ const kindNames: Record<TurnRecord["decisions"][number]["kind"], string> = {
   contingency: "Contingency",
   dustStorm: "dust storm",
   solarParticleEvent: "solar particle event",
+  crewedSolarParticleEvent: "solar particle event with Crew",
   goNoGo: "go/no-go check",
 };
 
@@ -382,6 +384,10 @@ export function balanceReport(
     "== Technology ==",
     "",
     ...technology(results),
+    "",
+    "== Crew ==",
+    "",
+    ...crew(results),
   ];
   for (const { strategy, plays } of results) {
     lines.push(

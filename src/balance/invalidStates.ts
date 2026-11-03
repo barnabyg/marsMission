@@ -84,6 +84,9 @@ export function invalidStates(
       summary.publicSupportStart +
         summary.publicSupportGained -
         (summary.failure?.publicSupportLost ?? 0) -
+        sum(
+          summary.crewLost.map(({ publicSupportLost }) => publicSupportLost),
+        ) -
         summary.publicSupportDrained !==
         summary.publicSupportEnd,
       "The Turn's Public Support doesn't add up.",
@@ -167,11 +170,13 @@ export function invalidStates(
       "A solar particle event's outcome doesn't follow from its answer.",
     ],
     [
+      // Holding off with only Crew being landed costs no Service Life.
       summary.goNoGo !== null &&
-        (summary.goNoGo.answer === "holdOff") !==
-          (summary.goNoGo.daysHeld > 0 &&
-            summary.goNoGo.serviceLifeDaysLost > 0),
-      "A landing was held off with no wait or no cost, or went ahead with one.",
+        ((summary.goNoGo.answer === "holdOff") !==
+          summary.goNoGo.daysHeld > 0 ||
+          (summary.goNoGo.answer !== "holdOff" &&
+            summary.goNoGo.serviceLifeDaysLost > 0)),
+      "A landing was held off with no wait, or went ahead with a wait or a cost.",
     ],
     [
       before.landingSites.some(({ id }) => !siteIds.includes(id)),

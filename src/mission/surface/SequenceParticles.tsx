@@ -15,7 +15,7 @@ import {
   type ParticlePool,
 } from "./particles";
 import type { LandingSequence } from "./sequence";
-import { placeOf } from "./surface";
+import { landerSpot } from "./surface";
 import { groundHeight } from "./terrain";
 
 const dotSize = 32;
@@ -73,8 +73,8 @@ export function SequenceParticles({
   const pools = useMemo(() => newParticlePools(), []);
   const emitters = useMemo(
     () =>
-      assets.map(({ place }) => {
-        const { x, z } = placeOf(place);
+      assets.map(({ place, lander }) => {
+        const { x, z } = landerSpot(place, lander);
         return { x, y: groundHeight(siteName, x, z), z };
       }),
     [assets, siteName],

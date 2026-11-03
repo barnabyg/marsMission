@@ -1,12 +1,10 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { AssetInService } from "./assetsInService";
+import type { CrewAtWork } from "./crewAtMars";
 import { raisedStretches, splitByRaise, type Stretch } from "./benefits";
 import { sum, type Activity, type Rules } from "./rules";
-import type {
-  OngoingResearchEarned,
-  PlannedActivity,
-  TurnSummary,
-} from "./types";
+import type { PlannedActivity } from "./previews";
+import type { OngoingResearchEarned, TurnSummary } from "./turnSummary";
 
 interface Earnings {
   science: number;
@@ -84,12 +82,16 @@ export function earningsPerTurn(
   return { science, publicSupport, researchGrantMillions: grantMillions };
 }
 
-/** The parts of a stay in service that aren't spent sheltering. */
+/** The parts of a stay at Mars, an Asset's or a Crew member's, that aren't spent sheltering. */
 function daysWorking({
   fromDay,
   untilDay,
   shelter,
-}: AssetInService & { untilDay: number }): { from: number; to: number }[] {
+}: {
+  fromDay: number;
+  untilDay: number;
+  shelter?: { fromDay: number; toDay: number } | undefined;
+}): { from: number; to: number }[] {
   const whole = [{ from: fromDay, to: untilDay }];
   if (!shelter) return whole;
   return [
@@ -146,15 +148,82 @@ function benefitPart(
 }
 
 /**
+ * What the Crew in one place earn this Turn, if their Activity is research: its rate for each Crew member, for their
+ * days there less any spent sheltering, rounded up for each of them. At a Landing Site, a Benefit that raises research
+ * on the surface raises theirs on the days it covers, as it does an Asset's there.
+ */
+export function crewResearch(
+  catalogue: Catalogue,
+  rules: Rules,
+  { name, place, activityId, stays }: CrewAtWork,
+  raised: Stretch[],
+) {
+  const activity = rules.activityById(activityId);
+  const turnDays = catalogue.program.launchWindowIntervalDays;
+  const each = stays.flatMap((stay) => {
+    const stretches = daysWorking({
+      ...stay,
+      untilDay: stay.untilDay ?? turnDays,
+    }).flatMap(({ from, to }) =>
+      splitByRaise(from, to, place.kind === "landingSite" ? raised : []),
+    );
+    if (stretches.length === 0) return [];
+    const usual = stretches.map((stretch) => ({ ...stretch, percent: 0 }));
+    return [
+      {
+        stretches,
+        earned: earningsFor(catalogue, activity, stretches),
+        usual: earningsFor(catalogue, activity, usual),
+      },
+    ];
+  });
+  const daysOf = (stretches: Stretch[]) =>
+    sum(stretches.map(({ fromDay, toDay }) => toDay - fromDay));
+  const days = Math.max(0, ...each.map(({ stretches }) => daysOf(stretches)));
+  if (activity?.effect.kind !== "research" || days <= 0) return [];
+  const total = (part: keyof Earnings, which: "earned" | "usual" = "earned") =>
+    sum(each.map((member) => member[which][part]));
+  const raisedDays = each.map(({ stretches }) =>
+    stretches.filter(({ percent }) => percent > 0),
+  );
+  const research: OngoingResearchEarned = {
+    assetName: name,
+    activityName: activity.name,
+    science: total("science"),
+    publicSupport: total("publicSupport"),
+    days,
+    ...(raisedDays.some((member) => member.length > 0)
+      ? {
+          benefit: {
+            givenBy: [
+              ...new Set(raisedDays.flat().flatMap(({ givenBy }) => givenBy)),
+            ],
+            days: Math.max(...raisedDays.map(daysOf)),
+            science: total("science") - total("science", "usual"),
+            publicSupport:
+              total("publicSupport") - total("publicSupport", "usual"),
+          },
+        }
+      : {}),
+  };
+  const grant = { name, millions: total("grantMillions") };
+  return [
+    { research, grant, stretches: each.flatMap(({ stretches }) => stretches) },
+  ];
+}
+
+/**
  * What each Asset doing research earns this Turn, for its days in service less any it spends sheltering, and the
  * Research Grant that pays. On the surface, it earns at the raised rate on the days a Benefit raises surface research.
  * The Science and Public Support are rounded up for each Asset and Turn, so that a short stint still earns something.
- * It uses no roll, so only the seed, the plan and the answers decide it.
+ * The Crew in each place earn it too, at their shared Activity's rate for each of them, raised in the same way at a
+ * Landing Site. It uses no roll, so only the seed, the plan and the answers decide it.
  */
 export function carryOutOngoingResearch(
   catalogue: Catalogue,
   rules: Rules,
   inService: AssetInService[],
+  crewAtWork: CrewAtWork[] = [],
 ): {
   earned: OngoingResearchEarned[];
   science: number;
@@ -190,6 +259,11 @@ export function carryOutOngoingResearch(
     const grant = { name: stay.asset.name, millions: earned.grantMillions };
     return [{ research, grant, stretches }];
   });
+  results.push(
+    ...crewAtWork.flatMap((crew) =>
+      crewResearch(catalogue, rules, crew, raised),
+    ),
+  );
   const earned = results.map(({ research }) => research);
   const researchGrants = results
     .map(({ grant }) => grant)

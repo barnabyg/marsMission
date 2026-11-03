@@ -1,6 +1,9 @@
-import { deliveryDayOf, type MissionOutcome } from "./flyMission";
+import type { Catalogue } from "../catalogue/catalogue";
+import { crewShipOnMission } from "./crewAtMars";
+import { deliveryDayOf, type MissionOutcome } from "./flight";
 import type { Rules } from "./rules";
-import type { TurnPlan, TurnSummary } from "./types";
+import type { TurnPlan } from "./types";
+import type { TurnSummary } from "./turnSummary";
 import type {
   DecisionPointEntry,
   MissionAsset,
@@ -10,6 +13,7 @@ import type {
 
 /** The Mission as Mission Mode displays it, or null if nothing launched. */
 export function missionOnTimeline(
+  catalogue: Catalogue,
   rules: Rules,
   plan: TurnPlan,
   flown: MissionOutcome,
@@ -19,26 +23,32 @@ export function missionOnTimeline(
     launchDay: 0,
     arrivalDay: rules.trajectoryFor(plan.mission).transferDays,
     launchVehicleName: flown.vehicleName,
-    assetNames: flown.assets.map((asset) => asset.name),
-    assets: flown.assets.map((asset): MissionAsset => {
-      const delivered = flown.deliveredAssets.includes(asset);
-      return {
-        name: asset.name,
-        kind: asset.kind,
-        landingSiteName: asset.landsAtSite
-          ? (flown.landingSite?.name ?? null)
-          : null,
-        deliveredOnDay: delivered
-          ? deliveryDayOf(rules, plan, flown, asset)
-          : null,
-        lostOnDay: delivered ? null : flown.failedOnDay,
-        crashed:
-          !delivered &&
-          asset.landsAtSite === true &&
-          flown.failedEvent !== undefined &&
-          asset.missionEvents.includes(flown.failedEvent.id),
-      };
-    }),
+    assetNames: [
+      ...flown.assets.map((asset) => asset.name),
+      ...(plan.mission?.crew ? [catalogue.crew.vehicleName] : []),
+    ],
+    assets: [
+      ...flown.assets.map((asset): MissionAsset => {
+        const delivered = flown.deliveredAssets.includes(asset);
+        return {
+          name: asset.name,
+          kind: asset.kind,
+          landingSiteName: asset.landsAtSite
+            ? (flown.landingSite?.name ?? null)
+            : null,
+          deliveredOnDay: delivered
+            ? deliveryDayOf(rules, plan, flown, asset)
+            : null,
+          lostOnDay: delivered ? null : flown.failedOnDay,
+          crashed:
+            !delivered &&
+            asset.landsAtSite === true &&
+            flown.failedEvent !== undefined &&
+            asset.missionEvents.includes(flown.failedEvent.id),
+        };
+      }),
+      ...crewShipOnMission(catalogue, rules, plan, flown),
+    ],
     failedOnDay: flown.failedOnDay,
     ...(flown.solarParticleEvent
       ? { solarParticleEventDay: flown.solarParticleEvent.day }

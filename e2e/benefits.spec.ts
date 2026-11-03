@@ -30,7 +30,7 @@ test("puts a relay orbiter at Mars beside a lander and sees the raised earnings"
   await expect(page.getByTestId("benefit-tag")).toHaveCount(1);
   await tag.hover();
   await expect(page.getByRole("tooltip")).toContainText(
-    "Courier Relay: Raises the Ongoing Research of every Asset on the surface",
+    "Courier Relay: Raises the Ongoing Research of every Asset and Crew on the surface",
   );
   await chooseAssets(page, ["Prospector Lander"]);
   await expect(page.getByTestId("research-earnings")).not.toContainText(

@@ -110,9 +110,10 @@
   min-width: 22rem;
 }
 
+/* Rows a little closer than other lists, so that a Mission with every Asset and Crew still fits at 150% scaling. */
 .asset-choices {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.3rem;
   margin: 0;
   padding: 0;
   border: 0;
@@ -124,18 +125,31 @@
 }
 
 /* Gaps a little under 1rem, so that a row with every tag still fits at 150% display scaling. */
-.asset-choice {
+.asset-choice,
+.asset-choice-row {
   display: flex;
   align-items: center;
   gap: 0.8rem;
 }
 
-.asset-choice > span {
+.asset-choice > span,
+.asset-choice-row > span {
   color: var(--muted);
 }
 
-.asset-choice select {
+.asset-choice select,
+.asset-choice-row select {
   min-width: 11rem;
+}
+
+/* The Crew's choices take two lines, the second lined up after the tick box's label above it. */
+.crew-choice {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.crew-choice-second-line {
+  padding-left: calc(20rem + 0.8rem);
 }
 
 /* In a crowded row, with a wider font than Segoe UI, the tags move under the name rather than past the panel's edge.
@@ -152,7 +166,8 @@
 }
 
 /* The choices keep their width, so that the words around them give way instead. */
-.asset-choice select {
+.asset-choice select,
+.asset-choice-row select {
   flex-shrink: 0;
 }
 
@@ -167,6 +182,12 @@
 .benefit-tag,
 .operating-tag {
   color: var(--muted);
+}
+
+/* Two columns, so that a Program with every Milestone leaves room for what is operating at Mars. */
+.milestone-list {
+  columns: 2;
+  column-gap: 3rem;
 }
 
 .operating-assets {

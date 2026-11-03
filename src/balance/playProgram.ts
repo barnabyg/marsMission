@@ -1,5 +1,6 @@
 import {
   technologiesOn,
+  type CrewLossCause,
   type DecisionAnswer,
   type DecisionAnswers,
   type DecisionPoint,
@@ -10,6 +11,7 @@ import {
   type TurnResult,
   type TurnSummary,
 } from "../simulation/simulation";
+import { crewProblems } from "./invalidCrew";
 import { invalidStates, timelineMissionEventProblems } from "./invalidStates";
 import type { PlanningTools, Strategy } from "./playStyle";
 
@@ -35,13 +37,24 @@ export interface TurnRecord {
   /** How many Decision Points came up, and how many Contingencies ended with the Assets saved. */
   decisionPoints: number;
   rescues: number;
-  /** Each Decision Point answered, by kind. */
-  decisions: { kind: DecisionPoint["kind"]; answer: DecisionAnswer }[];
+  /** Each Decision Point answered, by kind, with a solar particle event with Crew aboard a kind of its own. */
+  decisions: {
+    kind: DecisionPoint["kind"] | "crewedSolarParticleEvent";
+    answer: DecisionAnswer;
+  }[];
   /** The technologies whose Development started this Turn, and those that finish as the next Turn starts. */
   developmentsStarted: string[];
   developmentsFinished: string[];
   /** Each technology the Turn's Mission flew before it was Flight-proven, and whether that flight failed to prove it. */
   unprovenFlights: { name: string; failed: boolean }[];
+  /** How many Crew the Turn's Mission carried, which is 0 with no Crewed Mission. */
+  crewFlown: number;
+  /** How many Crew were lost this Turn, for each reason. */
+  crewLost: Record<CrewLossCause, number>;
+  /** How many Crew a Free-return brought home this Turn. */
+  crewHome: number;
+  /** How many Crew are at Mars as the Turn ends. */
+  crewAtMars: number;
 }
 
 /** What a strategy may ask about the Program it is planning for, which it never sees itself. */
@@ -53,6 +66,7 @@ export function planningTools(
     previewAssets: (mission) => simulation.previewAssets(program, mission),
     previewMission: (mission) => simulation.previewMission(program, mission),
     previewTrajectories: (mission) => simulation.previewTrajectories(mission),
+    previewCrew: (mission) => simulation.previewCrew(program, mission),
     problemsWith: (plan) => simulation.validatePlan(program, plan).problems,
     costOf: (plan) => {
       const { costMillions, developmentCostMillions } = simulation.validatePlan(
@@ -106,7 +120,23 @@ function recordOf(
       name,
       failed: !summary.technologiesProven.includes(name),
     })),
+    crewFlown: plan.mission?.crew?.size ?? 0,
+    crewLost: crewLostIn(summary),
+    crewHome: summary.crewHome.length,
+    crewAtMars: summary.crew.length,
   };
+}
+
+/** How many Crew a Turn's summary says were lost, for each reason. */
+function crewLostIn(summary: TurnSummary): TurnRecord["crewLost"] {
+  const lost = {
+    missionEvent: 0,
+    health: 0,
+    supplies: 0,
+    solarParticleEvent: 0,
+  };
+  for (const { cause, names } of summary.crewLost) lost[cause] += names.length;
+  return lost;
 }
 
 /** The technologies on a plan's Mission that aren't Flight-proven as the Turn starts, by name. */
@@ -132,7 +162,10 @@ function decisionsIn(summary: TurnSummary): TurnRecord["decisions"] {
     ...(summary.solarParticleEvent
       ? [
           {
-            kind: "solarParticleEvent" as const,
+            kind:
+              summary.solarParticleEvent.crew.length > 0
+                ? ("crewedSolarParticleEvent" as const)
+                : ("solarParticleEvent" as const),
             answer: summary.solarParticleEvent.answer,
           },
         ]
@@ -158,7 +191,7 @@ function playTurn(
     answers = {
       ...answers,
       [decisionPoint.id]:
-        strategy.answer?.(decisionPoint, view) ??
+        strategy.answer?.(decisionPoint, view, plan) ??
         decisionPoint.choices[0].answer,
     };
     progress = simulation.workOutTurn(program, plan, answers);
@@ -193,6 +226,7 @@ export function playProgram(
     const after = simulation.readProgram(result.program);
     const invalid = [
       ...invalidStates(view, result.summary, after),
+      ...crewProblems(view, result.summary, after),
       ...timelineMissionEventProblems(result.timeline, result.summary),
     ];
     if (invalid.length > 0) throw fail(invalid);

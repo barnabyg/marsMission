@@ -13,7 +13,12 @@ import type { Timeline } from "../../simulation/simulation";
 import { useDisposal, type Point, type SceneLabel } from "../sceneParts";
 import { markChanged, softDot } from "../surface/SequenceParticles";
 import { particleCount, writeParticleStream } from "./particleStream";
-import { assetsOnBoard, spacecraftCentre, stackLayout } from "./spacecraft";
+import {
+  assetsOnBoard,
+  onBoardLabelClass,
+  spacecraftCentre,
+  stackLayout,
+} from "./spacecraft";
 import { MissionStack } from "./spacecraftModels";
 
 /** How far above the middle of the stack the Assets' labels sit. */
@@ -137,10 +142,10 @@ export function spacecraftLabels(
 ): SceneLabel[] {
   const onBoard = assetsOnBoard(timeline.mission, day);
   const layout = stackLayout(onBoard.length);
-  return onBoard.map(({ name, lost }, index) => ({
+  return onBoard.map(({ name, kind, lost }, index) => ({
     text: lost ? `${name}: lost` : name,
     position: inTheShot(layout.assets[index] ?? 0, labelHeight),
     testId: lost ? "spacecraft-lost" : "spacecraft-asset",
-    className: lost ? "crashed-label" : "spacecraft-label",
+    className: onBoardLabelClass(kind, lost),
   }));
 }

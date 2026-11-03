@@ -55,12 +55,16 @@ A Robotic Mission whose main value is lowering the risk or cost of later Mission
 The named astronauts on a Crewed Mission. Apart from their names and Health, they have no individual traits.
 _Avoid_: Astronauts (as a game term), personnel
 
+**Crew size**:
+How many Crew fly on a Crewed Mission, chosen in Planning Mode. A larger Crew earns more Ongoing Research, but weighs and costs more.
+_Avoid_: Crew count, team size
+
 **Health**:
-A single value for each Crew member. Radiation, time at Mars and failed Mission Events lower it, Protection slows the decline, and at zero the Crew member dies.
+A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, solar particle events, carrying on through a dust storm and having no Supplies lower it, Protection slows the decline, and at zero the Crew member dies.
 _Avoid_: Condition, hit points
 
 **Supplies**:
-The food, water and everything else Crew use up to stay alive. When they run out, Health falls quickly.
+The food, water and everything else Crew use up to stay alive, from launch. They are chosen for each Crewed Mission, and last a larger Crew fewer days. Crew in one place share theirs, and Crew who join them bring more. When they run out, Health falls quickly.
 _Avoid_: Consumables, life support (as the general term)
 
 ## Assets
@@ -74,11 +78,11 @@ How long an Asset keeps operating once in place. Longer Service Life costs more.
 _Avoid_: Lifespan, durability
 
 **Benefit**:
-What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset on the surface. A second Asset giving the same Benefit adds nothing.
+What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface. A second Asset giving the same Benefit adds nothing.
 _Avoid_: Bonus, buff, synergy
 
 **Activity**:
-What an Asset, or all the Crew at one Landing Site, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.
+What an Asset, or all the Crew in one place at Mars, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset or Crew keep their Activity into later Turns until the player changes it.
 _Avoid_: Task, job, assignment
 
 **Landing Site**:
@@ -101,6 +105,12 @@ An Activity for a rover: Ongoing Research that stays near the Landing Site and a
 **Long traverse**:
 An Activity for a rover: Ongoing Research that drives long distances around the Landing Site. It earns more Science than Soil analysis and pays no Research Grant.
 
+**Crew research**:
+An Activity for Crew in Mars orbit: Ongoing Research from orbit, such as studying Mars, driving robots on the surface from above and running experiments aboard. Each Crew member earns it, and it pays a Research Grant.
+
+**Field research**:
+An Activity for Crew at a Landing Site: Ongoing Research on the surface, exploring around the site, collecting samples and studying them in their lander. Each Crew member earns it, a Benefit that raises research on the surface raises it too, and it pays a Research Grant.
+
 ## Modes
 
 **Planning Mode**:
@@ -122,7 +132,7 @@ _Avoid_: Prompt, intervention
 ## Risk
 
 **Go/no-go check**:
-A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life.
+A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life for each Asset being landed, while Crew being landed use their Supplies for each day held.
 _Avoid_: Abort check, landing poll
 
 **Mission Event**:
@@ -146,7 +156,7 @@ Safety Margin that changes the outcome when a Mission Event fails, such as an es
 _Avoid_: Backup, fallback
 
 **Protection**:
-Safety Margin that reduces harm to Crew that builds up over a Mission's Duration, such as radiation shielding.
+Safety Margin that slows the Health Crew lose to radiation, such as radiation shielding. It is bought for a Crewed Mission as a whole, at a cost in money and mass, and works on the way to Mars, in a solar particle event and at Mars, where it stays with the Crew.
 _Avoid_: Shielding (as the general term)
 
 **Hazard**:
@@ -154,11 +164,11 @@ A random environmental danger that happens during Mission Mode, separate from pl
 _Avoid_: Random event, disaster
 
 **Dust storm**:
-A Hazard: a storm over one Landing Site for a stretch of days. If an Asset is operating there when it starts, the player chooses between sheltering, which earns no Ongoing Research for those days, and carrying on, with a chance of each Asset failing.
+A Hazard: a storm over one Landing Site for a stretch of days. If an Asset or Crew are operating there when it starts, the player chooses between sheltering, which earns no Ongoing Research for those days, and carrying on, with a chance of each Asset failing and of each Crew member losing Health.
 _Avoid_: Sandstorm, weather
 
 **Solar particle event**:
-A Hazard: a burst of radiation from the Sun that hits a Mission on its way to Mars, more likely the longer its Duration. The player chooses between safe mode, which costs each Asset on board some Service Life, and carrying on, with a chance of damage that costs much more or loses the Mission.
+A Hazard: a burst of radiation from the Sun that hits a Mission on its way to Mars, more likely the longer its Duration. The player chooses between safe mode, which costs each Asset on board some Service Life and each Crew member some Health, and carrying on, with a chance of radiation that costs much more, or loses the Mission and any Crew aboard. Protection lessens what it costs Crew.
 _Avoid_: Solar flare, radiation storm
 
 ## Balance elements

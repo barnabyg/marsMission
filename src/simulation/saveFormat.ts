@@ -147,7 +147,45 @@ const format7 = format6.extend({
   ),
 });
 
-const newestFormat = format7;
+const crewLossCause = z.enum([
+  "missionEvent",
+  "solarParticleEvent",
+  "health",
+  "supplies",
+]);
+
+/**
+ * Adds Crew: every Crew member who has flown, where they are (Mars orbit, a Landing Site, lost or home) and the
+ * Protection their Mission carried, with what the Crew in each place do and the Supplies, in kilograms, they have left.
+ * A save from before Crew has none.
+ */
+const format8 = format7.extend({
+  crew: z.array(
+    z.strictObject({
+      name: z.string(),
+      health: z.number().nonnegative(),
+      arrivedOn: isoDate.nullable(),
+      location: z.discriminatedUnion("kind", [
+        z.strictObject({ kind: z.literal("marsOrbit") }),
+        z.strictObject({
+          kind: z.literal("landingSite"),
+          landingSiteId: z.string(),
+        }),
+        z.strictObject({
+          kind: z.literal("lost"),
+          lostOn: isoDate,
+          cause: crewLossCause,
+        }),
+        z.strictObject({ kind: z.literal("home"), backOn: isoDate }),
+      ]),
+      protectionId: z.string(),
+    }),
+  ),
+  crewActivities: z.record(z.string(), z.string()),
+  crewSupplies: z.record(z.string(), z.number().nonnegative()),
+});
+
+const newestFormat = format8;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -228,6 +266,15 @@ const formats: readonly SaveFormat[] = [
         ...asset,
         flewUnproven: false,
       })),
+    }),
+  },
+  {
+    schema: format7,
+    upgrade: (old: z.output<typeof format7>): z.output<typeof format8> => ({
+      ...old,
+      crew: [],
+      crewActivities: {},
+      crewSupplies: {},
     }),
   },
   { schema: newestFormat },

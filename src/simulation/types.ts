@@ -1,13 +1,15 @@
-import type { Raise } from "./benefits";
 import type { TechnologyReadiness } from "./technologyReadiness";
 import type { Timeline } from "./timeline";
+import type { CrewAtMars } from "./crew";
+import type { PlannedActivity, PlannedDevelopment } from "./previews";
+import type { TurnSummary } from "./turnSummary";
 
 export interface PlannedMission {
   launchVehicleId: string;
   assetIds: string[];
   /** The Reliability level bought for each Mission Event, by id. Any left out get the cheapest level. */
   reliability?: Record<string, string>;
-  /** Where the Mission comes down. Only a Mission carrying an Asset that lands has one. */
+  /** Where the Mission comes down. Only a Mission carrying an Asset or Crew that land has one. */
   landingSiteId?: string;
   /** The choices made for each Asset, by id. Anything left out gets the shortest Service Life, the cheapest Reliability and the first Activity it lists. */
   assetChoices?: Record<string, AssetChoices>;
@@ -15,6 +17,25 @@ export interface PlannedMission {
   contingencyIds?: string[];
   /** The Trajectory to Mars. Left out, it's the first the Catalogue lists. */
   trajectoryId?: string;
+  /** The Crew it carries, which makes it a Crewed Mission. Left out, it's a Robotic Mission. */
+  crew?: CrewChoices;
+}
+
+/** The choices made for a Crewed Mission's Crew. */
+interface CrewChoices {
+  /** How many Crew fly, which must be one of the Catalogue's Crew sizes. */
+  size: number;
+  /**
+   * What they all do from the day they arrive, until the player changes it. Left out, it's the first the Catalogue
+   * lists. Crew arriving where Crew already operate take up their Activity instead, because Crew in one place share one.
+   */
+  activityId?: string;
+  /** Whether they land at the Mission's Landing Site, rather than staying in Mars orbit. */
+  landsAtSite?: boolean;
+  /** The Supplies they carry, by id, which they use from launch. Left out, it's the least the Catalogue offers. */
+  suppliesId?: string;
+  /** The Protection it carries, by id, which slows the Health they lose to radiation. Left out, it's the first the Catalogue lists, which gives none. */
+  protectionId?: string;
 }
 
 export interface AssetChoices {
@@ -31,17 +52,8 @@ export interface TurnPlan {
   operatingActivities?: Record<string, string>;
   /** The technologies whose Development starts this Turn, by id. It is paid for in full this Turn, with or without a Mission. */
   developmentIds?: string[];
-}
-
-export interface PlanCheck {
-  /** What the Mission costs, which is 0 with no Mission. */
-  costMillions: number;
-  /** What the Developments started this Turn cost, on top of the Mission's cost. */
-  developmentCostMillions: number;
-  /** What the Mission's Assets weigh, against what its Launch Vehicle can carry. */
-  massTonnes: number;
-  capacityTonnes: number;
-  problems: string[];
+  /** New Activities for the Crew already operating in each place, by the place's `key`. Any left out keep the one they have. */
+  crewActivities?: Record<string, string>;
 }
 
 interface OperatingAsset {
@@ -61,22 +73,33 @@ interface OperatingAsset {
   flewUnproven: boolean;
 }
 
-/** An Activity as Planning Mode offers it. */
-export interface PlannedActivity {
-  id: string;
+/** A place at Mars where Crew operate: Mars orbit, or a Landing Site. */
+export type PlaceAtMars =
+  { kind: "marsOrbit" } | { kind: "landingSite"; landingSiteId: string };
+
+/**
+ * Why Crew were lost: a failed Mission Event, a solar particle event that lost the Mission, Health that ran out while
+ * they had Supplies, or Health that ran out once their Supplies had.
+ */
+export type CrewLossCause =
+  "missionEvent" | "solarParticleEvent" | "health" | "supplies";
+
+/** Where a Crew member is: at Mars, lost, or back on Earth after a Free-return, never to fly again. */
+type CrewLocation =
+  | PlaceAtMars
+  | { kind: "lost"; lostOn: string; cause: CrewLossCause }
+  | { kind: "home"; backOn: string };
+
+/** One named Crew member, from the day their Mission launches. */
+export interface CrewMember {
   name: string;
-  description: string;
-  /** Whether doing this is a Survey. */
-  surveys: boolean;
-  /** What it earns over a whole Turn in service if it's research, or null if it isn't. */
-  earnsPerTurn: {
-    science: number;
-    publicSupport: number;
-    /** The Research Grant it pays for that Science. Zero if it pays none. */
-    researchGrantMillions: number;
-  } | null;
-  /** The Benefit that earnsPerTurn is raised by, as long as the Assets giving it keep operating. Left out if none raises it. */
-  raisedBy?: Raise;
+  /** Out of the Catalogue's maxHealth, which they launch with. It is 0 once they are lost. */
+  health: number;
+  /** The day they arrived at Mars, or null if they never did. */
+  arrivedOn: string | null;
+  location: CrewLocation;
+  /** The Protection their Mission carried, by id, which stays with them at Mars. */
+  protectionId: string;
 }
 
 type ProgramStatus =
@@ -106,6 +129,15 @@ export interface Program {
   /** The Developments started, each with the Turn at whose start it finishes. One that has finished stays listed. */
   developments: { technologyId: string; finishesOnTurn: number }[];
   operatingAssets: OperatingAsset[];
+  /** Every Crew member who has flown, whether at Mars, lost or home, in the order they flew. Their names are never given again. */
+  crew: CrewMember[];
+  /** What the Crew in each place do, by the place's key, for each place where Crew operate. Crew in one place share one Activity. */
+  crewActivities: Record<string, string>;
+  /**
+   * The Supplies left, in kilograms, by the place's key, for each place where Crew operate. Crew in one place share
+   * them, and Crew who join them add theirs.
+   */
+  crewSupplies: Record<string, number>;
   status: ProgramStatus;
 }
 
@@ -153,6 +185,31 @@ export interface ProgramView {
     /** What it does for other Assets while it operates at Mars, or null if it gives no Benefit. */
     benefit: string | null;
   }[];
+  /** What a Crewed Mission can carry: the Crew sizes, Supplies and Protection on offer, what each costs and weighs, and the Health Crew start with. */
+  crewedMission: {
+    vehicleName: string;
+    sizes: { crew: number; costMillions: number; massTonnes: number }[];
+    /** The Supplies on offer, least first. How long they last depends on the Crew size (`previewCrew`). */
+    supplies: {
+      id: string;
+      name: string;
+      costMillions: number;
+      massTonnes: number;
+    }[];
+    /** The Protection on offer, from none to the most, with by what share each slows the Health Crew lose to radiation. */
+    protection: {
+      id: string;
+      name: string;
+      costMillions: number;
+      massTonnes: number;
+      radiationCutPercent: number;
+    }[];
+    maxHealth: number;
+    /** How many names are left to give Crew, which limits the Crew that can still fly. */
+    namesLeft: number;
+  };
+  /** The Crew operating at Mars, by where they are. Crew who are lost or home aren't listed. */
+  crew: CrewAtMars[];
   /** Each technology that needs Development before it can fly, Launch Vehicles first, whether or not it has started. */
   developments: PlannedDevelopment[];
   /** Whether a Survey would still lower a landing risk or reveal a Landing Site. */
@@ -172,147 +229,10 @@ export interface ProgramView {
   }[];
 }
 
-/** A technology's Development as Planning Mode shows it. */
-export interface PlannedDevelopment {
-  /** The id of the Asset or Launch Vehicle, which is how a plan names it to start its Development. */
-  id: string;
-  name: string;
-  costMillions: number;
-  turns: number;
-  status: "notStarted" | "inProgress" | "finished";
-  /** How many Turns until it finishes, at the start of a Turn: all of them before it starts, and 0 once it has finished. */
-  turnsLeft: number;
-}
-
-interface AwardedMilestone {
-  name: string;
-  science: number;
-  publicSupport: number;
-}
-
-/** What one Asset earned by doing research during a Turn. */
-export interface OngoingResearchEarned {
-  assetName: string;
-  activityName: string;
-  science: number;
-  publicSupport: number;
-  /** How many days of the Turn it was in service. */
-  days: number;
-  /** What other Assets' Benefits added to it, which science and publicSupport include. Left out if they raised none of its days. */
-  benefit?: {
-    /** The Assets that gave the Benefit. */
-    givenBy: string[];
-    /** How many of its days were raised. */
-    days: number;
-    science: number;
-    publicSupport: number;
-  };
-}
-
-/** What changed over a Turn. */
-export interface TurnSummary {
-  missionCostMillions: number;
-  /** What the Developments started this Turn cost, which moneyEndMillions takes off as well as the Mission's cost. */
-  developmentCostMillions: number;
-  moneyStartMillions: number;
-  moneyEndMillions: number;
-  scienceGained: number;
-  publicSupportStart: number;
-  publicSupportGained: number;
-  publicSupportDrained: number;
-  publicSupportEnd: number;
-  milestones: AwardedMilestone[];
-  /** The Science from landing at a Landing Site for the first time, if something did. */
-  firstLanding: { siteName: string; science: number } | null;
-  /** What each Asset doing research earned, which scienceGained and publicSupportGained include. */
-  ongoingResearch: OngoingResearchEarned[];
-  /** The Assets and Launch Vehicles that became Flight-proven this Turn. */
-  technologiesProven: string[];
-  /** The technologies whose Development started this Turn. */
-  developmentsStarted: string[];
-  /** The technologies whose Development finishes as the next Turn starts, which can then be chosen for a Mission. */
-  developmentsFinished: string[];
-  /** The Assets whose Service Life ended this Turn. */
-  assetsEnded: string[];
-  /** The Assets that failed in service this Turn, before their Service Life ended. */
-  assetsFailed: string[];
-  /** What this Turn's Survey found, if there was one and it changed anything. */
-  survey: {
-    siteNamesSurveyed: string[];
-    siteNameRevealed: string | null;
-  } | null;
-  fundingPayouts: { publicSupport: number; payoutMillions: number }[];
-  /** What each Asset's Ongoing Research paid in Research Grants, leaving out any that came to nothing. moneyEndMillions includes it. */
-  researchGrants: { name: string; millions: number }[];
-  researchGrantMillions: number;
-  /** The Mission Event that ended this Turn's Mission and what that cost, if one failed. Assets delivered before it are safe. */
-  failure: {
-    missionEventName: string;
-    assetsLost: string[];
-    publicSupportLost: number;
-    /** Whether a Free-return brought those Assets back to Earth. They aren't flown again. */
-    returnedToEarth: boolean;
-    /** The share of their cost that came back, which moneyEndMillions includes. */
-    refundMillions: number;
-    /** Whether a Hazard did it, which missionEventName then names, rather than a Mission Event. */
-    hazard?: true;
-  } | null;
-  /** How each Decision Point in this Turn was answered, and what came of it. */
-  contingencies: {
-    missionEventName: string;
-    contingencyName: string;
-    answer: DecisionAnswer;
-    rescued: boolean;
-    /** The Assets it saved, with the Service Life each has left to start with. */
-    assets: { name: string; serviceLifeDays: number }[];
-  }[];
-  /** The dust storms that had something at stake, how each was answered, and what came of it. */
-  dustStorms: {
-    siteName: string;
-    days: number;
-    answer: "shelter" | "carryOn";
-    /** The Assets operating there when it started. */
-    assets: string[];
-    /** Those that failed because they carried on. assetsFailed lists them too. */
-    assetsFailed: string[];
-  }[];
-  /** The solar particle event that hit the Mission, if one did, how it was answered and what came of it. */
-  solarParticleEvent: {
-    answer: "safeMode" | "carryOn";
-    outcome: "protected" | "unharmed" | "damaged" | "lost";
-    /** The Assets on board. */
-    assets: string[];
-    /** How much shorter it made each one's Service Life. */
-    serviceLifeLossPercent: number;
-  } | null;
-  /** The go/no-go check before a landing in a dust storm, if there was one, and how it was answered. */
-  goNoGo: {
-    siteName: string;
-    answer: "go" | "holdOff";
-    /** How long the landing waited, which is 0 if it went ahead. */
-    daysHeld: number;
-    /** The Service Life each Asset being landed lost by waiting. */
-    serviceLifeDaysLost: number;
-  } | null;
-  /** Why the Program was cancelled at the end of this Turn, if it was. */
-  cancellationReason: string | null;
-}
-
 export interface TurnResult {
   program: Program;
   timeline: Timeline;
   summary: TurnSummary;
-}
-
-/** A Trajectory as Planning Mode offers it. */
-export interface PlannedTrajectory {
-  id: string;
-  name: string;
-  description: string;
-  transferDays: number;
-  costMillions: number;
-  capacityLossTonnes: number;
-  chosen: boolean;
 }
 
 export type DecisionAnswer =
@@ -350,47 +270,3 @@ interface DecisionChoice {
 export type TurnProgress =
   | { decisionPoint: null; timeline: Timeline; result: TurnResult }
   | { decisionPoint: DecisionPoint; timeline: Timeline };
-
-/** An Asset on a planned Mission as Planning Mode shows it. */
-export interface PlannedAsset {
-  assetId: string;
-  name: string;
-  serviceLifeDays: number;
-  serviceLifeOptions: { days: number; costMillions: number }[];
-  reliabilityLevelId: string;
-  activityId: string;
-  activities: PlannedActivity[];
-  /** The chance of failing in each Turn after it arrives, as a rough figure. */
-  riskBand: string;
-  reliabilityLevels: {
-    id: string;
-    name: string;
-    costMillions: number;
-    riskBand: string;
-  }[];
-}
-
-/** A Mission Event as Planning Mode shows it: a rough risk band, never the exact probability. */
-export interface PlannedMissionEvent {
-  eventId: string;
-  name: string;
-  riskBand: string;
-  reliabilityLevelId: string;
-  reliabilityLevels: {
-    id: string;
-    name: string;
-    costMillions: number;
-    riskBand: string;
-  }[];
-  /** The Contingency on offer for this Mission Event, if it has one. */
-  contingency: {
-    id: string;
-    name: string;
-    description: string;
-    costMillions: number;
-    massTonnes: number;
-    /** The chance that using it fails, as a rough figure. */
-    riskBand: string;
-    bought: boolean;
-  } | null;
-}

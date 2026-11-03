@@ -19,6 +19,11 @@ interface SpacecraftControlsProps {
   earthOrbit: EarthOrbitNow | null;
 }
 
+/** How the player reads a kind on board, where the Crew's ship is named for its Crew. */
+function kindName(kind: string): string {
+  return kind === "crew" ? "Crew" : kind;
+}
+
 /** What's on board, each Asset with its kind, and whether it's lost. */
 function onBoardLines(
   timeline: Pick<Timeline, "mission">,
@@ -28,12 +33,14 @@ function onBoardLines(
   if (earthOrbit) {
     return (timeline.mission?.assets ?? []).map(({ name, kind }) =>
       earthOrbit.missionLost
-        ? `${name} (${kind}): lost in Earth orbit`
-        : `${name} (${kind})`,
+        ? `${name} (${kindName(kind)}): lost in Earth orbit`
+        : `${name} (${kindName(kind)})`,
     );
   }
   return assetsOnBoard(timeline.mission, day).map(({ name, kind, lost }) =>
-    lost ? `${name} (${kind}): lost on the way` : `${name} (${kind})`,
+    lost
+      ? `${name} (${kindName(kind)}): lost on the way`
+      : `${name} (${kindName(kind)})`,
   );
 }
 

@@ -5,7 +5,10 @@ import { planningTools, playProgram } from "./playProgram";
 import { strategies } from "./strategies";
 import { certain, real, simulationOf, turns } from "./testHelpers";
 
-const developing = strategies.filter(({ name }) => name.includes("develop"));
+// Every strategy that flies Crew develops the Meridian Colossus to carry them.
+const developing = strategies.filter(
+  ({ name }) => name.includes("develop") || name.includes("Crew"),
+);
 
 describe("strategies that develop technology", () => {
   it("exist", () => {
@@ -14,9 +17,7 @@ describe("strategies that develop technology", () => {
 
   /** What each one develops, by the name it is reported under. */
   const technologyOf = (name: string) =>
-    name.includes("Meridian Colossus")
-      ? "meridian-colossus"
-      : "endurance-rover";
+    name.includes("Endurance Rover") ? "endurance-rover" : "meridian-colossus";
 
   it.each(developing.map((strategy) => [strategy.name, strategy] as const))(
     "%s develops its technology, then flies it once it is built, which makes it Flight-proven",

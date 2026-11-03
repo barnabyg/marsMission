@@ -1,0 +1,253 @@
+import {
+  daysBetween,
+  type ProgramView,
+  type TurnSummary,
+} from "../simulation/simulation";
+
+/** Anything impossible about the Crew over one Turn, read from the Program before it, its summary and the Program after it. */
+export function crewProblems(
+  before: ProgramView,
+  summary: TurnSummary,
+  after: ProgramView,
+): string[] {
+  const namesOf = (view: ProgramView) =>
+    view.crew.flatMap(({ members }) => members.map(({ name }) => name));
+  const namesBefore = namesOf(before);
+  const namesAfter = namesOf(after);
+  const arrived = namesAfter.filter((name) => !namesBefore.includes(name));
+  const lost = summary.crewLost.flatMap(({ names }) => names);
+  const gone = [...lost, ...summary.crewHome];
+  // Crew lost on the way, or brought home, never reached Mars, but their names have been given.
+  const flown = [
+    ...arrived,
+    ...gone.filter((name) => !namesBefore.includes(name)),
+  ];
+  const { maxHealth } = after.crewedMission;
+  const sorted = (names: string[]) => names.toSorted().join();
+  const crewPlaces = new Set(
+    [...before.crew, ...after.crew].map(
+      ({ locationName }) => `Crew in ${locationName}`,
+    ),
+  );
+  // Health only falls by what the Turn summary says each one lost: from what they had at Mars, or from full if they flew.
+  const healthBefore = new Map(
+    before.crew.flatMap(({ members }) =>
+      members.map(({ name, health }) => [name, health] as const),
+    ),
+  );
+  const startOf = (name: string) => healthBefore.get(name) ?? maxHealth;
+  const lostBy = (name: string) =>
+    summary.healthLost
+      .filter((member) => member.name === name)
+      .flatMap(({ lost }) => lost)
+      .reduce((total, { health }) => total + health, 0);
+  const diedOfHealth = summary.crewLost
+    .filter(({ cause }) => cause === "health")
+    .flatMap(({ names }) => names);
+  const membersAfter = after.crew.flatMap(({ members }) => members);
+  const lostTo = (name: string, cause: string) =>
+    summary.healthLost.some(
+      (member) =>
+        member.name === name &&
+        member.lost.some((lost) => lost.cause === cause),
+    );
+  const starved = summary.crewLost
+    .filter(({ cause }) => cause === "supplies")
+    .flatMap(({ names }) => names);
+  const turnDays = daysBetween(before.date, after.date);
+  const particles = summary.solarParticleEvent;
+  // With the same Crew all Turn, Supplies fall by exactly a Turn's worth, and never below zero.
+  const unchangedPlaces = after.crew.flatMap((place) => {
+    const earlier = before.crew.find(({ key }) => key === place.key);
+    const same =
+      earlier !== undefined &&
+      sorted(earlier.members.map(({ name }) => name)) ===
+        sorted(place.members.map(({ name }) => name));
+    return same ? [{ earlier, later: place }] : [];
+  });
+  const checks: [impossible: boolean, problem: string][] = [
+    [
+      new Set(namesAfter).size < namesAfter.length,
+      "Two Crew members share a name.",
+    ],
+    [
+      new Set(gone).size < gone.length,
+      "A Crew member was lost or brought home twice.",
+    ],
+    // Only being lost or brought home takes Crew away from Mars.
+    [
+      namesBefore.some(
+        (name) => !namesAfter.includes(name) && !gone.includes(name),
+      ),
+      "A Crew member at Mars disappeared.",
+    ],
+    [
+      gone.some(
+        (name) =>
+          namesAfter.includes(name) ||
+          summary.crew.some((member) => member.name === name),
+      ),
+      "A Crew member who is lost or home still operates at Mars.",
+    ],
+    // Crew who arrive and die in the same Turn earn research where no Crew were before or after it.
+    [
+      !lost.some((name) => lostTo(name, "timeAtMars")) &&
+        summary.ongoingResearch.some(
+          ({ assetName }) =>
+            assetName.startsWith("Crew in ") && !crewPlaces.has(assetName),
+        ),
+      "Crew earned Ongoing Research where no Crew operate.",
+    ],
+    [
+      summary.crewLost.some(
+        ({ names, publicSupportLost }) =>
+          names.length === 0 || publicSupportLost < 0,
+      ),
+      "Losing Crew lost no one, or gained Public Support.",
+    ],
+    [
+      after.crew.some(({ members }) =>
+        members.some(({ health }) => health < 0 || health > maxHealth),
+      ),
+      `A Crew member's Health is outside 0 to ${maxHealth}.`,
+    ],
+    [
+      membersAfter.some(({ health }) => health === 0) ||
+        summary.crew.some(({ health }) => health === 0),
+      "A Crew member at zero Health still operates at Mars.",
+    ],
+    [
+      summary.healthLost.some(({ lost }) =>
+        lost.some(({ health }) => health <= 0),
+      ),
+      "A Crew member lost no Health, or gained some, to a cause.",
+    ],
+    [
+      membersAfter.some(
+        ({ name, health }) => health !== startOf(name) - lostBy(name),
+      ),
+      "A Crew member's Health doesn't match what the Turn summary says they lost.",
+    ],
+    [
+      diedOfHealth.some((name) => lostBy(name) !== startOf(name)),
+      "A Crew member died of their Health without losing all of it.",
+    ],
+    [
+      after.crew.some(
+        ({ suppliesDaysLeft }) =>
+          suppliesDaysLeft < 0 || !Number.isInteger(suppliesDaysLeft),
+      ),
+      "The Supplies left for Crew at Mars are below zero, or not whole days.",
+    ],
+    [
+      unchangedPlaces.some(
+        ({ earlier, later }) =>
+          later.suppliesDaysLeft !==
+          Math.max(0, earlier.suppliesDaysLeft - turnDays),
+      ),
+      "Supplies at Mars didn't fall by a Turn's worth for the same Crew.",
+    ],
+    [
+      starved.some((name) => !lostTo(name, "noSupplies")) ||
+        (starved.length > 0 && summary.suppliesRanOut.length === 0),
+      "Crew were lost to their Supplies without running out of them.",
+    ],
+    [
+      summary.healthLost.some(({ name }) => lostTo(name, "noSupplies")) &&
+        summary.suppliesRanOut.length === 0,
+      "Crew lost Health to having no Supplies, but none ran out.",
+    ],
+    [
+      after.crew.some(
+        ({ members, activityId, activities }) =>
+          members.length === 0 ||
+          !activities.some(({ id }) => id === activityId),
+      ),
+      "Crew at Mars have no one there, or an Activity they can't do.",
+    ],
+    [
+      new Set(after.crew.map(({ key }) => key)).size < after.crew.length,
+      "The Crew in one place are listed twice.",
+    ],
+    // Crew land only through a landing, which makes the site landed at.
+    [
+      after.crew.some(
+        ({ landingSiteId, locationName }) =>
+          landingSiteId !== null &&
+          !after.landingSites.some(
+            ({ id, name, landed }) =>
+              id === landingSiteId && name === locationName && landed,
+          ),
+      ),
+      "Crew are at a Landing Site that isn't known or that nothing has landed at.",
+    ],
+    [
+      summary.dustStorms.some(
+        ({ answer, assets, crewHurt }) =>
+          (answer === "shelter" && crewHurt.length > 0) ||
+          crewHurt.some((name) => !assets.includes(name)),
+      ),
+      "A dust storm hurt Crew who sheltered, or who weren't there.",
+    ],
+    [
+      summary.dustStorms
+        .flatMap(({ crewHurt }) => crewHurt)
+        .some(
+          (name) =>
+            !summary.healthLost.some(
+              (member) =>
+                member.name === name &&
+                member.lost.some(({ cause }) => cause === "dustStorm"),
+            ),
+        ),
+      "Crew hurt in a dust storm lost no Health to it.",
+    ],
+    // A solar particle event costs Health only to the Crew on board, in safe mode or when its radiation hits.
+    [
+      summary.healthLost.some(
+        ({ name }) =>
+          lostTo(name, "solarParticleEvent") &&
+          !(
+            particles?.crew.includes(name) &&
+            (particles.outcome === "protected" ||
+              particles.outcome === "damaged")
+          ),
+      ) ||
+        (particles !== null &&
+          particles.crewHealthLoss > 0 &&
+          (particles.crew.length === 0 ||
+            particles.outcome === "unharmed" ||
+            particles.outcome === "lost")),
+      "A solar particle event cost Health to Crew it didn't harm.",
+    ],
+    [
+      summary.healthLost.some(
+        ({ savedByProtection }) =>
+          savedByProtection !== undefined && savedByProtection <= 0,
+      ),
+      "Protection saved a Crew member no Health, or cost them some.",
+    ],
+    [
+      flown.length >
+        Math.max(0, ...after.crewedMission.sizes.map(({ crew }) => crew)),
+      "More Crew flew than a Crewed Mission carries.",
+    ],
+    [
+      after.crewedMission.namesLeft !==
+        before.crewedMission.namesLeft - flown.length,
+      "The names left to give Crew don't match the Crew who flew.",
+    ],
+    [
+      sorted(summary.crew.map(({ name }) => name)) !== sorted(namesAfter) ||
+        sorted(
+          summary.crew
+            .filter((member) => member.arrived)
+            .map(({ name }) => name),
+        ) !== sorted(arrived),
+      "The Crew in the Turn summary don't match the Crew at Mars.",
+    ],
+  ];
+  return checks.flatMap(([impossible, problem]) =>
+    impossible ? [problem] : [],
+  );
+}

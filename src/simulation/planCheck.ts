@@ -1,8 +1,10 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { formatMoney, operatingKey, sum, type Rules } from "./rules";
 import { costOf, readinessOf, type Technology } from "./technologyReadiness";
+import { checkCrew, operatingCrewProblems } from "./crew";
 import { developmentsStarting } from "./development";
-import type { PlanCheck, PlannedMission, Program, TurnPlan } from "./types";
+import type { PlanCheck } from "./previews";
+import type { PlannedMission, Program, TurnPlan } from "./types";
 
 const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
 
@@ -80,6 +82,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     );
     const problems = [
       ...operatingActivityProblems(program, plan),
+      ...operatingCrewProblems(catalogue, rules, program, plan),
       ...mission.problems,
       ...developments.problems,
     ];
@@ -132,8 +135,8 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     } else
       problems.push(`There is no Launch Vehicle called "${launchVehicleId}".`);
 
-    if (assetIds.length === 0) {
-      problems.push("A Mission must carry at least one Asset.");
+    if (assetIds.length === 0 && !planned.crew) {
+      problems.push("A Mission must carry at least one Asset or Crew.");
     }
     if (new Set(assetIds).size < assetIds.length) {
       problems.push("A Mission can't carry the same Asset twice.");
@@ -148,6 +151,10 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
         problems.push(...notBuiltProblems(program, asset));
       } else problems.push(`There is no Asset called "${assetId}".`);
     }
+    const crew = checkCrew(catalogue, rules, program, planned);
+    costMillions += crew.costMillions;
+    massTonnes += crew.massTonnes;
+    problems.push(...crew.problems);
     const plannedEvents = missionEventsFor(planned);
     if (new Set(contingencyIds).size < contingencyIds.length) {
       problems.push("A Mission can't buy the same Contingency twice.");
@@ -197,9 +204,11 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
       );
     }
 
-    const landsOnMars = catalogue.assets.some(
-      (asset) => assetIds.includes(asset.id) && asset.landsAtSite === true,
-    );
+    const landsOnMars =
+      planned.crew?.landsAtSite === true ||
+      catalogue.assets.some(
+        (asset) => assetIds.includes(asset.id) && asset.landsAtSite === true,
+      );
     if (landsOnMars) {
       if (landingSiteId === undefined) {
         problems.push(

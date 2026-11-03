@@ -165,6 +165,8 @@ describe("answering a solar particle event", () => {
       outcome: "protected",
       assets: ["Test Orbiter"],
       serviceLifeLossPercent: 10,
+      crew: [],
+      crewHealthLoss: 0,
     });
     // The shortest Service Life is 50,000 days.
     expect(program.operatingAssets[0]?.serviceLifeDays).toBe(45_000);
@@ -233,6 +235,34 @@ describe("answering a solar particle event", () => {
     expect(
       timeline.entries.filter((entry) => entry.kind === "missionEvent"),
     ).toHaveLength(2);
+  });
+
+  it("losing the Mission loses its Crew, at the drop in Public Support that losing Crew costs", () => {
+    const simulation = withParticles({
+      damageChance: 1,
+      lossChanceIfDamaged: 1,
+    });
+    const { summary, program } = simulation.runTurn(
+      simulation.startProgram(seedWithEvent()),
+      {
+        mission: {
+          launchVehicleId: "test-heavy",
+          assetIds: [],
+          crew: { size: 2 },
+        },
+      },
+      { [decisionId]: "carryOn" },
+    );
+    expect(summary.crewLost).toEqual([
+      {
+        names: ["Ann Able", "Ben Baker"],
+        cause: "solarParticleEvent",
+        description:
+          "Ann Able and Ben Baker were lost when the solar particle event lost the Mission.",
+        publicSupportLost: 40,
+      },
+    ]);
+    expect(simulation.readProgram(program).crewedMission.namesLeft).toBe(3);
   });
 
   it("doesn't re-roll anything else", () => {

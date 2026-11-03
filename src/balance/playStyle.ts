@@ -1,9 +1,11 @@
+import { crewedMissions, type CrewStyle } from "./crewPlay";
 import {
   canFly,
   type DecisionAnswer,
   type DecisionPoint,
   type PlannedActivity,
   type PlannedAsset,
+  type PlannedCrew,
   type PlannedTrajectory,
   type ProgramView,
   type Simulation,
@@ -19,6 +21,7 @@ export interface PlanningTools {
     mission: PlannedMission,
   ): ReturnType<Simulation["previewMission"]>;
   previewTrajectories(mission: PlannedMission): PlannedTrajectory[];
+  previewCrew(mission: PlannedMission): PlannedCrew | null;
   /** What's wrong with a plan for this Turn, which is nothing if it can be submitted. */
   problemsWith(plan: TurnPlan): string[];
   /** What a plan for this Turn costs, with any Development it starts. */
@@ -30,8 +33,12 @@ export interface Strategy {
   name: string;
   description: string;
   plan(view: ProgramView, tools: PlanningTools): TurnPlan;
-  /** What it does at a Decision Point. It takes the first choice offered unless it says otherwise. */
-  answer?(decisionPoint: DecisionPoint, view: ProgramView): DecisionAnswer;
+  /** What it does at a Decision Point on a Turn it planned this way. It takes the first choice offered unless it says otherwise. */
+  answer?(
+    decisionPoint: DecisionPoint,
+    view: ProgramView,
+    plan: TurnPlan,
+  ): DecisionAnswer;
 }
 
 type Aim = "science" | "grants";
@@ -55,6 +62,8 @@ export interface PlayStyle {
   develops?: string[];
   /** Starts that Development only while this is true. */
   developsWhile?: (view: ProgramView) => boolean;
+  /** Sends a Crewed Mission, of the largest Crew it can afford, before any Asset, whenever one can fly, as this says. */
+  fliesCrew?: CrewStyle;
   /** Whether an Asset that can Survey does that first, while there is something left to Survey. */
   surveysFirst: boolean;
   /** Stops Surveying sooner than when nothing is left to Survey, once this is no longer true. */
@@ -409,6 +418,19 @@ function missionPlan(
     view.turnNumber <= (playStyle.lastLaunchTurn ?? Infinity);
   if (launching) {
     const reserve = reserveFor(view, playStyle);
+    const affordable = (mission: PlannedMission) => {
+      const plan = { mission, operatingActivities: changes };
+      return tools.problemsWith(plan).length === 0 &&
+        view.moneyMillions - tools.costOf(plan) >= reserve
+        ? plan
+        : null;
+    };
+    for (const mission of playStyle.fliesCrew
+      ? crewedMissions(view, tools, playStyle.fliesCrew)
+      : []) {
+      const plan = affordable(mission);
+      if (plan) return plan;
+    }
     for (const kind of playStyle.order(view)) {
       for (const mission of missionsFor(
         kind,
@@ -417,13 +439,8 @@ function missionPlan(
         playStyle,
         surveying,
       ).flatMap((each) => [...fuller(each, view, playStyle), each])) {
-        const plan = { mission, operatingActivities: changes };
-        if (
-          tools.problemsWith(plan).length === 0 &&
-          view.moneyMillions - tools.costOf(plan) >= reserve
-        ) {
-          return plan;
-        }
+        const plan = affordable(mission);
+        if (plan) return plan;
       }
     }
   }
@@ -438,11 +455,15 @@ export function playStyle(
   return {
     name,
     description,
-    answer: ({ kind }) =>
+    answer: ({ kind }, _, { mission }) =>
       ({
         contingency: chosen.contingencies ?? "use",
         dustStorm: chosen.dustStorms ?? "shelter",
-        solarParticleEvent: chosen.solarParticleEvents ?? "safeMode",
+        // A solar particle event only hits the Turn's Mission, so its Crew are aboard if it has any.
+        solarParticleEvent:
+          (mission?.crew && chosen.fliesCrew?.solarParticleEvents) ??
+          chosen.solarParticleEvents ??
+          "safeMode",
         goNoGo: chosen.goNoGo ?? "holdOff",
       })[kind],
     plan(view, tools) {
