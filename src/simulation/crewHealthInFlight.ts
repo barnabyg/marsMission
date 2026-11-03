@@ -1,6 +1,5 @@
 import { crewDeliveryDayOf, type Flight } from "./flight";
-import { crewLoss } from "./lostCrew";
-import { diedWithoutSupplies } from "./supplies";
+import { healthRanOut } from "./lostCrew";
 
 /**
  * Works out what the flight did to the Health and Supplies of each Crew member it carried who wasn't lost with the
@@ -55,16 +54,7 @@ export function endCrewFlight(flight: Flight): void {
     }
   }
   const died = flown.flatMap(({ name, homeward, diedOn }) =>
-    diedOn === null
-      ? []
-      : [
-          {
-            name,
-            homeward,
-            diedOn,
-            starved: diedWithoutSupplies(outages, diedOn),
-          },
-        ],
+    diedOn === null ? [] : [{ name, homeward, diedOn }],
   );
   const diedNames = new Set(died.map(({ name }) => name));
   outcome.deliveredCrew = outcome.deliveredCrew.filter(
@@ -73,23 +63,18 @@ export function endCrewFlight(flight: Flight): void {
   const days = [...new Set(died.map(({ diedOn }) => diedOn))];
   for (const day of days.toSorted((first, second) => first - second)) {
     for (const homeward of [false, true]) {
-      for (const starved of [false, true]) {
-        outcome.crewLost.push(
-          ...crewLoss(
-            died
-              .filter(
-                (member) =>
-                  member.diedOn === day &&
-                  member.homeward === homeward &&
-                  member.starved === starved,
-              )
-              .map(({ name }) => name),
-            day,
-            starved ? "supplies" : "health",
-            `on the way ${homeward ? "home" : "to Mars"}, ${starved ? "with no Supplies left" : "when their Health ran out"}`,
-          ),
-        );
-      }
+      outcome.crewLost.push(
+        ...healthRanOut(
+          died
+            .filter(
+              (member) => member.diedOn === day && member.homeward === homeward,
+            )
+            .map(({ name }) => name),
+          day,
+          outages,
+          `on the way ${homeward ? "home" : "to Mars"}`,
+        ),
+      );
     }
   }
 }

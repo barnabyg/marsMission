@@ -1,5 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { addDays } from "./rules";
+import { diedWithoutSupplies, type Outage } from "./supplies";
 import type { CrewLostEntry } from "./timeline";
 import type { TurnSummary } from "./turnSummary";
 import type { CrewLossCause, CrewMember, Program } from "./types";
@@ -29,6 +30,25 @@ export function crewLoss(
   how: string,
 ): CrewLoss[] {
   return names.length > 0 ? [{ names, day, cause, how }] : [];
+}
+
+/**
+ * The loss of these Crew, whose Health ran out on this day where they were, such as "in Mars orbit" or "on the way
+ * home": to their Supplies if those were out that day, and otherwise to their Health. None if there are no Crew.
+ */
+export function healthRanOut(
+  names: string[],
+  day: number,
+  outages: readonly Outage[],
+  where: string,
+): CrewLoss[] {
+  const starved = diedWithoutSupplies(outages, day);
+  return crewLoss(
+    names,
+    day,
+    starved ? "supplies" : "health",
+    `${where}, ${starved ? "with no Supplies left" : "when their Health ran out"}`,
+  );
 }
 
 /** The Public Support that losing this many Crew costs, before it is held at what the Program has left. */

@@ -17,15 +17,10 @@ import {
   type HealthCourse,
   type HealthLost,
 } from "./health";
-import { crewLoss, type CrewLoss } from "./lostCrew";
+import { healthRanOut, type CrewLoss } from "./lostCrew";
 import { protectionIdOf, radiationCutOf } from "./protection";
 import { addDays, daysBetween, type Rules } from "./rules";
-import {
-  diedWithoutSupplies,
-  sameOutages,
-  suppliesCourse,
-  type Outage,
-} from "./supplies";
+import { sameOutages, suppliesCourse, type Outage } from "./supplies";
 import type { AssetAtMars, CrewArrivedEntry, MissionAsset } from "./timeline";
 import type { TurnSummary } from "./turnSummary";
 import type { PlaceAtMars, Program, TurnPlan } from "./types";
@@ -246,17 +241,16 @@ export function crewAtTurnEnd(
     const days = [
       ...new Set(here.flatMap(({ untilDay }) => untilDay ?? [])),
     ].toSorted((first, second) => first - second);
-    return days.flatMap((day) => {
-      const starved = diedWithoutSupplies(supplies.outages, day);
-      return crewLoss(
+    return days.flatMap((day) =>
+      healthRanOut(
         here
           .filter(({ untilDay }) => untilDay === day)
           .map(({ member }) => member.name),
         day,
-        starved ? "supplies" : "health",
-        `in ${locationName}, ${starved ? "with no Supplies left" : "when their Health ran out"}`,
-      );
-    });
+        supplies.outages,
+        `in ${locationName}`,
+      ),
+    );
   });
   // A place where every Crew member has died has no one left to do its Activity.
   const emptied = new Set(
