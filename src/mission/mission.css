@@ -25,7 +25,7 @@
   pointer-events: auto;
 }
 
-.view-label span {
+.view-label > span {
   display: block;
   transform: translate(-50%, -100%);
   font-size: 0.8rem;
@@ -33,7 +33,7 @@
   text-shadow: 0 0 0.3rem #000;
 }
 
-.spacecraft-label span {
+.spacecraft-label > span {
   color: #ffd9bd;
 }
 
@@ -42,26 +42,26 @@
   visibility: hidden;
 }
 
-.surface-label span {
+.surface-label > span {
   color: #ffe08a;
 }
 
-.crashed-label span {
+.crashed-label > span {
   color: #ff8a75;
 }
 
 /* The sky behind these is bright, so they need a backing to be read against it. */
-.on-surface span {
+.on-surface > span {
   padding: 0.1rem 0.5rem;
   border-radius: 0.3rem;
   background: rgb(10 12 20 / 75%);
 }
 
-.lander-label span {
+.lander-label > span {
   color: #ffd46b;
 }
 
-.rover-label span {
+.rover-label > span {
   color: #6fe6d4;
 }
 

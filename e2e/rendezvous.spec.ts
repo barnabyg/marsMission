@@ -180,6 +180,10 @@ test("moves to the spacecraft view for a failed rendezvous, shows the collision,
   await expect(page.getByTestId("spacecraft-tanker")).toHaveText(
     "Tanker: wrecked",
   );
+  // The term stays on the label's line, rather than taking the label's own placement.
+  await expect(
+    page.getByTestId("spacecraft-tanker").locator(".term"),
+  ).toHaveCSS("display", "inline");
   await expect(page.getByTestId("spacecraft-status")).toContainText(
     "Rendezvous failed: the Mission and the Tanker collided",
   );
