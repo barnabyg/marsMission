@@ -81,8 +81,10 @@ async function openBusyProgram(
                   health: realFiles.crew.maxHealth,
                   arrivedOn: "2043-07-01",
                   location: { kind: "marsOrbit" },
+                  protectionId: realFiles.crew.protection[0]?.id,
                 })),
                 crewActivities: { "mars-orbit": "crew-research" },
+                crewSupplies: { "mars-orbit": 3500 },
               },
             }
           : colossusBuilt

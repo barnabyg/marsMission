@@ -147,21 +147,6 @@ const format7 = format6.extend({
   ),
 });
 
-/** Adds Crew: each Crew member at Mars, and what the Crew in each place do. A save from before Crew has none. */
-const format8 = format7.extend({
-  crew: z.array(
-    z.strictObject({
-      name: z.string(),
-      health: z.number().nonnegative(),
-      arrivedOn: isoDate,
-      location: z.discriminatedUnion("kind", [
-        z.strictObject({ kind: z.literal("marsOrbit") }),
-      ]),
-    }),
-  ),
-  crewActivities: z.record(z.string(), z.string()),
-});
-
 const crewLossCause = z.enum([
   "missionEvent",
   "solarParticleEvent",
@@ -170,16 +155,22 @@ const crewLossCause = z.enum([
 ]);
 
 /**
- * Adds Crew who are lost, with the day and why, and Crew a Free-return brought home, who never arrived at Mars. A save
- * from before them has only Crew at Mars, and the names of any lost on the way were never kept, so they can be given again.
+ * Adds Crew: every Crew member who has flown, where they are (Mars orbit, a Landing Site, lost or home) and the
+ * Protection their Mission carried, with what the Crew in each place do and the Supplies, in kilograms, they have left.
+ * A save from before Crew has none.
  */
-const format9 = format8.extend({
+const format8 = format7.extend({
   crew: z.array(
     z.strictObject({
-      ...format8.shape.crew.element.shape,
+      name: z.string(),
+      health: z.number().nonnegative(),
       arrivedOn: isoDate.nullable(),
       location: z.discriminatedUnion("kind", [
         z.strictObject({ kind: z.literal("marsOrbit") }),
+        z.strictObject({
+          kind: z.literal("landingSite"),
+          landingSiteId: z.string(),
+        }),
         z.strictObject({
           kind: z.literal("lost"),
           lostOn: isoDate,
@@ -187,66 +178,14 @@ const format9 = format8.extend({
         }),
         z.strictObject({ kind: z.literal("home"), backOn: isoDate }),
       ]),
-    }),
-  ),
-});
-
-/** Adds Crew at a Landing Site, each site a place of its own. A save from before them has none, so it needs no change. */
-const format10 = format9.extend({
-  crew: z.array(
-    z.strictObject({
-      ...format9.shape.crew.element.shape,
-      location: z.discriminatedUnion("kind", [
-        ...format9.shape.crew.element.shape.location.options,
-        z.strictObject({
-          kind: z.literal("landingSite"),
-          landingSiteId: z.string(),
-        }),
-      ]),
-    }),
-  ),
-});
-
-/**
- * Adds the Supplies left for the Crew in each place, in kilograms. A save from before Supplies gives the Crew in each
- * place the most Supplies a Crewed Mission can carry, so that none run out sooner than they could have.
- */
-const format11 = format10.extend({
-  crewSupplies: z.record(z.string(), z.number().nonnegative()),
-});
-
-function suppliesBeforeSupplies(
-  crew: z.output<typeof format10>["crew"],
-  { crew: { supplies } }: Catalogue,
-): Record<string, number> {
-  const most = supplies.options.at(-1);
-  if (!most) throw new SaveError(corruptSave);
-  const keys = crew.flatMap(({ location }) => {
-    if (location.kind === "marsOrbit") return ["mars-orbit"];
-    if (location.kind === "landingSite") {
-      return [`landing-site:${location.landingSiteId}`];
-    }
-    return [];
-  });
-  return Object.fromEntries(
-    [...new Set(keys)].map((key) => [key, Math.round(most.massTonnes * 1000)]),
-  );
-}
-
-/**
- * Adds the Protection each Crew member's Mission carried, by id, which stays with them at Mars. A save from before
- * Protection gives everyone the first level, which gives none, as they had.
- */
-const format12 = format11.extend({
-  crew: z.array(
-    z.strictObject({
-      ...format11.shape.crew.element.shape,
       protectionId: z.string(),
     }),
   ),
+  crewActivities: z.record(z.string(), z.string()),
+  crewSupplies: z.record(z.string(), z.number().nonnegative()),
 });
 
-const newestFormat = format12;
+const newestFormat = format8;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -335,39 +274,8 @@ const formats: readonly SaveFormat[] = [
       ...old,
       crew: [],
       crewActivities: {},
+      crewSupplies: {},
     }),
-  },
-  {
-    schema: format8,
-    upgrade: (old: z.output<typeof format8>): z.output<typeof format9> => old,
-  },
-  {
-    schema: format9,
-    upgrade: (old: z.output<typeof format9>): z.output<typeof format10> => old,
-  },
-  {
-    schema: format10,
-    upgrade: (
-      old: z.output<typeof format10>,
-      catalogue: Catalogue,
-    ): z.output<typeof format11> => ({
-      ...old,
-      crewSupplies: suppliesBeforeSupplies(old.crew, catalogue),
-    }),
-  },
-  {
-    schema: format11,
-    upgrade: (
-      old: z.output<typeof format11>,
-      { crew: { protection } }: Catalogue,
-    ): z.output<typeof format12> => {
-      const none = protection[0];
-      if (!none) throw new SaveError(corruptSave);
-      return {
-        ...old,
-        crew: old.crew.map((member) => ({ ...member, protectionId: none.id })),
-      };
-    },
   },
   { schema: newestFormat },
 ];
