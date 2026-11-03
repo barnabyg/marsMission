@@ -24,7 +24,7 @@ export function goNoGoCheck(
   event: MissionEvent,
   usualRisk: number,
 ): number | null {
-  const { catalogue, rules, answers, outcome, assets, landingSite } = flight;
+  const { catalogue, rules, answers, outcome, landingSite } = flight;
   const storm = stormOnLanding(flight, event);
   if (!storm || !landingSite) return usualRisk;
   const { landingRiskMultiplier, serviceLifeLostPerDayHeld } =
@@ -69,9 +69,7 @@ export function goNoGoCheck(
         },
       ],
     };
-    outcome.deliveredAssets = assets.filter(
-      (asset) => !landing.includes(asset),
-    );
+    flight.stopWith(landing, flight.crewOnBoard(event));
     return null;
   }
   const holdingOff = answer === "holdOff";

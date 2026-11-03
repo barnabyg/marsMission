@@ -18,7 +18,13 @@ export function milestoneProblems({
       }
       continue;
     }
-    if ("totalScience" in milestone.trigger) continue;
+    // Every catalogue has a Crewed Mission, so Crew can always arrive.
+    if (
+      "totalScience" in milestone.trigger ||
+      "crewArrives" in milestone.trigger
+    ) {
+      continue;
+    }
     const kind = milestone.trigger.assetKindArrives;
     if (!assetKinds.has(kind)) {
       problems.push(

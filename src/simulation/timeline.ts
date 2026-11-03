@@ -56,6 +56,14 @@ export interface FlightProvenEntry {
   description: string;
 }
 
+/** Crew have arrived at Mars, and start on their Activity. */
+export interface CrewArrivedEntry {
+  kind: "crewArrived";
+  day: number;
+  title: string;
+  description: string;
+}
+
 export interface AssetEndedEntry {
   kind: "assetEnded";
   day: number;
@@ -101,14 +109,16 @@ export type TimelineEntry =
   | AssetEndedEntry
   | SurveyEntry
   | FlightProvenEntry
+  | CrewArrivedEntry
   | MissionEventEntry
   | MilestoneEntry
   | FundingThresholdEntry
   | FirstLandingEntry;
 
-/** One Asset on this Turn's Mission and how its journey ended. */
+/** One Asset on this Turn's Mission, or the ship carrying its Crew, and how its journey ended. */
 export interface MissionAsset {
   name: string;
+  /** The Asset's kind, or "crew" for the ship carrying the Crew. */
   kind: string;
   /** The Landing Site it is heading for, if it lands. */
   landingSiteName: string | null;
@@ -123,11 +133,12 @@ export interface MissionAsset {
 /** How an Asset gets about on the surface while doing its Activity. */
 export type SurfaceMotion = "traverse" | "nearby" | "still";
 
-/** An Asset operating at Mars at some point in a Turn. */
+/** An Asset operating at Mars at some point in a Turn, or the ship of the Crew in one place there. */
 export interface AssetAtMars {
   /** Names this Asset and no other, and stays the same from Turn to Turn. */
   key: string;
   name: string;
+  /** The Asset's kind, or "crew" for the Crew's ship. */
   kind: string;
   /** Where it is on the surface, or null if it's in orbit. */
   landingSiteName: string | null;

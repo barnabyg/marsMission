@@ -54,6 +54,18 @@
     }
   },
   {
+    "id": "crew-research",
+    "name": "Crew research",
+    "description": "The Crew study Mars from orbit, drive robots on the surface from above and run experiments aboard. Each Crew member earns this much.",
+    "effect": {
+      "kind": "research",
+      "sciencePerTurn": 80,
+      "publicSupportPerTurn": 12,
+      "researchKind": "crew-research",
+      "surfaceMotion": "nearby"
+    }
+  },
+  {
     "id": "nothing",
     "name": "Nothing",
     "description": "Stays in place and does no work this Turn.",

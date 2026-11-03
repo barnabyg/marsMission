@@ -1,5 +1,6 @@
 import type { TechnologyReadiness } from "./technologyReadiness";
 import type { Timeline } from "./timeline";
+import type { CrewAtMars } from "./crew";
 import type { PlannedActivity, PlannedDevelopment } from "./previews";
 import type { TurnSummary } from "./turnSummary";
 
@@ -16,6 +17,19 @@ export interface PlannedMission {
   contingencyIds?: string[];
   /** The Trajectory to Mars. Left out, it's the first the Catalogue lists. */
   trajectoryId?: string;
+  /** The Crew it carries, which makes it a Crewed Mission. Left out, it's a Robotic Mission. */
+  crew?: CrewChoices;
+}
+
+/** The choices made for a Crewed Mission's Crew. Supplies and Protection will join them. */
+interface CrewChoices {
+  /** How many Crew fly, which must be one of the Catalogue's Crew sizes. */
+  size: number;
+  /**
+   * What they all do from the day they arrive, until the player changes it. Left out, it's the first the Catalogue
+   * lists. Crew arriving where Crew already operate take up their Activity instead, because Crew in one place share one.
+   */
+  activityId?: string;
 }
 
 export interface AssetChoices {
@@ -32,6 +46,8 @@ export interface TurnPlan {
   operatingActivities?: Record<string, string>;
   /** The technologies whose Development starts this Turn, by id. It is paid for in full this Turn, with or without a Mission. */
   developmentIds?: string[];
+  /** New Activities for the Crew already operating in each place, by the place's `key`. Any left out keep the one they have. */
+  crewActivities?: Record<string, string>;
 }
 
 interface OperatingAsset {
@@ -49,6 +65,20 @@ interface OperatingAsset {
   activityId: string;
   /** Whether it flew before its technology was Flight-proven, which raises its chance of failing in service for good. */
   flewUnproven: boolean;
+}
+
+/** Where a Crew member is. Crew at a Landing Site, and Crew who are lost or home, are still to come. */
+interface CrewLocation {
+  kind: "marsOrbit";
+}
+
+/** One named Crew member, from the day they arrive at Mars. */
+export interface CrewMember {
+  name: string;
+  /** Out of the Catalogue's maxHealth, which they arrive with. */
+  health: number;
+  arrivedOn: string;
+  location: CrewLocation;
 }
 
 type ProgramStatus =
@@ -78,6 +108,10 @@ export interface Program {
   /** The Developments started, each with the Turn at whose start it finishes. One that has finished stays listed. */
   developments: { technologyId: string; finishesOnTurn: number }[];
   operatingAssets: OperatingAsset[];
+  /** Every Crew member who has reached Mars, in the order they arrived. */
+  crew: CrewMember[];
+  /** What the Crew in each place do, by the place's key, for each place where Crew operate. Crew in one place share one Activity. */
+  crewActivities: Record<string, string>;
   status: ProgramStatus;
 }
 
@@ -125,6 +159,16 @@ export interface ProgramView {
     /** What it does for other Assets while it operates at Mars, or null if it gives no Benefit. */
     benefit: string | null;
   }[];
+  /** What a Crewed Mission can carry: the Crew sizes on offer, what each costs and weighs, and the Health Crew start with. */
+  crewedMission: {
+    vehicleName: string;
+    sizes: { crew: number; costMillions: number; massTonnes: number }[];
+    maxHealth: number;
+    /** How many names are left to give Crew, which limits the Crew that can still fly. */
+    namesLeft: number;
+  };
+  /** The Crew operating at Mars, by where they are. */
+  crew: CrewAtMars[];
   /** Each technology that needs Development before it can fly, Launch Vehicles first, whether or not it has started. */
   developments: PlannedDevelopment[];
   /** Whether a Survey would still lower a landing risk or reveal a Landing Site. */

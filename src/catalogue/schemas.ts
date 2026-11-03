@@ -155,6 +155,30 @@ const assetsSchema = z.array(
   }),
 );
 
+const crewSchema = z.strictObject({
+  // The spacecraft that carries the Crew to Mars, and stays in Mars orbit with them.
+  vehicleName: z.string().min(1),
+  // The Mission Events it brings, as an Asset's do. The Crew arrive when the last of them succeeds.
+  missionEvents: z.array(id).min(1),
+  // The Crew sizes on offer, smallest first: how many fly, and what the Crewed Mission costs and weighs with them.
+  sizes: z
+    .array(
+      z.strictObject({
+        crew: z.number().int().positive(),
+        costMillions: money,
+        massTonnes: z.number().positive(),
+      }),
+    )
+    .min(1),
+  // Each Crew member's Health as they launch, which is the most they can have.
+  maxHealth: z.number().int().positive(),
+  // What Crew in Mars orbit can do, which all of them there share. The first is what they do unless the player picks
+  // another. A research Activity earns its rate for each Crew member doing it.
+  orbitActivities: z.array(id).min(1),
+  // The names Crew are given, in order. A name is never given twice in a Program.
+  names: z.array(z.string().min(1)).min(1),
+});
+
 const landingSitesSchema = z.array(
   z.strictObject({
     id,
@@ -252,16 +276,18 @@ const milestonesSchema = z.array(
     id,
     name: z.string().min(1),
     description: z.string().min(1),
-    // Earned by the first Asset of a kind to be delivered, the first Asset to land, or reaching a total of Science.
+    // Earned by the first Asset of a kind to be delivered, the first Asset to land, the first Crew to arrive, or
+    // reaching a total of Science.
     trigger: z.union(
       [
         z.strictObject({ assetKindArrives: id }),
         z.strictObject({ assetLands: z.literal(true) }),
+        z.strictObject({ crewArrives: z.literal(true) }),
         z.strictObject({ totalScience: z.number().int().positive() }),
       ],
       {
         error:
-          "must be one of assetKindArrives with a kind of Asset, assetLands with true, or totalScience with a positive whole number",
+          "must be one of assetKindArrives with a kind of Asset, assetLands with true, crewArrives with true, or totalScience with a positive whole number",
       },
     ),
     science: z.number().int().nonnegative(),
@@ -304,6 +330,7 @@ export const schemas = {
   launchVehicles: launchVehiclesSchema,
   trajectories: trajectoriesSchema,
   assets: assetsSchema,
+  crew: crewSchema,
   landingSites: landingSitesSchema,
   missionEvents: missionEventsSchema,
   contingencies: contingenciesSchema,
@@ -322,6 +349,7 @@ export const catalogueFileNames = {
   launchVehicles: "launch-vehicles.json",
   trajectories: "trajectories.json",
   assets: "assets.json",
+  crew: "crew.json",
   landingSites: "landing-sites.json",
   missionEvents: "mission-events.json",
   contingencies: "contingencies.json",
@@ -340,6 +368,8 @@ export interface Catalogue {
   /** The first is what a Mission takes unless the player picks another. */
   trajectories: z.output<typeof trajectoriesSchema>;
   assets: z.output<typeof assetsSchema>;
+  /** The Crewed Mission: what carries Crew, the Crew sizes on offer, their Health, Activities and names. */
+  crew: z.output<typeof crewSchema>;
   /** In the order a Survey reveals them. */
   landingSites: z.output<typeof landingSitesSchema>;
   missionEvents: z.output<typeof missionEventsSchema>;

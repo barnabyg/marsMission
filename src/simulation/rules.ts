@@ -85,13 +85,14 @@ export function createRules(catalogue: Catalogue) {
     return trajectory;
   }
 
-  /** The Mission Events a Mission goes through, in the order the Catalogue lists them. */
+  /** The Mission Events a Mission goes through, in the order the Catalogue lists them, with its Crew's if it has Crew. */
   function eventsOf(mission: PlannedMission | null): MissionEvent[] {
-    const eventIds = new Set(
-      technologiesOn(catalogue, mission).flatMap(
+    const eventIds = new Set([
+      ...technologiesOn(catalogue, mission).flatMap(
         ({ missionEvents }) => missionEvents,
       ),
-    );
+      ...(mission?.crew ? catalogue.crew.missionEvents : []),
+    ]);
     return [...eventIds].flatMap((eventId) =>
       catalogue.missionEvents.filter((event) => event.id === eventId),
     );
@@ -310,9 +311,12 @@ export function createRules(catalogue: Catalogue) {
     return Math.min(1, risk * unproven * level.failureMultiplier);
   }
 
-  /** The day this Mission delivers an Asset, which is when its last Mission Event happens. */
-  function deliveryDay(asset: Asset, mission: PlannedMission | null): number {
-    const days = asset.missionEvents.flatMap((eventId) =>
+  /** The day this Mission delivers an Asset, or its Crew, which is when its last Mission Event happens. */
+  function deliveryDay(
+    { missionEvents }: { missionEvents: string[] },
+    mission: PlannedMission | null,
+  ): number {
+    const days = missionEvents.flatMap((eventId) =>
       catalogue.missionEvents
         .filter((event) => event.id === eventId)
         .map((event) => dayOf(event, mission)),

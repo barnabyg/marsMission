@@ -55,6 +55,10 @@ A Robotic Mission whose main value is lowering the risk or cost of later Mission
 The named astronauts on a Crewed Mission. Apart from their names and Health, they have no individual traits.
 _Avoid_: Astronauts (as a game term), personnel
 
+**Crew size**:
+How many Crew fly on a Crewed Mission, chosen in Planning Mode. A larger Crew earns more Ongoing Research, but weighs and costs more.
+_Avoid_: Crew count, team size
+
 **Health**:
 A single value for each Crew member. Radiation, time at Mars and failed Mission Events lower it, Protection slows the decline, and at zero the Crew member dies.
 _Avoid_: Condition, hit points
@@ -78,7 +82,7 @@ What one Asset does for others on each day it operates at Mars, whatever its Act
 _Avoid_: Bonus, buff, synergy
 
 **Activity**:
-What an Asset, or all the Crew at one Landing Site, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.
+What an Asset, or all the Crew in one place at Mars, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset or Crew keep their Activity into later Turns until the player changes it.
 _Avoid_: Task, job, assignment
 
 **Landing Site**:
@@ -100,6 +104,9 @@ An Activity for a rover: Ongoing Research that stays near the Landing Site and a
 
 **Long traverse**:
 An Activity for a rover: Ongoing Research that drives long distances around the Landing Site. It earns more Science than Soil analysis and pays no Research Grant.
+
+**Crew research**:
+An Activity for Crew in Mars orbit: Ongoing Research from orbit, such as studying Mars, driving robots on the surface from above and running experiments aboard. Each Crew member earns it, and it pays a Research Grant.
 
 ## Modes
 

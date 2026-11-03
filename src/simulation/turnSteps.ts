@@ -4,6 +4,12 @@ import {
   operateAssets,
   stoppedEntries,
 } from "./assetsInService";
+import {
+  crewArrivedEntry,
+  crewAtMars,
+  crewShipsAtMars,
+  crewSummary,
+} from "./crewAtMars";
 import { carryOutDevelopment } from "./development";
 import { resolveDustStorms } from "./dustStorms";
 import type { MissionOutcome } from "./flight";
@@ -47,7 +53,7 @@ interface FundingOutcome {
   entries: FundingThresholdEntry[];
 }
 
-/** Awards each Milestone that an Asset delivered this Turn has earned for the first time. */
+/** Awards each Milestone that an Asset or the Crew delivered this Turn have earned for the first time. */
 function awardArrivalMilestones(
   catalogue: Catalogue,
   rules: Rules,
@@ -55,28 +61,30 @@ function awardArrivalMilestones(
   plan: TurnPlan,
   flown: MissionOutcome,
 ): MilestoneAward[] {
-  const { deliveredAssets } = flown;
-  const earnedBy = ({ trigger }: Milestone) =>
-    deliveredAssets.filter((asset) => {
-      if ("totalScience" in trigger) return false;
-      return "assetLands" in trigger
-        ? asset.landsAtSite === true
-        : asset.kind === trigger.assetKindArrives;
-    });
+  const { deliveredAssets, deliveredCrew } = flown;
+  /** The days on which what the Mission delivered earned it. */
+  const earnedOn = ({ trigger }: Milestone): number[] => {
+    if ("totalScience" in trigger) return [];
+    if ("crewArrives" in trigger) {
+      return deliveredCrew.length > 0
+        ? [rules.deliveryDay(catalogue.crew, plan.mission)]
+        : [];
+    }
+    return deliveredAssets
+      .filter((asset) =>
+        "assetLands" in trigger
+          ? asset.landsAtSite === true
+          : asset.kind === trigger.assetKindArrives,
+      )
+      .map((asset) => deliveryDayOf(rules, plan, flown, asset));
+  };
   return catalogue.milestones
     .filter(
       (milestone) =>
         !program.milestoneIds.includes(milestone.id) &&
-        earnedBy(milestone).length > 0,
+        earnedOn(milestone).length > 0,
     )
-    .map((milestone) => ({
-      milestone,
-      day: Math.min(
-        ...earnedBy(milestone).map((asset) =>
-          deliveryDayOf(rules, plan, flown, asset),
-        ),
-      ),
-    }));
+    .map((milestone) => ({ milestone, day: Math.min(...earnedOn(milestone)) }));
 }
 
 function milestoneEntry({ milestone, day }: MilestoneAward): MilestoneEntry {
@@ -196,7 +204,13 @@ export function resolveTurn(
   );
   const { inService } = dustStorms;
   const survey = carryOutSurvey(catalogue, rules, program, inService);
-  const research = carryOutOngoingResearch(catalogue, rules, inService);
+  const crew = crewAtMars(catalogue, rules, program, plan, flown);
+  const research = carryOutOngoingResearch(
+    catalogue,
+    rules,
+    inService,
+    crew.atWork,
+  );
   const scienceAwards = awardScienceMilestones(
     catalogue,
     program.milestoneIds,
@@ -278,6 +292,13 @@ export function resolveTurn(
   );
 
   const otherEntries = [
+    ...crewArrivedEntry(
+      catalogue,
+      rules,
+      plan,
+      crew.arrived,
+      crew.crewActivities,
+    ),
     ...arrivalAwards.map(milestoneEntry),
     ...(firstLanding ? [firstLanding.entry] : []),
     ...proven.entries,
@@ -317,6 +338,8 @@ export function resolveTurn(
       operatingAssets: inService
         .filter(({ untilDay }) => untilDay === null)
         .map(({ asset }) => asset),
+      crew: [...program.crew, ...crew.arrived],
+      crewActivities: crew.crewActivities,
       status:
         faded.cancellationReason === null
           ? program.status
@@ -326,11 +349,14 @@ export function resolveTurn(
       startDate: program.date,
       durationDays: launchWindowIntervalDays,
       decisionDay: null,
-      mission: missionOnTimeline(rules, plan, flown),
+      mission: missionOnTimeline(catalogue, rules, plan, flown),
       landingSites: catalogue.landingSites.map(
         ({ name, latitude, longitude }) => ({ name, latitude, longitude }),
       ),
-      assetsAtMars,
+      assetsAtMars: [
+        ...assetsAtMars,
+        ...crewShipsAtMars(catalogue, rules, program, crew.atWork),
+      ],
       dustStorms: dustStorms.storms,
       // The sort is stable, so an award stays after the arrival or the Science that earned it.
       entries: [...flown.entries, ...otherEntries].sort(
@@ -362,6 +388,7 @@ export function resolveTurn(
       technologiesProven: proven.technologies.map(({ name }) => name),
       developmentsStarted: development.started,
       developmentsFinished: development.finished,
+      crew: crewSummary(catalogue, crew.atWork),
       assetsEnded: inService
         .filter(({ untilDay, failed }) => untilDay !== null && !failed)
         .map(({ asset }) => asset.name),

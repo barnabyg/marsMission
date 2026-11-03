@@ -351,7 +351,10 @@ const onColossus: TurnPlan = {
  * A seed where the Meridian Colossus, developed over the first two Turns with nothing launched, carries its first
  * Mission with nothing to answer, and the only Mission Event to fail, if any, is the named one.
  */
-function colossusSeedWhere(failedEvent: string | null): number {
+function colossusSeedWhere(
+  failedEvent: string | null,
+  plan: TurnPlan = onColossus,
+): number {
   for (let seed = 1; seed < 100_000; seed++) {
     const developing = colossusSimulation.runTurn(
       colossusSimulation.startProgram(seed),
@@ -360,7 +363,7 @@ function colossusSeedWhere(failedEvent: string | null): number {
     const built = colossusSimulation.runTurn(developing.program, {
       mission: null,
     });
-    const progress = colossusSimulation.workOutTurn(built.program, onColossus);
+    const progress = colossusSimulation.workOutTurn(built.program, plan);
     if (
       !progress.decisionPoint &&
       (progress.result.summary.failure?.missionEventName ?? null) ===
@@ -379,6 +382,15 @@ export const colossusSeed = colossusSeedWhere(null);
 
 /** A seed where the Meridian Colossus's first Mission collides with its Tanker at the rendezvous. */
 export const rendezvousFailureSeed = colossusSeedWhere("Rendezvous");
+
+/** A seed where the Meridian Colossus carries the smallest Crew to Mars orbit on its first Mission, with nothing to answer. */
+export const crewSeed = colossusSeedWhere(null, {
+  mission: {
+    launchVehicleId: "meridian-colossus",
+    assetIds: [],
+    crew: { size: catalogue.crew.sizes[0]?.crew ?? 0 },
+  },
+});
 
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);

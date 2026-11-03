@@ -3,6 +3,7 @@ import {
   canFly,
   type AssetChoices,
   type PlannedAsset,
+  type PlannedCrew,
   type PlannedTrajectory,
   type Program,
   type ProgramView,
@@ -21,6 +22,11 @@ interface MissionPlan {
   setCarried: (assetId: string, carried: boolean) => void;
   plannedAssets: PlannedAsset[];
   changeAssetChoices: (assetId: string, choices: AssetChoices) => void;
+  /** The Crew chosen, which only a Crewed Mission has. */
+  plannedCrew: PlannedCrew | null;
+  /** Makes it a Crewed Mission with this many Crew, or a Robotic Mission with null. */
+  chooseCrewSize: (size: number | null) => void;
+  chooseCrewActivity: (activityId: string) => void;
   /** The Landing Site chosen, which only a Mission carrying an Asset that lands has. */
   landingSite: ProgramView["landingSites"][number] | undefined;
   chooseLandingSite: (siteId: string) => void;
@@ -44,6 +50,8 @@ export function useMissionPlan(
   operatingActivities: Record<string, string>,
   /** The Developments chosen to start this Turn, which either plan sends. */
   developmentIds: string[],
+  /** The new Activities chosen for Crew already operating, which either plan sends. */
+  crewActivities: Record<string, string>,
 ): MissionPlan {
   // It starts on the first that can fly, because one that needs Development can't be chosen.
   const [launchVehicleId, setLaunchVehicleId] = useState(
@@ -60,6 +68,9 @@ export function useMissionPlan(
   >({});
   const [contingencyIds, setContingencyIds] = useState<string[]>([]);
   const [trajectoryId, setTrajectoryId] = useState<string | undefined>();
+  // A Turn starts with a Robotic Mission, as it does with no Asset ticked.
+  const [crewSize, setCrewSize] = useState<number | null>(null);
+  const [crewActivityId, setCrewActivityId] = useState<string | undefined>();
 
   const landsOnMars = view.assets.some(
     (asset) => assetIds.includes(asset.id) && asset.landsAtSite,
@@ -67,16 +78,26 @@ export function useMissionPlan(
   const landingSite = landsOnMars
     ? view.landingSites.find((site) => site.id === chosenSiteId)
     : undefined;
-  const mission = {
+  const carried = {
     launchVehicleId,
     assetIds,
+    ...(crewSize !== null && {
+      crew: {
+        size: crewSize,
+        ...(crewActivityId !== undefined && { activityId: crewActivityId }),
+      },
+    }),
+  };
+  const mission = {
+    ...carried,
     ...(landingSite && { landingSiteId: landingSite.id }),
     // A choice can outlive a change of Asset that takes it off the list.
     ...(trajectoryId !== undefined &&
       simulation
-        .previewTrajectories({ launchVehicleId, assetIds })
+        .previewTrajectories(carried)
         .some(({ id }) => id === trajectoryId) && { trajectoryId }),
   };
+  const plannedCrew = simulation.previewCrew(program, mission);
   const trajectories = simulation.previewTrajectories(mission);
   const plannedEvents = simulation.previewMission(program, {
     ...mission,
@@ -90,8 +111,13 @@ export function useMissionPlan(
   const plan: TurnPlan = {
     operatingActivities,
     developmentIds,
+    crewActivities,
     mission: {
       ...mission,
+      // The Activity they will have, which may be that of Crew already there.
+      ...(plannedCrew && {
+        crew: { size: plannedCrew.size, activityId: plannedCrew.activityId },
+      }),
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
       reliability: Object.fromEntries(
         plannedEvents.map((event) => [event.eventId, event.reliabilityLevelId]),
@@ -117,6 +143,7 @@ export function useMissionPlan(
     mission: null,
     operatingActivities,
     developmentIds,
+    crewActivities,
   };
 
   return {
@@ -140,6 +167,9 @@ export function useMissionPlan(
         [assetId]: { ...assetChoices[assetId], ...choices },
       });
     },
+    plannedCrew,
+    chooseCrewSize: setCrewSize,
+    chooseCrewActivity: setCrewActivityId,
     landingSite,
     chooseLandingSite: setChosenSiteId,
     plannedEvents,

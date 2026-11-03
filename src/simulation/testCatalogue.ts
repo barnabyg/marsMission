@@ -4,6 +4,7 @@ import {
   type CatalogueFiles,
 } from "../catalogue/catalogue";
 import { testActivities } from "./testActivities";
+import { testCrew } from "./testCrew";
 import { testMissionEvents } from "./testMissionEvents";
 import { testTechnologies } from "./testTechnology";
 
@@ -143,6 +144,7 @@ export function testCatalogueFiles(): CatalogueFiles {
       },
       ...technologies.assets,
     ],
+    crew: testCrew(),
     landingSites: [
       {
         id: "alpha-plain",
@@ -248,6 +250,14 @@ export function testCatalogueFiles(): CatalogueFiles {
         trigger: { assetKindArrives: "rover" },
         science: 20,
         publicSupport: 30,
+      },
+      {
+        id: "first-crew",
+        name: "First Crew at Mars",
+        description: "Crew reached Mars.",
+        trigger: { crewArrives: true },
+        science: 30,
+        publicSupport: 150,
       },
     ],
     reliabilityLevels: [

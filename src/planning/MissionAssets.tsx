@@ -1,5 +1,7 @@
+import type { ReactNode } from "react";
 import type {
   AssetChoices,
+  PlannedActivity,
   PlannedAsset,
   ProgramView,
 } from "../simulation/simulation";
@@ -16,8 +18,12 @@ interface MissionAssetsProps {
   /** The Assets ticked to carry. */
   assetIds: string[];
   plannedAssets: PlannedAsset[];
+  /** The Activities on offer to the Mission's Crew, if it has Crew, whose earnings show with the Assets'. */
+  crewActivities: PlannedActivity[];
   onCarriedChange: (assetId: string, carried: boolean) => void;
   onChoicesChange: (assetId: string, choices: AssetChoices) => void;
+  /** The choice of Crew, shown after the Assets. */
+  children: ReactNode;
 }
 
 /** The Assets the Mission can carry, the choices for each one it does, and what they would earn at Mars. */
@@ -25,8 +31,10 @@ export function MissionAssets({
   view,
   assetIds,
   plannedAssets,
+  crewActivities,
   onCarriedChange,
   onChoicesChange,
+  children,
 }: MissionAssetsProps) {
   return (
     <>
@@ -53,9 +61,13 @@ export function MissionAssets({
             }}
           />
         ))}
+        {children}
       </fieldset>
       <ResearchEarnings
-        activities={plannedAssets.flatMap(({ activities }) => activities)}
+        activities={[
+          ...plannedAssets.flatMap(({ activities }) => activities),
+          ...crewActivities,
+        ]}
       />
       {!view.somethingLeftToSurvey &&
         plannedAssets.some(({ activityId, activities }) =>

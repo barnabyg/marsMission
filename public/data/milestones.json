@@ -30,6 +30,16 @@
     "publicSupport": 100
   },
   {
+    "id": "first-crew-at-mars",
+    "name": "First Crew at Mars",
+    "description": "The Program has people at Mars for the first time, and the whole world is watching them.",
+    "trigger": {
+      "crewArrives": true
+    },
+    "science": 200,
+    "publicSupport": 400
+  },
+  {
     "id": "science-700",
     "name": "700 Science earned",
     "description": "The Program has earned 700 Science, and its first results are in the news as well as the journals.",

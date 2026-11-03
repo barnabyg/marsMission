@@ -1,0 +1,37 @@
+{
+  "vehicleName": "Odyssey",
+  "missionEvents": ["mars-orbit-insertion"],
+  "sizes": [
+    { "crew": 2, "costMillions": 3000, "massTonnes": 9 },
+    { "crew": 3, "costMillions": 3500, "massTonnes": 10.5 },
+    { "crew": 4, "costMillions": 4000, "massTonnes": 12 }
+  ],
+  "maxHealth": 100,
+  "orbitActivities": ["crew-research", "nothing"],
+  "names": [
+    "Amara Okafor",
+    "Lena Petrova",
+    "Kenji Sato",
+    "Diego Morales",
+    "Priya Raman",
+    "Tom Gallagher",
+    "Ingrid Solberg",
+    "Malik Haddad",
+    "Wei Lin",
+    "Sofia Rossi",
+    "Kwame Mensah",
+    "Hannah Becker",
+    "Arjun Mehta",
+    "Chloe Martin",
+    "Yusuf Demir",
+    "Elena Vargas",
+    "Noah Fischer",
+    "Aiko Tanaka",
+    "Samuel Adeyemi",
+    "Maja Nowak",
+    "Rafael Costa",
+    "Freya Lund",
+    "Omar Farouk",
+    "Grace O'Neill"
+  ]
+}

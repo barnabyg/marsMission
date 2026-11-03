@@ -433,6 +433,18 @@ export const strategies: Strategy[] = [
     },
   ),
   playStyle(
+    "big Program: develop the Meridian Colossus and fly Crew when rich",
+    "As big Program: develop the Meridian Colossus when rich, also sending a Crewed Mission to Mars orbit, of the largest Crew it can afford, before any Asset whenever it can afford one and keep its reserve.",
+    {
+      ...bigProgram,
+      develops: ["meridian-colossus"],
+      developsWhile: (view) => view.moneyMillions >= 5000,
+      fillsVehicle: "meridian-colossus",
+      fillsWhile: (view) => view.moneyMillions >= 5000,
+      fliesCrew: true,
+    },
+  ),
+  playStyle(
     "steady: Survey once",
     "As steady: Soil analysis, but the orbiter changes to research after its first Survey.",
     {

@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import { assetProblems } from "./crossCheckAssets";
 import { benefitProblems } from "./crossCheckBenefits";
+import { crewProblems } from "./crossCheckCrew";
 import { hazardProblems } from "./crossCheckHazards";
 import { idProblems } from "./crossCheckIds";
 import { milestoneProblems } from "./crossCheckMilestones";
@@ -45,6 +46,7 @@ const crossChecks: ((catalogue: Catalogue) => string[])[] = [
   trajectoryProblems,
   technologyProblems,
   benefitProblems,
+  crewProblems,
 ];
 
 /** Validates the raw contents of the data files and returns the catalogue, or throws a CatalogueError. */
@@ -84,6 +86,12 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     catalogueFileNames.assets,
     schemas.assets,
     files.assets,
+    problems,
+  );
+  const crew = parsePart(
+    catalogueFileNames.crew,
+    schemas.crew,
+    files.crew,
     problems,
   );
   const landingSites = parsePart(
@@ -148,6 +156,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     !launchVehicles ||
     !trajectories ||
     !assets ||
+    !crew ||
     !landingSites ||
     !missionEvents ||
     !contingencies ||
@@ -167,6 +176,7 @@ export function parseCatalogue(files: CatalogueFiles): Catalogue {
     launchVehicles,
     trajectories,
     assets,
+    crew,
     landingSites,
     missionEvents,
     contingencies,

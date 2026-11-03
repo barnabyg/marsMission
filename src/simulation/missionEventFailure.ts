@@ -47,17 +47,23 @@ export function missionEventFailed(
   onBoard: Asset[],
   used: Contingency | undefined,
 ): void {
-  const { outcome, assets, freeReturn } = flight;
-  const lostNames = onBoard.map((asset) => asset.name).join(", ");
-  // An Asset is delivered when its last Mission Event succeeds, so anything delivered before a failure is safe.
+  const { outcome, freeReturn } = flight;
+  const crewOnBoard = flight.crewOnBoard(event);
+  const lostNames = [
+    ...onBoard.map((asset) => asset.name),
+    ...crewOnBoard,
+  ].join(", ");
+  // An Asset or Crew are delivered when their last Mission Event succeeds, so anything delivered before a failure is safe.
   outcome.failedEvent = event;
   outcome.failedOnDay = flight.dayOf(event);
-  outcome.deliveredAssets = assets.filter((asset) => !onBoard.includes(asset));
+  flight.stopWith(onBoard, crewOnBoard);
   outcome.publicSupportLost = lossFor(flight, event, used);
+  const stillSafe = [
+    ...outcome.deliveredAssets.map((asset) => asset.name),
+    ...outcome.deliveredCrew,
+  ];
   const safe =
-    outcome.deliveredAssets.length > 0
-      ? ` Still safe: ${outcome.deliveredAssets.map((asset) => asset.name).join(", ")}.`
-      : "";
+    stillSafe.length > 0 ? ` Still safe: ${stillSafe.join(", ")}.` : "";
   const tried = used ? ` ${used.name} couldn't save it.` : "";
   if (freeReturn && comesHomeFrom(flight, event)) {
     const refundMillions = refundFor(flight, onBoard);

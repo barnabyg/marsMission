@@ -147,7 +147,22 @@ const format7 = format6.extend({
   ),
 });
 
-const newestFormat = format7;
+/** Adds Crew: each Crew member at Mars, and what the Crew in each place do. A save from before Crew has none. */
+const format8 = format7.extend({
+  crew: z.array(
+    z.strictObject({
+      name: z.string(),
+      health: z.number().nonnegative(),
+      arrivedOn: isoDate,
+      location: z.discriminatedUnion("kind", [
+        z.strictObject({ kind: z.literal("marsOrbit") }),
+      ]),
+    }),
+  ),
+  crewActivities: z.record(z.string(), z.string()),
+});
+
+const newestFormat = format8;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -228,6 +243,14 @@ const formats: readonly SaveFormat[] = [
         ...asset,
         flewUnproven: false,
       })),
+    }),
+  },
+  {
+    schema: format7,
+    upgrade: (old: z.output<typeof format7>): z.output<typeof format8> => ({
+      ...old,
+      crew: [],
+      crewActivities: {},
     }),
   },
   { schema: newestFormat },

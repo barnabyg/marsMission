@@ -174,6 +174,24 @@ export function TurnSummaryScreen({
           </ul>
         </section>
       )}
+      {summary.crew.length > 0 && (
+        <section data-testid="summary-crew">
+          <h2>
+            <GameText>Crew at Mars</GameText>
+          </h2>
+          <ul>
+            {summary.crew.map(
+              ({ name, locationName, health, maxHealth, arrived }) => (
+                <li key={name}>
+                  <GameText>
+                    {`${name}, in ${locationName}${arrived ? " from this Turn" : ""}: Health ${health} of ${maxHealth}`}
+                  </GameText>
+                </li>
+              ),
+            )}
+          </ul>
+        </section>
+      )}
       {summary.firstLanding && (
         <p data-testid="summary-first-landing">
           <GameText>

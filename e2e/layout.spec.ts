@@ -49,9 +49,18 @@ const allLandingSiteIds = realFiles.landingSites.map(({ id }) => id);
  */
 async function openBusyProgram(
   page: Page,
-  { allSurveyed = false, colossusBuilt = false } = {},
+  { allSurveyed = false, colossusBuilt = false, crewAtMars = false } = {},
 ): Promise<void> {
   const saved = busyProgram(allSurveyed);
+  const developed = {
+    ...saved.program,
+    provenTechnologyIds: [],
+    developments: [{ technologyId: "meridian-colossus", finishesOnTurn: 9 }],
+    operatingAssets: saved.program.operatingAssets.map((asset) => ({
+      ...asset,
+      flewUnproven: false,
+    })),
+  };
   await page.addInitScript(
     ([key, value]) => {
       localStorage.setItem(key, value);
@@ -59,23 +68,27 @@ async function openBusyProgram(
     [
       storageKeyFor("automatic"),
       JSON.stringify(
-        colossusBuilt
+        crewAtMars
           ? {
-              // Format 7 holds Development, here with the Meridian Colossus built.
-              formatVersion: 7,
+              // Format 8 holds Crew, here with the largest Crew in Mars orbit.
+              formatVersion: 8,
               program: {
-                ...saved.program,
-                provenTechnologyIds: [],
-                developments: [
-                  { technologyId: "meridian-colossus", finishesOnTurn: 9 },
-                ],
-                operatingAssets: saved.program.operatingAssets.map((asset) => ({
-                  ...asset,
-                  flewUnproven: false,
+                ...developed,
+                // Enough for the largest Crewed Mission and a lander, so that nothing shows a problem.
+                moneyMillions: 9000,
+                crew: realFiles.crew.names.slice(0, 4).map((name) => ({
+                  name,
+                  health: realFiles.crew.maxHealth,
+                  arrivedOn: "2043-07-01",
+                  location: { kind: "marsOrbit" },
                 })),
+                crewActivities: { "mars-orbit": "crew-research" },
               },
             }
-          : saved,
+          : colossusBuilt
+            ? // Format 7 holds Development, here with the Meridian Colossus built.
+              { formatVersion: 7, program: developed }
+            : saved,
       ),
     ] as const,
   );
@@ -298,6 +311,39 @@ for (const size of screenSizes) {
       await page
         .getByRole("combobox", { name: "Trajectory" })
         .selectOption("free-return");
+      await expect(page.getByTestId("landing-site-details")).toBeVisible();
+      expect(await somethingScrolls(page)).toBe(false);
+      for (const name of ["Launch Mission", "End Turn without launching"]) {
+        await expect(page.getByRole("button", { name })).toBeInViewport({
+          ratio: 1,
+        });
+      }
+    });
+
+    test("Planning Mode fits on one screen with Crew at Mars, and a Crewed Mission with everything else chosen", async ({
+      page,
+    }) => {
+      await openBusyProgram(page, { crewAtMars: true });
+      await page
+        .getByRole("combobox", { name: "Launch Vehicle" })
+        .selectOption("meridian-colossus");
+      await page.getByRole("checkbox", { name: /Crewed Mission/ }).check();
+      await page.getByRole("combobox", { name: "Crew size" }).selectOption("4");
+      // As much as the largest Crew leaves room for, with a landing as well.
+      await chooseAssets(page, ["Prospector Lander"]);
+      for (const contingency of await page
+        .getByRole("checkbox", { name: /Contingency/ })
+        .all()) {
+        await contingency.check();
+      }
+      await page
+        .getByRole("combobox", { name: "Trajectory" })
+        .selectOption("free-return");
+      await expect(page.getByTestId("crew-joining")).toBeVisible();
+      await expect(page.getByTestId("crew-at-mars")).toContainText(
+        realFiles.crew.names[3] ?? "",
+      );
+      await expect(page.getByRole("alert")).toHaveCount(0);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
       expect(await somethingScrolls(page)).toBe(false);
       for (const name of ["Launch Mission", "End Turn without launching"]) {

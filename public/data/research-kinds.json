@@ -18,5 +18,10 @@
     "id": "long-traverse",
     "name": "Long traverse",
     "grantMillionsPerScience": 0
+  },
+  {
+    "id": "crew-research",
+    "name": "Crew research",
+    "grantMillionsPerScience": 2
   }
 ]

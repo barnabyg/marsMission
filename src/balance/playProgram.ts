@@ -10,6 +10,7 @@ import {
   type TurnResult,
   type TurnSummary,
 } from "../simulation/simulation";
+import { crewProblems } from "./invalidCrew";
 import { invalidStates, timelineMissionEventProblems } from "./invalidStates";
 import type { PlanningTools, Strategy } from "./playStyle";
 
@@ -53,6 +54,7 @@ export function planningTools(
     previewAssets: (mission) => simulation.previewAssets(program, mission),
     previewMission: (mission) => simulation.previewMission(program, mission),
     previewTrajectories: (mission) => simulation.previewTrajectories(mission),
+    previewCrew: (mission) => simulation.previewCrew(program, mission),
     problemsWith: (plan) => simulation.validatePlan(program, plan).problems,
     costOf: (plan) => {
       const { costMillions, developmentCostMillions } = simulation.validatePlan(
@@ -193,6 +195,7 @@ export function playProgram(
     const after = simulation.readProgram(result.program);
     const invalid = [
       ...invalidStates(view, result.summary, after),
+      ...crewProblems(view, result.summary, after),
       ...timelineMissionEventProblems(result.timeline, result.summary),
     ];
     if (invalid.length > 0) throw fail(invalid);

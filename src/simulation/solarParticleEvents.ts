@@ -61,6 +61,7 @@ function meetSolarParticleEvent(
   answer: DecisionAnswer | undefined,
   day: number,
   onBoard: Asset[],
+  crewOnBoard: string[],
 ): SolarParticleEventMet {
   const {
     name,
@@ -71,7 +72,9 @@ function meetSolarParticleEvent(
     lossChanceIfDamaged,
     publicSupportLoss,
   } = catalogue.hazards.solarParticleEvent;
-  const names = onBoard.map((asset) => asset.name).join(", ");
+  const names = [...onBoard.map((asset) => asset.name), ...crewOnBoard].join(
+    ", ",
+  );
   const loss = Math.min(publicSupportLoss, program.publicSupport);
   const decisionEntry: DecisionPointEntry = {
     kind: "decisionPoint",
@@ -89,7 +92,7 @@ function meetSolarParticleEvent(
         day,
         title: name,
         description: `${description} On board: ${names}.`,
-        assets: onBoard.map((asset) => asset.name),
+        assets: [...onBoard.map((asset) => asset.name), ...crewOnBoard],
         choices: [
           {
             answer: "safeMode",
@@ -179,6 +182,7 @@ export function solarParticleEventInFlight(
   const onBoard = assets.filter(
     (asset) => rules.deliveryDay(asset, mission) > day,
   );
+  const crewOnBoard = flight.crewOnBoard(day);
   const met = meetSolarParticleEvent(
     catalogue,
     rules,
@@ -186,14 +190,13 @@ export function solarParticleEventInFlight(
     answers[solarParticleEventId],
     day,
     onBoard,
+    crewOnBoard,
   );
   outcome.entries.push(...met.entries);
   outcome.solarParticleEvent = { day, summary: met.summary };
   if (met.decisionPoint || met.lostWithPublicSupport !== null) {
     outcome.decisionPoint = met.decisionPoint;
-    outcome.deliveredAssets = assets.filter(
-      (asset) => !onBoard.includes(asset),
-    );
+    flight.stopWith(onBoard, crewOnBoard);
   }
   if (met.decisionPoint) return true;
   if (met.lostWithPublicSupport !== null) {

@@ -6,13 +6,14 @@ interface AwardedMilestone {
   publicSupport: number;
 }
 
-/** What one Asset earned by doing research during a Turn. */
+/** What one Asset, or the Crew in one place, earned by doing research during a Turn. */
 export interface OngoingResearchEarned {
+  /** The Asset's name, or the Crew's, such as "Crew in Mars orbit". */
   assetName: string;
   activityName: string;
   science: number;
   publicSupport: number;
-  /** How many days of the Turn it was in service. */
+  /** How many days of the Turn it was in service, or the longest any of the Crew were. */
   days: number;
   /** What other Assets' Benefits added to it, which science and publicSupport include. Left out if they raised none of its days. */
   benefit?: {
@@ -48,6 +49,14 @@ export interface TurnSummary {
   developmentsStarted: string[];
   /** The technologies whose Development finishes as the next Turn starts, which can then be chosen for a Mission. */
   developmentsFinished: string[];
+  /** Every Crew member at Mars as the Turn ends, with their Health, and whether they arrived this Turn. */
+  crew: {
+    name: string;
+    locationName: string;
+    health: number;
+    maxHealth: number;
+    arrived: boolean;
+  }[];
   /** The Assets whose Service Life ended this Turn. */
   assetsEnded: string[];
   /** The Assets that failed in service this Turn, before their Service Life ended. */

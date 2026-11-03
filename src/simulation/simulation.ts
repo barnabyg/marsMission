@@ -6,6 +6,12 @@ import {
   type Activity,
 } from "./rules";
 import { describeBenefit, largestRaise, type Raise } from "./benefits";
+import {
+  crewAtMarsView,
+  crewedMissionView,
+  previewCrew,
+  type PlannedCrew,
+} from "./crew";
 import { needingDevelopment, plannedDevelopment } from "./development";
 import { flyMission } from "./flyMission";
 import { missionOnTimeline, timelineUpToDecision } from "./missionReport";
@@ -41,6 +47,7 @@ export {
   technologiesOn,
   type TechnologyReadiness,
 } from "./technologyReadiness";
+export type { PlannedCrew } from "./crew";
 export type {
   AssetChoices,
   DecisionAnswer,
@@ -78,6 +85,8 @@ export interface Simulation {
   previewAssets(program: Program, mission: PlannedMission): PlannedAsset[];
   /** The Trajectories on offer to a Mission, in the order the Catalogue lists them. */
   previewTrajectories(mission: PlannedMission): PlannedTrajectory[];
+  /** The Crew a Mission would carry, who they are and what they could do, or null if it carries none. */
+  previewCrew(program: Program, mission: PlannedMission): PlannedCrew | null;
   /** Works out a Turn from the seed, the plan and the answers so far, stopping at the first Decision Point with no answer. */
   workOutTurn(
     program: Program,
@@ -219,7 +228,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         result.timeline,
         otherEntries,
         flown.entries,
-        missionOnTimeline(rules, plan, flown),
+        missionOnTimeline(catalogue, rules, plan, flown),
         {
           day: decisionPoint.day,
           entry: stormComesFirst ? stormDecision.entry : null,
@@ -252,6 +261,8 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         provenTechnologyIds: [],
         developments: [],
         operatingAssets: [],
+        crew: [],
+        crewActivities: {},
         status: { kind: "active" },
       };
     },
@@ -298,6 +309,8 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           daysLeft: Math.max(0, daysUntilServiceEnds(program.date, asset)),
           landingSiteName: landingSiteById(asset.landingSiteId)?.name ?? null,
         })),
+        crewedMission: crewedMissionView(catalogue, program),
+        crew: crewAtMarsView(catalogue, rules, program),
         developments: needingDevelopment(catalogue).map((technology) =>
           plannedDevelopment(program, technology),
         ),
@@ -412,6 +425,9 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         chosen: trajectory === chosen,
       }));
     },
+
+    previewCrew: (program, mission) =>
+      previewCrew(catalogue, rules, program, mission),
 
     workOutTurn,
 

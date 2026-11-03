@@ -44,6 +44,9 @@ export function PlanningMode({
     Record<string, string>
   >({});
   const [developmentIds, setDevelopmentIds] = useState<string[]>([]);
+  const [crewActivities, setCrewActivities] = useState<Record<string, string>>(
+    {},
+  );
 
   function open(dialog: PlanningDialog) {
     setSavedToSlot(null);
@@ -156,12 +159,18 @@ export function PlanningMode({
           view={view}
           operatingActivities={operatingActivities}
           developmentIds={developmentIds}
+          crewActivities={crewActivities}
           onSubmit={onSubmit}
         />
 
         <div className="planning-side">
           <OperatingPanel
             assets={view.operatingAssets}
+            crew={view.crew}
+            chosenCrewActivities={crewActivities}
+            onCrewActivityChange={(key, activityId) => {
+              setCrewActivities({ ...crewActivities, [key]: activityId });
+            }}
             somethingLeftToSurvey={view.somethingLeftToSurvey}
             chosenActivities={operatingActivities}
             onActivityChange={(key, activityId) => {
@@ -179,7 +188,7 @@ export function PlanningMode({
             {view.milestones.length === 0 ? (
               <p>None yet.</p>
             ) : (
-              <ul data-testid="milestones">
+              <ul className="milestone-list" data-testid="milestones">
                 {view.milestones.map((milestone) => (
                   <li key={milestone.id}>
                     <GameText>{milestone.name}</GameText>

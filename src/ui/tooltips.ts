@@ -27,6 +27,8 @@ export const tooltips = {
   Precursor:
     "A Robotic Mission whose main value is lowering the risk or cost of later Missions, for example by surveying landing sites.",
   Crew: "The named astronauts on a Crewed Mission. Apart from their names and Health, they have no individual traits.",
+  "Crew size":
+    "How many Crew fly on a Crewed Mission, chosen in Planning Mode. A larger Crew earns more Ongoing Research, but weighs and costs more.",
   Health:
     "A single value for each Crew member. Radiation, time at Mars and failed Mission Events lower it, Protection slows the decline, and at zero the Crew member dies.",
   Supplies:
@@ -38,7 +40,7 @@ export const tooltips = {
   Benefit:
     "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset on the surface. A second Asset giving the same Benefit adds nothing.",
   Activity:
-    "What an Asset, or all the Crew at one Landing Site, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset keeps its Activity into later Turns until the player changes it.",
+    "What an Asset, or all the Crew in one place at Mars, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset or Crew keep their Activity into later Turns until the player changes it.",
   "Landing Site":
     "A named place on Mars where a Mission can land, with its own landing risk and Science value. Apart from a couple of well-known sites, they become available only through a Survey.",
   Survey:
@@ -51,6 +53,8 @@ export const tooltips = {
     "An Activity for a rover: Ongoing Research that stays near the Landing Site and analyses soil samples. It earns less Science than a Long traverse and pays a Research Grant.",
   "Long traverse":
     "An Activity for a rover: Ongoing Research that drives long distances around the Landing Site. It earns more Science than Soil analysis and pays no Research Grant.",
+  "Crew research":
+    "An Activity for Crew in Mars orbit: Ongoing Research from orbit, such as studying Mars, driving robots on the surface from above and running experiments aboard. Each Crew member earns it, and it pays a Research Grant.",
   "Planning Mode":
     "The first part of a Turn, in which the player chooses Missions, Assets, Activities, technology and Safety Margin and spends money. No game time passes in Planning Mode.",
   "Mission Mode":

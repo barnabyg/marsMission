@@ -33,8 +33,24 @@ export function tryContingency(
   event: MissionEvent,
   onBoard: Asset[],
 ): ContingencyResult {
-  const { rules, program, mission, answers, outcome, assets } = flight;
-  const lostNames = onBoard.map((asset) => asset.name).join(", ");
+  const { rules, program, mission, answers, outcome } = flight;
+  const crewOnBoard = flight.crewOnBoard(event);
+  const assetNames = onBoard.map((asset) => asset.name).join(", ");
+  const lostNames = [
+    ...onBoard.map((asset) => asset.name),
+    ...crewOnBoard,
+  ].join(", ");
+  // Only an Asset has Service Life. What a rescue costs Crew is still to come.
+  const carryOn = (percent: number) =>
+    onBoard.length === 0
+      ? ""
+      : crewOnBoard.length === 0
+        ? ` with ${percent}% less Service Life`
+        : `, the Assets with ${percent}% less Service Life`;
+  const lifeLost = (percent: number) =>
+    onBoard.length === 0
+      ? ""
+      : ` ${assetNames} lost ${percent}% of their Service Life.`;
   const contingency = rules.contingencyFor(mission, event.id);
   if (contingency) {
     outcome.entries.push({
@@ -52,13 +68,13 @@ export function tryContingency(
         day: flight.dayOf(event),
         title: event.name,
         description: flight.filledIn(contingency.troubleDescription),
-        assets: onBoard.map((asset) => asset.name),
+        assets: [...onBoard.map((asset) => asset.name), ...crewOnBoard],
         choices: [
           {
             answer: "use",
             label: `Use ${contingency.name}`,
             riskBand: rules.riskBandFor(contingency.rescueFailureProbability),
-            description: `A second try. If it works, ${lostNames} carry on with ${contingency.serviceLifeLossPercent}% less Service Life. If it fails, ${
+            description: `A second try. If it works, ${lostNames} carry on${carryOn(contingency.serviceLifeLossPercent)}. If it fails, ${
               comesHomeFrom(flight, event)
                 ? `they swing back to Earth, which costs ${supportCost(lossFor(flight, event, contingency))} and refunds ${formatMoney(refundFor(flight, onBoard))}.`
                 : `they are lost and it costs ${lossFor(flight, event, contingency)} Public Support.`
@@ -74,9 +90,7 @@ export function tryContingency(
           },
         ],
       };
-      outcome.deliveredAssets = assets.filter(
-        (asset) => !onBoard.includes(asset),
-      );
+      flight.stopWith(onBoard, crewOnBoard);
       return { kind: "decisionPoint" };
     }
     if (
@@ -95,7 +109,7 @@ export function tryContingency(
       outcome.entries.push({
         ...flight.happened(event),
         title: `${event.name}: saved by ${contingency.name}`,
-        description: `${flight.filledIn(contingency.rescueDescription)} ${lostNames} lost ${contingency.serviceLifeLossPercent}% of their Service Life.`,
+        description: `${flight.filledIn(contingency.rescueDescription)}${lifeLost(contingency.serviceLifeLossPercent)}`,
         outcome: "success",
       });
       return { kind: "rescued" };

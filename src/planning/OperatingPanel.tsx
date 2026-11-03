@@ -9,15 +9,25 @@ import {
 
 interface OperatingPanelProps {
   assets: ProgramView["operatingAssets"];
+  crew: ProgramView["crew"];
+  /** The new Activities chosen this Turn for the Crew in each place, by its key. */
+  chosenCrewActivities: Record<string, string>;
+  onCrewActivityChange: (key: string, activityId: string) => void;
   somethingLeftToSurvey: boolean;
   /** The new Activities chosen this Turn, by each Asset's key. */
   chosenActivities: Record<string, string>;
   onActivityChange: (key: string, activityId: string) => void;
 }
 
-/** The Assets already at Mars, each with what is left of its Service Life and the choice of its Activity. */
+/**
+ * The Assets already at Mars, each with what is left of its Service Life and the choice of its Activity, and the Crew
+ * there, with their Health and the choice of the Activity they share in each place.
+ */
 export function OperatingPanel({
   assets,
+  crew,
+  chosenCrewActivities,
+  onCrewActivityChange,
   somethingLeftToSurvey,
   chosenActivities,
   onActivityChange,
@@ -25,8 +35,31 @@ export function OperatingPanel({
   return (
     <section className="panel">
       <h2>Operating at Mars</h2>
+      {crew.length > 0 && (
+        <ul className="operating-assets" data-testid="crew-at-mars">
+          {crew.map((group) => (
+            <li key={group.key}>
+              <span>
+                <GameText>
+                  {`Crew in ${group.locationName}: ${group.members
+                    .map(({ name, health }) => `${name} (Health ${health})`)
+                    .join(", ")}`}
+                </GameText>
+              </span>
+              <ActivitySelect
+                assetName={`the Crew in ${group.locationName}`}
+                activityId={chosenCrewActivities[group.key] ?? group.activityId}
+                activities={group.activities}
+                onChange={(activityId) => {
+                  onCrewActivityChange(group.key, activityId);
+                }}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
       {assets.length === 0 ? (
-        <p>Nothing.</p>
+        crew.length === 0 && <p>Nothing.</p>
       ) : (
         <>
           <p>
@@ -35,7 +68,10 @@ export function OperatingPanel({
             </GameText>
           </p>
           <ResearchEarnings
-            activities={assets.flatMap(({ activities }) => activities)}
+            activities={[
+              ...assets.flatMap(({ activities }) => activities),
+              ...crew.flatMap(({ activities }) => activities),
+            ]}
           />
           {!somethingLeftToSurvey &&
             assets.some(({ key, activityId, activities }) =>

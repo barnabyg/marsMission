@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import { crewNamesFor } from "./crew";
 import type {
   Asset,
   LandingSite,
@@ -37,6 +38,8 @@ export interface MissionOutcome {
   /** The day of the failed Mission Event, if there was one. */
   failedOnDay: number | null;
   deliveredAssets: Asset[];
+  /** The names of the Crew it delivered to Mars, which is none if it carried none or lost them on the way. */
+  deliveredCrew: string[];
   publicSupportLost: number;
   landingSite: LandingSite | undefined;
   /** What a Free-return brought back, if it did. */
@@ -70,6 +73,8 @@ export interface Flight {
   mission: TurnPlan["mission"];
   answers: DecisionAnswers;
   assets: Asset[];
+  /** The names of the Crew on board, which is none for a Robotic Mission. */
+  crew: string[];
   landingSite: LandingSite | undefined;
   freeReturn: Trajectory["freeReturn"];
   outcome: MissionOutcome;
@@ -79,6 +84,10 @@ export interface Flight {
   dayOf: (event: MissionEvent) => number;
   /** The Assets not yet delivered when this Mission Event is due. */
   stillOnBoard: (event: MissionEvent) => Asset[];
+  /** The names of the Crew not yet delivered when this Mission Event is due, or on this day if it's a day. */
+  crewOnBoard: (when: MissionEvent | number) => string[];
+  /** Ends the Mission for what is still on board, so that only what was delivered before arrives. */
+  stopWith: (onBoard: Asset[], crewOnBoard: string[]) => void;
   /** A Mission Event's or Contingency's text, with the Landing Site and what lands there filled in. */
   filledIn: (text: string) => string;
   /** Shortens the Service Life of each of these Assets, to no less than a day. */
@@ -120,6 +129,7 @@ export function startFlight(
   const assets = (mission?.assetIds ?? []).flatMap((assetId) =>
     catalogue.assets.filter((candidate) => candidate.id === assetId),
   );
+  const crew = crewNamesFor(catalogue, program, mission);
   const landingSite = rules.landingSiteById(mission?.landingSiteId);
   const outcome: MissionOutcome = {
     vehicleName: vehicle?.name ?? null,
@@ -128,6 +138,7 @@ export function startFlight(
     failedEvent: undefined,
     failedOnDay: null,
     deliveredAssets: assets,
+    deliveredCrew: crew,
     publicSupportLost: 0,
     landingSite,
     returned: null,
@@ -154,6 +165,7 @@ export function startFlight(
     mission,
     answers,
     assets,
+    crew,
     landingSite,
     freeReturn: rules.trajectoryFor(mission).freeReturn,
     outcome,
@@ -164,6 +176,19 @@ export function startFlight(
         (asset) =>
           rules.deliveryDay(asset, mission) >= rules.dayOf(event, mission),
       ),
+    crewOnBoard: (when) => {
+      const due =
+        typeof when === "number" ? when + 1 : rules.dayOf(when, mission);
+      return rules.deliveryDay(catalogue.crew, mission) >= due ? crew : [];
+    },
+    stopWith: (onBoard, crewOnBoard) => {
+      outcome.deliveredAssets = assets.filter(
+        (asset) => !onBoard.includes(asset),
+      );
+      outcome.deliveredCrew = crew.filter(
+        (name) => !crewOnBoard.includes(name),
+      );
+    },
     filledIn: (text) =>
       text
         .replaceAll("{site}", landingSite?.name ?? "")

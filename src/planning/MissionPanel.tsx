@@ -8,6 +8,7 @@ import {
 import { GameText } from "../ui/GameText";
 import { LandingSiteChoice } from "./LandingSiteChoice";
 import { MissionAssets } from "./MissionAssets";
+import { MissionCrew } from "./MissionCrew";
 import { MissionEventChoices } from "./MissionEventChoices";
 import { MissionLaunchChoice } from "./MissionLaunchChoice";
 import { useMissionPlan } from "./useMissionPlan";
@@ -20,6 +21,8 @@ interface MissionPanelProps {
   operatingActivities: Record<string, string>;
   /** The Developments chosen to start this Turn, which either button sends. */
   developmentIds: string[];
+  /** The new Activities chosen for Crew already operating, which either button sends. */
+  crewActivities: Record<string, string>;
   onSubmit: (plan: TurnPlan) => void;
 }
 
@@ -33,6 +36,7 @@ export function MissionPanel({
   view,
   operatingActivities,
   developmentIds,
+  crewActivities,
   onSubmit,
 }: MissionPanelProps) {
   const choices = useMissionPlan(
@@ -41,6 +45,7 @@ export function MissionPanel({
     view,
     operatingActivities,
     developmentIds,
+    crewActivities,
   );
   const { plan, withoutLaunching, withoutLaunchingProblems, landingSite } =
     choices;
@@ -52,7 +57,8 @@ export function MissionPanel({
     problems,
   } = choices.check;
   const canEndWithoutLaunching = withoutLaunchingProblems.length === 0;
-  const nothingTicked = choices.assetIds.length === 0;
+  const nothingTicked =
+    choices.assetIds.length === 0 && choices.plannedCrew === null;
 
   return (
     <section className="panel">
@@ -71,9 +77,17 @@ export function MissionPanel({
         view={view}
         assetIds={choices.assetIds}
         plannedAssets={choices.plannedAssets}
+        crewActivities={choices.plannedCrew?.activities ?? []}
         onCarriedChange={choices.setCarried}
         onChoicesChange={choices.changeAssetChoices}
-      />
+      >
+        <MissionCrew
+          crewedMission={view.crewedMission}
+          planned={choices.plannedCrew}
+          onCrewSizeChange={choices.chooseCrewSize}
+          onActivityChange={choices.chooseCrewActivity}
+        />
+      </MissionAssets>
       {landingSite && (
         <LandingSiteChoice
           landingSites={view.landingSites}
@@ -106,7 +120,8 @@ export function MissionPanel({
       {nothingTicked && (
         <p data-testid="nothing-ticked">
           <GameText>
-            Tick an Asset to plan a Mission, or end the Turn without launching.
+            Tick an Asset or Crew to plan a Mission, or end the Turn without
+            launching.
           </GameText>
         </p>
       )}
