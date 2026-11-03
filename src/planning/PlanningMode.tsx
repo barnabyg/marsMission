@@ -160,6 +160,18 @@ export function PlanningMode({
         />
 
         <div className="planning-side">
+          <OperatingPanel
+            assets={view.operatingAssets}
+            somethingLeftToSurvey={view.somethingLeftToSurvey}
+            chosenActivities={operatingActivities}
+            onActivityChange={(key, activityId) => {
+              setOperatingActivities({
+                ...operatingActivities,
+                [key]: activityId,
+              });
+            }}
+          />
+
           <section className="panel">
             <h2>
               <GameText>Milestones</GameText>
@@ -176,18 +188,6 @@ export function PlanningMode({
               </ul>
             )}
           </section>
-
-          <OperatingPanel
-            assets={view.operatingAssets}
-            somethingLeftToSurvey={view.somethingLeftToSurvey}
-            chosenActivities={operatingActivities}
-            onActivityChange={(key, activityId) => {
-              setOperatingActivities({
-                ...operatingActivities,
-                [key]: activityId,
-              });
-            }}
-          />
 
           <DevelopmentPanel
             developments={view.developments}

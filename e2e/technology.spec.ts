@@ -26,6 +26,7 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
   // Over 5 s: waits at 1x for the landing, then plays on to the next Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${pinpointLandingSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await expect(page.getByTestId("launch-vehicle-readiness")).toHaveText(
     "Flight-proven",
   );
@@ -90,6 +91,7 @@ test("develops the Endurance Rover over two Turns, then chooses it for a Mission
   // Enough for the Development and then the rover, which a real Program can't afford until later.
   await overrideProgramData(page, { startingMoneyMillions: 4000 });
   await page.goto("/?seed=1");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await expect(
     enduranceRow(page).getByTestId("technology-readiness"),
   ).toHaveText("Needs Development");

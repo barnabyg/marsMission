@@ -4,6 +4,7 @@ import {
   pauseAtEvent,
   viewButton,
   watchForProblems,
+  chooseAssets,
 } from "./helpers";
 import { successSeed } from "./seeds";
 
@@ -14,6 +15,7 @@ function trajectory(page: Page) {
 /** Flies the first orbiter by this Trajectory, and returns the date of its arrival in the events column. */
 async function arrivalDate(page: Page, id: "slow" | "fast"): Promise<string> {
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await trajectory(page).selectOption(id);
   await pauseAtEvent(page, "Mars orbit insertion", () =>
     page.getByRole("button", { name: "Launch Mission" }).click(),
@@ -30,6 +32,7 @@ async function arrivalDate(page: Page, id: "slow" | "fast"): Promise<string> {
 
 test("Planning Mode shows what a Trajectory changes", async ({ page }) => {
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await expect(trajectory(page).locator("option")).toHaveText([
     "Slow (210 days)",
     "Fast (150 days, $40M, 0.5 t less)",
@@ -74,6 +77,7 @@ test("a Trajectory too heavy for the Launch Vehicle is refused", async ({
   page,
 }) => {
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("checkbox", { name: /Pathfinder Orbiter/ }).uncheck();
   await page.getByRole("checkbox", { name: /Trailblazer Rover/ }).check();
   await page.getByRole("checkbox", { name: /Retro thrusters/ }).check();

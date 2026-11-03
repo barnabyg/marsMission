@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
 import {
+  chooseAssets,
   cancelledAfterOneTurn,
   eventEntries,
   overrideProgramData,
@@ -15,6 +16,7 @@ test("keeps a Program between sessions: launches, reaches the next Turn, reloads
 }) => {
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await playToNextTurn(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
@@ -48,6 +50,7 @@ test("returns to the start of the Turn after a reload in Mission Mode, and the s
   page,
 }) => {
   await page.goto(`/?seed=${seedFailingAt("Launch")}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   const heading = eventEntries(page).first().getByRole("heading");
   await expect(heading).toHaveText("Launch failed");
@@ -55,6 +58,7 @@ test("returns to the start of the Turn after a reload in Mission Mode, and the s
   await page.reload();
   await page.getByRole("button", { name: "Continue this Program" }).click();
   await expect(page.getByTestId("turn-number")).toHaveText("1");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(heading).toHaveText("Launch failed");
 });

@@ -3,6 +3,7 @@ import {
   holdTurnWhenShown,
   termsWithoutTooltips,
   watchForProblems,
+  chooseAssets,
 } from "./helpers";
 import { solarParticleEventSeed, solarParticleLossSeed } from "./seeds";
 
@@ -17,6 +18,7 @@ function endTurn(page: Page) {
 /** Launches the orbiter Planning Mode starts with, up to the solar particle event on its way. */
 async function meetParticles(page: Page, seed: number) {
   await page.goto(`/?seed=${seed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   // Held from the start, as the event can come too soon after launch at this test speed for a click to beat it.
   await holdTurnWhenShown(page);
   await page.getByRole("button", { name: "Launch Mission" }).click();

@@ -5,6 +5,7 @@ import {
   termsWithoutTooltips,
   viewButton,
   watchForProblems,
+  chooseAssets,
 } from "./helpers";
 import { seedFailingAt, solarParticleEventSeed, successSeed } from "./seeds";
 
@@ -41,6 +42,7 @@ test("switches to the spacecraft view by hand on the way to Mars, and moves on o
   // Over 5 s: plays at 1x from launch to the arrival, which is what the view moves on from.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await holdTurnWhenShown(page);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
@@ -97,6 +99,7 @@ test("switches to the spacecraft view by hand on the way to Mars, and moves on o
 
 test("isn't available in a Turn with no Mission", async ({ page }) => {
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await holdTurnWhenShown(page);
   await page
     .getByRole("button", { name: "End Turn without launching" })
@@ -112,6 +115,7 @@ for (const reachedBy of ["10x", "End Turn"] as const) {
     // Over 5 s: waits 7 s on purpose, to show that a Decision Point waiting for an answer holds everything.
     const problems = watchForProblems(page);
     await page.goto(`/?seed=${solarParticleEventSeed}`);
+    await chooseAssets(page, ["Pathfinder Orbiter"]);
     // Held from the start, as the event comes too soon after launch at this test speed for a click to beat it.
     await holdTurnWhenShown(page);
     await page.getByRole("button", { name: "Launch Mission" }).click();
@@ -157,6 +161,7 @@ test("moves to the spacecraft view when the transfer burn fails, and then on to 
   // Over 5 s: holds the failure for a while, then plays at 1x for the few seconds it stays on screen.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${seedFailingAt("Mars transfer burn")}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await holdTurnWhenShown(page, "Mars transfer burn failed");
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");

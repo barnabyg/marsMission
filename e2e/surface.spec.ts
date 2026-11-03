@@ -40,6 +40,7 @@ async function launchLanderAndRover(page: Page): Promise<void> {
     startingMoneyMillions: landerAndRoverMoney,
   });
   await page.goto(`/?seed=${landerAndRoverSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
   await chooseAssets(page, ["Prospector Lander", "Trailblazer Rover"]);
   await holdTurnWhenShown(page);
@@ -134,6 +135,7 @@ test("disables the surface view and says why when nothing has landed and no land
 }) => {
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await holdTurnWhenShown(page);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expectSurfaceUnavailable(page);

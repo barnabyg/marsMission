@@ -6,6 +6,7 @@ import {
   playToNextTurn,
   soundsHeard,
   watchForProblems,
+  chooseAssets,
 } from "./helpers";
 import { seedFailingAt, successSeed } from "./seeds";
 
@@ -17,6 +18,7 @@ for (const speed of ["1x", "10x"]) {
     await listenForSounds(page);
     const problems = watchForProblems(page);
     await page.goto(`/?seed=${successSeed}`);
+    await chooseAssets(page, ["Pathfinder Orbiter"]);
     await page.getByRole("button", { name: "Launch Mission" }).click();
     await page.getByRole("button", { name: speed }).click();
     await expect(page.getByTestId("turn-summary")).toBeVisible();
@@ -38,6 +40,7 @@ for (const speed of ["1x", "10x"]) {
 test("plays the failure sound when a Mission Event fails", async ({ page }) => {
   await listenForSounds(page);
   await page.goto(`/?seed=${seedFailingAt("Launch")}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(eventEntries(page).first().getByRole("heading")).toHaveText(
     "Launch failed",
@@ -52,6 +55,7 @@ test("stays silent for the rest of a Turn after muting partway through", async (
 }) => {
   await listenForSounds(page);
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await pauseAtEvent(page, "Launch", () =>
     page.getByRole("button", { name: "Launch Mission" }).click(),
   );
@@ -66,6 +70,7 @@ test("stays silent for the rest of a Turn after muting partway through", async (
 test("plays no sounds for what End Turn skips", async ({ page }) => {
   await listenForSounds(page);
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await pauseAtEvent(page, "Launch", () =>
     page.getByRole("button", { name: "Launch Mission" }).click(),
   );
@@ -81,6 +86,7 @@ test("remembers the mute setting after the browser closes", async ({
 }) => {
   await listenForSounds(page);
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(eventEntries(page).first()).toBeVisible();
 
@@ -91,6 +97,7 @@ test("remembers the mute setting after the browser closes", async ({
 
   await page.reload();
   await page.getByRole("button", { name: "Continue this Program" }).click();
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(
     page.getByRole("button", { name: "Mute sound" }),
@@ -105,6 +112,7 @@ test("keeps playing when the sound files can't be loaded", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await playToNextTurn(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");

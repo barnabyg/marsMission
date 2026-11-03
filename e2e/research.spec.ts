@@ -19,6 +19,7 @@ test("sets a research Activity, sees what it earns, and sees the Science in the 
   // Over 5 s: ends two Turns, because the Service Life only runs out in the second.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterLastsSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   const activity = page.getByLabel("Activity for Pathfinder Orbiter");
   await expect(activity).toHaveValue("survey");
   await activity.selectOption("orbital-research");
@@ -77,6 +78,7 @@ test("a lander starts on research, shown beside an orbiter's choices when both a
 }) => {
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   const orbiterBox = page.locator(".asset-choice", {
     hasText: "Pathfinder Orbiter",
   });
@@ -185,7 +187,8 @@ test("says when an Asset is set to Survey and nothing is left to Survey", async 
   const missionPanel = page.locator(".panel", { hasText: "Launch Vehicle" });
   const noteText =
     "Nothing is left to Survey, so an Asset set to Survey does nothing.";
-  // The Mission starts with an orbiter, which starts on Survey too.
+  // An orbiter on the Mission starts on Survey too.
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await expect(note).toHaveCount(2);
   await expect(operatingPanel.getByTestId("nothing-left-to-survey")).toHaveText(
     noteText,
@@ -222,6 +225,7 @@ test("with something left to Survey, an Asset set to Survey has no such note", a
   page,
 }) => {
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await expect(page.getByLabel("Activity for Pathfinder Orbiter")).toHaveValue(
     "survey",
   );

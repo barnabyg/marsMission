@@ -13,6 +13,8 @@ interface MissionAssetChoiceProps {
   asset: ProgramView["assets"][number];
   /** The choices for this Asset, which only an Asset on the Mission has. */
   planned: PlannedAsset | undefined;
+  /** How many of this Asset are operating at Mars this Turn, which keep working without being launched again. */
+  operatingCount: number;
   carried: boolean;
   onCarriedChange: (carried: boolean) => void;
   onChoicesChange: (choices: AssetChoices) => void;
@@ -22,6 +24,7 @@ interface MissionAssetChoiceProps {
 export function MissionAssetChoice({
   asset,
   planned,
+  operatingCount,
   carried,
   onCarriedChange,
   onChoicesChange,
@@ -53,6 +56,18 @@ export function MissionAssetChoice({
             tabIndex={0}
           >
             Benefit
+          </span>
+        )}
+        {operatingCount > 0 && (
+          // Its tooltip says the one at Mars keeps working, after what an Asset is.
+          <span
+            className="term operating-tag"
+            data-term="Asset"
+            data-detail={`${asset.name} operating at Mars: ${operatingCount}. Each keeps working without being launched again, so ticking this launches another.`}
+            data-testid="operating-tag"
+            tabIndex={0}
+          >
+            {operatingCount} at Mars
           </span>
         )}
       </label>

@@ -15,6 +15,7 @@ test("Free-return is offered only for a Mission with Mars orbit insertion, and s
   page,
 }) => {
   await page.goto(`/?seed=${freeReturnSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await trajectory(page).selectOption("free-return");
   await expect(page.getByTestId("mission-cost")).toHaveText("$1.03B");
   await expect(page.getByTestId("mission-mass")).toHaveText(
@@ -38,6 +39,7 @@ test("a Free-return Mission whose arrival burn fails comes back, at no Public Su
   // Over 5 s: waits at 1x for the arrival burn to fail, then again for the Mission to get back to Earth.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${freeReturnSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await trajectory(page).selectOption("free-return");
 
   await pauseAtEvent(page, "Mars orbit insertion failed", () =>
@@ -92,6 +94,7 @@ test("a Contingency's Decision Point comes before the Free-return", async ({
 }) => {
   // Over 5 s: waits at 1x for the Decision Point at the arrival burn, then ends the Turn.
   await page.goto(`/?seed=${freeReturnSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await trajectory(page).selectOption("free-return");
   await page.getByRole("checkbox", { name: /Reserve fuel/ }).check();
   await page.getByRole("button", { name: "Launch Mission" }).click();

@@ -147,6 +147,7 @@ for (const size of screenSizes) {
       page,
     }) => {
       await page.goto(`/?seed=${successSeed}`);
+      await chooseAssets(page, ["Pathfinder Orbiter"]);
       await expect(page.getByTestId("turn-number")).toHaveText("1");
       expect(await somethingScrolls(page)).toBe(false);
       for (const name of [
@@ -179,7 +180,8 @@ for (const size of screenSizes) {
       page,
     }) => {
       await openBusyProgram(page);
-      // One in the Operating at Mars panel, and one for the orbiter the Mission starts with.
+      await chooseAssets(page, ["Pathfinder Orbiter"]);
+      // One in the Operating at Mars panel, and one for the orbiter on the Mission.
       await expect(page.getByTestId("research-earnings")).toHaveCount(2);
       expect(await somethingScrolls(page)).toBe(false);
       await expect(
@@ -362,6 +364,7 @@ for (const size of screenSizes) {
 
     test("Mission Mode's controls fit on one line", async ({ page }) => {
       await page.goto(`/?seed=${successSeed}`);
+      await chooseAssets(page, ["Pathfinder Orbiter"]);
       await page.getByRole("button", { name: "Launch Mission" }).click();
       const speeds = page
         .getByRole("group", { name: "Speed" })
@@ -389,6 +392,7 @@ for (const size of screenSizes) {
 
     test("text is the same size whatever the screen", async ({ page }) => {
       await page.goto(`/?seed=${successSeed}`);
+      await chooseAssets(page, ["Pathfinder Orbiter"]);
       await expect(page.locator("html")).toHaveCSS("font-size", "18px");
     });
   });

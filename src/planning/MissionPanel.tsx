@@ -38,16 +38,12 @@ export function MissionPanel({
   developmentIds,
   onSubmit,
 }: MissionPanelProps) {
-  // Each starts on the first that can fly, because one that needs Development can't be chosen.
+  // It starts on the first that can fly, because one that needs Development can't be chosen.
   const [launchVehicleId, setLaunchVehicleId] = useState(
     view.launchVehicles.find(canFly)?.id ?? "",
   );
-  const [assetIds, setAssetIds] = useState(
-    view.assets
-      .filter(canFly)
-      .slice(0, 1)
-      .map((asset) => asset.id),
-  );
+  // None start ticked, so that one already at Mars never looks as if it has to be launched again.
+  const [assetIds, setAssetIds] = useState<string[]>([]);
   const [reliability, setReliability] = useState<Record<string, string>>({});
   const [chosenSiteId, setChosenSiteId] = useState(
     view.landingSites[0]?.id ?? "",
@@ -124,13 +120,17 @@ export function MissionPanel({
     operatingActivities,
     developmentIds,
   };
-  const canEndWithoutLaunching =
-    simulation.validatePlan(program, withoutLaunching).problems.length === 0;
+  const withoutLaunchingProblems = simulation.validatePlan(
+    program,
+    withoutLaunching,
+  ).problems;
+  const canEndWithoutLaunching = withoutLaunchingProblems.length === 0;
+  const nothingTicked = assetIds.length === 0;
 
   return (
     <section className="panel">
       <h2>
-        <GameText>Mission</GameText>
+        <GameText>New Mission</GameText>
       </h2>
       <div className="mission-launch">
         <label>
@@ -202,6 +202,11 @@ export function MissionPanel({
             key={asset.id}
             asset={asset}
             planned={plannedAssets.find(({ assetId }) => assetId === asset.id)}
+            operatingCount={
+              view.operatingAssets.filter(
+                ({ assetId, daysLeft }) => assetId === asset.id && daysLeft > 0,
+              ).length
+            }
             carried={assetIds.includes(asset.id)}
             onCarriedChange={(carried) => {
               setAssetIds(
@@ -331,7 +336,15 @@ export function MissionPanel({
           </>
         )}
       </p>
-      {problems.map((problem) => (
+      {nothingTicked && (
+        <p data-testid="nothing-ticked">
+          <GameText>
+            Tick an Asset to plan a Mission, or end the Turn without launching.
+          </GameText>
+        </p>
+      )}
+      {/* With nothing ticked, only ending without launching is possible, so only its problems matter. */}
+      {(nothingTicked ? withoutLaunchingProblems : problems).map((problem) => (
         <p key={problem} className="problem" role="alert">
           <GameText>{problem}</GameText>
         </p>

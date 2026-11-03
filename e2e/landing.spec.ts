@@ -168,6 +168,7 @@ test("turns Surveying off, sees no Survey that Turn, keeps that through a reload
   // Over 5 s: plays two Turns, because turning Surveying back on needs an Asset already operating.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterLastsSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   const activity = page.getByLabel("Activity for Pathfinder Orbiter");
   await expect(activity).toHaveValue("survey");
   await expect(activity.getByRole("option")).toHaveText([
@@ -222,6 +223,7 @@ test("forgets an Activity chosen but not yet carried out when a save is loaded",
 }) => {
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterLastsSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await playToNextTurn(page);
 
@@ -251,6 +253,7 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   // Over 5 s: plays two Turns, because a Service Life can only run out in the Turn after the launch.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterLastsSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   const life = page.getByLabel("Service Life for Pathfinder Orbiter");
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
   await life.selectOption("2100");
@@ -300,6 +303,7 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
   // Over 5 s: plays two Turns, because an Asset can only fail in service in the Turn after the launch.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterFailsInServiceSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
 
   const reliability = page.getByLabel(
     "Reliability for Pathfinder Orbiter in service",
