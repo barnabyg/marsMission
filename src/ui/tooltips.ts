@@ -30,7 +30,7 @@ export const tooltips = {
   "Crew size":
     "How many Crew fly on a Crewed Mission, chosen in Planning Mode. A larger Crew earns more Ongoing Research, but weighs and costs more.",
   Health:
-    "A single value for each Crew member. Radiation, time at Mars and failed Mission Events lower it, Protection slows the decline, and at zero the Crew member dies.",
+    "A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars and Contingency rescues lower it, Protection slows the decline, and at zero the Crew member dies.",
   Supplies:
     "The food, water and everything else Crew use up to stay alive. When they run out, Health falls quickly.",
   Asset:

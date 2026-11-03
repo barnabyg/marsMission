@@ -48,6 +48,7 @@ export {
   type TechnologyReadiness,
 } from "./technologyReadiness";
 export type { PlannedCrew } from "./crew";
+export { healthLossCauses } from "./health";
 export type {
   AssetChoices,
   DecisionAnswer,

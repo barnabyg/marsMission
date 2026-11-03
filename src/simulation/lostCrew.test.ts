@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { TurnPlan } from "./simulation";
-import { skipTurn, withFailures } from "./testHelpers";
+import { skipTurn, steadyHealth, withFailures } from "./testHelpers";
 
 const crewMission = {
   launchVehicleId: "test-heavy",
@@ -87,6 +87,7 @@ describe("Crew at Mars when a later Crew is lost", () => {
   it("keep their Activity and earn all Turn, while the lost Crew earn nothing", () => {
     const { simulation, program } = withFailures(["test-arrival"], {
       startingMoneyMillions: 5000,
+      crewHealth: steadyHealth,
     });
     const rescued = simulation.runTurn(
       program,

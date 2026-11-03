@@ -49,7 +49,7 @@ export function MissionCrew({
           <span
             className="term operating-tag"
             data-term="Health"
-            data-detail={`Flying: ${planned.names.join(", ")}, each starting at Health ${maxHealth}.`}
+            data-detail={`Flying: ${planned.names.join(", ")}, each starting at Health ${maxHealth}. Radiation on the way leaves them ${planned.arrivalHealth} as they reach Mars.`}
             data-testid="crew-names"
             tabIndex={0}
           >

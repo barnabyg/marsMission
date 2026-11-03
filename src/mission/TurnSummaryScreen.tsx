@@ -1,5 +1,6 @@
 import { formatMoney, type TurnSummary } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
+import { SummaryHealthLost } from "./SummaryHealthLost";
 
 function describeSolarParticleEvent({
   outcome,
@@ -215,6 +216,7 @@ export function TurnSummaryScreen({
           </ul>
         </section>
       )}
+      <SummaryHealthLost healthLost={summary.healthLost} />
       {summary.firstLanding && (
         <p data-testid="summary-first-landing">
           <GameText>

@@ -73,7 +73,9 @@ export function missionEventFailed(
   if (freeReturn && comesHomeFrom(flight, event)) {
     const refundMillions = refundFor(flight, onBoard);
     const backOnDay = flight.dayOf(event) + freeReturn.returnDays;
-    outcome.returned = { refundMillions, backOnDay, crew: crewOnBoard };
+    // Crew whose Health runs out on the long way round are lost once the Mission has flown.
+    const crewHome = flight.aliveOn(crewOnBoard, backOnDay);
+    outcome.returned = { refundMillions, backOnDay, crew: crewHome };
     const assetsBack = onBoard.map((asset) => asset.name).join(", ");
     outcome.entries.push(
       {
@@ -89,10 +91,12 @@ export function missionEventFailed(
         title: "Mission back at Earth",
         description: [
           ...(assetsBack ? [`${assetsBack} came back to Earth.`] : []),
-          ...(crewOnBoard.length > 0
-            ? [`${listOfNames.format(crewOnBoard)} are home safe.`]
+          ...(crewHome.length > 0
+            ? [`${listOfNames.format(crewHome)} are home safe.`]
             : []),
-          "None of them will fly again.",
+          assetsBack || crewHome.length > 0
+            ? "None of them will fly again."
+            : "It brought no one home alive.",
         ].join(" "),
       },
     );

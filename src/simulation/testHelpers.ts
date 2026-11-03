@@ -16,18 +16,34 @@ export const sendLander: TurnPlan = {
 
 export const skipTurn: TurnPlan = { mission: null };
 
+/** Crew Health that never falls, for the tests of Crew that aren't about Health. */
+export const steadyHealth: CatalogueFiles["crew"]["health"] = {
+  radiationPerDay: { inFlight: 0, atMars: 0 },
+  timeAtMarsPerDay: 0,
+  contingencyRescueLoss: 0,
+};
+
 /** A Simulation whose named Mission Events always fail and whose others never do, with these changes. */
 export function withFailures(
   failing: string[],
   {
     rescueFailureProbability = 0,
     startingMoneyMillions,
-  }: { rescueFailureProbability?: number; startingMoneyMillions?: number } = {},
+    crewHealth,
+  }: {
+    rescueFailureProbability?: number;
+    startingMoneyMillions?: number;
+    crewHealth?: Partial<CatalogueFiles["crew"]["health"]>;
+  } = {},
 ) {
   const files = testCatalogueFiles();
   const simulation = createSimulation(
     parseCatalogue({
       ...files,
+      crew: {
+        ...files.crew,
+        health: { ...files.crew.health, ...crewHealth },
+      },
       program: {
         ...files.program,
         startingMoneyMillions:

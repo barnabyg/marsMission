@@ -1,5 +1,12 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { crewNamesFor } from "./crew";
+import {
+  drainsInFlight,
+  healthCourse,
+  type HealthBlow,
+  type HealthCourse,
+  type HealthLost,
+} from "./health";
 import type { CrewLoss } from "./lostCrew";
 import type {
   Asset,
@@ -43,6 +50,13 @@ export interface MissionOutcome {
   deliveredCrew: string[];
   /** The Crew it lost on the way, if it did, which costs Public Support as well as publicSupportLost. */
   crewLost: CrewLoss[];
+  /** What hit the Crew's Health all at once on the way, such as a Contingency rescue, and who it hit. */
+  crewBlows: (HealthBlow & { names: string[] })[];
+  /**
+   * The Health of each Crew member it carried, who wasn't lost with the Mission, as their flight ended: on arriving,
+   * on getting home, at a Decision Point, or at 0 if it ran out on the way. Set once the Mission has flown.
+   */
+  crewHealth: { name: string; health: number; lost: HealthLost[] }[];
   publicSupportLost: number;
   landingSite: LandingSite | undefined;
   /** What a Free-return brought back, if it did, with the names of the Crew it brought home. */
@@ -91,8 +105,12 @@ export interface Flight {
   dayOf: (event: MissionEvent) => number;
   /** The Assets not yet delivered when this Mission Event is due. */
   stillOnBoard: (event: MissionEvent) => Asset[];
-  /** The names of the Crew not yet delivered when this Mission Event is due, or on this day if it's a day. */
+  /** The names of the Crew not yet delivered when this Mission Event is due, or on this day if it's a day, and still alive then. */
   crewOnBoard: (when: MissionEvent | number) => string[];
+  /** What the flight has done to a Crew member's Health from launch to this day. */
+  healthInFlight: (name: string, toDay: number) => HealthCourse;
+  /** Those of these Crew whose Health hasn't run out by this day. */
+  aliveOn: (names: string[], day: number) => string[];
   /** Ends the Mission for what is still on board, so that only what was delivered before arrives. */
   stopWith: (onBoard: Asset[], crewOnBoard: string[]) => void;
   /** A Mission Event's or Contingency's text, with the Landing Site and what lands there filled in. */
@@ -147,6 +165,8 @@ export function startFlight(
     deliveredAssets: assets,
     deliveredCrew: crew,
     crewLost: [],
+    crewBlows: [],
+    crewHealth: [],
     publicSupportLost: 0,
     landingSite,
     returned: null,
@@ -185,10 +205,20 @@ export function startFlight(
           rules.deliveryDay(asset, mission) >= rules.dayOf(event, mission),
       ),
     crewOnBoard: (when) => {
-      const due =
-        typeof when === "number" ? when + 1 : rules.dayOf(when, mission);
-      return rules.deliveryDay(catalogue.crew, mission) >= due ? crew : [];
+      const day = typeof when === "number" ? when : rules.dayOf(when, mission);
+      const due = typeof when === "number" ? when + 1 : day;
+      return rules.deliveryDay(catalogue.crew, mission) >= due
+        ? flight.aliveOn(crew, day)
+        : [];
     },
+    healthInFlight: (name, toDay) =>
+      healthCourse(
+        catalogue.crew.maxHealth,
+        drainsInFlight(catalogue, toDay),
+        outcome.crewBlows.filter(({ names }) => names.includes(name)),
+      ),
+    aliveOn: (names, day) =>
+      names.filter((name) => flight.healthInFlight(name, day).diedOn === null),
     stopWith: (onBoard, crewOnBoard) => {
       outcome.deliveredAssets = assets.filter(
         (asset) => !onBoard.includes(asset),

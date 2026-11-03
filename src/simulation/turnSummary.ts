@@ -1,3 +1,4 @@
+import type { HealthLost } from "./health";
 import type { CrewLossCause, DecisionAnswer } from "./types";
 
 interface AwardedMilestone {
@@ -68,6 +69,12 @@ export interface TurnSummary {
     description: string;
     publicSupportLost: number;
   }[];
+  /**
+   * What each Crew member lost in Health this Turn and why, whether they are still at Mars, were lost or came home:
+   * those already at Mars first, then those the Mission carried. Anyone who lost none is left out. For a Crew member who
+   * died of it, it adds up to the Health they had.
+   */
+  healthLost: { name: string; lost: HealthLost[] }[];
   /** The Crew a Free-return brought back to Earth this Turn, safe, who won't fly again. */
   crewHome: string[];
   /** The Assets whose Service Life ended this Turn. */

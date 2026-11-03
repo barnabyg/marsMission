@@ -25,6 +25,22 @@ export function crewProblems(
       ({ locationName }) => `Crew in ${locationName}`,
     ),
   );
+  // Health only falls by what the Turn summary says each one lost: from what they had at Mars, or from full if they flew.
+  const healthBefore = new Map(
+    before.crew.flatMap(({ members }) =>
+      members.map(({ name, health }) => [name, health] as const),
+    ),
+  );
+  const startOf = (name: string) => healthBefore.get(name) ?? maxHealth;
+  const lostBy = (name: string) =>
+    summary.healthLost
+      .filter((member) => member.name === name)
+      .flatMap(({ lost }) => lost)
+      .reduce((total, { health }) => total + health, 0);
+  const diedOfHealth = summary.crewLost
+    .filter(({ cause }) => cause === "health")
+    .flatMap(({ names }) => names);
+  const membersAfter = after.crew.flatMap(({ members }) => members);
   const checks: [impossible: boolean, problem: string][] = [
     [
       new Set(namesAfter).size < namesAfter.length,
@@ -68,6 +84,27 @@ export function crewProblems(
         members.some(({ health }) => health < 0 || health > maxHealth),
       ),
       `A Crew member's Health is outside 0 to ${maxHealth}.`,
+    ],
+    [
+      membersAfter.some(({ health }) => health === 0) ||
+        summary.crew.some(({ health }) => health === 0),
+      "A Crew member at zero Health still operates at Mars.",
+    ],
+    [
+      summary.healthLost.some(({ lost }) =>
+        lost.some(({ health }) => health <= 0),
+      ),
+      "A Crew member lost no Health, or gained some, to a cause.",
+    ],
+    [
+      membersAfter.some(
+        ({ name, health }) => health !== startOf(name) - lostBy(name),
+      ),
+      "A Crew member's Health doesn't match what the Turn summary says they lost.",
+    ],
+    [
+      diedOfHealth.some((name) => lostBy(name) !== startOf(name)),
+      "A Crew member died of their Health without losing all of it.",
     ],
     [
       after.crew.some(

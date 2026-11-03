@@ -51,6 +51,27 @@ describe("Crew in the real data files", () => {
     );
   });
 
+  it("makes a Slow Trajectory cost more Health on the way than a Fast one, but leave Crew most of it", () => {
+    const { trajectories } = parseCatalogue(realCatalogueFiles());
+    const lostOnTheWay = (id: string) =>
+      crew.health.radiationPerDay.inFlight *
+      (trajectories.find((trajectory) => trajectory.id === id)?.transferDays ??
+        0);
+    expect(lostOnTheWay("slow")).toBeGreaterThan(lostOnTheWay("fast"));
+    expect(
+      lostOnTheWay("slow") + crew.health.contingencyRescueLoss,
+    ).toBeLessThan(crew.maxHealth / 2);
+  });
+
+  it("makes Crew at Mars die there in the end, though not in their first Turn", () => {
+    const { program } = parseCatalogue(realCatalogueFiles());
+    const perTurn =
+      (crew.health.radiationPerDay.atMars + crew.health.timeAtMarsPerDay) *
+      program.launchWindowIntervalDays;
+    expect(perTurn).toBeGreaterThan(0);
+    expect(perTurn).toBeLessThan(crew.maxHealth / 2);
+  });
+
   it("names enough Crew for several Crewed Missions of the largest size", () => {
     const largest = Math.max(...crew.sizes.map((size) => size.crew));
     expect(crew.names.length).toBeGreaterThanOrEqual(4 * largest);
@@ -80,6 +101,34 @@ describe("invalid Crew", () => {
   it("rejects losing Crew gaining Public Support", () => {
     expect(errorFrom(withCrew({ publicSupportLossPerMember: -1 }))).toContain(
       "crew.json: publicSupportLossPerMember:",
+    );
+  });
+
+  it("rejects Health that rises over time", () => {
+    const { health } = testCatalogueFiles().crew;
+    expect(
+      errorFrom(withCrew({ health: { ...health, timeAtMarsPerDay: -0.1 } })),
+    ).toContain("crew.json: health.timeAtMarsPerDay:");
+    expect(
+      errorFrom(
+        withCrew({
+          health: {
+            ...health,
+            radiationPerDay: { ...health.radiationPerDay, inFlight: -0.1 },
+          },
+        }),
+      ),
+    ).toContain("crew.json: health.radiationPerDay.inFlight:");
+  });
+
+  it("rejects a Contingency rescue that costs all of a Crew member's Health", () => {
+    const { health } = testCatalogueFiles().crew;
+    expect(
+      errorFrom(
+        withCrew({ health: { ...health, contingencyRescueLoss: 100 } }),
+      ),
+    ).toContain(
+      "crew.json: a Contingency rescue costs 100 Health, which must be less than the 100 Crew start with",
     );
   });
 

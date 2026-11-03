@@ -105,31 +105,36 @@ export function loseCrew(
   };
 }
 
-/** The records of Crew a Free-return brought back to Earth on this day of the Turn. They never fly again. */
+/** The records of Crew a Free-return brought back to Earth on this day of the Turn, with the Health they have left. They never fly again. */
 export function bringCrewHome(
-  catalogue: Catalogue,
   program: Program,
-  names: string[],
+  crew: readonly { name: string; health: number }[],
   backOnDay: number,
 ): CrewMember[] {
   const backOn = addDays(program.date, backOnDay);
-  return names.map((name) => ({
+  return crew.map(({ name, health }) => ({
     name,
-    health: catalogue.crew.maxHealth,
+    health,
     arrivedOn: null,
     location: { kind: "home", backOn },
   }));
 }
 
-/** The Program's Crew with these changed or new: each one already listed keeps its place, and new ones go at the end. */
+/**
+ * The Program's Crew with these changed or new: each one already listed keeps its place, and new ones go at the end.
+ * A Crew member changed more than once, such as one who arrived and then died, ends as the last change says.
+ */
 export function withCrew(
   crew: readonly CrewMember[],
   changed: readonly CrewMember[],
 ): CrewMember[] {
   const byName = new Map(changed.map((member) => [member.name, member]));
   const listed = new Set(crew.map(({ name }) => name));
+  const added = [...new Set(changed.map(({ name }) => name))].filter(
+    (name) => !listed.has(name),
+  );
   return [
     ...crew.map((member) => byName.get(member.name) ?? member),
-    ...changed.filter(({ name }) => !listed.has(name)),
+    ...added.flatMap((name) => byName.get(name) ?? []),
   ];
 }

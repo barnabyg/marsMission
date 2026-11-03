@@ -45,13 +45,33 @@ describe("strategies that fly Crew", () => {
   });
 
   it.each(flying.map((strategy) => [strategy.name, strategy] as const))(
-    "%s gets Crew to Mars once it can carry them, and keeps them at research",
+    "%s gets Crew to Mars once it can carry them, and keeps them at research until their Health runs out",
     (_, strategy) => {
       const certainly = simulationOf(certain);
-      const { program } = playProgram(certainly, strategy, 1, turns);
-      const [group] = certainly.readProgram(program).crew;
-      expect(group?.members.length).toBeGreaterThan(0);
-      expect(group?.activityName).toBe("Crew research");
+      const { program, turns: played } = playProgram(
+        certainly,
+        strategy,
+        1,
+        turns,
+      );
+      expect(
+        played.some(({ researchScience }) =>
+          researchScience.some(
+            ({ activityName, science }) =>
+              activityName === "Crew research" && science > 0,
+          ),
+        ),
+      ).toBe(true);
+      // With nothing able to fail, only Health takes Crew away from Mars.
+      const { crew } = certainly.saveProgram(program).program;
+      expect(crew.length).toBeGreaterThan(0);
+      expect(
+        crew.every(
+          ({ location }) =>
+            location.kind === "marsOrbit" ||
+            (location.kind === "lost" && location.cause === "health"),
+        ),
+      ).toBe(true);
     },
   );
 
@@ -188,6 +208,55 @@ describe("the checks for invalid Crew", () => {
       () =>
         withMembers(group.members.map((member) => ({ ...member, health: -1 }))),
       /Health is outside/,
+    ],
+    [
+      "a Crew member at zero Health still at Mars",
+      () =>
+        withMembers(group.members.map((member) => ({ ...member, health: 0 }))),
+      /zero Health still operates/,
+    ],
+    [
+      "Health lost to a cause that's nothing",
+      () =>
+        changedSummary({
+          healthLost: [
+            { name: firstName, lost: [{ cause: "timeAtMars", health: 0 }] },
+          ],
+        }),
+      /lost no Health, or gained some/,
+    ],
+    [
+      "Health that falls by more than the Turn summary says",
+      () =>
+        withMembers(
+          group.members.map((member) => ({
+            ...member,
+            health: member.health - 1,
+          })),
+        ),
+      /doesn't match what the Turn summary says/,
+    ],
+    [
+      "a Crew member dying of Health they still had",
+      () =>
+        crewProblems(
+          before,
+          {
+            ...summary,
+            crewLost: [{ ...lostFirst, cause: "health" }],
+            healthLost: [],
+          },
+          {
+            ...after,
+            crew: [
+              {
+                ...group,
+                members: group.members.filter(({ name }) => name !== firstName),
+              },
+            ],
+          },
+        ),
+      /died of their Health without losing all of it/,
     ],
     [
       "Crew doing an Activity they can't do",

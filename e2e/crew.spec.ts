@@ -60,7 +60,7 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await expect(page.getByTestId("crew-names")).toHaveText("Health 100 each");
   await expect(page.getByTestId("crew-names")).toHaveAttribute(
     "data-detail",
-    "Flying: Amara Okafor, Lena Petrova, each starting at Health 100.",
+    "Flying: Amara Okafor, Lena Petrova, each starting at Health 100. Radiation on the way leaves them 79 as they reach Mars.",
   );
   await expect(page.getByTestId("research-earnings")).toContainText(
     "Crew research earns 160 Science",
@@ -83,7 +83,10 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await page.getByRole("button", { name: "10x" }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-crew")).toContainText(
-    "Amara Okafor, in Mars orbit from this Turn: Health 100 of 100",
+    "Amara Okafor, in Mars orbit from this Turn: Health 57 of 100",
+  );
+  await expect(summary.getByTestId("summary-health-lost")).toContainText(
+    "Amara Okafor lost 43 Health: 21 to radiation in flight, 11 to radiation at Mars, 11 to time at Mars",
   );
   await expect(summary.getByTestId("summary-ongoing-research")).toContainText(
     "Crew in Mars orbit, Crew research",
@@ -94,7 +97,7 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await expect(page.getByTestId("turn-number")).toHaveText("4");
   const crew = page.getByTestId("crew-at-mars").getByRole("listitem");
   await expect(crew).toHaveText([
-    /Crew in Mars orbit: Amara Okafor \(Health 100\), Lena Petrova \(Health 100\)/,
+    /Crew in Mars orbit: Amara Okafor \(Health 57\), Lena Petrova \(Health 57\)/,
   ]);
   await expect(
     page.getByRole("combobox", { name: "Activity for the Crew in Mars orbit" }),
@@ -122,7 +125,7 @@ test("keeps the Crew at Mars through saving and loading", async ({ page }) => {
   await page.reload();
   await page.getByRole("button", { name: "Continue this Program" }).click();
   await expect(page.getByTestId("crew-at-mars")).toContainText(
-    "Amara Okafor (Health 100), Lena Petrova (Health 100)",
+    "Amara Okafor (Health 57), Lena Petrova (Health 57)",
   );
 });
 

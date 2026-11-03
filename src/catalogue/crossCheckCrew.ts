@@ -1,7 +1,7 @@
 import { findDuplicates } from "./crossCheckIds";
 import { catalogueFileNames, type Catalogue } from "./schemas";
 
-/** The Crewed Mission: its Mission Events, Crew sizes, Activities and names. */
+/** The Crewed Mission: its Mission Events, Crew sizes, Health, Activities and names. */
 export function crewProblems({
   crew,
   activities,
@@ -43,6 +43,12 @@ export function crewProblems({
   }
   for (const duplicate of new Set(findDuplicates(crew.names))) {
     problems.push(`${file}: the name "${duplicate}" is listed more than once`);
+  }
+  const { contingencyRescueLoss } = crew.health;
+  if (contingencyRescueLoss >= crew.maxHealth) {
+    problems.push(
+      `${file}: a Contingency rescue costs ${contingencyRescueLoss} Health, which must be less than the ${crew.maxHealth} Crew start with`,
+    );
   }
   const largest = Math.max(...crew.sizes.map((size) => size.crew));
   if (crew.names.length < largest) {

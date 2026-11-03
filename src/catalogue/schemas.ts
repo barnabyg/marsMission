@@ -172,6 +172,18 @@ const crewSchema = z.strictObject({
     .min(1),
   // Each Crew member's Health as they launch, which is the most they can have.
   maxHealth: z.number().int().positive(),
+  // How Crew lose Health. Radiation is a cause of its own, on the way to Mars and at Mars, which Protection will slow.
+  health: z.strictObject({
+    // Health lost to radiation for each day on the way to Mars (or back), and for each day at Mars.
+    radiationPerDay: z.strictObject({
+      inFlight: z.number().nonnegative(),
+      atMars: z.number().nonnegative(),
+    }),
+    // Health lost for each day at Mars to everything else that living there does to the body.
+    timeAtMarsPerDay: z.number().nonnegative(),
+    // Health each Crew member on board loses when a Contingency saves their Mission.
+    contingencyRescueLoss: z.number().int().nonnegative(),
+  }),
   // The Public Support lost for each Crew member lost, whatever the cause, on top of anything else that day costs.
   publicSupportLossPerMember: z.number().int().nonnegative(),
   // What Crew in Mars orbit can do, which all of them there share. The first is what they do unless the player picks

@@ -1,6 +1,7 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { tryContingency } from "./contingency";
-import { startFlight, type MissionOutcome } from "./flight";
+import { endCrewFlight } from "./crewHealthInFlight";
+import { startFlight, type Flight, type MissionOutcome } from "./flight";
 import { goNoGoCheck } from "./goNoGo";
 import { missionEventFailed } from "./missionEventFailure";
 import { roll, type Asset, type Rules } from "./rules";
@@ -32,7 +33,8 @@ export function deliveryDayOf(
  *
  * Each subject of the flight has its own module: the solar particle event on the way (`solarParticleEvents.ts`), the
  * go/no-go check before a landing in a dust storm (`goNoGo.ts`), the Contingency for a Mission Event that fails
- * (`contingency.ts`), and what failing for good costs (`missionEventFailure.ts`). They share the `Flight`.
+ * (`contingency.ts`), what failing for good costs (`missionEventFailure.ts`) and what the flight did to the Crew's
+ * Health (`crewHealthInFlight.ts`). They share the `Flight`.
  */
 export function flyMission(
   catalogue: Catalogue,
@@ -42,10 +44,16 @@ export function flyMission(
   answers: DecisionAnswers,
 ): MissionOutcome {
   const flight = startFlight(catalogue, rules, program, plan, answers);
-  const { mission, outcome } = flight;
+  flyEvents(flight);
+  endCrewFlight(flight);
+  return flight.outcome;
+}
+
+function flyEvents(flight: Flight): void {
+  const { rules, program, mission, outcome } = flight;
   const plannedEvents = mission ? rules.missionEventsFor(mission) : [];
   const particleDay = mission
-    ? solarParticleEventDay(catalogue, rules, program, mission)
+    ? solarParticleEventDay(flight.catalogue, rules, program, mission)
     : null;
 
   for (const event of plannedEvents) {
@@ -55,7 +63,7 @@ export function flyMission(
       flight.dayOf(event) > particleDay &&
       solarParticleEventInFlight(flight, particleDay)
     ) {
-      return outcome;
+      return;
     }
     const risk = goNoGoCheck(
       flight,
@@ -67,7 +75,7 @@ export function flyMission(
         mission,
       ),
     );
-    if (risk === null) return outcome;
+    if (risk === null) return;
     const failed = roll(program.seed, program.turnNumber, event.id) < risk;
     if (!failed) {
       outcome.entries.push({
@@ -85,11 +93,10 @@ export function flyMission(
     if (contingency.kind === "failed") {
       missionEventFailed(flight, event, onBoard, contingency.used);
     }
-    return outcome;
+    return;
   }
   // A Mission with nothing to do on arrival still meets one on the way.
   if (particleDay !== null && outcome.solarParticleEvent === null) {
     solarParticleEventInFlight(flight, particleDay);
   }
-  return outcome;
 }

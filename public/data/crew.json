@@ -7,6 +7,11 @@
     { "crew": 4, "costMillions": 4000, "massTonnes": 12 }
   ],
   "maxHealth": 100,
+  "health": {
+    "radiationPerDay": { "inFlight": 0.1, "atMars": 0.02 },
+    "timeAtMarsPerDay": 0.02,
+    "contingencyRescueLoss": 15
+  },
   "publicSupportLossPerMember": 100,
   "orbitActivities": ["crew-research", "nothing"],
   "names": [

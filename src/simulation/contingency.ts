@@ -14,6 +14,9 @@ import {
   type MissionEvent,
 } from "./rules";
 
+// Slow to create, and balance runs fly a great many Missions.
+const listOfNames = new Intl.ListFormat("en");
+
 const decisionIdOf = (event: MissionEvent) => `contingency:${event.id}`;
 
 /**
@@ -27,7 +30,8 @@ type ContingencyResult =
 
 /**
  * Offers the Contingency the Mission bought for a Mission Event that failed, if it bought one, as a Decision Point, and
- * rolls for the rescue once the player has chosen to use it. A rescue costs the Assets on board some Service Life.
+ * rolls for the rescue once the player has chosen to use it. A rescue costs the Assets on board some Service Life, and
+ * the Crew on board some Health.
  */
 export function tryContingency(
   flight: Flight,
@@ -41,17 +45,29 @@ export function tryContingency(
     ...onBoard.map((asset) => asset.name),
     ...crewOnBoard,
   ].join(", ");
-  // Only an Asset has Service Life. What a rescue costs Crew is still to come.
-  const carryOn = (percent: number) =>
-    onBoard.length === 0
-      ? ""
-      : crewOnBoard.length === 0
-        ? ` with ${percent}% less Service Life`
-        : `, the Assets with ${percent}% less Service Life`;
+  const { contingencyRescueLoss } = flight.catalogue.crew.health;
+  // An Asset loses Service Life to a rescue, and Crew lose Health.
+  const crewCost = `${contingencyRescueLoss} less Health each`;
+  const carryOn = (percent: number) => {
+    const assetCost = `${percent}% less Service Life`;
+    if (crewOnBoard.length === 0) {
+      return onBoard.length === 0 ? "" : ` with ${assetCost}`;
+    }
+    return onBoard.length === 0
+      ? ` with ${crewCost}`
+      : `, the Assets with ${assetCost} and the Crew with ${crewCost}`;
+  };
   const lifeLost = (percent: number) =>
-    onBoard.length === 0
-      ? ""
-      : ` ${assetNames} lost ${percent}% of their Service Life.`;
+    [
+      ...(onBoard.length > 0
+        ? [` ${assetNames} lost ${percent}% of their Service Life.`]
+        : []),
+      ...(crewOnBoard.length > 0
+        ? [
+            ` ${listOfNames.format(crewOnBoard)} lost ${contingencyRescueLoss} Health${crewOnBoard.length > 1 ? " each" : ""}.`,
+          ]
+        : []),
+    ].join("");
   const contingency = rules.contingencyFor(mission, event.id);
   if (contingency) {
     outcome.entries.push({
@@ -100,6 +116,14 @@ export function tryContingency(
         contingency.rescueFailureProbability
     ) {
       flight.cut(onBoard, contingency.serviceLifeLossPercent);
+      if (crewOnBoard.length > 0) {
+        outcome.crewBlows.push({
+          names: crewOnBoard,
+          cause: "contingency",
+          day: flight.dayOf(event),
+          health: contingencyRescueLoss,
+        });
+      }
       outcome.contingencies.push({
         missionEventName: event.name,
         contingencyName: contingency.name,

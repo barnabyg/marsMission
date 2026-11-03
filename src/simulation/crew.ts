@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import { drainsInFlight, healthCourse } from "./health";
 import { earningsPerTurn } from "./ongoingResearch";
 import type { Activity, Rules } from "./rules";
 import type { PlannedActivity } from "./previews";
@@ -40,6 +41,8 @@ export interface PlannedCrew {
   activities: PlannedActivity[];
   /** Where they would join Crew already operating, whose Activity they take up, or null if none are there. */
   joining: string | null;
+  /** The Health each would have left on arriving, after radiation on the way, if nothing else harms them. */
+  arrivalHealth: number;
 }
 
 /** Crew in Mars orbit, the only place they go so far. */
@@ -229,6 +232,11 @@ export function previewCrew(
       orbitActivityNow(program, plan) === undefined
         ? null
         : locationNameOf(marsOrbit),
+    arrivalHealth: healthCourse(
+      catalogue.crew.maxHealth,
+      drainsInFlight(catalogue, rules.deliveryDay(catalogue.crew, mission)),
+      [],
+    ).health,
   };
 }
 

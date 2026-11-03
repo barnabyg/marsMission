@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { TurnPlan } from "./simulation";
-import { setup, skipTurn, withFailures } from "./testHelpers";
+import { setup, skipTurn, steadyHealth, withFailures } from "./testHelpers";
 
 const crewMission = {
   launchVehicleId: "test-heavy",
@@ -9,8 +9,15 @@ const crewMission = {
 };
 const sendCrew: TurnPlan = { mission: crewMission };
 
-/** Two Turns' worth of money, so that two Crewed Missions can fly. */
-const wealthy = () => withFailures([], { startingMoneyMillions: 5000 });
+/** Two Turns' worth of money, so that two Crewed Missions can fly, and Crew whose Health lasts. */
+const wealthy = () =>
+  withFailures([], {
+    startingMoneyMillions: 5000,
+    crewHealth: steadyHealth,
+  });
+
+/** Crew whose Health never falls, for the tests that follow them over several Turns. */
+const lasting = () => withFailures([], { crewHealth: steadyHealth });
 
 describe("planning a Crewed Mission", () => {
   it("offers each Crew size with what it weighs and costs, and the Health Crew start with", () => {
@@ -110,8 +117,8 @@ describe("planning a Crewed Mission", () => {
 });
 
 describe("Crew at Mars", () => {
-  it("arrive in Mars orbit as the Mission's arrival succeeds, named in the data files' order, at full Health", () => {
-    const { simulation, program } = setup();
+  it("arrive in Mars orbit as the Mission's arrival succeeds, named in the data files' order", () => {
+    const { simulation, program } = lasting();
     const { program: next, timeline } = simulation.runTurn(program, sendCrew);
     expect(simulation.readProgram(next).crew).toEqual([
       expect.objectContaining({
@@ -159,7 +166,7 @@ describe("Crew at Mars", () => {
   });
 
   it("share one Activity and earn Ongoing Research for each Crew member, which the Turn summary reports", () => {
-    const { simulation, program } = setup();
+    const { simulation, program } = lasting();
     const first = simulation.runTurn(program, sendCrew);
     // 580 of the Turn's 780 days, for each of the two.
     expect(first.summary.ongoingResearch).toEqual([
@@ -184,7 +191,7 @@ describe("Crew at Mars", () => {
   });
 
   it("keep their Activity into later Turns until the player changes it", () => {
-    const { simulation, program } = setup();
+    const { simulation, program } = lasting();
     const first = simulation.runTurn(program, sendCrew);
     const resting = simulation.runTurn(first.program, {
       mission: null,
@@ -255,7 +262,7 @@ describe("Crew at Mars", () => {
   });
 
   it("are listed with their Health in the Turn summary", () => {
-    const { simulation, program } = setup();
+    const { simulation, program } = lasting();
     const first = simulation.runTurn(program, sendCrew);
     expect(first.summary.crew).toEqual([
       {

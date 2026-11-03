@@ -9,6 +9,7 @@ import {
   crewAtMars,
   crewShipsAtMars,
   crewSummary,
+  healthLostSummary,
 } from "./crewAtMars";
 import { carryOutDevelopment } from "./development";
 import { bringCrewHome, loseCrew, withCrew } from "./lostCrew";
@@ -209,7 +210,7 @@ export function resolveTurn(
   const lostCrew = loseCrew(
     catalogue,
     program,
-    flown.crewLost,
+    [...flown.crewLost, ...crew.deaths],
     program.publicSupport - flown.publicSupportLost,
   );
   const crewHome = flown.returned?.crew ?? [];
@@ -352,13 +353,12 @@ export function resolveTurn(
         .filter(({ untilDay }) => untilDay === null)
         .map(({ asset }) => asset),
       crew: withCrew(program.crew, [
-        ...crew.arrived,
+        ...crew.stillThere,
         ...lostCrew.lost,
         ...(flown.returned
           ? bringCrewHome(
-              catalogue,
               program,
-              crewHome,
+              flown.crewHealth.filter(({ name }) => crewHome.includes(name)),
               flown.returned.backOnDay,
             )
           : []),
@@ -414,6 +414,7 @@ export function resolveTurn(
       developmentsFinished: development.finished,
       crew: crewSummary(catalogue, crew.atWork),
       crewLost: lostCrew.summary,
+      healthLost: healthLostSummary(crew.atWork, flown),
       crewHome,
       assetsEnded: inService
         .filter(({ untilDay, failed }) => untilDay !== null && !failed)
