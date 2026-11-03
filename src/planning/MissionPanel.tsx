@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  canFly,
   formatMoney,
   type AssetChoices,
   type PlannedTrajectory,
@@ -10,7 +11,7 @@ import {
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { MissionAssetChoice } from "./MissionAssetChoice";
-import { canFly, readinessLabel, ReadinessTag } from "./ReadinessTag";
+import { readinessLabel, ReadinessTag } from "./ReadinessTag";
 import {
   isSurveying,
   NothingLeftToSurvey,

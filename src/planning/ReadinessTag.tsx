@@ -1,6 +1,4 @@
-import type { ProgramView } from "../simulation/simulation";
-
-type TechnologyReadiness = ProgramView["assets"][number]["technologyReadiness"];
+import type { TechnologyReadiness } from "../simulation/simulation";
 
 /** How Planning Mode labels a technology's Technology Readiness. */
 export function readinessLabel(readiness: TechnologyReadiness): string {
@@ -10,15 +8,6 @@ export function readinessLabel(readiness: TechnologyReadiness): string {
     "not-built": "Needs Development",
   };
   return labels[readiness];
-}
-
-/** Whether a technology can be chosen for a Mission, which it can't until its Development has finished. */
-export function canFly({
-  technologyReadiness,
-}: {
-  technologyReadiness: TechnologyReadiness;
-}): boolean {
-  return technologyReadiness !== "not-built";
 }
 
 /** A technology's Technology Readiness, short enough for a crowded row, with that term's tooltip. */

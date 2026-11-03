@@ -7,6 +7,15 @@ export type Technology =
 
 export type TechnologyReadiness = Technology["technologyReadiness"];
 
+/** Whether a technology can be chosen for a Mission, which it can't until its Development has finished. */
+export function canFly({
+  technologyReadiness,
+}: {
+  technologyReadiness: TechnologyReadiness;
+}): boolean {
+  return technologyReadiness !== "not-built";
+}
+
 /** Whether a technology's Development has finished in this Program, which is at the start of the Turn it was due. */
 function isDeveloped(program: Program, technology: Technology): boolean {
   return program.developments.some(

@@ -1,4 +1,5 @@
 import {
+  canFly,
   formatMoney,
   type AssetChoices,
   type PlannedAsset,
@@ -6,7 +7,7 @@ import {
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
-import { canFly, ReadinessTag } from "./ReadinessTag";
+import { ReadinessTag } from "./ReadinessTag";
 
 interface MissionAssetChoiceProps {
   asset: ProgramView["assets"][number];

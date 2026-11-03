@@ -33,6 +33,7 @@ import type {
 
 export { addDays, formatMoney } from "./rules";
 export { corruptSave, SaveError } from "./saveFormat";
+export { canFly, type TechnologyReadiness } from "./technologyReadiness";
 export type {
   AssetChoices,
   DecisionAnswer,

@@ -1,12 +1,13 @@
-import type {
-  DecisionAnswer,
-  DecisionPoint,
-  PlannedActivity,
-  PlannedAsset,
-  PlannedTrajectory,
-  ProgramView,
-  Simulation,
-  TurnPlan,
+import {
+  canFly,
+  type DecisionAnswer,
+  type DecisionPoint,
+  type PlannedActivity,
+  type PlannedAsset,
+  type PlannedTrajectory,
+  type ProgramView,
+  type Simulation,
+  type TurnPlan,
 } from "../simulation/simulation";
 
 type PlannedMission = NonNullable<TurnPlan["mission"]>;
@@ -169,13 +170,6 @@ function landingSiteFor(view: ProgramView, playStyle: PlayStyle) {
         second.science - first.science,
     )[0];
 }
-
-/** Whether a technology can be chosen for a Mission, which it can't until its Development has finished. */
-const canFly = ({
-  technologyReadiness,
-}: {
-  technologyReadiness: ProgramView["assets"][number]["technologyReadiness"];
-}) => technologyReadiness !== "not-built";
 
 /** The Developments to start this Turn, in the order the PlayStyle lists them, while the money left covers each one. */
 function developmentsToStart(
