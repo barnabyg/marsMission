@@ -4,6 +4,7 @@ import { drainsInFlight, healthCourse } from "./health";
 import { earningsPerTurn } from "./ongoingResearch";
 import type { Activity, Rules } from "./rules";
 import type { PlannedActivity } from "./previews";
+import { daysOfSupplies, kilogramsOf, suppliesOptionOf } from "./supplies";
 import type {
   CrewMember,
   PlaceAtMars,
@@ -33,6 +34,8 @@ export interface CrewAtMars {
   /** The Activities they can do, with what the Crew there would earn together. */
   activities: PlannedActivity[];
   members: { name: string; health: number; arrivedOn: string }[];
+  /** How many days the Supplies they share will last them all, which is 0 once they have run out. */
+  suppliesDaysLeft: number;
 }
 
 /** A Crewed Mission's Crew as Planning Mode shows them before it launches. */
@@ -47,6 +50,16 @@ export interface PlannedCrew {
   joining: string | null;
   /** The Health each would have left on arriving, after radiation on the way, if nothing else harms them. */
   arrivalHealth: number;
+  /** The Supplies they carry, by id. */
+  suppliesId: string;
+  /** The Supplies on offer, least first, with how many days each would last this Crew from launch. */
+  supplies: {
+    id: string;
+    name: string;
+    costMillions: number;
+    massTonnes: number;
+    days: number;
+  }[];
 }
 
 /** Crew in Mars orbit, where a Crewed Mission goes unless its Crew land. */
@@ -200,7 +213,7 @@ export function crewedMissionView(
   catalogue: Catalogue,
   program: Program,
 ): ProgramView["crewedMission"] {
-  const { vehicleName, sizes, maxHealth } = catalogue.crew;
+  const { vehicleName, sizes, maxHealth, supplies } = catalogue.crew;
   return {
     vehicleName,
     sizes: sizes.map(({ crew, costMillions, massTonnes }) => ({
@@ -208,6 +221,14 @@ export function crewedMissionView(
       costMillions,
       massTonnes,
     })),
+    supplies: supplies.options.map(
+      ({ id, name, costMillions, massTonnes }) => ({
+        id,
+        name,
+        costMillions,
+        massTonnes,
+      }),
+    ),
     maxHealth,
     namesLeft: namesLeft(catalogue, program).length,
   };
@@ -246,6 +267,11 @@ export function crewAtMarsView(
           health,
           arrivedOn,
         })),
+        suppliesDaysLeft: daysOfSupplies(
+          catalogue,
+          program.crewSupplies[key] ?? 0,
+          members.length,
+        ),
       },
     ];
   });
@@ -285,6 +311,14 @@ export function previewCrew(
       ),
       [],
     ).health,
+    suppliesId: suppliesOptionOf(catalogue, mission)?.id ?? "",
+    supplies: catalogue.crew.supplies.options.map((option) => ({
+      id: option.id,
+      name: option.name,
+      costMillions: option.costMillions,
+      massTonnes: option.massTonnes,
+      days: daysOfSupplies(catalogue, kilogramsOf(option), size),
+    })),
   };
 }
 
@@ -323,7 +357,7 @@ export function operatingCrewProblems(
   );
 }
 
-/** What a Mission's Crew cost and weigh, and what's wrong with them, if anything. */
+/** What a Mission's Crew and their Supplies cost and weigh, and what's wrong with them, if anything. */
 export function checkCrew(
   catalogue: Catalogue,
   rules: Rules,
@@ -333,12 +367,16 @@ export function checkCrew(
   const { crew } = mission;
   if (!crew) return { costMillions: 0, massTonnes: 0, problems: [] };
   const size = crewSizeOf(catalogue, mission);
+  const supplies = suppliesOptionOf(catalogue, mission);
   const left = namesLeft(catalogue, program).length;
   return {
-    costMillions: size?.costMillions ?? 0,
-    massTonnes: size?.massTonnes ?? 0,
+    costMillions: (size?.costMillions ?? 0) + (supplies?.costMillions ?? 0),
+    massTonnes: (size?.massTonnes ?? 0) + (supplies?.massTonnes ?? 0),
     problems: [
       ...(size ? [] : [`There is no Crew size of ${crew.size}.`]),
+      ...(supplies
+        ? []
+        : [`There are no Supplies called "${crew.suppliesId}".`]),
       ...(size && left < size.crew
         ? [
             `Only ${left} Crew ${left === 1 ? "member is" : "members are"} left to fly, too few for a Crew of ${size.crew}.`,

@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import type { Outage } from "./supplies";
 
 /**
  * Crew Health: what lowers it, and when it runs out. Health is a whole number, from the Catalogue's maxHealth down to
@@ -7,8 +8,8 @@ import type { Catalogue } from "../catalogue/catalogue";
  * built up over the stretch, so the same days always cost the same Health, and a Crew member dies on the first day the
  * points they have lost reach the Health they started the stretch with.
  *
- * Radiation is a cause of its own, in flight and at Mars, so Protection can slow just that, and a drain from Supplies
- * running out can join the others at Mars from the day they do.
+ * Radiation is a cause of its own, in flight and at Mars, so Protection can slow just that, and having no Supplies
+ * left adds a faster drain of its own, in flight or at Mars, for the days they are out (`supplies.ts`).
  */
 
 /** Why a Crew member lost Health. */
@@ -17,7 +18,8 @@ export type HealthLossCause =
   | "radiationAtMars"
   | "timeAtMars"
   | "contingency"
-  | "dustStorm";
+  | "dustStorm"
+  | "noSupplies";
 
 /** The causes in the order the Turn summary lists them, with how the player reads each. */
 export const healthLossCauses: Record<HealthLossCause, string> = {
@@ -26,6 +28,7 @@ export const healthLossCauses: Record<HealthLossCause, string> = {
   timeAtMars: "time at Mars",
   contingency: "a Contingency rescue",
   dustStorm: "a dust storm",
+  noSupplies: "having no Supplies",
 };
 
 /** Health lost steadily, at so much a day, from one day of the Turn to another. */
@@ -179,4 +182,27 @@ export function drainsAtMars(
     },
     { cause: "timeAtMars", fromDay, toDay, perDay: timeAtMarsPerDay },
   ];
+}
+
+/** Having no Supplies left, over the days of these outages that fall between `fromDay` and `toDay`. */
+export function drainsWithoutSupplies(
+  catalogue: Catalogue,
+  outages: readonly Outage[],
+  fromDay: number,
+  toDay: number,
+): HealthDrain[] {
+  return outages.flatMap((outage) => {
+    const from = Math.max(fromDay, outage.fromDay);
+    const to = Math.min(toDay, outage.toDay);
+    return to > from
+      ? [
+          {
+            cause: "noSupplies" as const,
+            fromDay: from,
+            toDay: to,
+            perDay: catalogue.crew.health.noSuppliesPerDay,
+          },
+        ]
+      : [];
+  });
 }

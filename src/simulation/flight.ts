@@ -2,12 +2,19 @@ import type { Catalogue } from "../catalogue/catalogue";
 import { crewNamesFor } from "./crew";
 import {
   drainsInFlight,
+  drainsWithoutSupplies,
   healthCourse,
   type HealthBlow,
   type HealthCourse,
   type HealthLost,
 } from "./health";
 import type { CrewLoss } from "./lostCrew";
+import {
+  kilogramsOf,
+  suppliesCourse,
+  suppliesOptionOf,
+  type Outage,
+} from "./supplies";
 import type {
   Asset,
   LandingSite,
@@ -27,6 +34,7 @@ import type {
   HazardEntry,
   MissionEventEntry,
   MissionReturnedEntry,
+  SuppliesOutEntry,
 } from "./timeline";
 
 /** One Decision Point and how it was answered, with the Assets that came through it. */
@@ -40,7 +48,11 @@ export interface MissionOutcome {
   assets: Asset[];
   /** The Mission Events that happened, ending with the one that failed if one did. */
   entries: (
-    MissionEventEntry | DecisionPointEntry | HazardEntry | MissionReturnedEntry
+    | MissionEventEntry
+    | DecisionPointEntry
+    | HazardEntry
+    | MissionReturnedEntry
+    | SuppliesOutEntry
   )[];
   failedEvent: MissionEvent | undefined;
   /** The day of the failed Mission Event, if there was one. */
@@ -57,6 +69,10 @@ export interface MissionOutcome {
    * on getting home, at a Decision Point, or at 0 if it ran out on the way. Set once the Mission has flown.
    */
   crewHealth: { name: string; health: number; lost: HealthLost[] }[];
+  /** The Supplies, in kilograms, the Crew had left as their flight ended, which those who arrive bring with them. Set once the Mission has flown. */
+  crewSuppliesKg: number;
+  /** The day the Crew's Supplies ran out on the way, if they did. Set once the Mission has flown. */
+  crewSuppliesOutOn: number | null;
   publicSupportLost: number;
   landingSite: LandingSite | undefined;
   /** What a Free-return brought back, if it did, with the names of the Crew it brought home. */
@@ -109,6 +125,10 @@ export interface Flight {
   crewOnBoard: (when: MissionEvent | number) => string[];
   /** What the flight has done to a Crew member's Health from launch to this day. */
   healthInFlight: (name: string, toDay: number) => HealthCourse;
+  /** The days the Crew have had no Supplies left on board, if they keep flying to the end of the Turn. */
+  suppliesOutages: () => Outage[];
+  /** The Supplies, in kilograms, the Crew have left on board on this day. */
+  suppliesLeftOn: (day: number) => number;
   /** Those of these Crew whose Health hasn't run out by this day. */
   aliveOn: (names: string[], day: number) => string[];
   /** Ends the Mission for what is still on board, so that only what was delivered before arrives. */
@@ -205,6 +225,8 @@ export function startFlight(
     crewLost: [],
     crewBlows: [],
     crewHealth: [],
+    crewSuppliesKg: 0,
+    crewSuppliesOutOn: null,
     publicSupportLost: 0,
     landingSite,
     returned: null,
@@ -223,6 +245,39 @@ export function startFlight(
         rules.serviceLifeFor(mission, asset).days;
       outcome.cutServiceLife.set(asset, Math.max(1, Math.round(to(days))));
     }
+  };
+  const turnDays = catalogue.program.launchWindowIntervalDays;
+  const suppliesKg =
+    crew.length > 0 ? kilogramsOf(suppliesOptionOf(catalogue, mission)) : 0;
+  const blowsTo = (name: string) =>
+    outcome.crewBlows.filter(({ names }) => names.includes(name));
+  // Only Crew still alive use Supplies, and no one dies of having none before they run out, so the days each would
+  // die of everything else say when they do.
+  const suppliesTo = (day: number) =>
+    suppliesCourse(
+      catalogue,
+      suppliesKg,
+      crew.map((name) => ({
+        fromDay: 0,
+        untilDay: healthCourse(
+          catalogue.crew.maxHealth,
+          drainsInFlight(catalogue, turnDays),
+          blowsTo(name),
+        ).diedOn,
+      })),
+      [],
+      day,
+    );
+  // Health in flight is asked for often, and the outages change only with a new blow.
+  let outagesSoFar: { blows: number; outages: Outage[] } | null = null;
+  const suppliesOutages = () => {
+    if (outagesSoFar?.blows !== outcome.crewBlows.length) {
+      outagesSoFar = {
+        blows: outcome.crewBlows.length,
+        outages: suppliesTo(turnDays).outages,
+      };
+    }
+    return outagesSoFar.outages;
   };
   const flight: Flight = {
     catalogue,
@@ -252,9 +307,14 @@ export function startFlight(
     healthInFlight: (name, toDay) =>
       healthCourse(
         catalogue.crew.maxHealth,
-        drainsInFlight(catalogue, toDay),
-        outcome.crewBlows.filter(({ names }) => names.includes(name)),
+        [
+          ...drainsInFlight(catalogue, toDay),
+          ...drainsWithoutSupplies(catalogue, suppliesOutages(), 0, toDay),
+        ],
+        blowsTo(name),
       ),
+    suppliesOutages,
+    suppliesLeftOn: (day) => suppliesTo(day).leftKg,
     aliveOn: (names, day) =>
       names.filter((name) => flight.healthInFlight(name, day).diedOn === null),
     stopWith: (onBoard, crewOnBoard) => {

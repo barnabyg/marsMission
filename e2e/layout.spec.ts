@@ -74,7 +74,7 @@ async function openBusyProgram(
               formatVersion: 8,
               program: {
                 ...developed,
-                // Enough for the largest Crewed Mission and a lander, so that nothing shows a problem.
+                // Enough for a large Crewed Mission and a lander, so that nothing shows a problem.
                 moneyMillions: 9000,
                 crew: realFiles.crew.names.slice(0, 4).map((name) => ({
                   name,
@@ -328,8 +328,9 @@ for (const size of screenSizes) {
         .getByRole("combobox", { name: "Launch Vehicle" })
         .selectOption("meridian-colossus");
       await page.getByRole("checkbox", { name: /Crewed Mission/ }).check();
-      await page.getByRole("combobox", { name: "Crew size" }).selectOption("4");
-      // As much as the largest Crew leaves room for, with a landing as well.
+      // The smallest Crew, which leaves room for a lander, Supplies, Contingencies and a Free-return, so that a landing
+      // is planned as well.
+      await page.getByRole("combobox", { name: "Crew size" }).selectOption("2");
       await chooseAssets(page, ["Prospector Lander"]);
       for (const contingency of await page
         .getByRole("checkbox", { name: /Contingency/ })
@@ -361,7 +362,8 @@ for (const size of screenSizes) {
         .getByRole("combobox", { name: "Launch Vehicle" })
         .selectOption("meridian-colossus");
       await page.getByRole("checkbox", { name: /Crewed Mission/ }).check();
-      await page.getByRole("combobox", { name: "Crew size" }).selectOption("4");
+      // The smallest Crew, which leaves room for a lander, Supplies, Contingencies and a Free-return.
+      await page.getByRole("combobox", { name: "Crew size" }).selectOption("2");
       // Landing, they can't join the Crew in Mars orbit, so they choose an Activity of their own, which is the widest row.
       await page
         .getByRole("combobox", { name: "Crew destination" })

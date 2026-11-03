@@ -30,6 +30,8 @@ interface MissionPlan {
   /** Whether the Crew land at the Landing Site, rather than staying in Mars orbit. */
   crewLands: boolean;
   chooseCrewLands: (lands: boolean) => void;
+  /** Chooses the Supplies the Crew carry, by id. */
+  chooseCrewSupplies: (suppliesId: string) => void;
   /** The Landing Site chosen, which only a Mission carrying an Asset or Crew that land has. */
   landingSite: ProgramView["landingSites"][number] | undefined;
   chooseLandingSite: (siteId: string) => void;
@@ -75,6 +77,7 @@ export function useMissionPlan(
   const [crewSize, setCrewSize] = useState<number | null>(null);
   const [crewActivityId, setCrewActivityId] = useState<string | undefined>();
   const [crewLands, setCrewLands] = useState(false);
+  const [crewSuppliesId, setCrewSuppliesId] = useState<string | undefined>();
 
   const landsOnMars =
     (crewSize !== null && crewLands) ||
@@ -92,6 +95,7 @@ export function useMissionPlan(
         size: crewSize,
         ...(crewActivityId !== undefined && { activityId: crewActivityId }),
         ...(crewLands && { landsAtSite: true }),
+        ...(crewSuppliesId !== undefined && { suppliesId: crewSuppliesId }),
       },
     }),
   };
@@ -127,6 +131,7 @@ export function useMissionPlan(
           size: plannedCrew.size,
           activityId: plannedCrew.activityId,
           ...(crewLands && { landsAtSite: true }),
+          suppliesId: plannedCrew.suppliesId,
         },
       }),
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
@@ -187,6 +192,7 @@ export function useMissionPlan(
       // Crew in orbit and Crew on the surface do different Activities.
       setCrewActivityId(undefined);
     },
+    chooseCrewSupplies: setCrewSuppliesId,
     landingSite,
     chooseLandingSite: setChosenSiteId,
     plannedEvents,

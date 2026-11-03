@@ -1,6 +1,11 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { AssetInService } from "./assetsInService";
-import { hurt, type CrewAtWork, type CrewStay } from "./crewAtMars";
+import {
+  hurt,
+  withSupplies,
+  type CrewAtWork,
+  type CrewStay,
+} from "./crewAtMars";
 import { crewResearch, earningsOfStay } from "./ongoingResearch";
 import { raisedStretches, type Stretch } from "./benefits";
 import {
@@ -269,7 +274,8 @@ export function resolveDustStorms(
       const here = crewAtStake.find((group) => group.crew === crew);
       if (!here) return crew;
       if (!carriesOn) return sheltering(crew, here.stays, { fromDay, toDay });
-      return {
+      // Crew who die sooner leave more Supplies for the rest.
+      return withSupplies(catalogue, {
         ...crew,
         stays: crew.stays.map((stay) => {
           if (!here.stays.includes(stay)) return stay;
@@ -295,7 +301,7 @@ export function resolveDustStorms(
           }
           return after;
         }),
-      };
+      });
     });
     if (answer === undefined) continue;
 

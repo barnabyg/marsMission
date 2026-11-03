@@ -11,12 +11,19 @@ import { crewDeliveryDayOf, type MissionOutcome } from "./flight";
 import {
   bothLost,
   drainsAtMars,
+  drainsWithoutSupplies,
   healthCourse,
   type HealthBlow,
   type HealthCourse,
 } from "./health";
 import { crewLoss, type CrewLoss } from "./lostCrew";
 import { addDays, daysBetween, type Rules } from "./rules";
+import {
+  diedWithoutSupplies,
+  sameOutages,
+  suppliesCourse,
+  type Outage,
+} from "./supplies";
 import type { AssetAtMars, CrewArrivedEntry, MissionAsset } from "./timeline";
 import type { TurnSummary } from "./turnSummary";
 import type { PlaceAtMars, Program, TurnPlan } from "./types";
@@ -31,6 +38,8 @@ export interface CrewStay {
   blows: HealthBlow[];
   /** The days they shelter from a dust storm, when they do no work. */
   shelter?: { fromDay: number; toDay: number };
+  /** The days the Supplies in their place are out, which lower their Health faster. */
+  outages: Outage[];
 }
 
 /** The Crew operating in one place at Mars during a Turn, who share one Activity. */
@@ -44,31 +53,46 @@ export interface CrewAtWork {
   name: string;
   activityId: string;
   stays: CrewStay[];
+  /** The Supplies they share: what they started the Turn with and gained, in kilograms, and what became of them. */
+  supplies: {
+    startKg: number;
+    /** Supplies brought by Crew who arrive here this Turn, on the day they do. */
+    refills: { day: number; kg: number }[];
+    leftKg: number;
+    outages: Outage[];
+  };
 }
 
 // Slow to create, and balance runs fly a great many Missions.
 const listOfNames = new Intl.ListFormat("en");
 
-/** A Crew member's days at Mars from `fromDay` to the end of the Turn, with these blows to their Health. */
+/**
+ * A Crew member's days at Mars from `fromDay` to the end of the Turn, with these blows to their Health and these days
+ * without Supplies.
+ */
 function stayOf(
   catalogue: Catalogue,
   member: CrewMemberAtMars,
   fromDay: number,
   blows: HealthBlow[],
-): CrewStay {
+  outages: Outage[],
+): Omit<CrewStay, "shelter"> {
+  const turnDays = catalogue.program.launchWindowIntervalDays;
   const health = healthCourse(
     member.health,
-    drainsAtMars(
-      catalogue,
-      fromDay,
-      catalogue.program.launchWindowIntervalDays,
-    ),
+    [
+      ...drainsAtMars(catalogue, fromDay, turnDays),
+      ...drainsWithoutSupplies(catalogue, outages, fromDay, turnDays),
+    ],
     blows,
   );
-  return { member, fromDay, untilDay: health.diedOn, health, blows };
+  return { member, fromDay, untilDay: health.diedOn, health, blows, outages };
 }
 
-/** A Crew member's stay with one more blow to their Health, which can end it sooner. */
+/**
+ * A Crew member's stay with one more blow to their Health, which can end it sooner. Fewer Crew make their place's
+ * Supplies last longer, so `withSupplies` works the place out again once its stays have changed.
+ */
 export function hurt(
   catalogue: Catalogue,
   stay: CrewStay,
@@ -76,8 +100,43 @@ export function hurt(
 ): CrewStay {
   return {
     ...stay,
-    ...stayOf(catalogue, stay.member, stay.fromDay, [...stay.blows, blow]),
+    ...stayOf(
+      catalogue,
+      stay.member,
+      stay.fromDay,
+      [...stay.blows, blow],
+      stay.outages,
+    ),
   };
+}
+
+/**
+ * The Crew in one place with their shared Supplies worked out from their stays, and their stays from their Supplies.
+ * Only Crew alive use Supplies, and running out lowers Health faster, so each pass starts from the days the last pass
+ * said were out. The days up to the first refill are settled by the second pass, and a Turn has at most one refill.
+ */
+export function withSupplies(
+  catalogue: Catalogue,
+  crew: CrewAtWork,
+): CrewAtWork {
+  const turnDays = catalogue.program.launchWindowIntervalDays;
+  const { startKg, refills } = crew.supplies;
+  let outages: Outage[] = [];
+  for (let pass = 0; ; pass += 1) {
+    const stays = crew.stays.map((stay) => ({
+      ...stay,
+      ...stayOf(catalogue, stay.member, stay.fromDay, stay.blows, outages),
+    }));
+    const course = suppliesCourse(catalogue, startKg, stays, refills, turnDays);
+    if (sameOutages(course.outages, outages) || pass === 3) {
+      return {
+        ...crew,
+        stays,
+        supplies: { startKg, refills, leftKg: course.leftKg, outages },
+      };
+    }
+    outages = course.outages;
+  }
 }
 
 /**
@@ -91,7 +150,10 @@ export function crewAtMars(
   rules: Rules,
   program: Program,
   plan: TurnPlan,
-  flown: Pick<MissionOutcome, "deliveredCrew" | "crewHealth" | "heldLanding">,
+  flown: Pick<
+    MissionOutcome,
+    "deliveredCrew" | "crewHealth" | "heldLanding" | "crewSuppliesKg"
+  >,
 ): {
   atWork: CrewAtWork[];
   arrived: CrewMemberAtMars[];
@@ -119,9 +181,11 @@ export function crewAtMars(
       plan,
     ).id;
   }
-  const stays = [
-    ...crewAtMarsOf(program).map((member) => stayOf(catalogue, member, 0, [])),
-    ...arrived.map((member) => stayOf(catalogue, member, arrivalDay, [])),
+  const stays: CrewStay[] = [
+    ...crewAtMarsOf(program).map((member) =>
+      stayOf(catalogue, member, 0, [], []),
+    ),
+    ...arrived.map((member) => stayOf(catalogue, member, arrivalDay, [], [])),
   ];
   const keys = [
     ...new Set(stays.map(({ member }) => crewKeyOf(member.location))),
@@ -133,15 +197,24 @@ export function crewAtMars(
     const where = here[0]?.member.location;
     if (!where) return [];
     const locationName = locationNameOf(rules, where);
+    const arrivesHere = arrived.length > 0 && crewKeyOf(place) === key;
     return [
-      {
+      withSupplies(catalogue, {
         key,
         place: where,
         locationName,
         name: `Crew in ${locationName}`,
         activityId: crewActivities[key] ?? "",
         stays: here,
-      },
+        supplies: {
+          startKg: program.crewSupplies[key] ?? 0,
+          refills: arrivesHere
+            ? [{ day: arrivalDay, kg: flown.crewSuppliesKg }]
+            : [],
+          leftKg: 0,
+          outages: [],
+        },
+      }),
     ];
   });
   return { atWork, arrived, crewActivities };
@@ -149,7 +222,8 @@ export function crewAtMars(
 
 /**
  * Who of the Crew at Mars is still there at the end of the Turn, with the Health they have left, and who died there
- * when their Health ran out. A place whose Crew have all died drops out of what Crew do.
+ * when their Health ran out: to their Supplies, if those were out that day, and otherwise to their Health. A place whose
+ * Crew have all died drops out of what Crew do, and of the Supplies kept.
  */
 export function crewAtTurnEnd(
   atWork: CrewAtWork[],
@@ -158,21 +232,23 @@ export function crewAtTurnEnd(
   stillThere: CrewMemberAtMars[];
   deaths: CrewLoss[];
   crewActivities: Record<string, string>;
+  crewSupplies: Record<string, number>;
 } {
-  const deaths = atWork.flatMap(({ stays: here, locationName }) => {
+  const deaths = atWork.flatMap(({ stays: here, locationName, supplies }) => {
     const days = [
       ...new Set(here.flatMap(({ untilDay }) => untilDay ?? [])),
     ].toSorted((first, second) => first - second);
-    return days.flatMap((day) =>
-      crewLoss(
+    return days.flatMap((day) => {
+      const starved = diedWithoutSupplies(supplies.outages, day);
+      return crewLoss(
         here
           .filter(({ untilDay }) => untilDay === day)
           .map(({ member }) => member.name),
         day,
-        "health",
-        `in ${locationName}, when their Health ran out`,
-      ),
-    );
+        starved ? "supplies" : "health",
+        `in ${locationName}, ${starved ? "with no Supplies left" : "when their Health ran out"}`,
+      );
+    });
   });
   // A place where every Crew member has died has no one left to do its Activity.
   const emptied = new Set(
@@ -191,6 +267,11 @@ export function crewAtTurnEnd(
     deaths,
     crewActivities: Object.fromEntries(
       Object.entries(crewActivities).filter(([key]) => !emptied.has(key)),
+    ),
+    crewSupplies: Object.fromEntries(
+      atWork
+        .filter(({ key }) => !emptied.has(key))
+        .map(({ key, supplies }) => [key, supplies.leftKg]),
     ),
   };
 }

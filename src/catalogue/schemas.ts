@@ -191,6 +191,25 @@ const crewSchema = z.strictObject({
       chance: z.number().min(0).max(1),
       loss: z.number().int().nonnegative(),
     }),
+    // Health lost for each day a Crew member has no Supplies left, on top of everything else.
+    noSuppliesPerDay: z.number().nonnegative(),
+  }),
+  // What Crew use up each day to stay alive, from launch, wherever they are.
+  supplies: z.strictObject({
+    // The kilograms each Crew member uses a day, so a larger Crew uses them faster.
+    usePerMemberPerDayKg: z.number().positive(),
+    // The Supplies a Crewed Mission can carry, least first, with what each costs and weighs. The first is what it
+    // carries unless the player picks another.
+    options: z
+      .array(
+        z.strictObject({
+          id,
+          name: z.string().min(1),
+          massTonnes: z.number().positive(),
+          costMillions: money,
+        }),
+      )
+      .min(1),
   }),
   // The Public Support lost for each Crew member lost, whatever the cause, on top of anything else that day costs.
   publicSupportLossPerMember: z.number().int().nonnegative(),

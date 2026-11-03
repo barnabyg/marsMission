@@ -12,7 +12,31 @@
     "radiationPerDay": { "inFlight": 0.1, "atMars": 0.02 },
     "timeAtMarsPerDay": 0.02,
     "contingencyRescueLoss": 15,
-    "dustStorm": { "chance": 0.25, "loss": 20 }
+    "dustStorm": { "chance": 0.25, "loss": 20 },
+    "noSuppliesPerDay": 2
+  },
+  "supplies": {
+    "usePerMemberPerDayKg": 1,
+    "options": [
+      {
+        "id": "supplies-lean",
+        "name": "Lean",
+        "massTonnes": 2,
+        "costMillions": 100
+      },
+      {
+        "id": "supplies-standard",
+        "name": "Standard",
+        "massTonnes": 3,
+        "costMillions": 150
+      },
+      {
+        "id": "supplies-ample",
+        "name": "Ample",
+        "massTonnes": 4,
+        "costMillions": 200
+      }
+    ]
   },
   "publicSupportLossPerMember": 100,
   "orbitActivities": ["crew-research", "nothing"],

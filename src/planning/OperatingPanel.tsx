@@ -43,7 +43,11 @@ export function OperatingPanel({
                 <GameText>
                   {`Crew in ${group.locationName}: ${group.members
                     .map(({ name, health }) => `${name} (Health ${health})`)
-                    .join(", ")}`}
+                    .join(", ")}. ${
+                    group.suppliesDaysLeft > 0
+                      ? `Supplies for ${group.suppliesDaysLeft.toLocaleString("en")} days`
+                      : "No Supplies left"
+                  }`}
                 </GameText>
               </span>
               <ActivitySelect

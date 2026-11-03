@@ -21,6 +21,26 @@ export function testCrew(): CatalogueFiles["crew"] {
       contingencyRescueLoss: 10,
       // No one is hurt in a dust storm unless a test says so.
       dustStorm: { chance: 0, loss: 30 },
+      noSuppliesPerDay: 1,
+    },
+    // A Crew of two uses half a kilogram a day, so the Short Supplies last them 2,000 days, longer than any test
+    // follows them unless it uses them faster.
+    supplies: {
+      usePerMemberPerDayKg: 0.25,
+      options: [
+        {
+          id: "test-supplies-short",
+          name: "Short",
+          massTonnes: 1,
+          costMillions: 100,
+        },
+        {
+          id: "test-supplies-long",
+          name: "Long",
+          massTonnes: 2,
+          costMillions: 200,
+        },
+      ],
     },
     publicSupportLossPerMember: 20,
     orbitActivities: ["test-research", "test-nothing"],

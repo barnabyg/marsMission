@@ -72,6 +72,14 @@ export interface CrewLostEntry {
   description: string;
 }
 
+/** Crew have run out of Supplies, on the way or in one place at Mars, which the events column shows as a failure. */
+export interface SuppliesOutEntry {
+  kind: "suppliesOut";
+  day: number;
+  title: string;
+  description: string;
+}
+
 export interface AssetEndedEntry {
   kind: "assetEnded";
   day: number;
@@ -119,6 +127,7 @@ export type TimelineEntry =
   | FlightProvenEntry
   | CrewArrivedEntry
   | CrewLostEntry
+  | SuppliesOutEntry
   | MissionEventEntry
   | MilestoneEntry
   | FundingThresholdEntry

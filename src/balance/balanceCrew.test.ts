@@ -33,7 +33,8 @@ const crewed = {
   mission: {
     launchVehicleId: "meridian-colossus",
     assetIds: [],
-    crew: { size: 2 },
+    // Supplies that keep them alive for the two Turns these tests follow them.
+    crew: { size: 2, suppliesId: "supplies-ample" },
   },
 };
 
@@ -45,7 +46,7 @@ describe("strategies that fly Crew", () => {
   });
 
   it.each(flying.map((strategy) => [strategy.name, strategy] as const))(
-    "%s gets Crew to Mars once it can carry them, and keeps them at research until their Health runs out",
+    "%s gets Crew to Mars once it can carry them, and keeps them at research until their Health or Supplies run out",
     (_, strategy) => {
       const certainly = simulationOf(certain);
       const { program, turns: played } = playProgram(
@@ -63,7 +64,7 @@ describe("strategies that fly Crew", () => {
           ),
         ),
       ).toBe(true);
-      // With nothing able to fail, only Health takes Crew away from Mars.
+      // With nothing able to fail, only Health, or Supplies running out, take Crew away from Mars.
       const { crew } = certainly.saveProgram(program).program;
       expect(crew.length).toBeGreaterThan(0);
       expect(
@@ -71,7 +72,8 @@ describe("strategies that fly Crew", () => {
           ({ location }) =>
             location.kind === "marsOrbit" ||
             location.kind === "landingSite" ||
-            (location.kind === "lost" && location.cause === "health"),
+            (location.kind === "lost" &&
+              ["health", "supplies"].includes(location.cause)),
         ),
       ).toBe(true);
     },
@@ -355,6 +357,35 @@ describe("the checks for invalid Crew", () => {
           ],
         }),
       /lost no Health to it/,
+    ],
+    [
+      "Supplies below zero",
+      () => changedAfter({ crew: [{ ...group, suppliesDaysLeft: -1 }] }),
+      /Supplies left for Crew at Mars are below zero/,
+    ],
+    [
+      "Supplies that don't fall for the same Crew",
+      () => {
+        const [earlier] = before.crew;
+        if (!earlier) throw new Error("No Crew before");
+        return changedAfter({ crew: [{ ...earlier }] });
+      },
+      /didn't fall by a Turn's worth/,
+    ],
+    [
+      "Crew lost to their Supplies with none running out",
+      () => changedSummary({ crewLost: [{ ...lostFirst, cause: "supplies" }] }),
+      /lost to their Supplies without running out/,
+    ],
+    [
+      "Health lost to having no Supplies with none running out",
+      () =>
+        changedSummary({
+          healthLost: [
+            { name: firstName, lost: [{ cause: "noSupplies", health: 5 }] },
+          ],
+        }),
+      /but none ran out/,
     ],
   ])("catch %s", (_, check, expected) => {
     expect(check().join(" ")).toMatch(expected);

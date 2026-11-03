@@ -39,29 +39,47 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await endTurnWithoutLaunching(page);
   await expect(page.getByTestId("turn-number")).toHaveText("3");
 
-  // Too heavy for the Meridian Heavy, even with the smallest Crew.
+  // Too heavy for the Meridian Heavy, even with the smallest Crew and the least Supplies.
   await launchVehicle(page).selectOption("meridian-heavy");
   await crewedMission(page).check();
   await expect(page.getByRole("combobox", { name: "Crew size" })).toHaveValue(
     "2",
   );
-  await expect(page.getByTestId("mission-mass")).toHaveText("9 of 8 tonnes");
+  await expect(page.getByRole("combobox", { name: "Supplies" })).toHaveValue(
+    "supplies-lean",
+  );
+  await expect(page.getByTestId("mission-mass")).toHaveText("11 of 8 tonnes");
   await expect(page.getByRole("alert")).toHaveText(
-    "This Mission weighs 9 tonnes, but its Launch Vehicle can only carry 8 tonnes.",
+    "This Mission weighs 11 tonnes, but its Launch Vehicle can only carry 8 tonnes.",
   );
   // A larger Crew weighs and costs more, and earns more.
   await page.getByRole("combobox", { name: "Crew size" }).selectOption("3");
-  await expect(page.getByTestId("mission-mass")).toHaveText("10.5 of 8 tonnes");
+  await expect(page.getByTestId("mission-mass")).toHaveText("12.5 of 8 tonnes");
   await expect(page.getByTestId("research-earnings")).toContainText(
     "Crew research earns 240 Science",
   );
+  // The same Supplies last a larger Crew fewer days.
+  await expect(
+    page.getByRole("combobox", { name: "Supplies" }).getByRole("option"),
+  ).toHaveText([
+    "666 days ($100M, 2 t)",
+    "1,000 days ($150M, 3 t)",
+    "1,333 days ($200M, 4 t)",
+  ]);
   await page.getByRole("combobox", { name: "Crew size" }).selectOption("2");
+  await page
+    .getByRole("combobox", { name: "Supplies" })
+    .selectOption("supplies-ample");
+  await expect(page.getByTestId("mission-mass")).toHaveText("13 of 8 tonnes");
+  await page
+    .getByRole("combobox", { name: "Supplies" })
+    .selectOption("supplies-lean");
 
   await launchVehicle(page).selectOption("meridian-colossus");
   await expect(page.getByRole("alert")).toHaveCount(0);
-  await expect(page.getByTestId("mission-mass")).toHaveText("9 of 16 tonnes");
-  // The Meridian Colossus, still unproven, and the Crew.
-  await expect(page.getByTestId("mission-cost")).toHaveText("$4.1B");
+  await expect(page.getByTestId("mission-mass")).toHaveText("11 of 16 tonnes");
+  // The Meridian Colossus, still unproven, the Crew and their Supplies.
+  await expect(page.getByTestId("mission-cost")).toHaveText("$4.2B");
   await expect(page.getByTestId("crew-names")).toHaveText("Health 100 each");
   await expect(page.getByTestId("crew-names")).toHaveAttribute(
     "data-detail",
@@ -101,12 +119,32 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
 
   await expect(page.getByTestId("turn-number")).toHaveText("4");
   const crew = page.getByTestId("crew-at-mars").getByRole("listitem");
+  // 2,000 kg, less 2 kg a day for the 780 days since launch.
   await expect(crew).toHaveText([
-    /Crew in Mars orbit: Amara Okafor \(Health 57\), Lena Petrova \(Health 57\)/,
+    /^Crew in Mars orbit: Amara Okafor \(Health 57\), Lena Petrova \(Health 57\)\. Supplies for 220 days/,
   ]);
   await expect(
     page.getByRole("combobox", { name: "Activity for the Crew in Mars orbit" }),
   ).toHaveValue("crew-research");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  // Their Supplies run out 220 days into the next Turn, after which their Health falls quickly.
+  await pauseAtEvent(page, "Supplies out in Mars orbit", () =>
+    page.getByRole("button", { name: "End Turn without launching" }).click(),
+  );
+  await expect(
+    eventEntries(page).filter({ hasText: "Supplies out in Mars orbit" }),
+  ).toContainText(
+    "The Crew in Mars orbit have run out of Supplies, so their Health falls quickly.",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await expect(summary.getByTestId("summary-supplies-out")).toContainText(
+    "Supplies ran out: Crew in Mars orbit on",
+  );
+  await expect(summary.getByTestId("summary-crew-lost")).toContainText(
+    "Amara Okafor and Lena Petrova were lost in Mars orbit, with no Supplies left.",
+  );
   expect(await termsWithoutTooltips(page)).toEqual([]);
   expect(problems).toEqual([]);
 });

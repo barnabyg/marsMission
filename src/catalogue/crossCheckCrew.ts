@@ -1,7 +1,7 @@
 import { findDuplicates } from "./crossCheckIds";
 import { catalogueFileNames, type Catalogue } from "./schemas";
 
-/** The Crewed Mission: its Mission Events to Mars orbit and to a Landing Site, Crew sizes, Health, Activities and names. */
+/** The Crewed Mission: its Mission Events to Mars orbit and to a Landing Site, Crew sizes, Health, Supplies, Activities and names. */
 export function crewProblems({
   crew,
   activities,
@@ -61,6 +61,21 @@ export function crewProblems({
   if (dustStorm.loss >= crew.maxHealth) {
     problems.push(
       `${file}: being hurt in a dust storm costs ${dustStorm.loss} Health, which must be less than the ${crew.maxHealth} Crew start with`,
+    );
+  }
+  crew.supplies.options.forEach((option, index) => {
+    const less = crew.supplies.options[index - 1];
+    if (less && option.massTonnes <= less.massTonnes) {
+      problems.push(
+        `${file}: the Supplies "${option.id}" weigh no more than "${less.id}" before them. Supplies go from least to most`,
+      );
+    }
+  });
+  for (const duplicate of new Set(
+    findDuplicates(crew.supplies.options.map(({ id }) => id)),
+  )) {
+    problems.push(
+      `${file}: the Supplies "${duplicate}" are listed more than once`,
     );
   }
   const largest = Math.max(...crew.sizes.map((size) => size.crew));

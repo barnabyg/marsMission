@@ -22,9 +22,9 @@ function crewLandingSite(view: ProgramView): string | undefined {
 }
 
 /**
- * Crewed Missions with no Asset aboard, largest Crew first, each on the cheapest Launch Vehicle that is built and can
- * carry it, with the Activity that earns the most Science. They go to Mars orbit, or land at a surveyed Landing Site if
- * `lands` and there is one. None if no Launch Vehicle can carry Crew.
+ * Crewed Missions with no Asset aboard, largest Crew first and then the most Supplies, each on the cheapest Launch
+ * Vehicle that is built and can carry it, with the Activity that earns the most Science. They go to Mars orbit, or land
+ * at a surveyed Landing Site if `lands` and there is one. None if no Launch Vehicle can carry Crew.
  */
 export function crewedMissions(
   view: ProgramView,
@@ -32,13 +32,16 @@ export function crewedMissions(
   lands = false,
 ): PlannedMission[] {
   const landingSiteId = lands ? crewLandingSite(view) : undefined;
+  const supplies = view.crewedMission.supplies.toReversed();
   return view.crewedMission.sizes
     .toSorted((first, second) => second.crew - first.crew)
-    .flatMap(({ crew, massTonnes }) => {
+    .flatMap((size) => supplies.map((carried) => ({ size, carried })))
+    .flatMap(({ size: { crew, massTonnes }, carried }) => {
       const vehicle = view.launchVehicles
         .filter(
           (candidate) =>
-            canFly(candidate) && candidate.capacityTonnes >= massTonnes,
+            canFly(candidate) &&
+            candidate.capacityTonnes >= massTonnes + carried.massTonnes,
         )
         .toSorted(
           (first, second) => first.costMillions - second.costMillions,
@@ -47,7 +50,11 @@ export function crewedMissions(
       const mission = {
         launchVehicleId: vehicle.id,
         assetIds: [],
-        crew: { size: crew, landsAtSite: landingSiteId !== undefined },
+        crew: {
+          size: crew,
+          landsAtSite: landingSiteId !== undefined,
+          suppliesId: carried.id,
+        },
         ...(landingSiteId === undefined ? {} : { landingSiteId }),
       };
       const planned = tools.previewCrew(mission);

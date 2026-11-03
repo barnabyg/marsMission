@@ -15,16 +15,19 @@ const stormDecision = "dust-storm:alpha-plain";
 
 /**
  * The Test Catalogue with nothing failing or crashing, a 100-day dust storm over every Landing Site in every Turn if `stormy`, and
- * Crew who lose Health at these rates, and are hurt by a storm they carry on through at this chance.
+ * Crew who lose Health at these rates, are hurt by a storm they carry on through at this chance, and use Supplies this
+ * fast, in kilograms a day each.
  */
 function simulationWith({
   stormy,
   health = steadyHealth,
   hurtChance = 1,
+  suppliesPerMemberPerDayKg,
 }: {
   stormy: boolean;
   health?: CatalogueFiles["crew"]["health"];
   hurtChance?: number;
+  suppliesPerMemberPerDayKg?: number;
 }) {
   const files = testCatalogueFiles();
   return createSimulation(
@@ -43,6 +46,12 @@ function simulationWith({
       crew: {
         ...files.crew,
         health: { ...health, dustStorm: { chance: hurtChance, loss: 30 } },
+        supplies: {
+          ...files.crew.supplies,
+          usePerMemberPerDayKg:
+            suppliesPerMemberPerDayKg ??
+            files.crew.supplies.usePerMemberPerDayKg,
+        },
       },
       hazards: {
         ...files.hazards,
@@ -213,7 +222,7 @@ describe("a Crew landing due in a dust storm", () => {
       assets: ["Ann Able", "Ben Baker"],
     });
     expect(decisionPoint?.choices[1]?.description).toContain(
-      "Waiting costs nothing but time, and research starts later.",
+      "Waiting uses 70 days of the Crew's Supplies, and research starts later.",
     );
   });
 
@@ -234,5 +243,41 @@ describe("a Crew landing due in a dust storm", () => {
     expect(stormy.readProgram(program).crew[0]?.locationName).toBe(
       "Alpha Plain",
     );
+  });
+
+  it("uses the Crew's Supplies for each day held, which can run them out on the way down", () => {
+    // 1,000 kg at 4 kg a day lasts 250 days: 45 are left when the landing is due on day 205.
+    const hungry = simulationWith({
+      stormy: true,
+      health: { ...steadyHealth, noSuppliesPerDay: 1 },
+      suppliesPerMemberPerDayKg: 2,
+    });
+    const program = hungry.startProgram(stormOnLandingSeed.seed);
+    expect(
+      hungry.workOutTurn(program, landCrew).decisionPoint?.choices[1]
+        ?.description,
+    ).toContain(
+      "Waiting uses 70 days of the Crew's Supplies, more than they have left, and research starts later.",
+    );
+    const { summary, timeline } = hungry.runTurn(program, landCrew, {
+      "go-no-go:test-landing": "holdOff",
+      [stormDecision]: "shelter",
+    });
+    // Out on day 250, they land with 75 Health on day 275 and have none left by day 350.
+    expect(
+      timeline.entries
+        .filter(({ kind }) => kind === "suppliesOut" || kind === "crewLost")
+        .map(({ day, title }) => [day, title]),
+    ).toEqual([
+      [250, "Supplies out aboard the Test Crew Ship"],
+      [350, "Crew lost"],
+    ]);
+    expect(summary.crewLost).toMatchObject([
+      {
+        cause: "supplies",
+        description:
+          "Ann Able and Ben Baker were lost in Alpha Plain, with no Supplies left.",
+      },
+    ]);
   });
 });

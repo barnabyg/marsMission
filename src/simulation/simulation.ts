@@ -39,7 +39,7 @@ import type {
   TurnResult,
 } from "./types";
 
-export { addDays, formatMoney } from "./rules";
+export { addDays, daysBetween, formatMoney } from "./rules";
 export { corruptSave, SaveError } from "./saveFormat";
 export {
   canFly,
@@ -264,6 +264,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
         operatingAssets: [],
         crew: [],
         crewActivities: {},
+        crewSupplies: {},
         status: { kind: "active" },
       };
     },

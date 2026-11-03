@@ -207,7 +207,33 @@ const format10 = format9.extend({
   ),
 });
 
-const newestFormat = format10;
+/**
+ * Adds the Supplies left for the Crew in each place, in kilograms. A save from before Supplies gives the Crew in each
+ * place the most Supplies a Crewed Mission can carry, so that none run out sooner than they could have.
+ */
+const format11 = format10.extend({
+  crewSupplies: z.record(z.string(), z.number().nonnegative()),
+});
+
+function suppliesBeforeSupplies(
+  crew: z.output<typeof format10>["crew"],
+  { crew: { supplies } }: Catalogue,
+): Record<string, number> {
+  const most = supplies.options.at(-1);
+  if (!most) throw new SaveError(corruptSave);
+  const keys = crew.flatMap(({ location }) => {
+    if (location.kind === "marsOrbit") return ["mars-orbit"];
+    if (location.kind === "landingSite") {
+      return [`landing-site:${location.landingSiteId}`];
+    }
+    return [];
+  });
+  return Object.fromEntries(
+    [...new Set(keys)].map((key) => [key, Math.round(most.massTonnes * 1000)]),
+  );
+}
+
+const newestFormat = format11;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -305,6 +331,16 @@ const formats: readonly SaveFormat[] = [
   {
     schema: format9,
     upgrade: (old: z.output<typeof format9>): z.output<typeof format10> => old,
+  },
+  {
+    schema: format10,
+    upgrade: (
+      old: z.output<typeof format10>,
+      catalogue: Catalogue,
+    ): z.output<typeof format11> => ({
+      ...old,
+      crewSupplies: suppliesBeforeSupplies(old.crew, catalogue),
+    }),
   },
   { schema: newestFormat },
 ];

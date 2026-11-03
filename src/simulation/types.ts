@@ -21,7 +21,7 @@ export interface PlannedMission {
   crew?: CrewChoices;
 }
 
-/** The choices made for a Crewed Mission's Crew. Supplies and Protection will join them. */
+/** The choices made for a Crewed Mission's Crew. Protection will join them. */
 interface CrewChoices {
   /** How many Crew fly, which must be one of the Catalogue's Crew sizes. */
   size: number;
@@ -32,6 +32,8 @@ interface CrewChoices {
   activityId?: string;
   /** Whether they land at the Mission's Landing Site, rather than staying in Mars orbit. */
   landsAtSite?: boolean;
+  /** The Supplies they carry, by id, which they use from launch. Left out, it's the least the Catalogue offers. */
+  suppliesId?: string;
 }
 
 export interface AssetChoices {
@@ -74,8 +76,8 @@ export type PlaceAtMars =
   { kind: "marsOrbit" } | { kind: "landingSite"; landingSiteId: string };
 
 /**
- * Why Crew were lost: a failed Mission Event, a solar particle event that lost the Mission, Health that ran out, or
- * Supplies that ran out. Only the first two can happen so far.
+ * Why Crew were lost: a failed Mission Event, a solar particle event that lost the Mission, Health that ran out while
+ * they had Supplies, or Health that ran out once their Supplies had.
  */
 export type CrewLossCause =
   "missionEvent" | "solarParticleEvent" | "health" | "supplies";
@@ -127,6 +129,11 @@ export interface Program {
   crew: CrewMember[];
   /** What the Crew in each place do, by the place's key, for each place where Crew operate. Crew in one place share one Activity. */
   crewActivities: Record<string, string>;
+  /**
+   * The Supplies left, in kilograms, by the place's key, for each place where Crew operate. Crew in one place share
+   * them, and Crew who join them add theirs.
+   */
+  crewSupplies: Record<string, number>;
   status: ProgramStatus;
 }
 
@@ -174,10 +181,17 @@ export interface ProgramView {
     /** What it does for other Assets while it operates at Mars, or null if it gives no Benefit. */
     benefit: string | null;
   }[];
-  /** What a Crewed Mission can carry: the Crew sizes on offer, what each costs and weighs, and the Health Crew start with. */
+  /** What a Crewed Mission can carry: the Crew sizes and Supplies on offer, what each costs and weighs, and the Health Crew start with. */
   crewedMission: {
     vehicleName: string;
     sizes: { crew: number; costMillions: number; massTonnes: number }[];
+    /** The Supplies on offer, least first. How long they last depends on the Crew size (`previewCrew`). */
+    supplies: {
+      id: string;
+      name: string;
+      costMillions: number;
+      massTonnes: number;
+    }[];
     maxHealth: number;
     /** How many names are left to give Crew, which limits the Crew that can still fly. */
     namesLeft: number;

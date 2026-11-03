@@ -22,6 +22,7 @@ import { bringCrewHome, loseCrew, withCrew } from "./lostCrew";
 import { resolveDustStorms } from "./dustStorms";
 import type { MissionOutcome } from "./flight";
 import { proveTechnologies } from "./flightProven";
+import { suppliesRanOut } from "./supplies";
 import {
   contingenciesAnswered,
   missionFailure,
@@ -144,6 +145,7 @@ export function resolveTurn(
   const { inService, crewAtWork } = dustStorms;
   const survey = carryOutSurvey(catalogue, rules, program, inService);
   const crew = crewAtTurnEnd(crewAtWork, crewThere.crewActivities);
+  const suppliesOut = suppliesRanOut(catalogue, program, crewAtWork, flown);
   const lostCrew = loseCrew(
     catalogue,
     program,
@@ -251,6 +253,7 @@ export function resolveTurn(
       crew.crewActivities,
     ),
     ...lostCrew.entries,
+    ...suppliesOut.entries,
     ...arrivalAwards.map(milestoneEntry),
     ...(firstLanding ? [firstLanding.entry] : []),
     ...proven.entries,
@@ -302,6 +305,7 @@ export function resolveTurn(
           : []),
       ]),
       crewActivities: crew.crewActivities,
+      crewSupplies: crew.crewSupplies,
       status:
         faded.cancellationReason === null
           ? program.status
@@ -354,6 +358,7 @@ export function resolveTurn(
       crewLost: lostCrew.summary,
       healthLost: healthLostSummary(crewAtWork, flown),
       crewHome,
+      suppliesRanOut: suppliesOut.summary,
       assetsEnded: inService
         .filter(({ untilDay, failed }) => untilDay !== null && !failed)
         .map(({ asset }) => asset.name),

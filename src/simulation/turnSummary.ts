@@ -77,6 +77,11 @@ export interface TurnSummary {
   healthLost: { name: string; lost: HealthLost[] }[];
   /** The Crew a Free-return brought back to Earth this Turn, safe, who won't fly again. */
   crewHome: string[];
+  /**
+   * When Supplies ran out this Turn, in order: aboard the Crewed Mission on its way, or for the Crew in a place at Mars,
+   * such as "Crew in Mars orbit", including Crew who start the Turn with none left.
+   */
+  suppliesRanOut: { crew: string; on: string }[];
   /** The Assets whose Service Life ended this Turn. */
   assetsEnded: string[];
   /** The Assets that failed in service this Turn, before their Service Life ended. */

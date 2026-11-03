@@ -1,6 +1,7 @@
 import { dustStormOver } from "./dustStorms";
 import type { Flight } from "./flight";
 import type { Asset, MissionEvent } from "./rules";
+import { daysOfSupplies } from "./supplies";
 
 const goNoGoIdOf = (event: MissionEvent) => `go-no-go:${event.id}`;
 
@@ -15,12 +16,14 @@ function stormOnLanding(flight: Flight, event: MissionEvent) {
 
 /**
  * What holding off a landing for `wait` days costs what is being landed, said for the player, and paying it. Each Asset
- * being landed loses Service Life for each day held. Crew being landed lose nothing until there are Supplies to spend.
+ * being landed loses Service Life for each day held. Crew being landed use their Supplies for each day held instead,
+ * which the longer flight takes care of, so there is nothing more to pay for them.
  */
 function costOfHoldingOff(
   flight: Flight,
   landing: Asset[],
   crewLanding: string[],
+  due: number,
   wait: number,
 ): { says: string; serviceLifeDaysLost: number; pay: () => void } {
   const { serviceLifeLostPerDayHeld } = flight.catalogue.hazards.dustStorm;
@@ -30,9 +33,18 @@ function costOfHoldingOff(
     ...(landing.length > 0
       ? [`costs each Asset being landed ${lifeLost} days of Service Life`]
       : []),
-    // Supplies will be spent here for Crew aboard.
-    ...(crewLanding.length > 0 && landing.length === 0
-      ? ["costs nothing but time"]
+    ...(crewLanding.length > 0
+      ? [
+          `uses ${wait} days of the Crew's Supplies${
+            daysOfSupplies(
+              flight.catalogue,
+              flight.suppliesLeftOn(due),
+              crewLanding.length,
+            ) < wait
+              ? ", more than they have left"
+              : ""
+          }`,
+        ]
       : []),
   ];
   return {
@@ -65,7 +77,13 @@ export function goNoGoCheck(
   const crewLanding = flight.crewOnBoard(event);
   const landingNames = [...landing.map((asset) => asset.name), ...crewLanding];
   const names = landingNames.join(", ");
-  const holdingOffCosts = costOfHoldingOff(flight, landing, crewLanding, wait);
+  const holdingOffCosts = costOfHoldingOff(
+    flight,
+    landing,
+    crewLanding,
+    due,
+    wait,
+  );
   const raisedRisk = Math.min(1, usualRisk * landingRiskMultiplier);
   outcome.entries.push({
     kind: "decisionPoint",

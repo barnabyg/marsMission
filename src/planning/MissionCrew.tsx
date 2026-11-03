@@ -15,11 +15,12 @@ interface MissionCrewProps {
   /** Whether the Crew land at the Mission's Landing Site, rather than staying in Mars orbit. */
   lands: boolean;
   onLandsChange: (lands: boolean) => void;
+  onSuppliesChange: (suppliesId: string) => void;
 }
 
 /**
- * Whether the Mission carries Crew and, if it does, how many, who they are, whether they land and what they will do at
- * Mars. It is a row among the Assets, without their class, so that ticking Assets leaves it alone. Landing brings in
+ * Whether the Mission carries Crew and, if it does, how many, who they are, whether they land, the Supplies they carry
+ * and what they will do at Mars. It is a row among the Assets, without their class, so that ticking Assets leaves it alone. Landing brings in
  * the Landing Site choice below the Assets, which a lander shares.
  */
 export function MissionCrew({
@@ -29,6 +30,7 @@ export function MissionCrew({
   onActivityChange,
   lands,
   onLandsChange,
+  onSuppliesChange,
 }: MissionCrewProps) {
   const { vehicleName, sizes, maxHealth, namesLeft } = crewedMission;
   const smallest = sizes[0];
@@ -90,6 +92,24 @@ export function MissionCrew({
           >
             <option value="marsOrbit">to Mars orbit</option>
             <option value="landingSite">to land</option>
+          </select>
+          <span>
+            <GameText>Supplies</GameText>
+          </span>
+          {/* Each says how long it lasts this Crew, from launch. */}
+          <select
+            aria-label="Supplies"
+            value={planned.suppliesId}
+            onChange={(event) => {
+              onSuppliesChange(event.target.value);
+            }}
+          >
+            {planned.supplies.map(({ id, days, costMillions, massTonnes }) => (
+              <option key={id} value={id}>
+                {days.toLocaleString("en")} days ({formatMoney(costMillions)},{" "}
+                {massTonnes} t)
+              </option>
+            ))}
           </select>
           <span>
             <GameText>Activity</GameText>

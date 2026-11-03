@@ -22,6 +22,7 @@ export const steadyHealth: CatalogueFiles["crew"]["health"] = {
   timeAtMarsPerDay: 0,
   contingencyRescueLoss: 0,
   dustStorm: { chance: 0, loss: 0 },
+  noSuppliesPerDay: 0,
 };
 
 /** A Simulation whose named Mission Events always fail and whose others never do, with these changes. */
@@ -31,10 +32,13 @@ export function withFailures(
     rescueFailureProbability = 0,
     startingMoneyMillions,
     crewHealth,
+    suppliesPerMemberPerDayKg,
   }: {
     rescueFailureProbability?: number;
     startingMoneyMillions?: number;
     crewHealth?: Partial<CatalogueFiles["crew"]["health"]>;
+    /** How fast Crew use Supplies, which the test catalogue makes last longer than most tests follow them. */
+    suppliesPerMemberPerDayKg?: number;
   } = {},
 ) {
   const files = testCatalogueFiles();
@@ -44,6 +48,12 @@ export function withFailures(
       crew: {
         ...files.crew,
         health: { ...files.crew.health, ...crewHealth },
+        supplies: {
+          ...files.crew.supplies,
+          usePerMemberPerDayKg:
+            suppliesPerMemberPerDayKg ??
+            files.crew.supplies.usePerMemberPerDayKg,
+        },
       },
       program: {
         ...files.program,

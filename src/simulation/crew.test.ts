@@ -20,7 +20,7 @@ const wealthy = () =>
 const lasting = () => withFailures([], { crewHealth: steadyHealth });
 
 describe("planning a Crewed Mission", () => {
-  it("offers each Crew size with what it weighs and costs, and the Health Crew start with", () => {
+  it("offers each Crew size and Supplies with what they weigh and cost, and the Health Crew start with", () => {
     const { simulation, program } = setup();
     expect(simulation.readProgram(program).crewedMission).toEqual({
       vehicleName: "Test Crew Ship",
@@ -28,22 +28,36 @@ describe("planning a Crewed Mission", () => {
         { crew: 2, costMillions: 1000, massTonnes: 6 },
         { crew: 3, costMillions: 1200, massTonnes: 8 },
       ],
+      supplies: [
+        {
+          id: "test-supplies-short",
+          name: "Short",
+          costMillions: 100,
+          massTonnes: 1,
+        },
+        {
+          id: "test-supplies-long",
+          name: "Long",
+          costMillions: 200,
+          massTonnes: 2,
+        },
+      ],
       maxHealth: 100,
       namesLeft: 5,
     });
   });
 
-  it("adds the Crew size's cost and mass to the Mission's", () => {
+  it("adds the cost and mass of the Crew size and the least Supplies to the Mission's", () => {
     const { simulation, program } = setup();
     expect(simulation.validatePlan(program, sendCrew)).toMatchObject({
-      costMillions: 300 + 1000,
-      massTonnes: 6,
+      costMillions: 300 + 1000 + 100,
+      massTonnes: 6 + 1,
       problems: [],
     });
     const larger = { mission: { ...crewMission, crew: { size: 3 } } };
     expect(simulation.validatePlan(program, larger)).toMatchObject({
-      costMillions: 300 + 1200,
-      massTonnes: 8,
+      costMillions: 300 + 1200 + 100,
+      massTonnes: 8 + 1,
     });
   });
 
@@ -53,7 +67,7 @@ describe("planning a Crewed Mission", () => {
       mission: { ...crewMission, launchVehicleId: "test-vehicle" },
     };
     expect(simulation.validatePlan(program, onSmall).problems).toEqual([
-      "This Mission weighs 6 tonnes, but its Launch Vehicle can only carry 5 tonnes.",
+      "This Mission weighs 7 tonnes, but its Launch Vehicle can only carry 5 tonnes.",
     ]);
   });
 
@@ -61,7 +75,7 @@ describe("planning a Crewed Mission", () => {
     const { simulation, program } = setup();
     const both = { mission: { ...crewMission, assetIds: ["test-relay"] } };
     expect(simulation.validatePlan(program, both)).toMatchObject({
-      massTonnes: 8,
+      massTonnes: 9,
       problems: [],
     });
   });

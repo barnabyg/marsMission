@@ -60,11 +60,11 @@ How many Crew fly on a Crewed Mission, chosen in Planning Mode. A larger Crew ea
 _Avoid_: Crew count, team size
 
 **Health**:
-A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues and carrying on through a dust storm lower it, Protection slows the decline, and at zero the Crew member dies.
+A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, carrying on through a dust storm and having no Supplies lower it, Protection slows the decline, and at zero the Crew member dies.
 _Avoid_: Condition, hit points
 
 **Supplies**:
-The food, water and everything else Crew use up to stay alive. When they run out, Health falls quickly.
+The food, water and everything else Crew use up to stay alive, from launch. They are chosen for each Crewed Mission, and last a larger Crew fewer days. Crew in one place share theirs, and Crew who join them bring more. When they run out, Health falls quickly.
 _Avoid_: Consumables, life support (as the general term)
 
 ## Assets
@@ -132,7 +132,7 @@ _Avoid_: Prompt, intervention
 ## Risk
 
 **Go/no-go check**:
-A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life for each Asset being landed.
+A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life for each Asset being landed, while Crew being landed use their Supplies for each day held.
 _Avoid_: Abort check, landing poll
 
 **Mission Event**:

@@ -1,4 +1,5 @@
 import { formatMoney, type TurnSummary } from "../simulation/simulation";
+import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { SummaryHealthLost } from "./SummaryHealthLost";
 
@@ -225,6 +226,15 @@ export function TurnSummaryScreen({
             )}
           </ul>
         </section>
+      )}
+      {summary.suppliesRanOut.length > 0 && (
+        <p className="problem" data-testid="summary-supplies-out">
+          <GameText>
+            {`Supplies ran out: ${summary.suppliesRanOut
+              .map(({ crew, on }) => `${crew} on ${formatDate(on)}`)
+              .join(", ")}`}
+          </GameText>
+        </p>
       )}
       <SummaryHealthLost healthLost={summary.healthLost} />
       {summary.firstLanding && (

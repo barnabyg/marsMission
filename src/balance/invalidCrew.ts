@@ -1,4 +1,8 @@
-import type { ProgramView, TurnSummary } from "../simulation/simulation";
+import {
+  daysBetween,
+  type ProgramView,
+  type TurnSummary,
+} from "../simulation/simulation";
 
 /** Anything impossible about the Crew over one Turn, read from the Program before it, its summary and the Program after it. */
 export function crewProblems(
@@ -41,6 +45,25 @@ export function crewProblems(
     .filter(({ cause }) => cause === "health")
     .flatMap(({ names }) => names);
   const membersAfter = after.crew.flatMap(({ members }) => members);
+  const lostTo = (name: string, cause: string) =>
+    summary.healthLost.some(
+      (member) =>
+        member.name === name &&
+        member.lost.some((lost) => lost.cause === cause),
+    );
+  const starved = summary.crewLost
+    .filter(({ cause }) => cause === "supplies")
+    .flatMap(({ names }) => names);
+  const turnDays = daysBetween(before.date, after.date);
+  // With the same Crew all Turn, Supplies fall by exactly a Turn's worth, and never below zero.
+  const unchangedPlaces = after.crew.flatMap((place) => {
+    const earlier = before.crew.find(({ key }) => key === place.key);
+    const same =
+      earlier !== undefined &&
+      sorted(earlier.members.map(({ name }) => name)) ===
+        sorted(place.members.map(({ name }) => name));
+    return same ? [{ earlier, later: place }] : [];
+  });
   const checks: [impossible: boolean, problem: string][] = [
     [
       new Set(namesAfter).size < namesAfter.length,
@@ -65,11 +88,13 @@ export function crewProblems(
       ),
       "A Crew member who is lost or home still operates at Mars.",
     ],
+    // Crew who arrive and die in the same Turn earn research where no Crew were before or after it.
     [
-      summary.ongoingResearch.some(
-        ({ assetName }) =>
-          assetName.startsWith("Crew in ") && !crewPlaces.has(assetName),
-      ),
+      !lost.some((name) => lostTo(name, "timeAtMars")) &&
+        summary.ongoingResearch.some(
+          ({ assetName }) =>
+            assetName.startsWith("Crew in ") && !crewPlaces.has(assetName),
+        ),
       "Crew earned Ongoing Research where no Crew operate.",
     ],
     [
@@ -105,6 +130,31 @@ export function crewProblems(
     [
       diedOfHealth.some((name) => lostBy(name) !== startOf(name)),
       "A Crew member died of their Health without losing all of it.",
+    ],
+    [
+      after.crew.some(
+        ({ suppliesDaysLeft }) =>
+          suppliesDaysLeft < 0 || !Number.isInteger(suppliesDaysLeft),
+      ),
+      "The Supplies left for Crew at Mars are below zero, or not whole days.",
+    ],
+    [
+      unchangedPlaces.some(
+        ({ earlier, later }) =>
+          later.suppliesDaysLeft !==
+          Math.max(0, earlier.suppliesDaysLeft - turnDays),
+      ),
+      "Supplies at Mars didn't fall by a Turn's worth for the same Crew.",
+    ],
+    [
+      starved.some((name) => !lostTo(name, "noSupplies")) ||
+        (starved.length > 0 && summary.suppliesRanOut.length === 0),
+      "Crew were lost to their Supplies without running out of them.",
+    ],
+    [
+      summary.healthLost.some(({ name }) => lostTo(name, "noSupplies")) &&
+        summary.suppliesRanOut.length === 0,
+      "Crew lost Health to having no Supplies, but none ran out.",
     ],
     [
       after.crew.some(
