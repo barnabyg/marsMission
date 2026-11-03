@@ -103,8 +103,8 @@ export function createRules(catalogue: Catalogue) {
 
   /** The day a Mission leaves Earth orbit for Mars: the day after the last of its Mission Events timed from launch. */
   function departureDay(mission: PlannedMission | null): number {
-    const known = mission && departureDays.get(mission);
-    if (known) return known;
+    const known = mission ? departureDays.get(mission) : undefined;
+    if (known !== undefined) return known;
     const day =
       1 +
       Math.max(

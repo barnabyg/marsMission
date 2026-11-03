@@ -1,7 +1,7 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { AssetInService } from "./assetsInService";
-import { earningsOfStay, surfaceResearchRaised } from "./ongoingResearch";
-import type { Stretch } from "./benefits";
+import { earningsOfStay } from "./ongoingResearch";
+import { raisedStretches, type Stretch } from "./benefits";
 import {
   formatMoney,
   operatingKey,
@@ -104,7 +104,7 @@ export function resolveDustStorms(
     .sort((first, second) => first.fromDay - second.fromDay);
   let inService = operating;
   // Only Assets on the surface shelter, so a dust storm never changes what raises them.
-  const raised = surfaceResearchRaised(catalogue, operating);
+  const raised = raisedStretches(catalogue, operating, "surfaceResearch");
   const entries: (HazardEntry | DecisionPointEntry)[] = [];
   const summary: TurnSummary["dustStorms"] = [];
   let decision: {

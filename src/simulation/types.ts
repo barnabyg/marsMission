@@ -1,3 +1,4 @@
+import type { Raise } from "./benefits";
 import type { TechnologyReadiness } from "./technologyReadiness";
 import type { Timeline } from "./timeline";
 
@@ -75,7 +76,7 @@ export interface PlannedActivity {
     researchGrantMillions: number;
   } | null;
   /** The Benefit that earnsPerTurn is raised by, as long as the Assets giving it keep operating. Left out if none raises it. */
-  raisedBy?: { percent: number; givenBy: string[] };
+  raisedBy?: Raise;
 }
 
 type ProgramStatus =

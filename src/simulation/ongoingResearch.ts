@@ -98,14 +98,6 @@ function daysWorking({
   ].filter(({ from, to }) => to > from);
 }
 
-/** The stretches of the Turn on which Benefits raise surface research, for `earningsOfStay`. */
-export function surfaceResearchRaised(
-  catalogue: Catalogue,
-  inService: AssetInService[],
-): Stretch[] {
-  return raisedStretches(catalogue, inService, "surfaceResearch");
-}
-
 /**
  * What one Asset earns this Turn for its days in service less any it spends sheltering, at the raised rate on days
  * that `raised` covers if it is on the surface, and what it would have earned with nothing raised.
@@ -177,7 +169,7 @@ export function carryOutOngoingResearch(
     publicSupport: number;
   }[];
 } {
-  const raised = surfaceResearchRaised(catalogue, inService);
+  const raised = raisedStretches(catalogue, inService, "surfaceResearch");
   const results = inService.flatMap((stay) => {
     const { activity, stretches, earned, usual } = earningsOfStay(
       catalogue,
