@@ -67,17 +67,31 @@ interface OperatingAsset {
   flewUnproven: boolean;
 }
 
-/** Where a Crew member is. Crew at a Landing Site, and Crew who are lost or home, are still to come. */
-interface CrewLocation {
+/** A place at Mars where Crew operate. Crew at a Landing Site are still to come. */
+export interface PlaceAtMars {
   kind: "marsOrbit";
 }
 
-/** One named Crew member, from the day they arrive at Mars. */
+/**
+ * Why Crew were lost: a failed Mission Event, a solar particle event that lost the Mission, Health that ran out, or
+ * Supplies that ran out. Only the first two can happen so far.
+ */
+export type CrewLossCause =
+  "missionEvent" | "solarParticleEvent" | "health" | "supplies";
+
+/** Where a Crew member is: at Mars, lost, or back on Earth after a Free-return, never to fly again. */
+type CrewLocation =
+  | PlaceAtMars
+  | { kind: "lost"; lostOn: string; cause: CrewLossCause }
+  | { kind: "home"; backOn: string };
+
+/** One named Crew member, from the day their Mission launches. */
 export interface CrewMember {
   name: string;
-  /** Out of the Catalogue's maxHealth, which they arrive with. */
+  /** Out of the Catalogue's maxHealth, which they launch with. It is 0 once they are lost. */
   health: number;
-  arrivedOn: string;
+  /** The day they arrived at Mars, or null if they never did. */
+  arrivedOn: string | null;
   location: CrewLocation;
 }
 
@@ -108,7 +122,7 @@ export interface Program {
   /** The Developments started, each with the Turn at whose start it finishes. One that has finished stays listed. */
   developments: { technologyId: string; finishesOnTurn: number }[];
   operatingAssets: OperatingAsset[];
-  /** Every Crew member who has reached Mars, in the order they arrived. */
+  /** Every Crew member who has flown, whether at Mars, lost or home, in the order they flew. Their names are never given again. */
   crew: CrewMember[];
   /** What the Crew in each place do, by the place's key, for each place where Crew operate. Crew in one place share one Activity. */
   crewActivities: Record<string, string>;
@@ -167,7 +181,7 @@ export interface ProgramView {
     /** How many names are left to give Crew, which limits the Crew that can still fly. */
     namesLeft: number;
   };
-  /** The Crew operating at Mars, by where they are. */
+  /** The Crew operating at Mars, by where they are. Crew who are lost or home aren't listed. */
   crew: CrewAtMars[];
   /** Each technology that needs Development before it can fly, Launch Vehicles first, whether or not it has started. */
   developments: PlannedDevelopment[];

@@ -64,6 +64,14 @@ export interface CrewArrivedEntry {
   description: string;
 }
 
+/** Crew have been lost, which the events column shows as a failure. */
+export interface CrewLostEntry {
+  kind: "crewLost";
+  day: number;
+  title: string;
+  description: string;
+}
+
 export interface AssetEndedEntry {
   kind: "assetEnded";
   day: number;
@@ -110,6 +118,7 @@ export type TimelineEntry =
   | SurveyEntry
   | FlightProvenEntry
   | CrewArrivedEntry
+  | CrewLostEntry
   | MissionEventEntry
   | MilestoneEntry
   | FundingThresholdEntry

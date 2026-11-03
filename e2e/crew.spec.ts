@@ -8,7 +8,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
-import { colossusMoney, crewSeed } from "./seeds";
+import { colossusMoney, crewLossSeed, crewSeed } from "./seeds";
 
 function launchVehicle(page: Page) {
   return page.getByRole("combobox", { name: "Launch Vehicle" });
@@ -124,4 +124,50 @@ test("keeps the Crew at Mars through saving and loading", async ({ page }) => {
   await expect(page.getByTestId("crew-at-mars")).toContainText(
     "Amara Okafor (Health 100), Lena Petrova (Health 100)",
   );
+});
+
+test("loses the Crew in a failed launch, and sees the drop in Public Support in the Turn summary", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
+  await page.goto(`/?seed=${crewLossSeed}`);
+  await page
+    .getByTestId("development")
+    .filter({ hasText: "Meridian Colossus" })
+    .getByRole("checkbox", { name: "Start Development" })
+    .check();
+  await endTurnWithoutLaunching(page);
+  await endTurnWithoutLaunching(page);
+  await expect(page.getByTestId("public-support")).toHaveText("72");
+  await launchVehicle(page).selectOption("meridian-colossus");
+  await crewedMission(page).check();
+
+  await pauseAtEvent(page, "Crew lost", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
+  const lost = eventEntries(page).filter({ hasText: "Crew lost" });
+  // Losing two Crew costs more than the 52 Public Support left after the failed launch, so it takes all of it.
+  await expect(lost).toContainText(
+    "Amara Okafor and Lena Petrova were lost when Launch failed. Losing Crew costs 52 Public Support.",
+  );
+  await expect(lost).toHaveClass(/failed/);
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.getByRole("button", { name: "10x" }).click();
+  const summary = page.getByTestId("turn-summary");
+  await expect(summary.getByTestId("summary-crew-lost")).toContainText(
+    "Amara Okafor and Lena Petrova were lost when Launch failed. Public Support lost: 52",
+  );
+  await expect(summary.getByTestId("summary-failure")).toContainText(
+    "Public Support lost: 20",
+  );
+  await expect(summary.getByTestId("summary-public-support")).toHaveText(
+    "72 to 0",
+  );
+  await expect(summary.getByRole("alert")).toContainText(
+    "The Program has been cancelled.",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  expect(problems).toEqual([]);
 });

@@ -6,7 +6,7 @@ import { strategies } from "./strategies";
 import { certain, simulationOf, turns } from "./testHelpers";
 
 /** Nothing fails, and the Meridian Colossus is built and Flight-proven from the start, so Crew can fly on Turn 1. */
-const simulation = simulationOf({
+const colossusFromTheStart = {
   ...certain,
   program: { ...certain.program, startingMoneyMillions: 20_000 },
   launchVehicles: certain.launchVehicles.map(
@@ -19,6 +19,15 @@ const simulation = simulationOf({
       technologyReadiness: "flight-proven" as const,
     }),
   ),
+};
+const simulation = simulationOf(colossusFromTheStart);
+/** As above, but Mars orbit insertion always fails. */
+const failingArrival = simulationOf({
+  ...colossusFromTheStart,
+  missionEvents: colossusFromTheStart.missionEvents.map((event) => ({
+    ...event,
+    failureProbability: event.id === "mars-orbit-insertion" ? 1 : 0,
+  })),
 });
 const crewed = {
   mission: {
@@ -73,8 +82,39 @@ describe("the checks for invalid Crew", () => {
     expect(after.crew[0]?.members).toHaveLength(4);
   });
 
+  it("find nothing wrong with Crew lost on the way, or brought home by a Free-return", () => {
+    const start = failingArrival.startProgram(1);
+    const lost = failingArrival.runTurn(start, crewed);
+    expect(lost.summary.crewLost).toHaveLength(1);
+    expect(
+      crewProblems(
+        failingArrival.readProgram(start),
+        lost.summary,
+        failingArrival.readProgram(lost.program),
+      ),
+    ).toEqual([]);
+    const home = failingArrival.runTurn(start, {
+      mission: { ...crewed.mission, trajectoryId: "free-return" },
+    });
+    expect(home.summary.crewHome).toHaveLength(2);
+    expect(
+      crewProblems(
+        failingArrival.readProgram(start),
+        home.summary,
+        failingArrival.readProgram(home.program),
+      ),
+    ).toEqual([]);
+  });
+
   const [group] = after.crew;
   if (!group) throw new Error("No Crew arrived");
+  const [firstName = ""] = group.members.map(({ name }) => name);
+  const lostFirst: TurnSummary["crewLost"][number] = {
+    names: [firstName],
+    cause: "missionEvent",
+    description: "Lost.",
+    publicSupportLost: 100,
+  };
   const withMembers = (members: typeof group.members) =>
     crewProblems(before, summary, { ...after, crew: [{ ...group, members }] });
   const changedSummary = (changes: Partial<TurnSummary>) =>
@@ -92,6 +132,48 @@ describe("the checks for invalid Crew", () => {
       "a Crew member disappearing",
       () => withMembers(group.members.slice(1)),
       /disappeared/,
+    ],
+    [
+      "a Crew member lost but still at Mars",
+      () => changedSummary({ crewLost: [lostFirst] }),
+      /lost or home still operates/,
+    ],
+    [
+      "a Crew member brought home but still at Mars",
+      () => changedSummary({ crewHome: [firstName] }),
+      /lost or home still operates/,
+    ],
+    [
+      "a Crew member lost twice",
+      () => changedSummary({ crewLost: [lostFirst, lostFirst] }),
+      /lost or brought home twice/,
+    ],
+    [
+      "losing Crew gaining Public Support",
+      () =>
+        changedSummary({ crewLost: [{ ...lostFirst, publicSupportLost: -1 }] }),
+      /gained Public Support/,
+    ],
+    [
+      "Crew earning where none operate",
+      () =>
+        crewProblems(
+          { ...before, crew: [] },
+          {
+            ...summary,
+            ongoingResearch: [
+              {
+                assetName: "Crew in Phobos orbit",
+                activityName: "Crew research",
+                science: 1,
+                publicSupport: 1,
+                days: 1,
+              },
+            ],
+          },
+          after,
+        ),
+      /where no Crew operate/,
     ],
     [
       "Health above the most there is",

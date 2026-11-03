@@ -13,6 +13,7 @@ export function testCrew(): CatalogueFiles["crew"] {
       { crew: 3, costMillions: 1200, massTonnes: 8 },
     ],
     maxHealth: 100,
+    publicSupportLossPerMember: 20,
     orbitActivities: ["test-research", "test-nothing"],
     names: ["Ann Able", "Ben Baker", "Cal Cole", "Dee Dunn", "Eve Eng"],
   };

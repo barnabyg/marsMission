@@ -1,5 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { crewNamesFor } from "./crew";
+import type { CrewLoss } from "./lostCrew";
 import type {
   Asset,
   LandingSite,
@@ -40,10 +41,16 @@ export interface MissionOutcome {
   deliveredAssets: Asset[];
   /** The names of the Crew it delivered to Mars, which is none if it carried none or lost them on the way. */
   deliveredCrew: string[];
+  /** The Crew it lost on the way, if it did, which costs Public Support as well as publicSupportLost. */
+  crewLost: CrewLoss[];
   publicSupportLost: number;
   landingSite: LandingSite | undefined;
-  /** What a Free-return brought back, if it did. */
-  returned: { refundMillions: number; backOnDay: number } | null;
+  /** What a Free-return brought back, if it did, with the names of the Crew it brought home. */
+  returned: {
+    refundMillions: number;
+    backOnDay: number;
+    crew: string[];
+  } | null;
   /** The first unanswered Decision Point, which the Mission stopped at. */
   decisionPoint: DecisionPoint | null;
   /** How each Decision Point was answered, in the order they came. */
@@ -139,6 +146,7 @@ export function startFlight(
     failedOnDay: null,
     deliveredAssets: assets,
     deliveredCrew: crew,
+    crewLost: [],
     publicSupportLost: 0,
     landingSite,
     returned: null,

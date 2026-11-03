@@ -71,6 +71,29 @@ export function TurnSummaryScreen({
           </ul>
         </section>
       )}
+      {summary.crewLost.length > 0 && (
+        <section data-testid="summary-crew-lost">
+          <h2 className="problem">
+            <GameText>Crew lost</GameText>
+          </h2>
+          <ul>
+            {summary.crewLost.map(({ description, publicSupportLost }) => (
+              <li key={description} className="problem">
+                <GameText>
+                  {`${description} Public Support lost: ${publicSupportLost}`}
+                </GameText>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {summary.crewHome.length > 0 && (
+        <p data-testid="summary-crew-home">
+          <GameText>
+            {`Crew home safe, who won't fly again: ${summary.crewHome.join(", ")}`}
+          </GameText>
+        </p>
+      )}
       {summary.contingencies.length > 0 && (
         <section data-testid="summary-contingencies">
           <h2>

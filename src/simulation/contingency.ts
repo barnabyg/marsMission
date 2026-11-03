@@ -1,4 +1,5 @@
 import type { Flight } from "./flight";
+import { crewLossWarning } from "./lostCrew";
 import {
   comesHomeFrom,
   lossFor,
@@ -77,7 +78,7 @@ export function tryContingency(
             description: `A second try. If it works, ${lostNames} carry on${carryOn(contingency.serviceLifeLossPercent)}. If it fails, ${
               comesHomeFrom(flight, event)
                 ? `they swing back to Earth, which costs ${supportCost(lossFor(flight, event, contingency))} and refunds ${formatMoney(refundFor(flight, onBoard))}.`
-                : `they are lost and it costs ${lossFor(flight, event, contingency)} Public Support.`
+                : `they are lost and it costs ${lossFor(flight, event, contingency)} Public Support.${crewLossWarning(flight.catalogue, crewOnBoard)}`
             }`,
           },
           {
@@ -86,7 +87,7 @@ export function tryContingency(
             riskBand: null,
             description: comesHomeFrom(flight, event)
               ? `${lostNames} swing back to Earth, which costs ${supportCost(lossFor(flight, event, undefined))} and refunds ${formatMoney(refundFor(flight, onBoard))}.`
-              : `${lostNames} are lost, and it costs ${lossFor(flight, event, undefined)} Public Support.`,
+              : `${lostNames} are lost, and it costs ${lossFor(flight, event, undefined)} Public Support.${crewLossWarning(flight.catalogue, crewOnBoard)}`,
           },
         ],
       };

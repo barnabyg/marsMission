@@ -383,14 +383,20 @@ export const colossusSeed = colossusSeedWhere(null);
 /** A seed where the Meridian Colossus's first Mission collides with its Tanker at the rendezvous. */
 export const rendezvousFailureSeed = colossusSeedWhere("Rendezvous");
 
-/** A seed where the Meridian Colossus carries the smallest Crew to Mars orbit on its first Mission, with nothing to answer. */
-export const crewSeed = colossusSeedWhere(null, {
+/** The smallest Crew on the Meridian Colossus, with nothing else aboard. */
+const smallestCrew: TurnPlan = {
   mission: {
     launchVehicleId: "meridian-colossus",
     assetIds: [],
     crew: { size: catalogue.crew.sizes[0]?.crew ?? 0 },
   },
-});
+};
+
+/** A seed where the Meridian Colossus carries the smallest Crew to Mars orbit on its first Mission, with nothing to answer. */
+export const crewSeed = colossusSeedWhere(null, smallestCrew);
+
+/** A seed where the Meridian Colossus's first Mission fails its launch with the smallest Crew aboard, which loses them. */
+export const crewLossSeed = colossusSeedWhere("Launch", smallestCrew);
 
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);

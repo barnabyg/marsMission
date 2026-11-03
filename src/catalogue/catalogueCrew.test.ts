@@ -42,6 +42,15 @@ describe("Crew in the real data files", () => {
     expect(cheapest).toBeGreaterThan(2 * dearestAsset);
   });
 
+  it("makes losing even one Crew member cost more Public Support than any failed Mission Event", () => {
+    const { missionEvents } = parseCatalogue(realCatalogueFiles());
+    expect(crew.publicSupportLossPerMember).toBeGreaterThan(
+      Math.max(
+        ...missionEvents.map(({ publicSupportLoss }) => publicSupportLoss),
+      ),
+    );
+  });
+
   it("names enough Crew for several Crewed Missions of the largest size", () => {
     const largest = Math.max(...crew.sizes.map((size) => size.crew));
     expect(crew.names.length).toBeGreaterThanOrEqual(4 * largest);
@@ -66,6 +75,12 @@ describe("invalid Crew", () => {
         withCrew({ sizes: [{ crew: 0, costMillions: 100, massTonnes: 1 }] }),
       ),
     ).toContain("crew.json: sizes.0.crew:");
+  });
+
+  it("rejects losing Crew gaining Public Support", () => {
+    expect(errorFrom(withCrew({ publicSupportLossPerMember: -1 }))).toContain(
+      "crew.json: publicSupportLossPerMember:",
+    );
   });
 
   it("rejects a Mission Event that isn't in the data files", () => {

@@ -1,15 +1,17 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import {
   arrivingCrewActivity,
+  crewAtMarsOf,
   crewKeyOf,
   locationNameOf,
   marsOrbit,
+  type CrewMemberAtMars,
 } from "./crew";
 import type { MissionOutcome } from "./flight";
 import { addDays, daysBetween, type Rules } from "./rules";
 import type { AssetAtMars, CrewArrivedEntry, MissionAsset } from "./timeline";
 import type { TurnSummary } from "./turnSummary";
-import type { CrewMember, Program, TurnPlan } from "./types";
+import type { Program, TurnPlan } from "./types";
 
 /** The Crew operating in one place at Mars during a Turn, who share one Activity. */
 export interface CrewAtWork {
@@ -19,7 +21,11 @@ export interface CrewAtWork {
   name: string;
   activityId: string;
   /** Each Crew member's days there in this Turn. Nothing ends their stay yet. */
-  stays: { member: CrewMember; fromDay: number; untilDay: number | null }[];
+  stays: {
+    member: CrewMemberAtMars;
+    fromDay: number;
+    untilDay: number | null;
+  }[];
 }
 
 // Slow to create, and balance runs fly a great many Missions.
@@ -41,11 +47,11 @@ export function crewAtMars(
   flown: Pick<MissionOutcome, "deliveredCrew">,
 ): {
   atWork: CrewAtWork[];
-  arrived: CrewMember[];
+  arrived: CrewMemberAtMars[];
   crewActivities: Record<string, string>;
 } {
   const arrivalDay = arrivalDayOf(catalogue, rules, plan);
-  const arrived = flown.deliveredCrew.map((name): CrewMember => ({
+  const arrived = flown.deliveredCrew.map((name): CrewMemberAtMars => ({
     name,
     health: catalogue.crew.maxHealth,
     arrivedOn: addDays(program.date, arrivalDay),
@@ -64,7 +70,11 @@ export function crewAtMars(
     ).id;
   }
   const stays = [
-    ...program.crew.map((member) => ({ member, fromDay: 0, untilDay: null })),
+    ...crewAtMarsOf(program).map((member) => ({
+      member,
+      fromDay: 0,
+      untilDay: null,
+    })),
     ...arrived.map((member) => ({
       member,
       fromDay: arrivalDay,
@@ -94,7 +104,7 @@ export function crewArrivedEntry(
   catalogue: Catalogue,
   rules: Rules,
   plan: TurnPlan,
-  arrived: CrewMember[],
+  arrived: CrewMemberAtMars[],
   crewActivities: Record<string, string>,
 ): CrewArrivedEntry[] {
   const [first] = arrived;

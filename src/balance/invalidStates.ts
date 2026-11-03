@@ -84,6 +84,9 @@ export function invalidStates(
       summary.publicSupportStart +
         summary.publicSupportGained -
         (summary.failure?.publicSupportLost ?? 0) -
+        sum(
+          summary.crewLost.map(({ publicSupportLost }) => publicSupportLost),
+        ) -
         summary.publicSupportDrained !==
         summary.publicSupportEnd,
       "The Turn's Public Support doesn't add up.",

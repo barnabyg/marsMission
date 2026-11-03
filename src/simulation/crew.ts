@@ -4,6 +4,7 @@ import type { Activity, Rules } from "./rules";
 import type { PlannedActivity } from "./previews";
 import type {
   CrewMember,
+  PlaceAtMars,
   PlannedMission,
   Program,
   ProgramView,
@@ -47,15 +48,29 @@ export const marsOrbit = { kind: "marsOrbit" } as const;
 /** Each kind of place where Crew operate: how a plan names it, and how the player reads it. */
 const places = {
   marsOrbit: { key: "mars-orbit", name: "Mars orbit" },
-} satisfies Record<CrewMember["location"]["kind"], unknown>;
+} satisfies Record<PlaceAtMars["kind"], unknown>;
 
 /** How a plan names a place where Crew operate. */
-export function crewKeyOf(location: CrewMember["location"]): string {
+export function crewKeyOf(location: PlaceAtMars): string {
   return places[location.kind].key;
 }
 
-export function locationNameOf(location: CrewMember["location"]): string {
+export function locationNameOf(location: PlaceAtMars): string {
   return places[location.kind].name;
+}
+
+/** A Crew member operating at Mars, who is neither lost nor home. */
+export type CrewMemberAtMars = CrewMember & {
+  arrivedOn: string;
+  location: PlaceAtMars;
+};
+
+const isAtMars = (member: CrewMember): member is CrewMemberAtMars =>
+  Object.hasOwn(places, member.location.kind) && member.arrivedOn !== null;
+
+/** The Program's Crew operating at Mars, in the order they arrived, leaving out those who are lost or home. */
+export function crewAtMarsOf(program: Program): CrewMemberAtMars[] {
+  return program.crew.filter(isAtMars);
 }
 
 /** The Crew size a Mission has chosen, if it has Crew and the size is on offer. */
@@ -66,7 +81,7 @@ function crewSizeOf(
   return catalogue.crew.sizes.find(({ crew }) => crew === mission?.crew?.size);
 }
 
-/** The names not yet given to Crew in this Program, in the order the Catalogue lists them. */
+/** The names not yet given to Crew in this Program, in the order the Catalogue lists them. Lost and home Crew keep theirs. */
 function namesLeft(catalogue: Catalogue, program: Program): string[] {
   const given = new Set(program.crew.map(({ name }) => name));
   return catalogue.crew.names.filter((name) => !given.has(name));
@@ -114,7 +129,9 @@ function orbitActivityNow(
   plan: TurnPlan,
 ): string | undefined {
   const key = crewKeyOf(marsOrbit);
-  if (!program.crew.some(({ location }) => crewKeyOf(location) === key)) {
+  if (
+    !crewAtMarsOf(program).some(({ location }) => crewKeyOf(location) === key)
+  ) {
     return undefined;
   }
   return plan.crewActivities?.[key] ?? program.crewActivities[key];
@@ -163,11 +180,10 @@ export function crewAtMarsView(
   rules: Rules,
   program: Program,
 ): CrewAtMars[] {
-  const keys = [
-    ...new Set(program.crew.map(({ location }) => crewKeyOf(location))),
-  ];
+  const atMars = crewAtMarsOf(program);
+  const keys = [...new Set(atMars.map(({ location }) => crewKeyOf(location)))];
   return keys.flatMap((key) => {
-    const members = program.crew.filter(
+    const members = atMars.filter(
       ({ location }) => crewKeyOf(location) === key,
     );
     const [first] = members;
@@ -238,7 +254,7 @@ export function operatingCrewProblems(
 ): string[] {
   return Object.entries(plan.crewActivities ?? {}).flatMap(
     ([key, activityId]) =>
-      program.crew.some(({ location }) => crewKeyOf(location) === key)
+      crewAtMarsOf(program).some(({ location }) => crewKeyOf(location) === key)
         ? crewActivityProblems(catalogue, rules, activityId)
         : [`There are no Crew operating at "${key}".`],
   );

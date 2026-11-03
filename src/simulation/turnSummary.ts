@@ -1,4 +1,4 @@
-import type { DecisionAnswer } from "./types";
+import type { CrewLossCause, DecisionAnswer } from "./types";
 
 interface AwardedMilestone {
   name: string;
@@ -57,6 +57,19 @@ export interface TurnSummary {
     maxHealth: number;
     arrived: boolean;
   }[];
+  /**
+   * The Crew lost this Turn, in the order they were lost, with why and the Public Support losing them cost, which
+   * publicSupportEnd takes off as well as any failure's own loss.
+   */
+  crewLost: {
+    names: string[];
+    cause: CrewLossCause;
+    /** Who was lost and how, such as "Ann Able was lost when Launch failed." */
+    description: string;
+    publicSupportLost: number;
+  }[];
+  /** The Crew a Free-return brought back to Earth this Turn, safe, who won't fly again. */
+  crewHome: string[];
   /** The Assets whose Service Life ended this Turn. */
   assetsEnded: string[];
   /** The Assets that failed in service this Turn, before their Service Life ended. */

@@ -11,6 +11,7 @@ import {
   crewSummary,
 } from "./crewAtMars";
 import { carryOutDevelopment } from "./development";
+import { bringCrewHome, loseCrew, withCrew } from "./lostCrew";
 import { resolveDustStorms } from "./dustStorms";
 import type { MissionOutcome } from "./flight";
 import { deliveryDayOf } from "./flyMission";
@@ -205,6 +206,13 @@ export function resolveTurn(
   const { inService } = dustStorms;
   const survey = carryOutSurvey(catalogue, rules, program, inService);
   const crew = crewAtMars(catalogue, rules, program, plan, flown);
+  const lostCrew = loseCrew(
+    catalogue,
+    program,
+    flown.crewLost,
+    program.publicSupport - flown.publicSupportLost,
+  );
+  const crewHome = flown.returned?.crew ?? [];
   const research = carryOutOngoingResearch(
     catalogue,
     rules,
@@ -241,7 +249,10 @@ export function resolveTurn(
     sum(awards.map(({ milestone }) => milestone.publicSupport)) +
     research.publicSupport;
   const publicSupportBeforeDrain =
-    program.publicSupport - flown.publicSupportLost + publicSupportGained;
+    program.publicSupport -
+    flown.publicSupportLost -
+    lostCrew.publicSupportLost +
+    publicSupportGained;
   const funding = payFundingThresholds(catalogue, program, {
     start: program.publicSupport,
     lumps: [
@@ -252,6 +263,7 @@ export function resolveTurn(
       ...(failedOnDay === null
         ? []
         : [{ day: failedOnDay, amount: -flown.publicSupportLost }]),
+      ...lostCrew.lumps,
     ],
     stints: research.stints.map(({ fromDay, toDay, publicSupport }) => ({
       fromDay,
@@ -299,6 +311,7 @@ export function resolveTurn(
       crew.arrived,
       crew.crewActivities,
     ),
+    ...lostCrew.entries,
     ...arrivalAwards.map(milestoneEntry),
     ...(firstLanding ? [firstLanding.entry] : []),
     ...proven.entries,
@@ -338,7 +351,18 @@ export function resolveTurn(
       operatingAssets: inService
         .filter(({ untilDay }) => untilDay === null)
         .map(({ asset }) => asset),
-      crew: [...program.crew, ...crew.arrived],
+      crew: withCrew(program.crew, [
+        ...crew.arrived,
+        ...lostCrew.lost,
+        ...(flown.returned
+          ? bringCrewHome(
+              catalogue,
+              program,
+              crewHome,
+              flown.returned.backOnDay,
+            )
+          : []),
+      ]),
       crewActivities: crew.crewActivities,
       status:
         faded.cancellationReason === null
@@ -389,6 +413,8 @@ export function resolveTurn(
       developmentsStarted: development.started,
       developmentsFinished: development.finished,
       crew: crewSummary(catalogue, crew.atWork),
+      crewLost: lostCrew.summary,
+      crewHome,
       assetsEnded: inService
         .filter(({ untilDay, failed }) => untilDay !== null && !failed)
         .map(({ asset }) => asset.name),

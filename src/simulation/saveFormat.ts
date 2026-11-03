@@ -162,7 +162,36 @@ const format8 = format7.extend({
   crewActivities: z.record(z.string(), z.string()),
 });
 
-const newestFormat = format8;
+const crewLossCause = z.enum([
+  "missionEvent",
+  "solarParticleEvent",
+  "health",
+  "supplies",
+]);
+
+/**
+ * Adds Crew who are lost, with the day and why, and Crew a Free-return brought home, who never arrived at Mars. A save
+ * from before them has only Crew at Mars, and the names of any lost on the way were never kept, so they can be given again.
+ */
+const format9 = format8.extend({
+  crew: z.array(
+    z.strictObject({
+      ...format8.shape.crew.element.shape,
+      arrivedOn: isoDate.nullable(),
+      location: z.discriminatedUnion("kind", [
+        z.strictObject({ kind: z.literal("marsOrbit") }),
+        z.strictObject({
+          kind: z.literal("lost"),
+          lostOn: isoDate,
+          cause: crewLossCause,
+        }),
+        z.strictObject({ kind: z.literal("home"), backOn: isoDate }),
+      ]),
+    }),
+  ),
+});
+
+const newestFormat = format9;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -252,6 +281,10 @@ const formats: readonly SaveFormat[] = [
       crew: [],
       crewActivities: {},
     }),
+  },
+  {
+    schema: format8,
+    upgrade: (old: z.output<typeof format8>): z.output<typeof format9> => old,
   },
   { schema: newestFormat },
 ];

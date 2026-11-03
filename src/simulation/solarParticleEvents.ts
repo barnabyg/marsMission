@@ -9,6 +9,7 @@ import type {
 import type { TurnSummary } from "./turnSummary";
 import type { DecisionPointEntry, HazardEntry } from "./timeline";
 import type { Flight } from "./flight";
+import { crewLoss, crewLossWarning } from "./lostCrew";
 
 const solarParticleEventId = "solar-particle-event";
 
@@ -104,7 +105,7 @@ function meetSolarParticleEvent(
             answer: "carryOn",
             label: "Carry on",
             riskBand: rules.riskBandFor(damageChance),
-            description: `No cost if all goes well. If the radiation hits, each Asset loses ${damageServiceLifeLossPercent}% of its Service Life, and there's a chance of losing the Mission, which costs ${loss} Public Support.`,
+            description: `No cost if all goes well. If the radiation hits, each Asset loses ${damageServiceLifeLossPercent}% of its Service Life, and there's a chance of losing the Mission, which costs ${loss} Public Support.${crewLossWarning(catalogue, crewOnBoard)}`,
           },
         ],
       },
@@ -203,6 +204,14 @@ export function solarParticleEventInFlight(
     outcome.failedOnDay = day;
     outcome.lostTo = catalogue.hazards.solarParticleEvent.name;
     outcome.publicSupportLost = met.lostWithPublicSupport;
+    outcome.crewLost.push(
+      ...crewLoss(
+        crewOnBoard,
+        day,
+        "solarParticleEvent",
+        `when the ${outcome.lostTo.toLowerCase()} lost the Mission`,
+      ),
+    );
     return true;
   }
   flight.cut(onBoard, met.serviceLifeLossPercent);

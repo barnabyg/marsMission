@@ -11,17 +11,57 @@ export function crewProblems(
   const namesBefore = namesOf(before);
   const namesAfter = namesOf(after);
   const arrived = namesAfter.filter((name) => !namesBefore.includes(name));
+  const lost = summary.crewLost.flatMap(({ names }) => names);
+  const gone = [...lost, ...summary.crewHome];
+  // Crew lost on the way, or brought home, never reached Mars, but their names have been given.
+  const flown = [
+    ...arrived,
+    ...gone.filter((name) => !namesBefore.includes(name)),
+  ];
   const { maxHealth } = after.crewedMission;
   const sorted = (names: string[]) => names.toSorted().join();
+  const crewPlaces = new Set(
+    [...before.crew, ...after.crew].map(
+      ({ locationName }) => `Crew in ${locationName}`,
+    ),
+  );
   const checks: [impossible: boolean, problem: string][] = [
     [
       new Set(namesAfter).size < namesAfter.length,
       "Two Crew members share a name.",
     ],
-    // Until Crew can be lost or come home, no one leaves Mars.
     [
-      namesBefore.some((name) => !namesAfter.includes(name)),
+      new Set(gone).size < gone.length,
+      "A Crew member was lost or brought home twice.",
+    ],
+    // Only being lost or brought home takes Crew away from Mars.
+    [
+      namesBefore.some(
+        (name) => !namesAfter.includes(name) && !gone.includes(name),
+      ),
       "A Crew member at Mars disappeared.",
+    ],
+    [
+      gone.some(
+        (name) =>
+          namesAfter.includes(name) ||
+          summary.crew.some((member) => member.name === name),
+      ),
+      "A Crew member who is lost or home still operates at Mars.",
+    ],
+    [
+      summary.ongoingResearch.some(
+        ({ assetName }) =>
+          assetName.startsWith("Crew in ") && !crewPlaces.has(assetName),
+      ),
+      "Crew earned Ongoing Research where no Crew operate.",
+    ],
+    [
+      summary.crewLost.some(
+        ({ names, publicSupportLost }) =>
+          names.length === 0 || publicSupportLost < 0,
+      ),
+      "Losing Crew lost no one, or gained Public Support.",
     ],
     [
       after.crew.some(({ members }) =>
@@ -42,14 +82,14 @@ export function crewProblems(
       "The Crew in one place are listed twice.",
     ],
     [
-      arrived.length >
+      flown.length >
         Math.max(0, ...after.crewedMission.sizes.map(({ crew }) => crew)),
-      "More Crew arrived than a Crewed Mission carries.",
+      "More Crew flew than a Crewed Mission carries.",
     ],
     [
       after.crewedMission.namesLeft !==
-        before.crewedMission.namesLeft - arrived.length,
-      "The names left to give Crew don't match the Crew who arrived.",
+        before.crewedMission.namesLeft - flown.length,
+      "The names left to give Crew don't match the Crew who flew.",
     ],
     [
       sorted(summary.crew.map(({ name }) => name)) !== sorted(namesAfter) ||

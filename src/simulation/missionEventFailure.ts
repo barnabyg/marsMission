@@ -1,4 +1,5 @@
 import type { Flight } from "./flight";
+import { crewLoss } from "./lostCrew";
 import {
   formatMoney,
   type Asset,
@@ -6,6 +7,9 @@ import {
   type MissionEvent,
 } from "./rules";
 import { costOf } from "./technologyReadiness";
+
+// Slow to create, and balance runs fly a great many Missions.
+const listOfNames = new Intl.ListFormat("en");
 
 /** Whether failing this Mission Event brings the Mission home, on a Free-return. */
 export const comesHomeFrom = (flight: Flight, event: MissionEvent) =>
@@ -39,7 +43,8 @@ export const supportCost = (loss: number) =>
 
 /**
  * Ends the Mission at a Mission Event that failed for good, after any Contingency that was tried. It loses the Assets
- * still on board, or brings them home if it was the arrival burn of a Free-return. Anything delivered before is safe.
+ * and Crew still on board, or brings them home if it was the arrival burn of a Free-return, the Crew alive. Anything
+ * delivered before is safe.
  */
 export function missionEventFailed(
   flight: Flight,
@@ -68,7 +73,8 @@ export function missionEventFailed(
   if (freeReturn && comesHomeFrom(flight, event)) {
     const refundMillions = refundFor(flight, onBoard);
     const backOnDay = flight.dayOf(event) + freeReturn.returnDays;
-    outcome.returned = { refundMillions, backOnDay };
+    outcome.returned = { refundMillions, backOnDay, crew: crewOnBoard };
+    const assetsBack = onBoard.map((asset) => asset.name).join(", ");
     outcome.entries.push(
       {
         ...flight.happened(event),
@@ -81,11 +87,25 @@ export function missionEventFailed(
         kind: "missionReturned",
         day: backOnDay,
         title: "Mission back at Earth",
-        description: `${lostNames} came back to Earth, and won't fly again.`,
+        description: [
+          ...(assetsBack ? [`${assetsBack} came back to Earth.`] : []),
+          ...(crewOnBoard.length > 0
+            ? [`${listOfNames.format(crewOnBoard)} are home safe.`]
+            : []),
+          "None of them will fly again.",
+        ].join(" "),
       },
     );
     return;
   }
+  outcome.crewLost.push(
+    ...crewLoss(
+      crewOnBoard,
+      flight.dayOf(event),
+      "missionEvent",
+      `when ${event.name} failed`,
+    ),
+  );
   outcome.entries.push({
     ...flight.happened(event),
     title: `${event.name} failed`,

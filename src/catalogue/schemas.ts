@@ -172,6 +172,8 @@ const crewSchema = z.strictObject({
     .min(1),
   // Each Crew member's Health as they launch, which is the most they can have.
   maxHealth: z.number().int().positive(),
+  // The Public Support lost for each Crew member lost, whatever the cause, on top of anything else that day costs.
+  publicSupportLossPerMember: z.number().int().nonnegative(),
   // What Crew in Mars orbit can do, which all of them there share. The first is what they do unless the player picks
   // another. A research Activity earns its rate for each Crew member doing it.
   orbitActivities: z.array(id).min(1),
