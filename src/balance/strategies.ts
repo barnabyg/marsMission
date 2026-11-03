@@ -1,4 +1,5 @@
 import type { ProgramView } from "../simulation/simulation";
+import type { CrewStyle } from "./crewPlay";
 import {
   playStyle,
   surveyorInService,
@@ -89,6 +90,20 @@ const relayBesideRovers: PlayStyle = {
 
 /** As relayBesideRovers, keeping more Assets, so that one Mission a Turn can hold it back once it is rich. */
 const bigProgram: PlayStyle = { ...relayBesideRovers, assetLimit: 6 };
+
+/** As bigProgram, developing the Meridian Colossus once rich and filling it once it is built. */
+const colossusWhenRich: PlayStyle = {
+  ...bigProgram,
+  develops: ["meridian-colossus"],
+  developsWhile: (view) => view.moneyMillions >= 5000,
+  fillsVehicle: "meridian-colossus",
+  fillsWhile: (view) => view.moneyMillions >= 5000,
+};
+
+/** Crew sent to Mars orbit with the best Reliability it can afford, as they are worth more than any Asset. */
+const crewInOrbit: CrewStyle = { reliability: true };
+/** The same Crew landing at a surveyed Landing Site once there is one. */
+const crewLanding: CrewStyle = { ...crewInOrbit, lands: true };
 
 /** Every strategy the report covers. Add one here and it needs nothing else. */
 export const strategies: Strategy[] = [
@@ -424,37 +439,34 @@ export const strategies: Strategy[] = [
   playStyle(
     "big Program: develop the Meridian Colossus when rich",
     "The same, starting Development of the Meridian Colossus once it has the money for several rovers, and filling the Meridian Colossus once it is built: a relay orbiter, a rover and a lander can go together.",
-    {
-      ...bigProgram,
-      develops: ["meridian-colossus"],
-      developsWhile: (view) => view.moneyMillions >= 5000,
-      fillsVehicle: "meridian-colossus",
-      fillsWhile: (view) => view.moneyMillions >= 5000,
-    },
+    colossusWhenRich,
   ),
   playStyle(
     "big Program: develop the Meridian Colossus and fly Crew when rich",
-    "As big Program: develop the Meridian Colossus when rich, also sending a Crewed Mission to Mars orbit, of the largest Crew it can afford with the most Supplies and then the most Protection that fit, before any Asset whenever it can afford one and keep its reserve.",
-    {
-      ...bigProgram,
-      develops: ["meridian-colossus"],
-      developsWhile: (view) => view.moneyMillions >= 5000,
-      fillsVehicle: "meridian-colossus",
-      fillsWhile: (view) => view.moneyMillions >= 5000,
-      fliesCrew: true,
-    },
+    "As big Program: develop the Meridian Colossus when rich, also sending a Crewed Mission to Mars orbit once the Meridian Colossus is Flight-proven, before any Asset whenever it can afford one and keep its reserve: the largest Crew it can afford, with the most Supplies and then the most Protection that fit, and the best Reliability on every Mission Event that it can afford.",
+    { ...colossusWhenRich, fliesCrew: crewInOrbit },
   ),
   playStyle(
     "big Program: develop the Meridian Colossus and land Crew when rich",
     "As big Program: develop the Meridian Colossus and fly Crew when rich, but its Crew land at a surveyed Landing Site, one not yet landed at if it can, once a Survey has made one safer, and go to Mars orbit until then.",
+    { ...colossusWhenRich, fliesCrew: crewLanding },
+  ),
+  playStyle(
+    "big Program: land Crew, least Supplies",
+    "As big Program: develop the Meridian Colossus and land Crew when rich, with the least Supplies, which leaves room for more Protection.",
+    { ...colossusWhenRich, fliesCrew: { ...crewLanding, leastSupplies: true } },
+  ),
+  playStyle(
+    "big Program: land Crew, no Protection",
+    "As big Program: develop the Meridian Colossus and land Crew when rich, with no Protection.",
+    { ...colossusWhenRich, fliesCrew: { ...crewLanding, noProtection: true } },
+  ),
+  playStyle(
+    "big Program: land Crew, carry on through radiation",
+    "As big Program: develop the Meridian Colossus and land Crew when rich, carrying on through every solar particle event with Crew aboard.",
     {
-      ...bigProgram,
-      develops: ["meridian-colossus"],
-      developsWhile: (view) => view.moneyMillions >= 5000,
-      fillsVehicle: "meridian-colossus",
-      fillsWhile: (view) => view.moneyMillions >= 5000,
-      fliesCrew: true,
-      landsCrew: true,
+      ...colossusWhenRich,
+      fliesCrew: { ...crewLanding, solarParticleEvents: "carryOn" },
     },
   ),
   playStyle(

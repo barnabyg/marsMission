@@ -24,8 +24,12 @@ const crewed = {
   mission: {
     launchVehicleId: "meridian-colossus",
     assetIds: [],
-    // Supplies that keep them alive for the two Turns these tests follow them.
-    crew: { size: 2, suppliesId: "supplies-ample" },
+    // Supplies and Protection that keep them alive for the two Turns these tests follow them.
+    crew: {
+      size: 2,
+      suppliesId: "supplies-ample",
+      protectionId: "protection-heavy-shielding",
+    },
   },
 };
 
@@ -67,10 +71,10 @@ describe("strategies that fly Crew", () => {
               ["health", "supplies"].includes(location.cause)),
         ),
       ).toBe(true);
-      // Each Crew carries the most Protection that it can afford and that fits.
+      // Each Crew carries the most Protection that it can afford and that fits, unless the strategy buys none.
       expect(
         crew.some(({ protectionId }) => protectionId !== "protection-none"),
-      ).toBe(true);
+      ).toBe(!strategy.name.includes("no Protection"));
     },
   );
 

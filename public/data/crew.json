@@ -4,13 +4,13 @@
   "landingMissionEvents": ["mars-orbit-insertion", "entry-descent-landing"],
   "sizes": [
     { "crew": 2, "costMillions": 3000, "massTonnes": 9 },
-    { "crew": 3, "costMillions": 3500, "massTonnes": 10.5 },
-    { "crew": 4, "costMillions": 4000, "massTonnes": 12 }
+    { "crew": 3, "costMillions": 3250, "massTonnes": 10.5 },
+    { "crew": 4, "costMillions": 3500, "massTonnes": 12 }
   ],
   "maxHealth": 100,
   "health": {
-    "radiationPerDay": { "inFlight": 0.1, "atMars": 0.02 },
-    "timeAtMarsPerDay": 0.02,
+    "radiationPerDay": { "inFlight": 0.1, "atMars": 0.03 },
+    "timeAtMarsPerDay": 0.03,
     "contingencyRescueLoss": 15,
     "dustStorm": { "chance": 0.25, "loss": 20 },
     "noSuppliesPerDay": 2,
@@ -27,42 +27,42 @@
     {
       "id": "protection-light-shielding",
       "name": "Light shielding",
-      "massTonnes": 1,
+      "massTonnes": 0.5,
       "costMillions": 150,
       "radiationCutPercent": 25
     },
     {
       "id": "protection-heavy-shielding",
       "name": "Heavy shielding",
-      "massTonnes": 2,
+      "massTonnes": 1,
       "costMillions": 300,
       "radiationCutPercent": 50
     }
   ],
   "supplies": {
-    "usePerMemberPerDayKg": 1,
+    "usePerMemberPerDayKg": 0.4,
     "options": [
       {
         "id": "supplies-lean",
         "name": "Lean",
-        "massTonnes": 2,
+        "massTonnes": 1.5,
         "costMillions": 100
       },
       {
         "id": "supplies-standard",
         "name": "Standard",
-        "massTonnes": 3,
+        "massTonnes": 2.5,
         "costMillions": 150
       },
       {
         "id": "supplies-ample",
         "name": "Ample",
-        "massTonnes": 4,
+        "massTonnes": 3.5,
         "costMillions": 200
       }
     ]
   },
-  "publicSupportLossPerMember": 100,
+  "publicSupportLossPerMember": 75,
   "orbitActivities": ["crew-research", "nothing"],
   "surfaceActivities": ["crew-field-research", "nothing"],
   "names": [

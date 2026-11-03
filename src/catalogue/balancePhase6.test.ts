@@ -157,7 +157,8 @@ describe("the balance of Phase 6", () => {
     expect(first.science).toBeLessThan(steady.science);
   });
 
-  it("makes the Meridian Colossus earn its place in a big Program, and not in a steady one", () => {
+  // Against filling the Meridian Heavy it pays only in a Program that flies Crew, which balancePhase7.test.ts tests.
+  it("makes the Meridian Colossus pay in a big Program over one Asset per Mission, and not in a steady one", () => {
     const oneAtATime = played("big Program: one Asset per Mission");
     const colossus = played(
       "big Program: develop the Meridian Colossus when rich",

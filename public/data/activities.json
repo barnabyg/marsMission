@@ -71,7 +71,7 @@
     "description": "The Crew explore around the Landing Site on foot and by rover, collect samples and study them in their lander. Each Crew member earns this much.",
     "effect": {
       "kind": "research",
-      "sciencePerTurn": 140,
+      "sciencePerTurn": 180,
       "publicSupportPerTurn": 14,
       "researchKind": "crew-field-research",
       "surfaceMotion": "nearby"
