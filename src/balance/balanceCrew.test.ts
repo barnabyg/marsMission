@@ -4,23 +4,13 @@ import { crewProblems } from "./invalidCrew";
 import { playProgram } from "./playProgram";
 import { balanceReport } from "./report";
 import { strategies } from "./strategies";
-import { certain, simulationOf, turns } from "./testHelpers";
+import {
+  certain,
+  colossusFromTheStart,
+  simulationOf,
+  turns,
+} from "./testHelpers";
 
-/** Nothing fails, and the Meridian Colossus is built and Flight-proven from the start, so Crew can fly on Turn 1. */
-const colossusFromTheStart = {
-  ...certain,
-  program: { ...certain.program, startingMoneyMillions: 20_000 },
-  launchVehicles: certain.launchVehicles.map(
-    ({ id, name, costMillions, capacityTonnes, missionEvents }) => ({
-      id,
-      name,
-      costMillions,
-      capacityTonnes,
-      missionEvents,
-      technologyReadiness: "flight-proven" as const,
-    }),
-  ),
-};
 const simulation = simulationOf(colossusFromTheStart);
 /** As above, but Mars orbit insertion always fails. */
 const failingArrival = simulationOf({

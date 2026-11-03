@@ -1,20 +1,10 @@
 import type { TurnRecord } from "./playProgram";
 import type { Strategy } from "./playStyle";
-import { mean, percent, table, tenth, whole } from "./reportFormat";
+import { ending, mean, percent, table, tenth } from "./reportFormat";
 import { sum } from "./sum";
 
 type Play = TurnRecord[];
 type Results = { strategy: Strategy; plays: Play[] }[];
-
-/** Mean Science, money and cancellations at the end of these Programs, as table cells. */
-function ending(plays: Play[]): string[] {
-  const last = plays.flatMap((play) => play.at(-1) ?? []);
-  return [
-    whole(mean(last.map((turn) => turn.science))),
-    whole(mean(last.map((turn) => turn.moneyMillions))),
-    percent(last.filter((turn) => turn.cancelled).length, last.length),
-  ];
-}
 
 const startedIn = (play: Play) =>
   sum(play.map((turn) => turn.developmentsStarted.length));

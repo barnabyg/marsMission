@@ -51,6 +51,7 @@ export type { PlannedCrew } from "./crew";
 export { healthLossCauses } from "./health";
 export type {
   AssetChoices,
+  CrewLossCause,
   DecisionAnswer,
   DecisionAnswers,
   DecisionPoint,

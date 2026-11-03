@@ -6,6 +6,7 @@ import { strategies as allStrategies } from "./strategies";
 import { sum } from "./sum";
 import { mean, percent, table, tenth, whole } from "./reportFormat";
 import { technology } from "./technologyReport";
+import { crew } from "./crewReport";
 
 /** How many Turns each Program plays at most. */
 const turnHorizon = 20;
@@ -383,6 +384,10 @@ export function balanceReport(
     "== Technology ==",
     "",
     ...technology(results),
+    "",
+    "== Crew ==",
+    "",
+    ...crew(results),
   ];
   for (const { strategy, plays } of results) {
     lines.push(

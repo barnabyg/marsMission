@@ -1,5 +1,6 @@
 import {
   technologiesOn,
+  type CrewLossCause,
   type DecisionAnswer,
   type DecisionAnswers,
   type DecisionPoint,
@@ -46,6 +47,14 @@ export interface TurnRecord {
   developmentsFinished: string[];
   /** Each technology the Turn's Mission flew before it was Flight-proven, and whether that flight failed to prove it. */
   unprovenFlights: { name: string; failed: boolean }[];
+  /** How many Crew the Turn's Mission carried, which is 0 with no Crewed Mission. */
+  crewFlown: number;
+  /** How many Crew were lost this Turn, for each reason. */
+  crewLost: Record<CrewLossCause, number>;
+  /** How many Crew a Free-return brought home this Turn. */
+  crewHome: number;
+  /** How many Crew are at Mars as the Turn ends. */
+  crewAtMars: number;
 }
 
 /** What a strategy may ask about the Program it is planning for, which it never sees itself. */
@@ -111,7 +120,23 @@ function recordOf(
       name,
       failed: !summary.technologiesProven.includes(name),
     })),
+    crewFlown: plan.mission?.crew?.size ?? 0,
+    crewLost: crewLostIn(summary),
+    crewHome: summary.crewHome.length,
+    crewAtMars: summary.crew.length,
   };
+}
+
+/** How many Crew a Turn's summary says were lost, for each reason. */
+function crewLostIn(summary: TurnSummary): TurnRecord["crewLost"] {
+  const lost = {
+    missionEvent: 0,
+    health: 0,
+    supplies: 0,
+    solarParticleEvent: 0,
+  };
+  for (const { cause, names } of summary.crewLost) lost[cause] += names.length;
+  return lost;
 }
 
 /** The technologies on a plan's Mission that aren't Flight-proven as the Turn starts, by name. */

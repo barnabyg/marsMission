@@ -31,3 +31,19 @@ export const certain: CatalogueFiles = {
     failureProbability: 0,
   })),
 };
+
+/** Nothing fails, and the Meridian Colossus is built and Flight-proven from the start, so Crew can fly on Turn 1. */
+export const colossusFromTheStart = {
+  ...certain,
+  program: { ...certain.program, startingMoneyMillions: 20_000 },
+  launchVehicles: certain.launchVehicles.map(
+    ({ id, name, costMillions, capacityTonnes, missionEvents }) => ({
+      id,
+      name,
+      costMillions,
+      capacityTonnes,
+      missionEvents,
+      technologyReadiness: "flight-proven" as const,
+    }),
+  ),
+};

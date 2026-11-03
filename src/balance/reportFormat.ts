@@ -1,3 +1,4 @@
+import type { TurnRecord } from "./playProgram";
 import { sum } from "./sum";
 
 // How the report writes numbers and tables, shared by its sections.
@@ -23,4 +24,14 @@ export function table(headers: string[], rows: string[][]): string[] {
       )
       .join("  "),
   );
+}
+
+/** Mean Science, money and cancellations at the end of these Programs, as table cells. */
+export function ending(plays: TurnRecord[][]): string[] {
+  const last = plays.flatMap((play) => play.at(-1) ?? []);
+  return [
+    whole(mean(last.map((turn) => turn.science))),
+    whole(mean(last.map((turn) => turn.moneyMillions))),
+    percent(last.filter((turn) => turn.cancelled).length, last.length),
+  ];
 }
