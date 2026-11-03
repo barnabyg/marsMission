@@ -204,9 +204,11 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
       );
     }
 
-    const landsOnMars = catalogue.assets.some(
-      (asset) => assetIds.includes(asset.id) && asset.landsAtSite === true,
-    );
+    const landsOnMars =
+      planned.crew?.landsAtSite === true ||
+      catalogue.assets.some(
+        (asset) => assetIds.includes(asset.id) && asset.landsAtSite === true,
+      );
     if (landsOnMars) {
       if (landingSiteId === undefined) {
         problems.push(

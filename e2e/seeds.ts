@@ -398,6 +398,19 @@ export const crewSeed = colossusSeedWhere(null, smallestCrew);
 /** A seed where the Meridian Colossus's first Mission fails its launch with the smallest Crew aboard, which loses them. */
 export const crewLossSeed = colossusSeedWhere("Launch", smallestCrew);
 
+/**
+ * A seed where the Meridian Colossus lands the smallest Crew at the first known Landing Site on its first Mission, as
+ * Planning Mode plans it once the Crew are set to land, with nothing to answer.
+ */
+export const crewLandingSeed = colossusSeedWhere(null, {
+  mission: {
+    launchVehicleId: "meridian-colossus",
+    assetIds: [],
+    crew: { size: catalogue.crew.sizes[0]?.crew ?? 0, landsAtSite: true },
+    landingSiteId: "jezero-crater",
+  },
+});
+
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);
 

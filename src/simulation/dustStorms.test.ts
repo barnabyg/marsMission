@@ -250,6 +250,7 @@ describe("answering a dust storm", () => {
         answer: "shelter",
         assets: ["Test Lander"],
         assetsFailed: [],
+        crewHurt: [],
       },
     ]);
   });

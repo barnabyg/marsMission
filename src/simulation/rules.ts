@@ -85,13 +85,27 @@ export function createRules(catalogue: Catalogue) {
     return trajectory;
   }
 
+  /**
+   * The Mission Events that carry a Mission's Crew, if it has Crew: to Mars orbit, or to its Landing Site if they land.
+   * Like an Asset's, they deliver the Crew when the last of them succeeds.
+   */
+  function crewOf(mission: PlannedMission | null): { missionEvents: string[] } {
+    const { crew } = catalogue;
+    if (!mission?.crew) return { missionEvents: [] };
+    return {
+      missionEvents: mission.crew.landsAtSite
+        ? crew.landingMissionEvents
+        : crew.missionEvents,
+    };
+  }
+
   /** The Mission Events a Mission goes through, in the order the Catalogue lists them, with its Crew's if it has Crew. */
   function eventsOf(mission: PlannedMission | null): MissionEvent[] {
     const eventIds = new Set([
       ...technologiesOn(catalogue, mission).flatMap(
         ({ missionEvents }) => missionEvents,
       ),
-      ...(mission?.crew ? catalogue.crew.missionEvents : []),
+      ...crewOf(mission).missionEvents,
     ]);
     return [...eventIds].flatMap((eventId) =>
       catalogue.missionEvents.filter((event) => event.id === eventId),
@@ -267,9 +281,13 @@ export function createRules(catalogue: Catalogue) {
     return catalogue.landingSites.find((site) => site.id === id);
   }
 
-  /** What a landing's risk is multiplied by for what it lands, which is as risky as the riskiest Asset in it. */
+  /**
+   * What a landing's risk is multiplied by for what it lands, which is as risky as the riskiest Asset in it. Crew land
+   * at the site's own risk.
+   */
   function landingRiskMultiplierOf(mission: PlannedMission | null): number {
     return Math.max(
+      mission?.crew?.landsAtSite ? 1 : 0,
       ...catalogue.assets
         .filter(
           ({ id, landsAtSite }) =>
@@ -339,6 +357,7 @@ export function createRules(catalogue: Catalogue) {
   }
 
   return {
+    crewOf,
     trajectoryFor,
     trajectoryOffered,
     dayOf,

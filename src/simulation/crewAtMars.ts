@@ -4,81 +4,115 @@ import {
   crewAtMarsOf,
   crewKeyOf,
   locationNameOf,
-  marsOrbit,
+  placeFor,
   type CrewMemberAtMars,
 } from "./crew";
-import type { MissionOutcome } from "./flight";
+import { crewDeliveryDayOf, type MissionOutcome } from "./flight";
 import {
   bothLost,
   drainsAtMars,
   healthCourse,
+  type HealthBlow,
   type HealthCourse,
 } from "./health";
 import { crewLoss, type CrewLoss } from "./lostCrew";
 import { addDays, daysBetween, type Rules } from "./rules";
 import type { AssetAtMars, CrewArrivedEntry, MissionAsset } from "./timeline";
 import type { TurnSummary } from "./turnSummary";
-import type { Program, TurnPlan } from "./types";
+import type { PlaceAtMars, Program, TurnPlan } from "./types";
+
+/** One Crew member's days at Mars in a Turn, which end early if their Health runs out, and what the days did to it. */
+export interface CrewStay {
+  member: CrewMemberAtMars;
+  fromDay: number;
+  untilDay: number | null;
+  health: HealthCourse;
+  /** What hit their Health all at once at Mars, such as being hurt in a dust storm. */
+  blows: HealthBlow[];
+  /** The days they shelter from a dust storm, when they do no work. */
+  shelter?: { fromDay: number; toDay: number };
+}
 
 /** The Crew operating in one place at Mars during a Turn, who share one Activity. */
 export interface CrewAtWork {
   /** How a plan names the place. */
   key: string;
+  place: PlaceAtMars;
+  /** Where they are, as the player reads it, such as "Mars orbit" or a Landing Site's name. */
+  locationName: string;
   /** How the Turn summary names them, such as "Crew in Mars orbit". */
   name: string;
   activityId: string;
-  /** Each Crew member's days there in this Turn, which end early if their Health runs out, and what the days did to it. */
-  stays: {
-    member: CrewMemberAtMars;
-    fromDay: number;
-    untilDay: number | null;
-    health: HealthCourse;
-  }[];
+  stays: CrewStay[];
 }
 
 // Slow to create, and balance runs fly a great many Missions.
 const listOfNames = new Intl.ListFormat("en");
 
-/** The day of the Turn the Mission delivers its Crew, if it carried any. */
-const arrivalDayOf = (catalogue: Catalogue, rules: Rules, plan: TurnPlan) =>
-  rules.deliveryDay(catalogue.crew, plan.mission);
+/** A Crew member's days at Mars from `fromDay` to the end of the Turn, with these blows to their Health. */
+function stayOf(
+  catalogue: Catalogue,
+  member: CrewMemberAtMars,
+  fromDay: number,
+  blows: HealthBlow[],
+): CrewStay {
+  const health = healthCourse(
+    member.health,
+    drainsAtMars(
+      catalogue,
+      fromDay,
+      catalogue.program.launchWindowIntervalDays,
+    ),
+    blows,
+  );
+  return { member, fromDay, untilDay: health.diedOn, health, blows };
+}
+
+/** A Crew member's stay with one more blow to their Health, which can end it sooner. */
+export function hurt(
+  catalogue: Catalogue,
+  stay: CrewStay,
+  blow: HealthBlow,
+): CrewStay {
+  return {
+    ...stay,
+    ...stayOf(catalogue, stay.member, stay.fromDay, [...stay.blows, blow]),
+  };
+}
 
 /**
- * The Crew at Mars this Turn: those already there, and any the Mission delivers, who arrive in Mars orbit with the
- * Health their flight left them and take up the Activity of any Crew already there. Each loses Health for every day
- * at Mars, and dies on the day it runs out. Also what each place's Crew do from now on, and each one's new record.
+ * The Crew at Mars this Turn, by place: those already there, and any the Mission delivers, who arrive in Mars orbit or
+ * at its Landing Site with the Health their flight left them, and take up the Activity of any Crew already there. Each
+ * loses Health for every day at Mars, and dies on the day it runs out. Also what each place's Crew do from now on.
+ * A dust storm can still change their stays (`dustStorms.ts`), before `crewAtTurnEnd` says who is left.
  */
 export function crewAtMars(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
   plan: TurnPlan,
-  flown: Pick<MissionOutcome, "deliveredCrew" | "crewHealth">,
+  flown: Pick<MissionOutcome, "deliveredCrew" | "crewHealth" | "heldLanding">,
 ): {
   atWork: CrewAtWork[];
   arrived: CrewMemberAtMars[];
-  /** Those at Mars at the end of the Turn, with the Health they have left. */
-  stillThere: CrewMemberAtMars[];
-  /** Those whose Health ran out at Mars. */
-  deaths: CrewLoss[];
   crewActivities: Record<string, string>;
 } {
-  const turnDays = catalogue.program.launchWindowIntervalDays;
-  const arrivalDay = arrivalDayOf(catalogue, rules, plan);
+  const arrivalDay = crewDeliveryDayOf(rules, plan, flown);
+  const place = placeFor(plan.mission);
   const arrived = flown.deliveredCrew.map((name): CrewMemberAtMars => ({
     name,
     health:
       flown.crewHealth.find((member) => member.name === name)?.health ??
       catalogue.crew.maxHealth,
     arrivedOn: addDays(program.date, arrivalDay),
-    location: marsOrbit,
+    location: place,
   }));
   const crewActivities = {
     ...program.crewActivities,
     ...plan.crewActivities,
   };
   if (arrived.length > 0) {
-    crewActivities[crewKeyOf(marsOrbit)] = arrivingCrewActivity(
+    crewActivities[crewKeyOf(place)] = arrivingCrewActivity(
       catalogue,
       rules,
       program,
@@ -86,44 +120,59 @@ export function crewAtMars(
     ).id;
   }
   const stays = [
-    ...crewAtMarsOf(program).map((member) => ({ member, fromDay: 0 })),
-    ...arrived.map((member) => ({ member, fromDay: arrivalDay })),
-  ].map(({ member, fromDay }) => {
-    const health = healthCourse(
-      member.health,
-      drainsAtMars(catalogue, fromDay, turnDays),
-      [],
-    );
-    return { member, fromDay, untilDay: health.diedOn, health };
-  });
+    ...crewAtMarsOf(program).map((member) => stayOf(catalogue, member, 0, [])),
+    ...arrived.map((member) => stayOf(catalogue, member, arrivalDay, [])),
+  ];
   const keys = [
     ...new Set(stays.map(({ member }) => crewKeyOf(member.location))),
   ];
-  const atWork = keys.map((key): CrewAtWork => {
+  const atWork = keys.flatMap((key): CrewAtWork[] => {
     const here = stays.filter(
       ({ member }) => crewKeyOf(member.location) === key,
     );
-    const location = here[0]?.member.location ?? marsOrbit;
-    return {
-      key,
-      name: `Crew in ${locationNameOf(location)}`,
-      activityId: crewActivities[key] ?? "",
-      stays: here,
-    };
+    const where = here[0]?.member.location;
+    if (!where) return [];
+    const locationName = locationNameOf(rules, where);
+    return [
+      {
+        key,
+        place: where,
+        locationName,
+        name: `Crew in ${locationName}`,
+        activityId: crewActivities[key] ?? "",
+        stays: here,
+      },
+    ];
   });
-  const deaths = atWork.flatMap(({ stays: here }) => {
+  return { atWork, arrived, crewActivities };
+}
+
+/**
+ * Who of the Crew at Mars is still there at the end of the Turn, with the Health they have left, and who died there
+ * when their Health ran out. A place whose Crew have all died drops out of what Crew do.
+ */
+export function crewAtTurnEnd(
+  atWork: CrewAtWork[],
+  crewActivities: Record<string, string>,
+): {
+  stillThere: CrewMemberAtMars[];
+  deaths: CrewLoss[];
+  crewActivities: Record<string, string>;
+} {
+  const deaths = atWork.flatMap(({ stays: here, locationName }) => {
     const days = [
       ...new Set(here.flatMap(({ untilDay }) => untilDay ?? [])),
     ].toSorted((first, second) => first - second);
-    return days.flatMap((day) => {
-      const dying = here.filter(({ untilDay }) => untilDay === day);
-      return crewLoss(
-        dying.map(({ member }) => member.name),
+    return days.flatMap((day) =>
+      crewLoss(
+        here
+          .filter(({ untilDay }) => untilDay === day)
+          .map(({ member }) => member.name),
         day,
         "health",
-        `in ${locationNameOf(dying[0]?.member.location ?? marsOrbit)}, when their Health ran out`,
-      );
-    });
+        `in ${locationName}, when their Health ran out`,
+      ),
+    );
   });
   // A place where every Crew member has died has no one left to do its Activity.
   const emptied = new Set(
@@ -133,13 +182,12 @@ export function crewAtMars(
       )
       .map(({ key }) => key),
   );
-  const stillThere = stays
-    .filter(({ untilDay }) => untilDay === null)
-    .map(({ member, health }) => ({ ...member, health: health.health }));
   return {
-    atWork,
-    arrived,
-    stillThere,
+    stillThere: atWork.flatMap(({ stays: here }) =>
+      here
+        .filter(({ untilDay }) => untilDay === null)
+        .map(({ member, health }) => ({ ...member, health: health.health })),
+    ),
     deaths,
     crewActivities: Object.fromEntries(
       Object.entries(crewActivities).filter(([key]) => !emptied.has(key)),
@@ -170,25 +218,27 @@ export function healthLostSummary(
   ].filter(({ lost }) => lost.length > 0);
 }
 
-/** The events column's entry for the Crew arriving, if they did. */
+/** The events column's entry for the Crew arriving in Mars orbit or landing, if they did. */
 export function crewArrivedEntry(
   catalogue: Catalogue,
   rules: Rules,
   plan: TurnPlan,
+  flown: Pick<MissionOutcome, "heldLanding">,
   arrived: CrewMemberAtMars[],
   crewActivities: Record<string, string>,
 ): CrewArrivedEntry[] {
   const [first] = arrived;
   if (!first) return [];
-  const where = locationNameOf(first.location);
+  const where = locationNameOf(rules, first.location);
   const activityId = crewActivities[crewKeyOf(first.location)] ?? "";
   const doing = rules.activityById(activityId);
+  const how = first.location.kind === "marsOrbit" ? "arrived" : "landed";
   return [
     {
       kind: "crewArrived",
-      day: arrivalDayOf(catalogue, rules, plan),
+      day: crewDeliveryDayOf(rules, plan, flown),
       title: `Crew in ${where}`,
-      description: `${listOfNames.format(arrived.map(({ name }) => name))} have arrived in ${where} aboard the ${catalogue.crew.vehicleName}, and ${
+      description: `${listOfNames.format(arrived.map(({ name }) => name))} have ${how} in ${where} aboard the ${catalogue.crew.vehicleName}, and ${
         doing?.effect.kind === "research" ? `start ${doing.name}` : "rest"
       }.`,
     },
@@ -200,25 +250,36 @@ export function crewShipOnMission(
   catalogue: Catalogue,
   rules: Rules,
   plan: TurnPlan,
-  flown: Pick<MissionOutcome, "deliveredCrew" | "failedOnDay">,
+  flown: Pick<
+    MissionOutcome,
+    "deliveredCrew" | "failedOnDay" | "failedEvent" | "heldLanding"
+  >,
 ): MissionAsset[] {
   if (!plan.mission?.crew) return [];
   const delivered = flown.deliveredCrew.length > 0;
+  const place = placeFor(plan.mission);
+  const lands = place.kind === "landingSite";
   return [
     {
       name: catalogue.crew.vehicleName,
       kind: "crew",
-      landingSiteName: null,
-      deliveredOnDay: delivered ? arrivalDayOf(catalogue, rules, plan) : null,
+      landingSiteName: lands ? locationNameOf(rules, place) : null,
+      deliveredOnDay: delivered ? crewDeliveryDayOf(rules, plan, flown) : null,
       lostOnDay: delivered ? null : flown.failedOnDay,
-      crashed: false,
+      crashed:
+        !delivered &&
+        lands &&
+        // Crashing is failing a Mission Event that only landing brings.
+        flown.failedEvent !== undefined &&
+        catalogue.crew.landingMissionEvents.includes(flown.failedEvent.id) &&
+        !catalogue.crew.missionEvents.includes(flown.failedEvent.id),
     },
   ];
 }
 
 /**
- * Each place's Crew as Mission Mode shows them at Mars: their ship, for now, from the day the first of them is there.
- * Crew of their own in the views are still to come.
+ * Each place's Crew as Mission Mode shows them at Mars: their ship, for now, in orbit or standing at their Landing
+ * Site, from the day the first of them is there. Crew of their own in the views are still to come.
  */
 export function crewShipsAtMars(
   catalogue: Catalogue,
@@ -226,11 +287,11 @@ export function crewShipsAtMars(
   program: Program,
   atWork: CrewAtWork[],
 ): AssetAtMars[] {
-  return atWork.map(({ key, activityId, stays }) => ({
+  return atWork.map(({ key, place, locationName, activityId, stays }) => ({
     key: `crew:${key}`,
     name: catalogue.crew.vehicleName,
     kind: "crew",
-    landingSiteName: null,
+    landingSiteName: place.kind === "landingSite" ? locationName : null,
     activityName: rules.activityNameOf({ activityId }),
     surfaceMotion: "still",
     arrivedOnDay: Math.min(
@@ -249,14 +310,14 @@ export function crewSummary(
   catalogue: Catalogue,
   atWork: CrewAtWork[],
 ): TurnSummary["crew"] {
-  return atWork.flatMap(({ stays }) =>
+  return atWork.flatMap(({ stays, locationName }) =>
     stays.flatMap(({ member, fromDay, untilDay, health }) =>
       untilDay !== null
         ? []
         : [
             {
               name: member.name,
-              locationName: locationNameOf(member.location),
+              locationName,
               health: health.health,
               maxHealth: catalogue.crew.maxHealth,
               arrived: fromDay > 0,

@@ -81,7 +81,7 @@ describe("planning a Crewed Mission", () => {
     };
     expect(simulation.validatePlan(program, odd).problems).toEqual([
       "There is no Crew size of 5.",
-      `Crew can't do the Activity "Survey".`,
+      `Crew in Mars orbit can't do the Activity "Survey".`,
     ]);
   });
 
@@ -219,7 +219,7 @@ describe("Crew at Mars", () => {
         mission: null,
         crewActivities: { "mars-orbit": "test-survey" },
       }).problems,
-    ).toEqual([`Crew can't do the Activity "Survey".`]);
+    ).toEqual([`Crew in Mars orbit can't do the Activity "Survey".`]);
   });
 
   it("give a later Crew the next names, joining the Activity of the Crew already there", () => {

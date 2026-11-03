@@ -353,6 +353,44 @@ for (const size of screenSizes) {
       }
     });
 
+    test("Planning Mode fits on one screen with Crew at Mars, and a Crewed Mission that lands with everything else chosen", async ({
+      page,
+    }) => {
+      await openBusyProgram(page, { crewAtMars: true });
+      await page
+        .getByRole("combobox", { name: "Launch Vehicle" })
+        .selectOption("meridian-colossus");
+      await page.getByRole("checkbox", { name: /Crewed Mission/ }).check();
+      await page.getByRole("combobox", { name: "Crew size" }).selectOption("4");
+      // Landing, they can't join the Crew in Mars orbit, so they choose an Activity of their own, which is the widest row.
+      await page
+        .getByRole("combobox", { name: "Crew destination" })
+        .selectOption("landingSite");
+      await chooseAssets(page, ["Prospector Lander"]);
+      for (const contingency of await page
+        .getByRole("checkbox", { name: /Contingency/ })
+        .all()) {
+        await contingency.check();
+      }
+      await page
+        .getByRole("combobox", { name: "Trajectory" })
+        .selectOption("free-return");
+      await expect(
+        page.getByRole("combobox", {
+          name: "Activity for the Crew",
+          exact: true,
+        }),
+      ).toBeVisible();
+      await expect(page.getByRole("alert")).toHaveCount(0);
+      await expect(page.getByTestId("landing-site-details")).toBeVisible();
+      expect(await somethingScrolls(page)).toBe(false);
+      for (const name of ["Launch Mission", "End Turn without launching"]) {
+        await expect(page.getByRole("button", { name })).toBeInViewport({
+          ratio: 1,
+        });
+      }
+    });
+
     test("Planning Mode fits on one screen with a busy Program, every Asset and every Development chosen", async ({
       page,
     }) => {

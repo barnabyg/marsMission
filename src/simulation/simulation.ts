@@ -311,7 +311,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           landingSiteName: landingSiteById(asset.landingSiteId)?.name ?? null,
         })),
         crewedMission: crewedMissionView(catalogue, program),
-        crew: crewAtMarsView(catalogue, rules, program),
+        crew: crewAtMarsView(catalogue, rules, program, raised),
         developments: needingDevelopment(catalogue).map((technology) =>
           plannedDevelopment(program, technology),
         ),
@@ -428,7 +428,19 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     },
 
     previewCrew: (program, mission) =>
-      previewCrew(catalogue, rules, program, mission),
+      previewCrew(
+        catalogue,
+        rules,
+        program,
+        mission,
+        // An Asset on the same Mission that raises research on the surface raises the Crew's too.
+        surfaceRaise(
+          program,
+          catalogue.assets
+            .filter(({ id }) => mission.assetIds.includes(id))
+            .map(({ id, name }) => ({ assetId: id, name })),
+        ),
+      ),
 
     workOutTurn,
 

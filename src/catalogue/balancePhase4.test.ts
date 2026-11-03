@@ -204,7 +204,9 @@ describe("a productive Program in the real data files", () => {
 
   // This Program flies no Crew, which came in Phase 7.
   it.each(
-    files.milestones.filter(({ trigger }) => !("crewArrives" in trigger)),
+    files.milestones.filter(
+      ({ trigger }) => !("crewArrives" in trigger || "crewLands" in trigger),
+    ),
   )("earns the Milestone $name", ({ id }) => {
     expect(played.view.milestones.map((milestone) => milestone.id)).toContain(
       id,

@@ -23,5 +23,10 @@
     "id": "crew-research",
     "name": "Crew research",
     "grantMillionsPerScience": 2
+  },
+  {
+    "id": "crew-field-research",
+    "name": "Field research",
+    "grantMillionsPerScience": 2
   }
 ]

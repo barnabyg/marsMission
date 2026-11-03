@@ -60,7 +60,7 @@ How many Crew fly on a Crewed Mission, chosen in Planning Mode. A larger Crew ea
 _Avoid_: Crew count, team size
 
 **Health**:
-A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars and Contingency rescues lower it, Protection slows the decline, and at zero the Crew member dies.
+A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues and carrying on through a dust storm lower it, Protection slows the decline, and at zero the Crew member dies.
 _Avoid_: Condition, hit points
 
 **Supplies**:
@@ -78,7 +78,7 @@ How long an Asset keeps operating once in place. Longer Service Life costs more.
 _Avoid_: Lifespan, durability
 
 **Benefit**:
-What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset on the surface. A second Asset giving the same Benefit adds nothing.
+What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface. A second Asset giving the same Benefit adds nothing.
 _Avoid_: Bonus, buff, synergy
 
 **Activity**:
@@ -108,6 +108,9 @@ An Activity for a rover: Ongoing Research that drives long distances around the 
 **Crew research**:
 An Activity for Crew in Mars orbit: Ongoing Research from orbit, such as studying Mars, driving robots on the surface from above and running experiments aboard. Each Crew member earns it, and it pays a Research Grant.
 
+**Field research**:
+An Activity for Crew at a Landing Site: Ongoing Research on the surface, exploring around the site, collecting samples and studying them in their lander. Each Crew member earns it, a Benefit that raises research on the surface raises it too, and it pays a Research Grant.
+
 ## Modes
 
 **Planning Mode**:
@@ -129,7 +132,7 @@ _Avoid_: Prompt, intervention
 ## Risk
 
 **Go/no-go check**:
-A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life.
+A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life for each Asset being landed.
 _Avoid_: Abort check, landing poll
 
 **Mission Event**:
@@ -161,7 +164,7 @@ A random environmental danger that happens during Mission Mode, separate from pl
 _Avoid_: Random event, disaster
 
 **Dust storm**:
-A Hazard: a storm over one Landing Site for a stretch of days. If an Asset is operating there when it starts, the player chooses between sheltering, which earns no Ongoing Research for those days, and carrying on, with a chance of each Asset failing.
+A Hazard: a storm over one Landing Site for a stretch of days. If an Asset or Crew are operating there when it starts, the player chooses between sheltering, which earns no Ongoing Research for those days, and carrying on, with a chance of each Asset failing and of each Crew member losing Health.
 _Avoid_: Sandstorm, weather
 
 **Solar particle event**:

@@ -445,6 +445,19 @@ export const strategies: Strategy[] = [
     },
   ),
   playStyle(
+    "big Program: develop the Meridian Colossus and land Crew when rich",
+    "As big Program: develop the Meridian Colossus and fly Crew when rich, but its Crew land at a surveyed Landing Site, one not yet landed at if it can, once a Survey has made one safer, and go to Mars orbit until then.",
+    {
+      ...bigProgram,
+      develops: ["meridian-colossus"],
+      developsWhile: (view) => view.moneyMillions >= 5000,
+      fillsVehicle: "meridian-colossus",
+      fillsWhile: (view) => view.moneyMillions >= 5000,
+      fliesCrew: true,
+      landsCrew: true,
+    },
+  ),
+  playStyle(
     "steady: Survey once",
     "As steady: Soil analysis, but the orbiter changes to research after its first Survey.",
     {

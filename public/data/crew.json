@@ -1,6 +1,7 @@
 {
   "vehicleName": "Odyssey",
   "missionEvents": ["mars-orbit-insertion"],
+  "landingMissionEvents": ["mars-orbit-insertion", "entry-descent-landing"],
   "sizes": [
     { "crew": 2, "costMillions": 3000, "massTonnes": 9 },
     { "crew": 3, "costMillions": 3500, "massTonnes": 10.5 },
@@ -10,10 +11,12 @@
   "health": {
     "radiationPerDay": { "inFlight": 0.1, "atMars": 0.02 },
     "timeAtMarsPerDay": 0.02,
-    "contingencyRescueLoss": 15
+    "contingencyRescueLoss": 15,
+    "dustStorm": { "chance": 0.25, "loss": 20 }
   },
   "publicSupportLossPerMember": 100,
   "orbitActivities": ["crew-research", "nothing"],
+  "surfaceActivities": ["crew-field-research", "nothing"],
   "names": [
     "Amara Okafor",
     "Lena Petrova",

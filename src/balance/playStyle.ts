@@ -60,6 +60,8 @@ export interface PlayStyle {
   developsWhile?: (view: ProgramView) => boolean;
   /** Sends a Crewed Mission to Mars orbit, of the largest Crew it can afford, before any Asset, whenever one can fly. */
   fliesCrew?: boolean;
+  /** Lands that Crew at a surveyed Landing Site, once there is one, rather than keeping them in Mars orbit. */
+  landsCrew?: boolean;
   /** Whether an Asset that can Survey does that first, while there is something left to Survey. */
   surveysFirst: boolean;
   /** Stops Surveying sooner than when nothing is left to Survey, once this is no longer true. */
@@ -422,7 +424,7 @@ function missionPlan(
         : null;
     };
     for (const mission of playStyle.fliesCrew
-      ? crewedMissions(view, tools)
+      ? crewedMissions(view, tools, playStyle.landsCrew)
       : []) {
       const plan = affordable(mission);
       if (plan) return plan;

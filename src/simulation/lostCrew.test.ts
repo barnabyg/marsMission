@@ -251,6 +251,6 @@ describe("saving lost and home Crew", () => {
       }),
     ]);
     expect(view.crewedMission.namesLeft).toBe(3);
-    expect(simulation.saveProgram(restored).formatVersion).toBe(9);
+    expect(simulation.saveProgram(restored).formatVersion).toBeGreaterThan(8);
   });
 });

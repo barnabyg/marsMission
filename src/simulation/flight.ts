@@ -127,15 +127,53 @@ export interface Flight {
   };
 }
 
+/**
+ * The day this Mission delivers an Asset, or its Crew, which a landing held off for a dust storm moves later if it is
+ * one of theirs.
+ */
+export function deliveryDayOf(
+  rules: Rules,
+  plan: TurnPlan,
+  flown: Pick<MissionOutcome, "heldLanding">,
+  delivered: { missionEvents: string[] },
+): number {
+  const { heldLanding } = flown;
+  return (
+    rules.deliveryDay(delivered, plan.mission) +
+    (heldLanding && delivered.missionEvents.includes(heldLanding.eventId)
+      ? heldLanding.days
+      : 0)
+  );
+}
+
+/** The day this Mission delivers its Crew, to Mars orbit or their Landing Site, after any wait for a dust storm. */
+export function crewDeliveryDayOf(
+  rules: Rules,
+  plan: TurnPlan,
+  flown: Pick<MissionOutcome, "heldLanding">,
+): number {
+  return deliveryDayOf(rules, plan, flown, rules.crewOf(plan.mission));
+}
+
 // Slow to create, and balance runs fly a great many Missions.
 const listOfKinds = new Intl.ListFormat("en");
 
-/** What is landing, to start a sentence, such as "The rover". Always in the Catalogue's order, whatever order the Mission lists them. */
-function whatLands(catalogue: Catalogue, assets: Asset[]): string {
+/**
+ * What is landing, to start a sentence, such as "The rover", or "The lander and the Odyssey" with Crew. Always in the
+ * Catalogue's order, whatever order the Mission lists them, with the Crew's ship last.
+ */
+function whatLands(
+  catalogue: Catalogue,
+  assets: Asset[],
+  mission: TurnPlan["mission"],
+): string {
   const kinds = catalogue.assets
     .filter((asset) => asset.landsAtSite && assets.includes(asset))
     .map(({ kind }) => `the ${kind}`);
-  const named = listOfKinds.format(new Set(kinds));
+  const crew = mission?.crew?.landsAtSite
+    ? [`the ${catalogue.crew.vehicleName}`]
+    : [];
+  const named = listOfKinds.format(new Set([...kinds, ...crew]));
   return named.charAt(0).toUpperCase() + named.slice(1);
 }
 
@@ -207,7 +245,7 @@ export function startFlight(
     crewOnBoard: (when) => {
       const day = typeof when === "number" ? when : rules.dayOf(when, mission);
       const due = typeof when === "number" ? when + 1 : day;
-      return rules.deliveryDay(catalogue.crew, mission) >= due
+      return rules.deliveryDay(rules.crewOf(mission), mission) >= due
         ? flight.aliveOn(crew, day)
         : [];
     },
@@ -230,7 +268,7 @@ export function startFlight(
     filledIn: (text) =>
       text
         .replaceAll("{site}", landingSite?.name ?? "")
-        .replaceAll("{lander}", whatLands(catalogue, assets)),
+        .replaceAll("{lander}", whatLands(catalogue, assets, mission)),
     shorten,
     cut: (onBoard, percent) => {
       shorten(onBoard, (days) => (days * (100 - percent)) / 100);

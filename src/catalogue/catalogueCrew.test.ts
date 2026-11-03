@@ -72,6 +72,29 @@ describe("Crew in the real data files", () => {
     expect(perTurn).toBeLessThan(crew.maxHealth / 2);
   });
 
+  it("makes Crew at a Landing Site earn more Science than Crew in Mars orbit, at the risk of a landing", () => {
+    const { activities } = parseCatalogue(realCatalogueFiles());
+    const bestScience = (ids: string[]) =>
+      Math.max(
+        ...activities
+          .filter(({ id }) => ids.includes(id))
+          .map(({ effect }) =>
+            effect.kind === "research" ? effect.sciencePerTurn : 0,
+          ),
+      );
+    expect(bestScience(crew.surfaceActivities)).toBeGreaterThan(
+      bestScience(crew.orbitActivities),
+    );
+  });
+
+  it("makes carrying on through a dust storm hurt some Crew, by less than half their Health", () => {
+    const { chance, loss } = crew.health.dustStorm;
+    expect(chance).toBeGreaterThan(0);
+    expect(chance).toBeLessThan(0.5);
+    expect(loss).toBeGreaterThan(0);
+    expect(loss).toBeLessThan(crew.maxHealth / 2);
+  });
+
   it("names enough Crew for several Crewed Missions of the largest size", () => {
     const largest = Math.max(...crew.sizes.map((size) => size.crew));
     expect(crew.names.length).toBeGreaterThanOrEqual(4 * largest);
@@ -138,9 +161,40 @@ describe("invalid Crew", () => {
     );
   });
 
-  it("rejects a Mission Event that needs a Landing Site, because Crew stay in Mars orbit", () => {
+  it("rejects a Mission Event that needs a Landing Site on the way to Mars orbit", () => {
     expect(errorFrom(withCrew({ missionEvents: ["test-landing"] }))).toContain(
-      `crew.json: the Crewed Mission can't use the Mission Event "test-landing", which needs a Landing Site`,
+      `crew.json: the Crewed Mission can't use the Mission Event "test-landing" to reach Mars orbit, because it needs a Landing Site`,
+    );
+  });
+
+  it("rejects a Mission Event for landing that isn't in the data files", () => {
+    expect(
+      errorFrom(
+        withCrew({ landingMissionEvents: ["test-landing", "warp-drive"] }),
+      ),
+    ).toContain(
+      `crew.json: the Crewed Mission refers to the Mission Event "warp-drive"`,
+    );
+  });
+
+  it("rejects a Survey as an Activity for Crew at a Landing Site", () => {
+    expect(
+      errorFrom(withCrew({ surfaceActivities: ["test-survey"] })),
+    ).toContain(
+      `crew.json: Crew can't do the Activity "test-survey", because a Survey is for an Asset`,
+    );
+  });
+
+  it("rejects being hurt in a dust storm costing all of a Crew member's Health", () => {
+    const files = testCatalogueFiles();
+    expect(
+      errorFrom(
+        withCrew({
+          health: { ...files.crew.health, dustStorm: { chance: 1, loss: 100 } },
+        }),
+      ),
+    ).toContain(
+      "crew.json: being hurt in a dust storm costs 100 Health, which must be less than the 100 Crew start with",
     );
   });
 
@@ -187,6 +241,6 @@ describe("invalid Crew", () => {
           },
         ],
       }),
-    ).toContain("milestones.json: 5.trigger:");
+    ).toContain("milestones.json: 6.trigger:");
   });
 });

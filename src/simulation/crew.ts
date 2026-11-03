@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import type { Raise } from "./benefits";
 import { drainsInFlight, healthCourse } from "./health";
 import { earningsPerTurn } from "./ongoingResearch";
 import type { Activity, Rules } from "./rules";
@@ -13,8 +14,9 @@ import type {
 } from "./types";
 
 /**
- * Crew in planning: the Crew sizes on offer, the names Crew are given, where Crew are and what they do there, and
- * what's wrong with a plan's Crew. What Crew do during a Turn is in `crewAtMars.ts`.
+ * Crew in planning: the Crew sizes on offer, the names Crew are given, where Crew are (Mars orbit or a Landing Site,
+ * each a place of its own) and what they do there, and what's wrong with a plan's Crew. What Crew do during a Turn is
+ * in `crewAtMars.ts`.
  */
 
 type CrewSize = Catalogue["crew"]["sizes"][number];
@@ -24,6 +26,8 @@ export interface CrewAtMars {
   /** How a plan names this place to change its Crew's Activity. */
   key: string;
   locationName: string;
+  /** The Landing Site they are at, or null if they are in Mars orbit. */
+  landingSiteId: string | null;
   activityId: string;
   activityName: string;
   /** The Activities they can do, with what the Crew there would earn together. */
@@ -37,7 +41,7 @@ export interface PlannedCrew {
   /** Who would fly: the next names not yet given, which are fewer than `size` if too few are left. */
   names: string[];
   activityId: string;
-  /** The Activities they can do, with what this Crew would earn together. */
+  /** The Activities they can do where they are going, with what this Crew would earn together. */
   activities: PlannedActivity[];
   /** Where they would join Crew already operating, whose Activity they take up, or null if none are there. */
   joining: string | null;
@@ -45,21 +49,29 @@ export interface PlannedCrew {
   arrivalHealth: number;
 }
 
-/** Crew in Mars orbit, the only place they go so far. */
-export const marsOrbit = { kind: "marsOrbit" } as const;
+/** Crew in Mars orbit, where a Crewed Mission goes unless its Crew land. */
+const marsOrbit = { kind: "marsOrbit" } as const;
 
-/** Each kind of place where Crew operate: how a plan names it, and how the player reads it. */
-const places = {
-  marsOrbit: { key: "mars-orbit", name: "Mars orbit" },
-} satisfies Record<PlaceAtMars["kind"], unknown>;
-
-/** How a plan names a place where Crew operate. */
+/** How a plan names a place where Crew operate. Each Landing Site is a place of its own. */
 export function crewKeyOf(location: PlaceAtMars): string {
-  return places[location.kind].key;
+  return location.kind === "marsOrbit"
+    ? "mars-orbit"
+    : `landing-site:${location.landingSiteId}`;
 }
 
-export function locationNameOf(location: PlaceAtMars): string {
-  return places[location.kind].name;
+/** Where Crew are, as the player reads it: Mars orbit, or their Landing Site's name. */
+export function locationNameOf(rules: Rules, location: PlaceAtMars): string {
+  return location.kind === "marsOrbit"
+    ? "Mars orbit"
+    : (rules.landingSiteById(location.landingSiteId)?.name ??
+        location.landingSiteId);
+}
+
+/** Where a Mission's Crew go: to its Landing Site if they land there, and otherwise to Mars orbit. */
+export function placeFor(mission: PlannedMission | null): PlaceAtMars {
+  return mission?.crew?.landsAtSite && mission.landingSiteId !== undefined
+    ? { kind: "landingSite", landingSiteId: mission.landingSiteId }
+    : marsOrbit;
 }
 
 /** A Crew member operating at Mars, who is neither lost nor home. */
@@ -69,7 +81,9 @@ export type CrewMemberAtMars = CrewMember & {
 };
 
 const isAtMars = (member: CrewMember): member is CrewMemberAtMars =>
-  Object.hasOwn(places, member.location.kind) && member.arrivedOn !== null;
+  (member.location.kind === "marsOrbit" ||
+    member.location.kind === "landingSite") &&
+  member.arrivedOn !== null;
 
 /** The Program's Crew operating at Mars, in the order they arrived, leaving out those who are lost or home. */
 export function crewAtMarsOf(program: Program): CrewMemberAtMars[] {
@@ -99,20 +113,35 @@ export function crewNamesFor(
   return namesLeft(catalogue, program).slice(0, mission?.crew?.size ?? 0);
 }
 
-/** The Activities Crew in Mars orbit can do, in the order the Catalogue lists them. */
-function crewActivities(catalogue: Catalogue, rules: Rules): Activity[] {
-  return catalogue.crew.orbitActivities.flatMap(
+/** The ids of the Activities Crew can do in a place: in Mars orbit, or on the surface. */
+function activityIdsAt(catalogue: Catalogue, place: PlaceAtMars): string[] {
+  return place.kind === "marsOrbit"
+    ? catalogue.crew.orbitActivities
+    : catalogue.crew.surfaceActivities;
+}
+
+/** The Activities Crew can do in a place, in the order the Catalogue lists them. */
+function crewActivities(
+  catalogue: Catalogue,
+  rules: Rules,
+  place: PlaceAtMars,
+): Activity[] {
+  return activityIdsAt(catalogue, place).flatMap(
     (id) => rules.activityById(id) ?? [],
   );
 }
 
-/** An Activity as Planning Mode offers it to this many Crew, who each earn its rate. */
+/**
+ * An Activity as Planning Mode offers it to this many Crew, who each earn its rate, raised as research on the surface
+ * is if they are at a Landing Site and a Benefit raises it.
+ */
 function forCrew(
   catalogue: Catalogue,
   activity: Activity,
   members: number,
+  raise: Raise | null,
 ): PlannedActivity {
-  const each = earningsPerTurn(catalogue, activity);
+  const each = earningsPerTurn(catalogue, activity, raise?.percent);
   return {
     id: activity.id,
     name: activity.name,
@@ -123,15 +152,21 @@ function forCrew(
       publicSupport: each.publicSupport * members,
       researchGrantMillions: each.researchGrantMillions * members,
     },
+    ...(raise && each ? { raisedBy: raise } : {}),
   };
 }
 
-/** What the Crew in Mars orbit do this Turn, going by the plan, or undefined if none operate there as it starts. */
-function orbitActivityNow(
+/** The raise that applies to Crew in a place, which is only ever on the surface. */
+const raiseAt = (place: PlaceAtMars, raise: Raise | null) =>
+  place.kind === "landingSite" ? raise : null;
+
+/** What the Crew in a place do this Turn, going by the plan, or undefined if none operate there as it starts. */
+function activityNowAt(
   program: Program,
   plan: TurnPlan,
+  place: PlaceAtMars,
 ): string | undefined {
-  const key = crewKeyOf(marsOrbit);
+  const key = crewKeyOf(place);
   if (
     !crewAtMarsOf(program).some(({ location }) => crewKeyOf(location) === key)
   ) {
@@ -141,8 +176,8 @@ function orbitActivityNow(
 }
 
 /**
- * The Activity a Mission's Crew take up as they arrive: that of the Crew already operating there, or else the one the
- * Mission chose, or else the first the Catalogue lists.
+ * The Activity a Mission's Crew take up as they arrive: that of the Crew already operating where they go, or else the
+ * one the Mission chose, or else the first the Catalogue lists for that place.
  */
 export function arrivingCrewActivity(
   catalogue: Catalogue,
@@ -150,9 +185,10 @@ export function arrivingCrewActivity(
   program: Program,
   plan: TurnPlan,
 ): Activity {
-  const available = crewActivities(catalogue, rules);
+  const place = placeFor(plan.mission);
+  const available = crewActivities(catalogue, rules, place);
   const chosen =
-    orbitActivityNow(program, plan) ?? plan.mission?.crew?.activityId;
+    activityNowAt(program, plan, place) ?? plan.mission?.crew?.activityId;
   const activity = available.find(({ id }) => id === chosen) ?? available[0];
   // The Catalogue guarantees at least one, and that each one exists.
   if (!activity) throw new Error("Crew have no Activities");
@@ -177,11 +213,12 @@ export function crewedMissionView(
   };
 }
 
-/** The Crew operating at Mars, by where they are, for Planning Mode. */
+/** The Crew operating at Mars, by where they are, for Planning Mode, with research on the surface raised by `raise`. */
 export function crewAtMarsView(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
+  raise: Raise | null,
 ): CrewAtMars[] {
   const atMars = crewAtMarsOf(program);
   const keys = [...new Set(atMars.map(({ location }) => crewKeyOf(location)))];
@@ -191,15 +228,18 @@ export function crewAtMarsView(
     );
     const [first] = members;
     if (!first) return [];
+    const place = first.location;
     const activityId = program.crewActivities[key] ?? "";
     return [
       {
         key,
-        locationName: locationNameOf(first.location),
+        locationName: locationNameOf(rules, place),
+        landingSiteId:
+          place.kind === "landingSite" ? place.landingSiteId : null,
         activityId,
         activityName: rules.activityNameOf({ activityId }),
-        activities: crewActivities(catalogue, rules).map((activity) =>
-          forCrew(catalogue, activity, members.length),
+        activities: crewActivities(catalogue, rules, place).map((activity) =>
+          forCrew(catalogue, activity, members.length, raiseAt(place, raise)),
         ),
         members: members.map(({ name, health, arrivedOn }) => ({
           name,
@@ -211,46 +251,57 @@ export function crewAtMarsView(
   });
 }
 
-/** A Mission's Crew as Planning Mode shows them, or null if it carries none. */
+/**
+ * A Mission's Crew as Planning Mode shows them, with research on the surface raised by `raise`, or null if it carries
+ * none.
+ */
 export function previewCrew(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
   mission: PlannedMission,
+  raise: Raise | null,
 ): PlannedCrew | null {
   if (!mission.crew) return null;
   const { size } = mission.crew;
   const plan = { mission };
+  const place = placeFor(mission);
   return {
     size,
     names: crewNamesFor(catalogue, program, mission),
     activityId: arrivingCrewActivity(catalogue, rules, program, plan).id,
-    activities: crewActivities(catalogue, rules).map((activity) =>
-      forCrew(catalogue, activity, size),
+    activities: crewActivities(catalogue, rules, place).map((activity) =>
+      forCrew(catalogue, activity, size, raiseAt(place, raise)),
     ),
     joining:
-      orbitActivityNow(program, plan) === undefined
+      activityNowAt(program, plan, place) === undefined
         ? null
-        : locationNameOf(marsOrbit),
+        : locationNameOf(rules, place),
     arrivalHealth: healthCourse(
       catalogue.crew.maxHealth,
-      drainsInFlight(catalogue, rules.deliveryDay(catalogue.crew, mission)),
+      drainsInFlight(
+        catalogue,
+        rules.deliveryDay(rules.crewOf(mission), mission),
+      ),
       [],
     ).health,
   };
 }
 
-/** What's wrong with an Activity for Crew, if anything. */
+/** What's wrong with an Activity for Crew in a place, if anything. */
 function crewActivityProblems(
   catalogue: Catalogue,
   rules: Rules,
+  place: PlaceAtMars,
   activityId: string,
 ): string[] {
   const activity = rules.activityById(activityId);
   if (!activity) return [`There is no Activity called "${activityId}".`];
-  return catalogue.crew.orbitActivities.includes(activityId)
+  return activityIdsAt(catalogue, place).includes(activityId)
     ? []
-    : [`Crew can't do the Activity "${activity.name}".`];
+    : [
+        `Crew in ${locationNameOf(rules, place)} can't do the Activity "${activity.name}".`,
+      ];
 }
 
 /** What's wrong with a plan's new Activities for Crew already operating, if anything. */
@@ -261,10 +312,14 @@ export function operatingCrewProblems(
   plan: TurnPlan,
 ): string[] {
   return Object.entries(plan.crewActivities ?? {}).flatMap(
-    ([key, activityId]) =>
-      crewAtMarsOf(program).some(({ location }) => crewKeyOf(location) === key)
-        ? crewActivityProblems(catalogue, rules, activityId)
-        : [`There are no Crew operating at "${key}".`],
+    ([key, activityId]) => {
+      const there = crewAtMarsOf(program).find(
+        ({ location }) => crewKeyOf(location) === key,
+      );
+      return there
+        ? crewActivityProblems(catalogue, rules, there.location, activityId)
+        : [`There are no Crew operating at "${key}".`];
+    },
   );
 }
 
@@ -291,7 +346,12 @@ export function checkCrew(
         : []),
       ...(crew.activityId === undefined
         ? []
-        : crewActivityProblems(catalogue, rules, crew.activityId)),
+        : crewActivityProblems(
+            catalogue,
+            rules,
+            placeFor(mission),
+            crew.activityId,
+          )),
     ],
   };
 }

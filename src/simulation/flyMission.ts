@@ -4,28 +4,12 @@ import { endCrewFlight } from "./crewHealthInFlight";
 import { startFlight, type Flight, type MissionOutcome } from "./flight";
 import { goNoGoCheck } from "./goNoGo";
 import { missionEventFailed } from "./missionEventFailure";
-import { roll, type Asset, type Rules } from "./rules";
+import { roll, type Rules } from "./rules";
 import {
   solarParticleEventDay,
   solarParticleEventInFlight,
 } from "./solarParticleEvents";
 import type { DecisionAnswers, Program, TurnPlan } from "./types";
-
-/** The day this Mission delivers an Asset, which a landing held off for a dust storm moves later. */
-export function deliveryDayOf(
-  rules: Rules,
-  plan: TurnPlan,
-  flown: Pick<MissionOutcome, "heldLanding">,
-  asset: Asset,
-): number {
-  const { heldLanding } = flown;
-  return (
-    rules.deliveryDay(asset, plan.mission) +
-    (heldLanding && asset.missionEvents.includes(heldLanding.eventId)
-      ? heldLanding.days
-      : 0)
-  );
-}
 
 /**
  * Rolls each of the Mission's Mission Events in turn, up to the first that fails for good or the first Decision

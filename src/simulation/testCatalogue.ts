@@ -259,6 +259,14 @@ export function testCatalogueFiles(): CatalogueFiles {
         science: 30,
         publicSupport: 150,
       },
+      {
+        id: "first-crew-landing",
+        name: "First Crew landing",
+        description: "Crew reached the surface.",
+        trigger: { crewLands: true },
+        science: 50,
+        publicSupport: 100,
+      },
     ],
     reliabilityLevels: [
       { id: "none", name: "None", costMillions: 0, failureMultiplier: 1 },

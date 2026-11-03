@@ -12,17 +12,23 @@ interface MissionCrewProps {
   planned: PlannedCrew | null;
   onCrewSizeChange: (size: number | null) => void;
   onActivityChange: (activityId: string) => void;
+  /** Whether the Crew land at the Mission's Landing Site, rather than staying in Mars orbit. */
+  lands: boolean;
+  onLandsChange: (lands: boolean) => void;
 }
 
 /**
- * Whether the Mission carries Crew and, if it does, how many, who they are and what they will do at Mars. It is a row
- * among the Assets, without their class, so that ticking Assets leaves it alone.
+ * Whether the Mission carries Crew and, if it does, how many, who they are, whether they land and what they will do at
+ * Mars. It is a row among the Assets, without their class, so that ticking Assets leaves it alone. Landing brings in
+ * the Landing Site choice below the Assets, which a lander shares.
  */
 export function MissionCrew({
   crewedMission,
   planned,
   onCrewSizeChange,
   onActivityChange,
+  lands,
+  onLandsChange,
 }: MissionCrewProps) {
   const { vehicleName, sizes, maxHealth, namesLeft } = crewedMission;
   const smallest = sizes[0];
@@ -74,6 +80,16 @@ export function MissionCrew({
                 {crew} ({formatMoney(costMillions)}, {massTonnes} t)
               </option>
             ))}
+          </select>
+          <select
+            aria-label="Crew destination"
+            value={lands ? "landingSite" : "marsOrbit"}
+            onChange={(event) => {
+              onLandsChange(event.target.value === "landingSite");
+            }}
+          >
+            <option value="marsOrbit">to Mars orbit</option>
+            <option value="landingSite">to land</option>
           </select>
           <span>
             <GameText>Activity</GameText>

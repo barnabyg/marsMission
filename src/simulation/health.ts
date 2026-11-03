@@ -13,7 +13,11 @@ import type { Catalogue } from "../catalogue/catalogue";
 
 /** Why a Crew member lost Health. */
 export type HealthLossCause =
-  "radiationInFlight" | "radiationAtMars" | "timeAtMars" | "contingency";
+  | "radiationInFlight"
+  | "radiationAtMars"
+  | "timeAtMars"
+  | "contingency"
+  | "dustStorm";
 
 /** The causes in the order the Turn summary lists them, with how the player reads each. */
 export const healthLossCauses: Record<HealthLossCause, string> = {
@@ -21,6 +25,7 @@ export const healthLossCauses: Record<HealthLossCause, string> = {
   radiationAtMars: "radiation at Mars",
   timeAtMars: "time at Mars",
   contingency: "a Contingency rescue",
+  dustStorm: "a dust storm",
 };
 
 /** Health lost steadily, at so much a day, from one day of the Turn to another. */

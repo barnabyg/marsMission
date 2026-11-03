@@ -30,7 +30,7 @@ export const tooltips = {
   "Crew size":
     "How many Crew fly on a Crewed Mission, chosen in Planning Mode. A larger Crew earns more Ongoing Research, but weighs and costs more.",
   Health:
-    "A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars and Contingency rescues lower it, Protection slows the decline, and at zero the Crew member dies.",
+    "A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues and carrying on through a dust storm lower it, Protection slows the decline, and at zero the Crew member dies.",
   Supplies:
     "The food, water and everything else Crew use up to stay alive. When they run out, Health falls quickly.",
   Asset:
@@ -38,7 +38,7 @@ export const tooltips = {
   "Service Life":
     "How long an Asset keeps operating once in place. Longer Service Life costs more.",
   Benefit:
-    "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset on the surface. A second Asset giving the same Benefit adds nothing.",
+    "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface. A second Asset giving the same Benefit adds nothing.",
   Activity:
     "What an Asset, or all the Crew in one place at Mars, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset or Crew keep their Activity into later Turns until the player changes it.",
   "Landing Site":
@@ -55,6 +55,8 @@ export const tooltips = {
     "An Activity for a rover: Ongoing Research that drives long distances around the Landing Site. It earns more Science than Soil analysis and pays no Research Grant.",
   "Crew research":
     "An Activity for Crew in Mars orbit: Ongoing Research from orbit, such as studying Mars, driving robots on the surface from above and running experiments aboard. Each Crew member earns it, and it pays a Research Grant.",
+  "Field research":
+    "An Activity for Crew at a Landing Site: Ongoing Research on the surface, exploring around the site, collecting samples and studying them in their lander. Each Crew member earns it, a Benefit that raises research on the surface raises it too, and it pays a Research Grant.",
   "Planning Mode":
     "The first part of a Turn, in which the player chooses Missions, Assets, Activities, technology and Safety Margin and spends money. No game time passes in Planning Mode.",
   "Mission Mode":
@@ -64,7 +66,7 @@ export const tooltips = {
   "Decision Point":
     "A moment in Mission Mode when play pauses for the player to make a limited choice, such as aborting or using a Contingency.",
   "Go/no-go check":
-    "A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life.",
+    "A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life for each Asset being landed.",
   "Mission Event":
     "A discrete, riskable event within a Mission, such as launch, Mars transfer burn, Mars orbit insertion, entry/descent/landing or rendezvous. Each one has a failure probability.",
   "Safety Margin":
@@ -80,7 +82,7 @@ export const tooltips = {
   Hazard:
     "A random environmental danger that happens during Mission Mode, separate from planned Mission Events, such as a dust storm, a solar particle event or an asteroid strike on a base.",
   "Dust storm":
-    "A Hazard: a storm over one Landing Site for a stretch of days. If an Asset is operating there when it starts, the player chooses between sheltering, which earns no Ongoing Research for those days, and carrying on, with a chance of each Asset failing.",
+    "A Hazard: a storm over one Landing Site for a stretch of days. If an Asset or Crew are operating there when it starts, the player chooses between sheltering, which earns no Ongoing Research for those days, and carrying on, with a chance of each Asset failing and of each Crew member losing Health.",
   "Solar particle event":
     "A Hazard: a burst of radiation from the Sun that hits a Mission on its way to Mars, more likely the longer its Duration. The player chooses between safe mode, which costs each Asset on board some Service Life, and carrying on, with a chance of damage that costs much more or loses the Mission.",
   Science:

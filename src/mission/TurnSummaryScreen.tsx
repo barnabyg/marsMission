@@ -165,19 +165,29 @@ export function TurnSummaryScreen({
           </h2>
           <ul>
             {summary.dustStorms.map(
-              ({ siteName, days, answer, assets, assetsFailed }) => (
-                <li key={siteName}>
-                  <GameText>
-                    {`Dust storm over ${siteName}: ${
-                      answer === "shelter"
-                        ? `${assets.join(", ")} sheltered for ${days} days, with no Ongoing Research`
-                        : assetsFailed.length > 0
-                          ? `carried on through ${days} days, and lost ${assetsFailed.join(", ")}`
-                          : `${assets.join(", ")} carried on through ${days} days, and came through`
-                    }`}
-                  </GameText>
-                </li>
-              ),
+              ({ siteName, days, answer, assets, assetsFailed, crewHurt }) => {
+                const harm = [
+                  ...(assetsFailed.length > 0
+                    ? [`lost ${assetsFailed.join(", ")}`]
+                    : []),
+                  ...(crewHurt.length > 0
+                    ? [`${crewHurt.join(", ")} lost Health`]
+                    : []),
+                ];
+                return (
+                  <li key={siteName}>
+                    <GameText>
+                      {`Dust storm over ${siteName}: ${
+                        answer === "shelter"
+                          ? `${assets.join(", ")} sheltered for ${days} days, with no Ongoing Research`
+                          : harm.length > 0
+                            ? `carried on through ${days} days, and ${harm.join(", and ")}`
+                            : `${assets.join(", ")} carried on through ${days} days, and came through`
+                      }`}
+                    </GameText>
+                  </li>
+                );
+              },
             )}
           </ul>
         </section>

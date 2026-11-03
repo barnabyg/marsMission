@@ -58,7 +58,8 @@ describe("strategies that fly Crew", () => {
         played.some(({ researchScience }) =>
           researchScience.some(
             ({ activityName, science }) =>
-              activityName === "Crew research" && science > 0,
+              ["Crew research", "Field research"].includes(activityName) &&
+              science > 0,
           ),
         ),
       ).toBe(true);
@@ -69,6 +70,7 @@ describe("strategies that fly Crew", () => {
         crew.every(
           ({ location }) =>
             location.kind === "marsOrbit" ||
+            location.kind === "landingSite" ||
             (location.kind === "lost" && location.cause === "health"),
         ),
       ).toBe(true);
@@ -100,6 +102,23 @@ describe("the checks for invalid Crew", () => {
     ).toEqual([]);
     expect(crewProblems(before, summary, after)).toEqual([]);
     expect(after.crew[0]?.members).toHaveLength(4);
+  });
+
+  it("find nothing wrong with Crew landing, at a site landed at for the first time", () => {
+    const landing = {
+      mission: {
+        ...crewed.mission,
+        crew: { size: 2, landsAtSite: true },
+        landingSiteId: "jezero-crater",
+      },
+    };
+    const landed = simulation.runTurn(first.program, landing);
+    const view = simulation.readProgram(landed.program);
+    expect(view.crew.map(({ landingSiteId }) => landingSiteId)).toEqual([
+      null,
+      "jezero-crater",
+    ]);
+    expect(crewProblems(before, landed.summary, view)).toEqual([]);
   });
 
   it("find nothing wrong with Crew lost on the way, or brought home by a Free-return", () => {
@@ -288,6 +307,54 @@ describe("the checks for invalid Crew", () => {
           crew: summary.crew.map((member) => ({ ...member, arrived: true })),
         }),
       /Turn summary don't match/,
+    ],
+    [
+      "Crew at a Landing Site nothing has landed at",
+      () =>
+        changedAfter({
+          crew: [
+            {
+              ...group,
+              landingSiteId: "jezero-crater",
+              locationName: "Jezero Crater",
+            },
+          ],
+        }),
+      /Landing Site that isn't known or that nothing has landed at/,
+    ],
+    [
+      "a dust storm hurting Crew who sheltered",
+      () =>
+        changedSummary({
+          dustStorms: [
+            {
+              siteName: "Jezero Crater",
+              days: 100,
+              answer: "shelter",
+              assets: [firstName],
+              assetsFailed: [],
+              crewHurt: [firstName],
+            },
+          ],
+        }),
+      /hurt Crew who sheltered/,
+    ],
+    [
+      "Crew hurt in a dust storm who lost no Health to it",
+      () =>
+        changedSummary({
+          dustStorms: [
+            {
+              siteName: "Jezero Crater",
+              days: 100,
+              answer: "carryOn",
+              assets: [firstName],
+              assetsFailed: [],
+              crewHurt: [firstName],
+            },
+          ],
+        }),
+      /lost no Health to it/,
     ],
   ])("catch %s", (_, check, expected) => {
     expect(check().join(" ")).toMatch(expected);

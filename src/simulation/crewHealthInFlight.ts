@@ -1,4 +1,4 @@
-import type { Flight } from "./flight";
+import { crewDeliveryDayOf, type Flight } from "./flight";
 import { crewLoss } from "./lostCrew";
 
 /**
@@ -7,13 +7,13 @@ import { crewLoss } from "./lostCrew";
  * Those whose Health ran out on the way are lost then, so they neither arrive nor come home.
  */
 export function endCrewFlight(flight: Flight): void {
-  const { catalogue, rules, mission, outcome } = flight;
+  const { rules, mission, outcome } = flight;
   const lostWithMission = new Set(
     outcome.crewLost.flatMap(({ names }) => names),
   );
   // Crew delivered before a later failure, or still on board at a Decision Point, stop there.
   const stoppedOn = Math.min(
-    rules.deliveryDay(catalogue.crew, mission),
+    crewDeliveryDayOf(rules, { mission }, outcome),
     outcome.failedOnDay ?? Infinity,
     outcome.decisionPoint?.day ?? Infinity,
   );

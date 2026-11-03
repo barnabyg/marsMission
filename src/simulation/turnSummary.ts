@@ -116,10 +116,12 @@ export interface TurnSummary {
     siteName: string;
     days: number;
     answer: "shelter" | "carryOn";
-    /** The Assets operating there when it started. */
+    /** The Assets operating there when it started, then the Crew. */
     assets: string[];
     /** Those that failed because they carried on. assetsFailed lists them too. */
     assetsFailed: string[];
+    /** The Crew hurt because they carried on, who each lost Health. healthLost lists it too. */
+    crewHurt: string[];
   }[];
   /** The solar particle event that hit the Mission, if one did, how it was answered and what came of it. */
   solarParticleEvent: {

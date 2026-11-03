@@ -191,7 +191,23 @@ const format9 = format8.extend({
   ),
 });
 
-const newestFormat = format9;
+/** Adds Crew at a Landing Site, each site a place of its own. A save from before them has none, so it needs no change. */
+const format10 = format9.extend({
+  crew: z.array(
+    z.strictObject({
+      ...format9.shape.crew.element.shape,
+      location: z.discriminatedUnion("kind", [
+        ...format9.shape.crew.element.shape.location.options,
+        z.strictObject({
+          kind: z.literal("landingSite"),
+          landingSiteId: z.string(),
+        }),
+      ]),
+    }),
+  ),
+});
+
+const newestFormat = format10;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -285,6 +301,10 @@ const formats: readonly SaveFormat[] = [
   {
     schema: format8,
     upgrade: (old: z.output<typeof format8>): z.output<typeof format9> => old,
+  },
+  {
+    schema: format9,
+    upgrade: (old: z.output<typeof format9>): z.output<typeof format10> => old,
   },
   { schema: newestFormat },
 ];

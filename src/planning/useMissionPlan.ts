@@ -27,7 +27,10 @@ interface MissionPlan {
   /** Makes it a Crewed Mission with this many Crew, or a Robotic Mission with null. */
   chooseCrewSize: (size: number | null) => void;
   chooseCrewActivity: (activityId: string) => void;
-  /** The Landing Site chosen, which only a Mission carrying an Asset that lands has. */
+  /** Whether the Crew land at the Landing Site, rather than staying in Mars orbit. */
+  crewLands: boolean;
+  chooseCrewLands: (lands: boolean) => void;
+  /** The Landing Site chosen, which only a Mission carrying an Asset or Crew that land has. */
   landingSite: ProgramView["landingSites"][number] | undefined;
   chooseLandingSite: (siteId: string) => void;
   plannedEvents: ReturnType<Simulation["previewMission"]>;
@@ -71,10 +74,13 @@ export function useMissionPlan(
   // A Turn starts with a Robotic Mission, as it does with no Asset ticked.
   const [crewSize, setCrewSize] = useState<number | null>(null);
   const [crewActivityId, setCrewActivityId] = useState<string | undefined>();
+  const [crewLands, setCrewLands] = useState(false);
 
-  const landsOnMars = view.assets.some(
-    (asset) => assetIds.includes(asset.id) && asset.landsAtSite,
-  );
+  const landsOnMars =
+    (crewSize !== null && crewLands) ||
+    view.assets.some(
+      (asset) => assetIds.includes(asset.id) && asset.landsAtSite,
+    );
   const landingSite = landsOnMars
     ? view.landingSites.find((site) => site.id === chosenSiteId)
     : undefined;
@@ -85,6 +91,7 @@ export function useMissionPlan(
       crew: {
         size: crewSize,
         ...(crewActivityId !== undefined && { activityId: crewActivityId }),
+        ...(crewLands && { landsAtSite: true }),
       },
     }),
   };
@@ -116,7 +123,11 @@ export function useMissionPlan(
       ...mission,
       // The Activity they will have, which may be that of Crew already there.
       ...(plannedCrew && {
-        crew: { size: plannedCrew.size, activityId: plannedCrew.activityId },
+        crew: {
+          size: plannedCrew.size,
+          activityId: plannedCrew.activityId,
+          ...(crewLands && { landsAtSite: true }),
+        },
       }),
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
       reliability: Object.fromEntries(
@@ -170,6 +181,12 @@ export function useMissionPlan(
     plannedCrew,
     chooseCrewSize: setCrewSize,
     chooseCrewActivity: setCrewActivityId,
+    crewLands,
+    chooseCrewLands: (lands) => {
+      setCrewLands(lands);
+      // Crew in orbit and Crew on the surface do different Activities.
+      setCrewActivityId(undefined);
+    },
     landingSite,
     chooseLandingSite: setChosenSiteId,
     plannedEvents,

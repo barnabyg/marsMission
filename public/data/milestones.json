@@ -40,6 +40,16 @@
     "publicSupport": 400
   },
   {
+    "id": "first-crew-landing",
+    "name": "First Crew on the surface",
+    "description": "The Program's Crew have landed on Mars, and the first footprints are on every screen in the world.",
+    "trigger": {
+      "crewLands": true
+    },
+    "science": 250,
+    "publicSupport": 500
+  },
+  {
     "id": "science-700",
     "name": "700 Science earned",
     "description": "The Program has earned 700 Science, and its first results are in the news as well as the journals.",

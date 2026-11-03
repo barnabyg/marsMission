@@ -143,8 +143,8 @@ const assetsSchema = z.array(
     // What the landing risk is multiplied by when this Asset lands. A landing is as risky as the riskiest Asset in it.
     landingRiskMultiplier: z.number().positive().optional(),
     // What it raises for other Assets, and by what percentage, on each day it operates at Mars, whatever its Activity.
-    // "surfaceResearch" is the Ongoing Research of every Asset on the surface. Benefits that raise the same thing don't
-    // add up: on each day the largest applies.
+    // "surfaceResearch" is the Ongoing Research of every Asset and Crew on the surface. Benefits that raise the same
+    // thing don't add up: on each day the largest applies.
     benefit: z
       .strictObject({
         raises: z.enum(["surfaceResearch"]),
@@ -156,10 +156,12 @@ const assetsSchema = z.array(
 );
 
 const crewSchema = z.strictObject({
-  // The spacecraft that carries the Crew to Mars, and stays in Mars orbit with them.
+  // The spacecraft that carries the Crew to Mars, and stays with them, in Mars orbit or at their Landing Site.
   vehicleName: z.string().min(1),
-  // The Mission Events it brings, as an Asset's do. The Crew arrive when the last of them succeeds.
+  // The Mission Events it brings to Mars orbit, as an Asset's do. The Crew arrive when the last of them succeeds.
   missionEvents: z.array(id).min(1),
+  // The Mission Events it brings when the Crew land at a Landing Site instead. They land when the last succeeds.
+  landingMissionEvents: z.array(id).min(1),
   // The Crew sizes on offer, smallest first: how many fly, and what the Crewed Mission costs and weighs with them.
   sizes: z
     .array(
@@ -183,12 +185,20 @@ const crewSchema = z.strictObject({
     timeAtMarsPerDay: z.number().nonnegative(),
     // Health each Crew member on board loses when a Contingency saves their Mission.
     contingencyRescueLoss: z.number().int().nonnegative(),
+    // Carrying on through a dust storm at their Landing Site: each Crew member's chance of being hurt, and the Health
+    // it costs them if they are.
+    dustStorm: z.strictObject({
+      chance: z.number().min(0).max(1),
+      loss: z.number().int().nonnegative(),
+    }),
   }),
   // The Public Support lost for each Crew member lost, whatever the cause, on top of anything else that day costs.
   publicSupportLossPerMember: z.number().int().nonnegative(),
   // What Crew in Mars orbit can do, which all of them there share. The first is what they do unless the player picks
   // another. A research Activity earns its rate for each Crew member doing it.
   orbitActivities: z.array(id).min(1),
+  // What Crew at a Landing Site can do, which all of them at that site share, in the same way.
+  surfaceActivities: z.array(id).min(1),
   // The names Crew are given, in order. A name is never given twice in a Program.
   names: z.array(z.string().min(1)).min(1),
 });
@@ -290,18 +300,19 @@ const milestonesSchema = z.array(
     id,
     name: z.string().min(1),
     description: z.string().min(1),
-    // Earned by the first Asset of a kind to be delivered, the first Asset to land, the first Crew to arrive, or
-    // reaching a total of Science.
+    // Earned by the first Asset of a kind to be delivered, the first Asset to land, the first Crew to arrive, the
+    // first Crew to land, or reaching a total of Science.
     trigger: z.union(
       [
         z.strictObject({ assetKindArrives: id }),
         z.strictObject({ assetLands: z.literal(true) }),
         z.strictObject({ crewArrives: z.literal(true) }),
+        z.strictObject({ crewLands: z.literal(true) }),
         z.strictObject({ totalScience: z.number().int().positive() }),
       ],
       {
         error:
-          "must be one of assetKindArrives with a kind of Asset, assetLands with true, crewArrives with true, or totalScience with a positive whole number",
+          "must be one of assetKindArrives with a kind of Asset, assetLands with true, crewArrives with true, crewLands with true, or totalScience with a positive whole number",
       },
     ),
     science: z.number().int().nonnegative(),

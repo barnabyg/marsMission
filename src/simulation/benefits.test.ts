@@ -308,7 +308,7 @@ describe("the raised rate in Planning Mode", () => {
       .readProgram(simulation.startProgram(42))
       .assets.find(({ id }) => id === "test-relay");
     expect(relay?.benefit).toBe(
-      "Raises the Ongoing Research of every Asset on the surface by 50% on each day it operates at Mars, whatever its Activity. A second one adds nothing.",
+      "Raises the Ongoing Research of every Asset and Crew on the surface by 50% on each day it operates at Mars, whatever its Activity. A second one adds nothing.",
     );
     expect(
       simulation

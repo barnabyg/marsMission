@@ -9,7 +9,7 @@ export interface PlannedMission {
   assetIds: string[];
   /** The Reliability level bought for each Mission Event, by id. Any left out get the cheapest level. */
   reliability?: Record<string, string>;
-  /** Where the Mission comes down. Only a Mission carrying an Asset that lands has one. */
+  /** Where the Mission comes down. Only a Mission carrying an Asset or Crew that land has one. */
   landingSiteId?: string;
   /** The choices made for each Asset, by id. Anything left out gets the shortest Service Life, the cheapest Reliability and the first Activity it lists. */
   assetChoices?: Record<string, AssetChoices>;
@@ -30,6 +30,8 @@ interface CrewChoices {
    * lists. Crew arriving where Crew already operate take up their Activity instead, because Crew in one place share one.
    */
   activityId?: string;
+  /** Whether they land at the Mission's Landing Site, rather than staying in Mars orbit. */
+  landsAtSite?: boolean;
 }
 
 export interface AssetChoices {
@@ -67,10 +69,9 @@ interface OperatingAsset {
   flewUnproven: boolean;
 }
 
-/** A place at Mars where Crew operate. Crew at a Landing Site are still to come. */
-export interface PlaceAtMars {
-  kind: "marsOrbit";
-}
+/** A place at Mars where Crew operate: Mars orbit, or a Landing Site. */
+export type PlaceAtMars =
+  { kind: "marsOrbit" } | { kind: "landingSite"; landingSiteId: string };
 
 /**
  * Why Crew were lost: a failed Mission Event, a solar particle event that lost the Mission, Health that ran out, or

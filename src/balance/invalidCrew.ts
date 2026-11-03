@@ -118,6 +118,39 @@ export function crewProblems(
       new Set(after.crew.map(({ key }) => key)).size < after.crew.length,
       "The Crew in one place are listed twice.",
     ],
+    // Crew land only through a landing, which makes the site landed at.
+    [
+      after.crew.some(
+        ({ landingSiteId, locationName }) =>
+          landingSiteId !== null &&
+          !after.landingSites.some(
+            ({ id, name, landed }) =>
+              id === landingSiteId && name === locationName && landed,
+          ),
+      ),
+      "Crew are at a Landing Site that isn't known or that nothing has landed at.",
+    ],
+    [
+      summary.dustStorms.some(
+        ({ answer, assets, crewHurt }) =>
+          (answer === "shelter" && crewHurt.length > 0) ||
+          crewHurt.some((name) => !assets.includes(name)),
+      ),
+      "A dust storm hurt Crew who sheltered, or who weren't there.",
+    ],
+    [
+      summary.dustStorms
+        .flatMap(({ crewHurt }) => crewHurt)
+        .some(
+          (name) =>
+            !summary.healthLost.some(
+              (member) =>
+                member.name === name &&
+                member.lost.some(({ cause }) => cause === "dustStorm"),
+            ),
+        ),
+      "Crew hurt in a dust storm lost no Health to it.",
+    ],
     [
       flown.length >
         Math.max(0, ...after.crewedMission.sizes.map(({ crew }) => crew)),

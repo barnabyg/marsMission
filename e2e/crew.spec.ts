@@ -8,7 +8,12 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
-import { colossusMoney, crewLossSeed, crewSeed } from "./seeds";
+import {
+  colossusMoney,
+  crewLandingSeed,
+  crewLossSeed,
+  crewSeed,
+} from "./seeds";
 
 function launchVehicle(page: Page) {
   return page.getByRole("combobox", { name: "Launch Vehicle" });
@@ -102,6 +107,82 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await expect(
     page.getByRole("combobox", { name: "Activity for the Crew in Mars orbit" }),
   ).toHaveValue("crew-research");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  expect(problems).toEqual([]);
+});
+
+test("lands a Crewed Mission at a Landing Site, and sees its Crew at work there in the next Planning Mode", async ({
+  page,
+}) => {
+  // Over 5 s: two Turns of Development, then a Turn played at 10x.
+  const problems = watchForProblems(page);
+  await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
+  await page.goto(`/?seed=${crewLandingSeed}`);
+  await page
+    .getByTestId("development")
+    .filter({ hasText: "Meridian Colossus" })
+    .getByRole("checkbox", { name: "Start Development" })
+    .check();
+  await endTurnWithoutLaunching(page);
+  await endTurnWithoutLaunching(page);
+
+  await launchVehicle(page).selectOption("meridian-colossus");
+  await crewedMission(page).check();
+  await expect(page.getByTestId("landing-site-details")).toHaveCount(0);
+  await page
+    .getByRole("combobox", { name: "Crew destination" })
+    .selectOption("landingSite");
+  // Landing brings the Landing Site choice and entry/descent/landing, at the site's risk.
+  await expect(
+    page.getByRole("combobox", { name: "Landing Site" }),
+  ).toHaveValue("jezero-crater");
+  await expect(page.getByTestId("landing-site-details")).toContainText(
+    "The first landing here earns 120 Science.",
+  );
+  await expect(
+    page.getByRole("combobox", {
+      name: "Reliability for Entry/descent/landing",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("combobox", { name: "Activity for the Crew", exact: true }),
+  ).toHaveValue("crew-field-research");
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await pauseAtEvent(page, "Crew in Jezero Crater", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
+  );
+  await expect(
+    eventEntries(page).filter({ hasText: "Crew in Jezero Crater" }),
+  ).toContainText(
+    "Amara Okafor and Lena Petrova have landed in Jezero Crater aboard the Odyssey, and start Field research.",
+  );
+  await expect(
+    eventEntries(page).getByRole("heading", {
+      name: "First Crew on the surface",
+    }),
+  ).toBeVisible();
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.getByRole("button", { name: "10x" }).click();
+  const summary = page.getByTestId("turn-summary");
+  await expect(summary.getByTestId("summary-ongoing-research")).toContainText(
+    "Crew in Jezero Crater, Field research",
+  );
+  await summary.getByRole("button", { name: "Continue" }).click();
+
+  await expect(page.getByTestId("turn-number")).toHaveText("4");
+  await expect(
+    page.getByTestId("crew-at-mars").getByRole("listitem"),
+  ).toHaveText([
+    /Crew in Jezero Crater: Amara Okafor \(Health \d+\), Lena Petrova \(Health \d+\)/,
+  ]);
+  await expect(
+    page.getByRole("combobox", {
+      name: "Activity for the Crew in Jezero Crater",
+    }),
+  ).toHaveValue("crew-field-research");
   expect(await termsWithoutTooltips(page)).toEqual([]);
   expect(problems).toEqual([]);
 });

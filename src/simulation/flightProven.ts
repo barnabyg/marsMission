@@ -1,6 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import type { MissionOutcome } from "./flight";
-import { deliveryDayOf } from "./flyMission";
+import { deliveryDayOf, type MissionOutcome } from "./flight";
 import { formatMoney, type Rules } from "./rules";
 import { isFlightProven, type Technology } from "./technologyReadiness";
 import type { Program, TurnPlan } from "./types";
