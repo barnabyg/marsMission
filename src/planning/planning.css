@@ -138,13 +138,20 @@
   min-width: 11rem;
 }
 
+/* In a crowded row, with a wider font than Segoe UI, the tags move under the name rather than past the panel's edge. */
 .panel .asset-choices label {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0 0.45rem;
   min-width: 20rem;
   color: var(--text);
   white-space: nowrap;
+}
+
+/* The choices keep their width, so that the words around them give way instead. */
+.asset-choice select {
+  flex-shrink: 0;
 }
 
 .technology-readiness {
