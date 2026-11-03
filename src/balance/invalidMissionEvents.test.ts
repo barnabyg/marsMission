@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Timeline, TurnPlan } from "../simulation/simulation";
-import { missionEventProblems } from "./invalidStates";
+import { timelineMissionEventProblems } from "./invalidStates";
 import { files, simulationOf } from "./testHelpers";
 
 /** The real data files with the Meridian Colossus built, and the named Mission Event certain to fail. */
@@ -35,12 +35,12 @@ function turnOn(failing: string | null) {
   return simulation.runTurn(simulation.startProgram(1), refuelled);
 }
 
-describe("the checks for invalid Mission Events", () => {
+describe("the checks for invalid Mission Events on the Timeline", () => {
   it.each([null, "tanker-launch", "rendezvous"])(
     "find nothing wrong with a refuelled Mission when %s fails",
     (failing) => {
       const { timeline, summary } = turnOn(failing);
-      expect(missionEventProblems(timeline, summary)).toEqual([]);
+      expect(timelineMissionEventProblems(timeline, summary)).toEqual([]);
     },
   );
 
@@ -49,7 +49,7 @@ describe("the checks for invalid Mission Events", () => {
   const changed = (
     { timeline, summary }: typeof flown,
     change: (timeline: Timeline) => Timeline,
-  ) => missionEventProblems(change(timeline), summary).join(" ");
+  ) => timelineMissionEventProblems(change(timeline), summary).join(" ");
   const moved = (eventId: string, day: number) => (timeline: Timeline) => ({
     ...timeline,
     entries: timeline.entries.map((entry) =>

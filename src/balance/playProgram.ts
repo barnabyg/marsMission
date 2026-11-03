@@ -10,7 +10,7 @@ import {
   type TurnResult,
   type TurnSummary,
 } from "../simulation/simulation";
-import { invalidStates, missionEventProblems } from "./invalidStates";
+import { invalidStates, timelineMissionEventProblems } from "./invalidStates";
 import type { PlanningTools, Strategy } from "./playStyle";
 
 /** What a report needs from one Turn of one Program. */
@@ -193,7 +193,7 @@ export function playProgram(
     const after = simulation.readProgram(result.program);
     const invalid = [
       ...invalidStates(view, result.summary, after),
-      ...missionEventProblems(result.timeline, result.summary),
+      ...timelineMissionEventProblems(result.timeline, result.summary),
     ];
     if (invalid.length > 0) throw fail(invalid);
 

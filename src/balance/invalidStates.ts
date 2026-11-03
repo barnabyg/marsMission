@@ -300,7 +300,7 @@ function developmentProblems(
  * What's impossible about the Mission Events on a Turn's Timeline, such as those of orbital refuelling: each on a day
  * of its own, none after one that failed, a failure the Turn summary reports, and nothing delivered once it was lost.
  */
-export function missionEventProblems(
+export function timelineMissionEventProblems(
   timeline: Timeline,
   summary: TurnSummary,
 ): string[] {
