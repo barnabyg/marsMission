@@ -5,11 +5,12 @@ import type {
   DecisionPoint,
   PlannedMission,
   Program,
-  TurnSummary,
 } from "./types";
+import type { TurnSummary } from "./turnSummary";
 import type { DecisionPointEntry, HazardEntry } from "./timeline";
+import type { Flight } from "./flight";
 
-export const solarParticleEventId = "solar-particle-event";
+const solarParticleEventId = "solar-particle-event";
 
 /**
  * The day of the Turn a solar particle event hits this Mission, if one does. It comes from one roll for the Turn, so
@@ -41,7 +42,7 @@ export function solarParticleEventDay(
 }
 
 /** What a solar particle event does to the Assets on board, as far as the answer so far takes it. */
-export interface SolarParticleEventMet {
+interface SolarParticleEventMet {
   entries: (HazardEntry | DecisionPointEntry)[];
   /** The Decision Point it raises, if it has no answer yet. */
   decisionPoint: DecisionPoint | null;
@@ -53,7 +54,7 @@ export interface SolarParticleEventMet {
 }
 
 /** Works out a solar particle event on its day, with the player's answer if there is one. */
-export function meetSolarParticleEvent(
+function meetSolarParticleEvent(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
@@ -166,4 +167,41 @@ export function meetSolarParticleEvent(
       serviceLifeLossPercent,
     },
   };
+}
+
+/** Meets the solar particle event on its day, on the Assets still on board, and says whether the Mission stops there. */
+export function solarParticleEventInFlight(
+  flight: Flight,
+  day: number,
+): boolean {
+  const { catalogue, rules, program, mission, answers, outcome, assets } =
+    flight;
+  const onBoard = assets.filter(
+    (asset) => rules.deliveryDay(asset, mission) > day,
+  );
+  const met = meetSolarParticleEvent(
+    catalogue,
+    rules,
+    program,
+    answers[solarParticleEventId],
+    day,
+    onBoard,
+  );
+  outcome.entries.push(...met.entries);
+  outcome.solarParticleEvent = { day, summary: met.summary };
+  if (met.decisionPoint || met.lostWithPublicSupport !== null) {
+    outcome.decisionPoint = met.decisionPoint;
+    outcome.deliveredAssets = assets.filter(
+      (asset) => !onBoard.includes(asset),
+    );
+  }
+  if (met.decisionPoint) return true;
+  if (met.lostWithPublicSupport !== null) {
+    outcome.failedOnDay = day;
+    outcome.lostTo = catalogue.hazards.solarParticleEvent.name;
+    outcome.publicSupportLost = met.lostWithPublicSupport;
+    return true;
+  }
+  flight.cut(onBoard, met.serviceLifeLossPercent);
+  return false;
 }

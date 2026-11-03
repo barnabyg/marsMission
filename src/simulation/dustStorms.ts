@@ -10,12 +10,8 @@ import {
   type LandingSite,
   type Rules,
 } from "./rules";
-import type {
-  DecisionAnswers,
-  DecisionPoint,
-  Program,
-  TurnSummary,
-} from "./types";
+import type { DecisionAnswers, DecisionPoint, Program } from "./types";
+import type { TurnSummary } from "./turnSummary";
 import type { DecisionPointEntry, HazardEntry, Timeline } from "./timeline";
 
 export interface DustStorm {

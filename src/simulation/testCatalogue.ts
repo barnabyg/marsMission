@@ -3,6 +3,8 @@ import {
   type Catalogue,
   type CatalogueFiles,
 } from "../catalogue/catalogue";
+import { testActivities } from "./testActivities";
+import { testMissionEvents } from "./testMissionEvents";
 import { testTechnologies } from "./testTechnology";
 
 /** Long enough that an Asset outlasts the rule tests that aren't about Service Life. */
@@ -23,74 +25,7 @@ export function testCatalogueFiles(): CatalogueFiles {
       publicSupportDrainPercent: 15,
       cancellationLevel: 50,
     },
-    activities: [
-      {
-        id: "test-survey",
-        name: "Survey",
-        description: "Looks for sites.",
-        effect: { kind: "survey" },
-      },
-      {
-        id: "test-nothing",
-        name: "Nothing",
-        description: "Does no work.",
-        effect: { kind: "nothing" },
-      },
-      {
-        id: "test-research",
-        name: "Test research",
-        description: "Earns Science and Public Support.",
-        // A tenth of a Science and a twentieth of a Public Support point a day, over the 780-day Turn.
-        effect: {
-          kind: "research",
-          sciencePerTurn: 78,
-          publicSupportPerTurn: 39,
-          researchKind: "test-unpaid",
-          surfaceMotion: "nearby",
-        },
-      },
-      {
-        id: "test-paid-research",
-        name: "Paid research",
-        description: "Earns Science that pays a Research Grant.",
-        // No Asset lists it. The tests of Research Grants give it to the Assets.
-        effect: {
-          kind: "research",
-          sciencePerTurn: 78,
-          publicSupportPerTurn: 0,
-          researchKind: "test-paid",
-          surfaceMotion: "nearby",
-        },
-      },
-      {
-        id: "test-soil",
-        name: "Test soil",
-        description: "Earns less Science, and a Research Grant.",
-        effect: {
-          kind: "research",
-          sciencePerTurn: 78,
-          publicSupportPerTurn: 0,
-          researchKind: "test-paid",
-          surfaceMotion: "nearby",
-        },
-      },
-      {
-        id: "test-traverse",
-        name: "Test traverse",
-        description: "Earns more Science, and no Research Grant.",
-        effect: {
-          kind: "research",
-          sciencePerTurn: 156,
-          publicSupportPerTurn: 0,
-          researchKind: "test-unpaid",
-          surfaceMotion: "traverse",
-        },
-      },
-    ],
-    researchKinds: [
-      { id: "test-unpaid", name: "Unpaid", grantMillionsPerScience: 0 },
-      { id: "test-paid", name: "Paid", grantMillionsPerScience: 0.5 },
-    ],
+    ...testActivities(),
     launchVehicles: [
       {
         id: "test-vehicle",
@@ -336,86 +271,7 @@ export function testCatalogueFiles(): CatalogueFiles {
       { upTo: 0.1, label: "~10%" },
       { upTo: 1, label: "Over 10%" },
     ],
-    missionEvents: [
-      {
-        id: "test-launch",
-        name: "Test launch",
-        description: "Lifts off.",
-        failureDescription: "It blew up on the pad.",
-        timing: { from: "launch", days: 0 },
-        failureProbability: 0,
-        publicSupportLoss: 20,
-      },
-      ...technologies.refuellingEvents,
-      {
-        id: "test-burn",
-        name: "Test burn",
-        description: "Burns.",
-        failureDescription: "The engine cut out.",
-        timing: { from: "departure", days: 0 },
-        failureProbability: 0,
-        publicSupportLoss: 30,
-      },
-      {
-        id: "test-arrival",
-        name: "Test arrival",
-        description: "Arrives.",
-        failureDescription: "It flew straight past.",
-        timing: { from: "arrival", days: 0 },
-        failureProbability: 0,
-        publicSupportLoss: 40,
-      },
-      {
-        id: "test-landing",
-        name: "Test landing",
-        description: "{lander} touched down at {site}.",
-        failureDescription: "{lander} crashed at {site}.",
-        timing: { from: "arrival", days: 5 },
-        failureProbability: "landingSite",
-        publicSupportLoss: 50,
-      },
-    ],
-    contingencies: [
-      {
-        id: "test-spare-engine",
-        name: "Spare engine",
-        description: "A second try at the burn.",
-        missionEvent: "test-burn",
-        costMillions: 20,
-        massTonnes: 0.5,
-        rescueFailureProbability: 0,
-        serviceLifeLossPercent: 10,
-        extraPublicSupportLoss: 5,
-        troubleDescription: "The engine is cutting out.",
-        rescueDescription: "The spare engine fired.",
-      },
-      {
-        id: "test-reserve-fuel",
-        name: "Reserve fuel",
-        description: "A second try at arriving.",
-        missionEvent: "test-arrival",
-        costMillions: 50,
-        massTonnes: 1,
-        rescueFailureProbability: 0,
-        serviceLifeLossPercent: 50,
-        extraPublicSupportLoss: 10,
-        troubleDescription: "It is about to fly past.",
-        rescueDescription: "The reserve fuel caught it.",
-      },
-      {
-        id: "test-thrusters",
-        name: "Retro thrusters",
-        description: "A second try at landing.",
-        missionEvent: "test-landing",
-        costMillions: 60,
-        massTonnes: 0.5,
-        rescueFailureProbability: 0,
-        serviceLifeLossPercent: 20,
-        extraPublicSupportLoss: 15,
-        troubleDescription: "{lander} came in too fast at {site}.",
-        rescueDescription: "{lander} made a hard landing at {site}.",
-      },
-    ],
+    ...testMissionEvents(technologies.refuellingEvents),
   };
 }
 

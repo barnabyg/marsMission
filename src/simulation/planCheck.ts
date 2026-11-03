@@ -2,7 +2,8 @@ import type { Catalogue } from "../catalogue/catalogue";
 import { formatMoney, operatingKey, sum, type Rules } from "./rules";
 import { costOf, readinessOf, type Technology } from "./technologyReadiness";
 import { developmentsStarting } from "./development";
-import type { PlanCheck, PlannedMission, Program, TurnPlan } from "./types";
+import type { PlanCheck } from "./previews";
+import type { PlannedMission, Program, TurnPlan } from "./types";
 
 const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
 

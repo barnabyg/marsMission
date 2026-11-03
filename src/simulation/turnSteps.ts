@@ -6,7 +6,8 @@ import {
 } from "./assetsInService";
 import { carryOutDevelopment } from "./development";
 import { resolveDustStorms } from "./dustStorms";
-import { deliveryDayOf, type MissionOutcome } from "./flyMission";
+import type { MissionOutcome } from "./flight";
+import { deliveryDayOf } from "./flyMission";
 import { proveTechnologies } from "./flightProven";
 import {
   contingenciesAnswered,

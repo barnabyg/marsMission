@@ -15,15 +15,17 @@ import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
 import { costOf, isFlightProven, readinessOf } from "./technologyReadiness";
 import { resolveTurn } from "./turnSteps";
 import type {
-  DecisionAnswer,
-  DecisionAnswers,
-  DecisionPoint,
   PlanCheck,
   PlannedActivity,
   PlannedAsset,
-  PlannedMission,
   PlannedMissionEvent,
   PlannedTrajectory,
+} from "./previews";
+import type {
+  DecisionAnswer,
+  DecisionAnswers,
+  DecisionPoint,
+  PlannedMission,
   Program,
   ProgramView,
   TurnPlan,
@@ -44,17 +46,19 @@ export type {
   DecisionAnswer,
   DecisionAnswers,
   DecisionPoint,
-  PlannedActivity,
-  PlannedAsset,
-  PlannedDevelopment,
-  PlannedTrajectory,
   Program,
   ProgramView,
   TurnPlan,
   TurnProgress,
   TurnResult,
-  TurnSummary,
 } from "./types";
+export type {
+  PlannedActivity,
+  PlannedAsset,
+  PlannedDevelopment,
+  PlannedTrajectory,
+} from "./previews";
+export type { TurnSummary } from "./turnSummary";
 export type { AssetAtMars, Timeline, TimelineEntry } from "./timeline";
 
 export interface Simulation {

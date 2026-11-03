@@ -2,11 +2,8 @@ import type { Catalogue } from "../catalogue/catalogue";
 import type { AssetInService } from "./assetsInService";
 import { raisedStretches, splitByRaise, type Stretch } from "./benefits";
 import { sum, type Activity, type Rules } from "./rules";
-import type {
-  OngoingResearchEarned,
-  PlannedActivity,
-  TurnSummary,
-} from "./types";
+import type { PlannedActivity } from "./previews";
+import type { OngoingResearchEarned, TurnSummary } from "./turnSummary";
 
 interface Earnings {
   science: number;
