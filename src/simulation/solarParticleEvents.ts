@@ -10,6 +10,7 @@ import type { TurnSummary } from "./turnSummary";
 import type { DecisionPointEntry, HazardEntry } from "./timeline";
 import type { Flight } from "./flight";
 import { crewLoss, crewLossWarning } from "./lostCrew";
+import { protectedFrom } from "./protection";
 
 const solarParticleEventId = "solar-particle-event";
 
@@ -42,19 +43,54 @@ export function solarParticleEventDay(
     : null;
 }
 
-/** What a solar particle event does to the Assets on board, as far as the answer so far takes it. */
+/** What a solar particle event does to the Assets and Crew on board, as far as the answer so far takes it. */
 interface SolarParticleEventMet {
   entries: (HazardEntry | DecisionPointEntry)[];
   /** The Decision Point it raises, if it has no answer yet. */
   decisionPoint: DecisionPoint | null;
   /** How much shorter every Asset on board's Service Life is. */
   serviceLifeLossPercent: number;
+  /** The Health every Crew member on board loses, after their Protection, and what it would be with none. */
+  crewHealthLoss: { health: number; unprotected: number };
   /** The Public Support it costs if it loses the Assets, or null if it doesn't. */
   lostWithPublicSupport: number | null;
   summary: TurnSummary["solarParticleEvent"];
 }
 
-/** Works out a solar particle event on its day, with the player's answer if there is one. */
+/**
+ * What it costs those on board, such as "each Asset 15% of its Service Life and each Crew member 5 Health", or "15% of
+ * each Asset's Service Life and 5 Health for each Crew member", leaving out the Assets or Crew if none are on board.
+ */
+function costs(
+  onBoard: Asset[],
+  crewOnBoard: string[],
+  percent: number,
+  health: number,
+  each: "before" | "after",
+): string {
+  const parts = [
+    ...(onBoard.length > 0
+      ? [
+          each === "before"
+            ? `each Asset ${percent}% of its Service Life`
+            : `${percent}% of each Asset's Service Life`,
+        ]
+      : []),
+    ...(crewOnBoard.length > 0
+      ? [
+          each === "before"
+            ? `each Crew member ${health} Health`
+            : `${health} Health for each Crew member`,
+        ]
+      : []),
+  ];
+  return parts.join(" and ");
+}
+
+/**
+ * Works out a solar particle event on its day, with the player's answer if there is one. The Crew's Protection,
+ * which slows radiation's harm by `radiationCutPercent`, lessens what it costs them.
+ */
 function meetSolarParticleEvent(
   catalogue: Catalogue,
   rules: Rules,
@@ -63,6 +99,7 @@ function meetSolarParticleEvent(
   day: number,
   onBoard: Asset[],
   crewOnBoard: string[],
+  radiationCutPercent: number,
 ): SolarParticleEventMet {
   const {
     name,
@@ -77,6 +114,12 @@ function meetSolarParticleEvent(
     ", ",
   );
   const loss = Math.min(publicSupportLoss, program.publicSupport);
+  const { safeModeLoss, hitLoss } = catalogue.crew.health.solarParticleEvent;
+  const harm = (health: number) => ({
+    health: Math.round(protectedFrom(health, radiationCutPercent)),
+    unprotected: health,
+  });
+  const lossIf = { safeMode: harm(safeModeLoss), hit: harm(hitLoss) };
   const decisionEntry: DecisionPointEntry = {
     kind: "decisionPoint",
     hazard: "solarParticleEvent",
@@ -99,17 +142,29 @@ function meetSolarParticleEvent(
             answer: "safeMode",
             label: "Safe mode",
             riskBand: null,
-            description: `Safe mode protects ${names}, but costs each Asset ${safeModeServiceLifeLossPercent}% of its Service Life.`,
+            description: `Safe mode protects ${names}, but costs ${costs(onBoard, crewOnBoard, safeModeServiceLifeLossPercent, lossIf.safeMode.health, "before")}.`,
           },
           {
             answer: "carryOn",
             label: "Carry on",
             riskBand: rules.riskBandFor(damageChance),
-            description: `No cost if all goes well. If the radiation hits, each Asset loses ${damageServiceLifeLossPercent}% of its Service Life, and there's a chance of losing the Mission, which costs ${loss} Public Support.${crewLossWarning(catalogue, crewOnBoard)}`,
+            description: `No cost if all goes well. If the radiation hits, ${[
+              ...(onBoard.length > 0
+                ? [
+                    `each Asset loses ${damageServiceLifeLossPercent}% of its Service Life`,
+                  ]
+                : []),
+              ...(crewOnBoard.length > 0
+                ? [`each Crew member loses ${lossIf.hit.health} Health`]
+                : []),
+            ].join(
+              " and ",
+            )}, and there's a chance of losing the Mission, which costs ${loss} Public Support.${crewLossWarning(catalogue, crewOnBoard)}`,
           },
         ],
       },
       serviceLifeLossPercent: 0,
+      crewHealthLoss: { health: 0, unprotected: 0 },
       lostWithPublicSupport: null,
       summary: null,
     };
@@ -131,10 +186,25 @@ function meetSolarParticleEvent(
       : outcome === "damaged"
         ? damageServiceLifeLossPercent
         : 0;
+  const crewHealthLoss =
+    crewOnBoard.length === 0
+      ? { health: 0, unprotected: 0 }
+      : outcome === "protected"
+        ? lossIf.safeMode
+        : outcome === "damaged"
+          ? lossIf.hit
+          : { health: 0, unprotected: 0 };
+  const cost = costs(
+    onBoard,
+    crewOnBoard,
+    serviceLifeLossPercent,
+    crewHealthLoss.health,
+    "after",
+  );
   const told: Record<typeof outcome, [title: string, text: string]> = {
     protected: [
       `${name}: safe mode`,
-      `Safe mode protected ${names}, at a cost of ${serviceLifeLossPercent}% of each Asset's Service Life.`,
+      `Safe mode protected ${names}, at a cost of ${cost}.`,
     ],
     unharmed: [
       `${name}: no harm done`,
@@ -142,7 +212,7 @@ function meetSolarParticleEvent(
     ],
     damaged: [
       `${name}: damage`,
-      `The radiation damaged ${names}, which cost each Asset ${serviceLifeLossPercent}% of its Service Life.`,
+      `The radiation damaged ${names}, which cost ${costs(onBoard, crewOnBoard, serviceLifeLossPercent, crewHealthLoss.health, "before")}.`,
     ],
     lost: [
       `${name}: Mission lost`,
@@ -163,17 +233,23 @@ function meetSolarParticleEvent(
     ],
     decisionPoint: null,
     serviceLifeLossPercent,
+    crewHealthLoss,
     lostWithPublicSupport: outcome === "lost" ? loss : null,
     summary: {
       answer: answer === "carryOn" ? "carryOn" : "safeMode",
       outcome,
       assets: onBoard.map((asset) => asset.name),
       serviceLifeLossPercent,
+      crew: crewOnBoard,
+      crewHealthLoss: crewHealthLoss.health,
     },
   };
 }
 
-/** Meets the solar particle event on its day, on the Assets still on board, and says whether the Mission stops there. */
+/**
+ * Meets the solar particle event on its day, on the Assets and Crew still on board, and says whether the Mission stops
+ * there. What it costs the Crew in Health lowers it as a blow on the day, which can kill them.
+ */
 export function solarParticleEventInFlight(
   flight: Flight,
   day: number,
@@ -192,6 +268,7 @@ export function solarParticleEventInFlight(
     day,
     onBoard,
     crewOnBoard,
+    flight.radiationCutPercent,
   );
   outcome.entries.push(...met.entries);
   outcome.solarParticleEvent = { day, summary: met.summary };
@@ -215,5 +292,14 @@ export function solarParticleEventInFlight(
     return true;
   }
   flight.cut(onBoard, met.serviceLifeLossPercent);
+  if (met.crewHealthLoss.unprotected > 0) {
+    outcome.crewBlows.push({
+      cause: "solarParticleEvent",
+      day,
+      health: met.crewHealthLoss.health,
+      unprotectedHealth: met.crewHealthLoss.unprotected,
+      names: crewOnBoard,
+    });
+  }
   return false;
 }

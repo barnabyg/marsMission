@@ -52,6 +52,8 @@ export function loseCrew(
   program: Program,
   losses: readonly CrewLoss[],
   publicSupportLeft: number,
+  /** The Protection of the Turn's Mission, for its Crew, who aren't on record yet. */
+  protectionId: string,
 ): {
   /** Their records as lost, keeping the day they arrived at Mars if they did. */
   lost: CrewMember[];
@@ -71,14 +73,16 @@ export function loseCrew(
       );
       left -= publicSupportLost;
       const lostOn = addDays(program.date, day);
-      const lost = names.map((name): CrewMember => ({
-        name,
-        health: 0,
-        arrivedOn:
-          program.crew.find((member) => member.name === name)?.arrivedOn ??
-          null,
-        location: { kind: "lost", lostOn, cause },
-      }));
+      const lost = names.map((name): CrewMember => {
+        const before = program.crew.find((member) => member.name === name);
+        return {
+          name,
+          health: 0,
+          arrivedOn: before?.arrivedOn ?? null,
+          location: { kind: "lost", lostOn, cause },
+          protectionId: before?.protectionId ?? protectionId,
+        };
+      });
       const [only] = names;
       const description = `${listOfNames.format(names)} ${names.length === 1 ? "was" : "were"} lost ${how}.`;
       const entry: CrewLostEntry = {
@@ -105,11 +109,15 @@ export function loseCrew(
   };
 }
 
-/** The records of Crew a Free-return brought back to Earth on this day of the Turn, with the Health they have left. They never fly again. */
+/**
+ * The records of Crew a Free-return brought back to Earth on this day of the Turn, with the Health they have left and
+ * their Mission's Protection. They never fly again.
+ */
 export function bringCrewHome(
   program: Program,
   crew: readonly { name: string; health: number }[],
   backOnDay: number,
+  protectionId: string,
 ): CrewMember[] {
   const backOn = addDays(program.date, backOnDay);
   return crew.map(({ name, health }) => ({
@@ -117,6 +125,7 @@ export function bringCrewHome(
     health,
     arrivedOn: null,
     location: { kind: "home", backOn },
+    protectionId,
   }));
 }
 

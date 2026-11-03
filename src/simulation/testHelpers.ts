@@ -23,6 +23,7 @@ export const steadyHealth: CatalogueFiles["crew"]["health"] = {
   contingencyRescueLoss: 0,
   dustStorm: { chance: 0, loss: 0 },
   noSuppliesPerDay: 0,
+  solarParticleEvent: { safeModeLoss: 0, hitLoss: 0 },
 };
 
 /** A Simulation whose named Mission Events always fail and whose others never do, with these changes. */

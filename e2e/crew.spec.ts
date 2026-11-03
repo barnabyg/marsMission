@@ -74,6 +74,17 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await page
     .getByRole("combobox", { name: "Supplies" })
     .selectOption("supplies-lean");
+  // Protection says how much it slows radiation's harm, and adds its mass and cost.
+  const protection = page.getByRole("combobox", { name: "Protection" });
+  await expect(protection).toHaveValue("protection-none");
+  await expect(protection.getByRole("option")).toHaveText([
+    "None",
+    "Light shielding, radiation −25% ($150M, 1 t)",
+    "Heavy shielding, radiation −50% ($300M, 2 t)",
+  ]);
+  await protection.selectOption("protection-heavy-shielding");
+  await expect(page.getByTestId("mission-mass")).toHaveText("13 of 8 tonnes");
+  await protection.selectOption("protection-none");
 
   await launchVehicle(page).selectOption("meridian-colossus");
   await expect(page.getByRole("alert")).toHaveCount(0);
@@ -83,7 +94,7 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await expect(page.getByTestId("crew-names")).toHaveText("Health 100 each");
   await expect(page.getByTestId("crew-names")).toHaveAttribute(
     "data-detail",
-    "Flying: Amara Okafor, Lena Petrova, each starting at Health 100. Radiation on the way leaves them 79 as they reach Mars.",
+    "Flying: Amara Okafor, Lena Petrova, each starting at Health 100. Radiation on the way leaves them 79 as they reach Mars (with Protection: None 79, Light shielding 85, Heavy shielding 90).",
   );
   await expect(page.getByTestId("research-earnings")).toContainText(
     "Crew research earns 160 Science",
@@ -185,6 +196,9 @@ test("lands a Crewed Mission at a Landing Site, and sees its Crew at work there 
   await expect(
     page.getByRole("combobox", { name: "Activity for the Crew", exact: true }),
   ).toHaveValue("crew-field-research");
+  await page
+    .getByRole("combobox", { name: "Protection" })
+    .selectOption("protection-light-shielding");
   await expect(page.getByRole("alert")).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
@@ -207,6 +221,10 @@ test("lands a Crewed Mission at a Landing Site, and sees its Crew at work there 
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-ongoing-research")).toContainText(
     "Crew in Jezero Crater, Field research",
+  );
+  // Their Light shielding slowed radiation in flight and at Mars.
+  await expect(summary.getByTestId("summary-health-lost")).toContainText(
+    /Amara Okafor lost \d+ Health: .*\. Protection saved \d+ more/,
   );
   await summary.getByRole("button", { name: "Continue" }).click();
 

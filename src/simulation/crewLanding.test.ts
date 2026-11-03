@@ -342,7 +342,13 @@ describe("saving Crew at a Landing Site", () => {
       },
     };
     const restored = simulation.restoreProgram(formatNine);
-    expect(restored.crew).toEqual(formatNine.program.crew);
+    // Later formats give them no Protection.
+    expect(restored.crew).toEqual(
+      formatNine.program.crew.map((member) => ({
+        ...member,
+        protectionId: "test-protection-none",
+      })),
+    );
     expect(simulation.readProgram(restored).crew).toEqual([
       expect.objectContaining({
         key: "mars-orbit",

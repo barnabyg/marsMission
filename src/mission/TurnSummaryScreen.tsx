@@ -7,15 +7,26 @@ function describeSolarParticleEvent({
   outcome,
   assets,
   serviceLifeLossPercent,
+  crew,
+  crewHealthLoss,
 }: NonNullable<TurnSummary["solarParticleEvent"]>): string {
-  const names = assets.join(", ");
+  const names = [...assets, ...crew].join(", ");
+  // What it cost those on board, such as "15% of each Asset's Service Life and 5 Health for each Crew member".
+  const cost = [
+    ...(assets.length > 0
+      ? [`${serviceLifeLossPercent}% of each Asset's Service Life`]
+      : []),
+    ...(crew.length > 0
+      ? [`${crewHealthLoss} Health for each Crew member`]
+      : []),
+  ].join(" and ");
   switch (outcome) {
     case "protected":
-      return `Safe mode protected ${names}, at a cost of ${serviceLifeLossPercent}% of each Asset's Service Life`;
+      return `Safe mode protected ${names}, at a cost of ${cost}`;
     case "unharmed":
       return `Carried on, and ${names} came through unharmed`;
     case "damaged":
-      return `Carried on, and the radiation damaged ${names}, which cost each Asset ${serviceLifeLossPercent}% of its Service Life`;
+      return `Carried on, and the radiation hit ${names}, which cost ${cost}`;
     case "lost":
       return `Carried on, and the radiation lost ${names}`;
   }

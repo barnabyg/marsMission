@@ -89,6 +89,7 @@ export function MissionPanel({
           lands={choices.crewLands}
           onLandsChange={choices.chooseCrewLands}
           onSuppliesChange={choices.chooseCrewSupplies}
+          onProtectionChange={choices.chooseCrewProtection}
         />
       </MissionAssets>
       {landingSite && (

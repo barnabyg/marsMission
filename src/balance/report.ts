@@ -229,6 +229,7 @@ const kindNames: Record<TurnRecord["decisions"][number]["kind"], string> = {
   contingency: "Contingency",
   dustStorm: "dust storm",
   solarParticleEvent: "solar particle event",
+  crewedSolarParticleEvent: "solar particle event with Crew",
   goNoGo: "go/no-go check",
 };
 

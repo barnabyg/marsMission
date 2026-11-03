@@ -30,7 +30,7 @@ export const tooltips = {
   "Crew size":
     "How many Crew fly on a Crewed Mission, chosen in Planning Mode. A larger Crew earns more Ongoing Research, but weighs and costs more.",
   Health:
-    "A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, carrying on through a dust storm and having no Supplies lower it, Protection slows the decline, and at zero the Crew member dies.",
+    "A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, solar particle events, carrying on through a dust storm and having no Supplies lower it, Protection slows the decline, and at zero the Crew member dies.",
   Supplies:
     "The food, water and everything else Crew use up to stay alive, from launch. They are chosen for each Crewed Mission, and last a larger Crew fewer days. Crew in one place share theirs, and Crew who join them bring more. When they run out, Health falls quickly.",
   Asset:
@@ -78,13 +78,13 @@ export const tooltips = {
   Contingency:
     "Safety Margin that changes the outcome when a Mission Event fails, such as an escape module or abort fuel.",
   Protection:
-    "Safety Margin that reduces harm to Crew that builds up over a Mission's Duration, such as radiation shielding.",
+    "Safety Margin that slows the Health Crew lose to radiation, such as radiation shielding. It is bought for a Crewed Mission as a whole, at a cost in money and mass, and works on the way to Mars, in a solar particle event and at Mars, where it stays with the Crew.",
   Hazard:
     "A random environmental danger that happens during Mission Mode, separate from planned Mission Events, such as a dust storm, a solar particle event or an asteroid strike on a base.",
   "Dust storm":
     "A Hazard: a storm over one Landing Site for a stretch of days. If an Asset or Crew are operating there when it starts, the player chooses between sheltering, which earns no Ongoing Research for those days, and carrying on, with a chance of each Asset failing and of each Crew member losing Health.",
   "Solar particle event":
-    "A Hazard: a burst of radiation from the Sun that hits a Mission on its way to Mars, more likely the longer its Duration. The player chooses between safe mode, which costs each Asset on board some Service Life, and carrying on, with a chance of damage that costs much more or loses the Mission.",
+    "A Hazard: a burst of radiation from the Sun that hits a Mission on its way to Mars, more likely the longer its Duration. The player chooses between safe mode, which costs each Asset on board some Service Life and each Crew member some Health, and carrying on, with a chance of radiation that costs much more, or loses the Mission and any Crew aboard. Protection lessens what it costs Crew.",
   Science:
     "The Program's score. It comes from Milestones and Ongoing Research, and is weighted heavily towards activity at Mars itself.",
   Milestone:

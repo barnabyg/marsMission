@@ -15,8 +15,10 @@ import {
   healthCourse,
   type HealthBlow,
   type HealthCourse,
+  type HealthLost,
 } from "./health";
 import { crewLoss, type CrewLoss } from "./lostCrew";
+import { protectionIdOf, radiationCutOf } from "./protection";
 import { addDays, daysBetween, type Rules } from "./rules";
 import {
   diedWithoutSupplies,
@@ -68,7 +70,7 @@ const listOfNames = new Intl.ListFormat("en");
 
 /**
  * A Crew member's days at Mars from `fromDay` to the end of the Turn, with these blows to their Health and these days
- * without Supplies.
+ * without Supplies, and radiation slowed by their own Protection.
  */
 function stayOf(
   catalogue: Catalogue,
@@ -81,7 +83,12 @@ function stayOf(
   const health = healthCourse(
     member.health,
     [
-      ...drainsAtMars(catalogue, fromDay, turnDays),
+      ...drainsAtMars(
+        catalogue,
+        fromDay,
+        turnDays,
+        radiationCutOf(catalogue, member.protectionId),
+      ),
       ...drainsWithoutSupplies(catalogue, outages, fromDay, turnDays),
     ],
     blows,
@@ -168,6 +175,7 @@ export function crewAtMars(
       catalogue.crew.maxHealth,
     arrivedOn: addDays(program.date, arrivalDay),
     location: place,
+    protectionId: protectionIdOf(catalogue, plan.mission),
   }));
   const crewActivities = {
     ...program.crewActivities,
@@ -286,16 +294,27 @@ export function healthLostSummary(
 ): TurnSummary["healthLost"] {
   const stays = atWork.flatMap(({ stays: here }) => here);
   const atMars = (name: string) =>
-    stays.find(({ member }) => member.name === name)?.health.lost ?? [];
+    stays.find(({ member }) => member.name === name)?.health;
   const flownNames = new Set(flown.crewHealth.map(({ name }) => name));
+  // What Protection saved is left out for those it saved nothing, such as Crew with none.
+  const withSaved = (name: string, lost: HealthLost[], saved: number) => ({
+    name,
+    lost,
+    ...(saved > 0 ? { savedByProtection: saved } : {}),
+  });
   return [
     ...stays
       .filter(({ member }) => !flownNames.has(member.name))
-      .map(({ member, health }) => ({ name: member.name, lost: health.lost })),
-    ...flown.crewHealth.map(({ name, lost }) => ({
-      name,
-      lost: bothLost(lost, atMars(name)),
-    })),
+      .map(({ member, health }) =>
+        withSaved(member.name, health.lost, health.saved),
+      ),
+    ...flown.crewHealth.map(({ name, lost, saved }) =>
+      withSaved(
+        name,
+        bothLost(lost, atMars(name)?.lost ?? []),
+        saved + (atMars(name)?.saved ?? 0),
+      ),
+    ),
   ].filter(({ lost }) => lost.length > 0);
 }
 

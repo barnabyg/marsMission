@@ -174,7 +174,7 @@ const crewSchema = z.strictObject({
     .min(1),
   // Each Crew member's Health as they launch, which is the most they can have.
   maxHealth: z.number().int().positive(),
-  // How Crew lose Health. Radiation is a cause of its own, on the way to Mars and at Mars, which Protection will slow.
+  // How Crew lose Health. Radiation is a cause of its own, on the way to Mars and at Mars, which Protection slows.
   health: z.strictObject({
     // Health lost to radiation for each day on the way to Mars (or back), and for each day at Mars.
     radiationPerDay: z.strictObject({
@@ -193,7 +193,27 @@ const crewSchema = z.strictObject({
     }),
     // Health lost for each day a Crew member has no Supplies left, on top of everything else.
     noSuppliesPerDay: z.number().nonnegative(),
+    // Health each Crew member on board loses to a solar particle event on the way: in safe mode, and if they carry on
+    // and the radiation hits. Protection slows both, as it does all radiation.
+    solarParticleEvent: z.strictObject({
+      safeModeLoss: z.number().int().nonnegative(),
+      hitLoss: z.number().int().nonnegative(),
+    }),
   }),
+  // The Protection a Crewed Mission can carry, such as radiation shielding, least first, with what each costs and
+  // weighs and by what share it slows the Health Crew lose to radiation, in flight and at Mars. The first, which must
+  // give none, is what it carries unless the player picks another.
+  protection: z
+    .array(
+      z.strictObject({
+        id,
+        name: z.string().min(1),
+        massTonnes: z.number().nonnegative(),
+        costMillions: money,
+        radiationCutPercent: z.number().int().min(0).max(100),
+      }),
+    )
+    .min(1),
   // What Crew use up each day to stay alive, from launch, wherever they are.
   supplies: z.strictObject({
     // The kilograms each Crew member uses a day, so a larger Crew uses them faster.

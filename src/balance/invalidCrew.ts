@@ -55,6 +55,7 @@ export function crewProblems(
     .filter(({ cause }) => cause === "supplies")
     .flatMap(({ names }) => names);
   const turnDays = daysBetween(before.date, after.date);
+  const particles = summary.solarParticleEvent;
   // With the same Crew all Turn, Supplies fall by exactly a Turn's worth, and never below zero.
   const unchangedPlaces = after.crew.flatMap((place) => {
     const earlier = before.crew.find(({ key }) => key === place.key);
@@ -200,6 +201,31 @@ export function crewProblems(
             ),
         ),
       "Crew hurt in a dust storm lost no Health to it.",
+    ],
+    // A solar particle event costs Health only to the Crew on board, in safe mode or when its radiation hits.
+    [
+      summary.healthLost.some(
+        ({ name }) =>
+          lostTo(name, "solarParticleEvent") &&
+          !(
+            particles?.crew.includes(name) &&
+            (particles.outcome === "protected" ||
+              particles.outcome === "damaged")
+          ),
+      ) ||
+        (particles !== null &&
+          particles.crewHealthLoss > 0 &&
+          (particles.crew.length === 0 ||
+            particles.outcome === "unharmed" ||
+            particles.outcome === "lost")),
+      "A solar particle event cost Health to Crew it didn't harm.",
+    ],
+    [
+      summary.healthLost.some(
+        ({ savedByProtection }) =>
+          savedByProtection !== undefined && savedByProtection <= 0,
+      ),
+      "Protection saved a Crew member no Health, or cost them some.",
     ],
     [
       flown.length >

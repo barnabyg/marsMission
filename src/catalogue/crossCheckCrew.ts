@@ -1,7 +1,7 @@
 import { findDuplicates } from "./crossCheckIds";
 import { catalogueFileNames, type Catalogue } from "./schemas";
 
-/** The Crewed Mission: its Mission Events to Mars orbit and to a Landing Site, Crew sizes, Health, Supplies, Activities and names. */
+/** The Crewed Mission: its Mission Events to Mars orbit and to a Landing Site, Crew sizes, Health, Supplies, Protection, Activities and names. */
 export function crewProblems({
   crew,
   activities,
@@ -78,10 +78,52 @@ export function crewProblems({
       `${file}: the Supplies "${duplicate}" are listed more than once`,
     );
   }
+  const { safeModeLoss, hitLoss } = crew.health.solarParticleEvent;
+  if (hitLoss < safeModeLoss) {
+    problems.push(
+      `${file}: a solar particle event that hits costs ${hitLoss} Health, which must be no less than the ${safeModeLoss} that safe mode costs`,
+    );
+  }
+  if (hitLoss >= crew.maxHealth) {
+    problems.push(
+      `${file}: a solar particle event that hits costs ${hitLoss} Health, which must be less than the ${crew.maxHealth} Crew start with`,
+    );
+  }
+  problems.push(...protectionProblems(crew.protection));
   const largest = Math.max(...crew.sizes.map((size) => size.crew));
   if (crew.names.length < largest) {
     problems.push(
       `${file}: there must be at least as many names as the largest Crew size, ${largest}`,
+    );
+  }
+  return problems;
+}
+
+/** Protection levels go from none to the most, each slowing radiation's harm more than the one before, so more is never worse. */
+function protectionProblems(
+  protection: Catalogue["crew"]["protection"],
+): string[] {
+  const file = catalogueFileNames.crew;
+  const problems: string[] = [];
+  const [first] = protection;
+  if (first && first.radiationCutPercent !== 0) {
+    problems.push(
+      `${file}: the first Protection level, "${first.id}", must slow radiation's harm by 0%, as a Crewed Mission has it unless the player buys more`,
+    );
+  }
+  protection.forEach((level, index) => {
+    const less = protection[index - 1];
+    if (less && level.radiationCutPercent <= less.radiationCutPercent) {
+      problems.push(
+        `${file}: the Protection level "${level.id}" slows radiation's harm by no more than "${less.id}" before it. Levels go from least Protection to most`,
+      );
+    }
+  });
+  for (const duplicate of new Set(
+    findDuplicates(protection.map(({ id }) => id)),
+  )) {
+    problems.push(
+      `${file}: the Protection level "${duplicate}" is listed more than once`,
     );
   }
   return problems;

@@ -19,6 +19,7 @@ import {
 } from "./crewAtMars";
 import { carryOutDevelopment } from "./development";
 import { bringCrewHome, loseCrew, withCrew } from "./lostCrew";
+import { protectionIdOf } from "./protection";
 import { resolveDustStorms } from "./dustStorms";
 import type { MissionOutcome } from "./flight";
 import { proveTechnologies } from "./flightProven";
@@ -151,6 +152,7 @@ export function resolveTurn(
     program,
     [...flown.crewLost, ...crew.deaths],
     program.publicSupport - flown.publicSupportLost,
+    protectionIdOf(catalogue, plan.mission),
   );
   const crewHome = flown.returned?.crew ?? [];
   const research = carryOutOngoingResearch(
@@ -301,6 +303,7 @@ export function resolveTurn(
               program,
               flown.crewHealth.filter(({ name }) => crewHome.includes(name)),
               flown.returned.backOnDay,
+              protectionIdOf(catalogue, plan.mission),
             )
           : []),
       ]),

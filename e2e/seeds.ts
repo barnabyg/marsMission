@@ -406,7 +406,11 @@ export const crewLandingSeed = colossusSeedWhere(null, {
   mission: {
     launchVehicleId: "meridian-colossus",
     assetIds: [],
-    crew: { size: catalogue.crew.sizes[0]?.crew ?? 0, landsAtSite: true },
+    crew: {
+      size: catalogue.crew.sizes[0]?.crew ?? 0,
+      landsAtSite: true,
+      protectionId: "protection-light-shielding",
+    },
     landingSiteId: "jezero-crater",
   },
 });

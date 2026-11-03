@@ -36,8 +36,11 @@ export interface TurnRecord {
   /** How many Decision Points came up, and how many Contingencies ended with the Assets saved. */
   decisionPoints: number;
   rescues: number;
-  /** Each Decision Point answered, by kind. */
-  decisions: { kind: DecisionPoint["kind"]; answer: DecisionAnswer }[];
+  /** Each Decision Point answered, by kind, with a solar particle event with Crew aboard a kind of its own. */
+  decisions: {
+    kind: DecisionPoint["kind"] | "crewedSolarParticleEvent";
+    answer: DecisionAnswer;
+  }[];
   /** The technologies whose Development started this Turn, and those that finish as the next Turn starts. */
   developmentsStarted: string[];
   developmentsFinished: string[];
@@ -134,7 +137,10 @@ function decisionsIn(summary: TurnSummary): TurnRecord["decisions"] {
     ...(summary.solarParticleEvent
       ? [
           {
-            kind: "solarParticleEvent" as const,
+            kind:
+              summary.solarParticleEvent.crew.length > 0
+                ? ("crewedSolarParticleEvent" as const)
+                : ("solarParticleEvent" as const),
             answer: summary.solarParticleEvent.answer,
           },
         ]

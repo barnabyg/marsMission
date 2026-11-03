@@ -22,7 +22,26 @@ export function testCrew(): CatalogueFiles["crew"] {
       // No one is hurt in a dust storm unless a test says so.
       dustStorm: { chance: 0, loss: 30 },
       noSuppliesPerDay: 1,
+      // Halved by the Shielding.
+      solarParticleEvent: { safeModeLoss: 10, hitLoss: 40 },
     },
+    // The Shielding halves radiation's harm: 10 Health on a Slow Trajectory rather than 20.
+    protection: [
+      {
+        id: "test-protection-none",
+        name: "None",
+        massTonnes: 0,
+        costMillions: 0,
+        radiationCutPercent: 0,
+      },
+      {
+        id: "test-shielding",
+        name: "Shielding",
+        massTonnes: 1,
+        costMillions: 100,
+        radiationCutPercent: 50,
+      },
+    ],
     // A Crew of two uses half a kilogram a day, so the Short Supplies last them 2,000 days, longer than any test
     // follows them unless it uses them faster.
     supplies: {

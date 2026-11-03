@@ -13,8 +13,32 @@
     "timeAtMarsPerDay": 0.02,
     "contingencyRescueLoss": 15,
     "dustStorm": { "chance": 0.25, "loss": 20 },
-    "noSuppliesPerDay": 2
+    "noSuppliesPerDay": 2,
+    "solarParticleEvent": { "safeModeLoss": 5, "hitLoss": 35 }
   },
+  "protection": [
+    {
+      "id": "protection-none",
+      "name": "None",
+      "massTonnes": 0,
+      "costMillions": 0,
+      "radiationCutPercent": 0
+    },
+    {
+      "id": "protection-light-shielding",
+      "name": "Light shielding",
+      "massTonnes": 1,
+      "costMillions": 150,
+      "radiationCutPercent": 25
+    },
+    {
+      "id": "protection-heavy-shielding",
+      "name": "Heavy shielding",
+      "massTonnes": 2,
+      "costMillions": 300,
+      "radiationCutPercent": 50
+    }
+  ],
   "supplies": {
     "usePerMemberPerDayKg": 1,
     "options": [

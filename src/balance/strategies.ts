@@ -434,7 +434,7 @@ export const strategies: Strategy[] = [
   ),
   playStyle(
     "big Program: develop the Meridian Colossus and fly Crew when rich",
-    "As big Program: develop the Meridian Colossus when rich, also sending a Crewed Mission to Mars orbit, of the largest Crew it can afford, before any Asset whenever it can afford one and keep its reserve.",
+    "As big Program: develop the Meridian Colossus when rich, also sending a Crewed Mission to Mars orbit, of the largest Crew it can afford with the most Supplies and then the most Protection that fit, before any Asset whenever it can afford one and keep its reserve.",
     {
       ...bigProgram,
       develops: ["meridian-colossus"],

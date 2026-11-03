@@ -331,6 +331,9 @@ for (const size of screenSizes) {
       // The smallest Crew, which leaves room for a lander, Supplies, Contingencies and a Free-return, so that a landing
       // is planned as well.
       await page.getByRole("combobox", { name: "Crew size" }).selectOption("2");
+      await page
+        .getByRole("combobox", { name: "Protection" })
+        .selectOption("protection-light-shielding");
       await chooseAssets(page, ["Prospector Lander"]);
       for (const contingency of await page
         .getByRole("checkbox", { name: /Contingency/ })
@@ -368,6 +371,9 @@ for (const size of screenSizes) {
       await page
         .getByRole("combobox", { name: "Crew destination" })
         .selectOption("landingSite");
+      await page
+        .getByRole("combobox", { name: "Protection" })
+        .selectOption("protection-light-shielding");
       await chooseAssets(page, ["Prospector Lander"]);
       for (const contingency of await page
         .getByRole("checkbox", { name: /Contingency/ })

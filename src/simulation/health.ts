@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import { protectedFrom } from "./protection";
 import type { Outage } from "./supplies";
 
 /**
@@ -8,8 +9,9 @@ import type { Outage } from "./supplies";
  * built up over the stretch, so the same days always cost the same Health, and a Crew member dies on the first day the
  * points they have lost reach the Health they started the stretch with.
  *
- * Radiation is a cause of its own, in flight and at Mars, so Protection can slow just that, and having no Supplies
- * left adds a faster drain of its own, in flight or at Mars, for the days they are out (`supplies.ts`).
+ * Radiation is a cause of its own, in flight, in a solar particle event and at Mars, so Protection (`protection.ts`)
+ * can slow just that, and having no Supplies left adds a faster drain of its own, in flight or at Mars, for the days
+ * they are out (`supplies.ts`). What Protection saved is the radiation's harm over the same days without it.
  */
 
 /** Why a Crew member lost Health. */
@@ -18,6 +20,7 @@ export type HealthLossCause =
   | "radiationAtMars"
   | "timeAtMars"
   | "contingency"
+  | "solarParticleEvent"
   | "dustStorm"
   | "noSupplies";
 
@@ -27,6 +30,7 @@ export const healthLossCauses: Record<HealthLossCause, string> = {
   radiationAtMars: "radiation at Mars",
   timeAtMars: "time at Mars",
   contingency: "a Contingency rescue",
+  solarParticleEvent: "a solar particle event",
   dustStorm: "a dust storm",
   noSupplies: "having no Supplies",
 };
@@ -37,6 +41,8 @@ export interface HealthDrain {
   fromDay: number;
   toDay: number;
   perDay: number;
+  /** What it would be with no Protection, if Protection slows it. */
+  unprotectedPerDay?: number;
 }
 
 /** Health lost all at once, on one day of the Turn. */
@@ -44,6 +50,8 @@ export interface HealthBlow {
   cause: HealthLossCause;
   day: number;
   health: number;
+  /** What it would be with no Protection, if Protection lessens it. */
+  unprotectedHealth?: number;
 }
 
 /** What one cause cost a Crew member in Health. */
@@ -60,6 +68,8 @@ export interface HealthCourse {
   diedOn: number | null;
   /** What each cause took, in the Turn summary's order, leaving out those that took nothing. Up to their death, it adds up to their Health at the start. */
   lost: HealthLost[];
+  /** How much more radiation would have taken over the same days with no Protection. */
+  saved: number;
 }
 
 const causeOrder = Object.keys(healthLossCauses) as HealthLossCause[];
@@ -114,7 +124,22 @@ export function healthCourse(
     ...drains.flatMap(({ fromDay, toDay }) => [fromDay, toDay]),
     ...blows.map(({ day }) => day),
   ];
-  if (days.length === 0) return { health: start, diedOn: null, lost: [] };
+  if (days.length === 0) {
+    return { health: start, diedOn: null, lost: [], saved: 0 };
+  }
+  const unprotected = {
+    drains: drains.map((drain) => ({
+      ...drain,
+      perDay: drain.unprotectedPerDay ?? drain.perDay,
+    })),
+    blows: blows.map((blow) => ({
+      ...blow,
+      health: blow.unprotectedHealth ?? blow.health,
+    })),
+  };
+  const savedBy = (day: number) =>
+    totalOf(lostBy(unprotected.drains, unprotected.blows, day)) -
+    totalOf(lostBy(drains, blows, day));
   let first = Math.min(...days);
   let last = Math.max(...days);
   const atEnd = lostBy(drains, blows, last);
@@ -123,6 +148,7 @@ export function healthCourse(
       health: start - totalOf(atEnd),
       diedOn: null,
       lost: listed(atEnd, start),
+      saved: savedBy(last),
     };
   }
   // Health only ever falls, so the first day it runs out can be searched for.
@@ -135,6 +161,7 @@ export function healthCourse(
     health: 0,
     diedOn: first,
     lost: listed(lostBy(drains, blows, first), start),
+    saved: savedBy(first),
   };
 }
 
@@ -151,26 +178,40 @@ export function bothLost(
   });
 }
 
-/** Radiation on the way to Mars, or back, from launch to this day. Protection will slow it. */
+/** Radiation at this rate, slowed by Protection that cuts its harm by this share. */
+const radiation = (perDay: number, cutPercent: number) => ({
+  perDay: protectedFrom(perDay, cutPercent),
+  ...(cutPercent > 0 ? { unprotectedPerDay: perDay } : {}),
+});
+
+/** Radiation on the way to Mars, or back, from launch to this day, slowed by Protection that cuts its harm by this share. */
 export function drainsInFlight(
   catalogue: Catalogue,
   toDay: number,
+  radiationCutPercent: number,
 ): HealthDrain[] {
   return [
     {
       cause: "radiationInFlight",
       fromDay: 0,
       toDay,
-      perDay: catalogue.crew.health.radiationPerDay.inFlight,
+      ...radiation(
+        catalogue.crew.health.radiationPerDay.inFlight,
+        radiationCutPercent,
+      ),
     },
   ];
 }
 
-/** Radiation and everything else that being at Mars does, over these days. Protection will slow the radiation. */
+/**
+ * Radiation and everything else that being at Mars does, over these days, with the radiation slowed by Protection
+ * that cuts its harm by this share.
+ */
 export function drainsAtMars(
   catalogue: Catalogue,
   fromDay: number,
   toDay: number,
+  radiationCutPercent: number,
 ): HealthDrain[] {
   const { radiationPerDay, timeAtMarsPerDay } = catalogue.crew.health;
   return [
@@ -178,7 +219,7 @@ export function drainsAtMars(
       cause: "radiationAtMars",
       fromDay,
       toDay,
-      perDay: radiationPerDay.atMars,
+      ...radiation(radiationPerDay.atMars, radiationCutPercent),
     },
     { cause: "timeAtMars", fromDay, toDay, perDay: timeAtMarsPerDay },
   ];

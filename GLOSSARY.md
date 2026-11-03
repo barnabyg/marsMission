@@ -60,7 +60,7 @@ How many Crew fly on a Crewed Mission, chosen in Planning Mode. A larger Crew ea
 _Avoid_: Crew count, team size
 
 **Health**:
-A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, carrying on through a dust storm and having no Supplies lower it, Protection slows the decline, and at zero the Crew member dies.
+A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, solar particle events, carrying on through a dust storm and having no Supplies lower it, Protection slows the decline, and at zero the Crew member dies.
 _Avoid_: Condition, hit points
 
 **Supplies**:
@@ -156,7 +156,7 @@ Safety Margin that changes the outcome when a Mission Event fails, such as an es
 _Avoid_: Backup, fallback
 
 **Protection**:
-Safety Margin that reduces harm to Crew that builds up over a Mission's Duration, such as radiation shielding.
+Safety Margin that slows the Health Crew lose to radiation, such as radiation shielding. It is bought for a Crewed Mission as a whole, at a cost in money and mass, and works on the way to Mars, in a solar particle event and at Mars, where it stays with the Crew.
 _Avoid_: Shielding (as the general term)
 
 **Hazard**:
@@ -168,7 +168,7 @@ A Hazard: a storm over one Landing Site for a stretch of days. If an Asset or Cr
 _Avoid_: Sandstorm, weather
 
 **Solar particle event**:
-A Hazard: a burst of radiation from the Sun that hits a Mission on its way to Mars, more likely the longer its Duration. The player chooses between safe mode, which costs each Asset on board some Service Life, and carrying on, with a chance of damage that costs much more or loses the Mission.
+A Hazard: a burst of radiation from the Sun that hits a Mission on its way to Mars, more likely the longer its Duration. The player chooses between safe mode, which costs each Asset on board some Service Life and each Crew member some Health, and carrying on, with a chance of radiation that costs much more, or loses the Mission and any Crew aboard. Protection lessens what it costs Crew.
 _Avoid_: Solar flare, radiation storm
 
 ## Balance elements

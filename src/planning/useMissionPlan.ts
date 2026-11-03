@@ -32,6 +32,8 @@ interface MissionPlan {
   chooseCrewLands: (lands: boolean) => void;
   /** Chooses the Supplies the Crew carry, by id. */
   chooseCrewSupplies: (suppliesId: string) => void;
+  /** Chooses the Protection the Crewed Mission carries, by id. */
+  chooseCrewProtection: (protectionId: string) => void;
   /** The Landing Site chosen, which only a Mission carrying an Asset or Crew that land has. */
   landingSite: ProgramView["landingSites"][number] | undefined;
   chooseLandingSite: (siteId: string) => void;
@@ -78,6 +80,9 @@ export function useMissionPlan(
   const [crewActivityId, setCrewActivityId] = useState<string | undefined>();
   const [crewLands, setCrewLands] = useState(false);
   const [crewSuppliesId, setCrewSuppliesId] = useState<string | undefined>();
+  const [crewProtectionId, setCrewProtectionId] = useState<
+    string | undefined
+  >();
 
   const landsOnMars =
     (crewSize !== null && crewLands) ||
@@ -96,6 +101,9 @@ export function useMissionPlan(
         ...(crewActivityId !== undefined && { activityId: crewActivityId }),
         ...(crewLands && { landsAtSite: true }),
         ...(crewSuppliesId !== undefined && { suppliesId: crewSuppliesId }),
+        ...(crewProtectionId !== undefined && {
+          protectionId: crewProtectionId,
+        }),
       },
     }),
   };
@@ -132,6 +140,7 @@ export function useMissionPlan(
           activityId: plannedCrew.activityId,
           ...(crewLands && { landsAtSite: true }),
           suppliesId: plannedCrew.suppliesId,
+          protectionId: plannedCrew.protectionId,
         },
       }),
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
@@ -193,6 +202,7 @@ export function useMissionPlan(
       setCrewActivityId(undefined);
     },
     chooseCrewSupplies: setCrewSuppliesId,
+    chooseCrewProtection: setCrewProtectionId,
     landingSite,
     chooseLandingSite: setChosenSiteId,
     plannedEvents,

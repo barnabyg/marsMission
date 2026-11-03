@@ -233,7 +233,20 @@ function suppliesBeforeSupplies(
   );
 }
 
-const newestFormat = format11;
+/**
+ * Adds the Protection each Crew member's Mission carried, by id, which stays with them at Mars. A save from before
+ * Protection gives everyone the first level, which gives none, as they had.
+ */
+const format12 = format11.extend({
+  crew: z.array(
+    z.strictObject({
+      ...format11.shape.crew.element.shape,
+      protectionId: z.string(),
+    }),
+  ),
+});
+
+const newestFormat = format12;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -341,6 +354,20 @@ const formats: readonly SaveFormat[] = [
       ...old,
       crewSupplies: suppliesBeforeSupplies(old.crew, catalogue),
     }),
+  },
+  {
+    schema: format11,
+    upgrade: (
+      old: z.output<typeof format11>,
+      { crew: { protection } }: Catalogue,
+    ): z.output<typeof format12> => {
+      const none = protection[0];
+      if (!none) throw new SaveError(corruptSave);
+      return {
+        ...old,
+        crew: old.crew.map((member) => ({ ...member, protectionId: none.id })),
+      };
+    },
   },
   { schema: newestFormat },
 ];

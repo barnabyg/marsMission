@@ -72,9 +72,14 @@ export interface TurnSummary {
   /**
    * What each Crew member lost in Health this Turn and why, whether they are still at Mars, were lost or came home:
    * those already at Mars first, then those the Mission carried. Anyone who lost none is left out. For a Crew member who
-   * died of it, it adds up to the Health they had.
+   * died of it, it adds up to the Health they had. `savedByProtection` is how much more radiation would have taken
+   * over the same days with no Protection, left out if it saved nothing.
    */
-  healthLost: { name: string; lost: HealthLost[] }[];
+  healthLost: {
+    name: string;
+    lost: HealthLost[];
+    savedByProtection?: number;
+  }[];
   /** The Crew a Free-return brought back to Earth this Turn, safe, who won't fly again. */
   crewHome: string[];
   /**
@@ -136,6 +141,10 @@ export interface TurnSummary {
     assets: string[];
     /** How much shorter it made each one's Service Life. */
     serviceLifeLossPercent: number;
+    /** The Crew on board, after the Assets. */
+    crew: string[];
+    /** The Health it cost each of them, after their Protection, which is 0 if it cost none or lost them. healthLost lists it too. */
+    crewHealthLoss: number;
   } | null;
   /** The go/no-go check before a landing in a dust storm, if there was one, and how it was answered. */
   goNoGo: {

@@ -20,7 +20,7 @@ const wealthy = () =>
 const lasting = () => withFailures([], { crewHealth: steadyHealth });
 
 describe("planning a Crewed Mission", () => {
-  it("offers each Crew size and Supplies with what they weigh and cost, and the Health Crew start with", () => {
+  it("offers each Crew size, Supplies and Protection with what they weigh and cost, and the Health Crew start with", () => {
     const { simulation, program } = setup();
     expect(simulation.readProgram(program).crewedMission).toEqual({
       vehicleName: "Test Crew Ship",
@@ -40,6 +40,22 @@ describe("planning a Crewed Mission", () => {
           name: "Long",
           costMillions: 200,
           massTonnes: 2,
+        },
+      ],
+      protection: [
+        {
+          id: "test-protection-none",
+          name: "None",
+          costMillions: 0,
+          massTonnes: 0,
+          radiationCutPercent: 0,
+        },
+        {
+          id: "test-shielding",
+          name: "Shielding",
+          costMillions: 100,
+          massTonnes: 1,
+          radiationCutPercent: 50,
         },
       ],
       maxHealth: 100,

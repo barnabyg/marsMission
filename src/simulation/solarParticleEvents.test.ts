@@ -165,6 +165,8 @@ describe("answering a solar particle event", () => {
       outcome: "protected",
       assets: ["Test Orbiter"],
       serviceLifeLossPercent: 10,
+      crew: [],
+      crewHealthLoss: 0,
     });
     // The shortest Service Life is 50,000 days.
     expect(program.operatingAssets[0]?.serviceLifeDays).toBe(45_000);

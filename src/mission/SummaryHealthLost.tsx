@@ -1,10 +1,21 @@
 import { healthLossCauses, type TurnSummary } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 
-type HealthLost = TurnSummary["healthLost"][number]["lost"];
+type HealthLost = TurnSummary["healthLost"][number];
 
-/** Such as "Ann Able lost 31 Health: 16 to radiation at Mars, 15 to time at Mars", or "Ann Able lost 52 Health to radiation in flight". */
-function describe(name: string, lost: HealthLost): string {
+/**
+ * Such as "Ann Able lost 31 Health: 16 to radiation at Mars, 15 to time at Mars", or "Ann Able lost 52 Health to
+ * radiation in flight", followed by what Protection saved, if it saved anything: ". Protection saved 12 more".
+ */
+function describe({ name, lost, savedByProtection }: HealthLost): string {
+  const saved =
+    savedByProtection === undefined
+      ? ""
+      : `. Protection saved ${savedByProtection} more`;
+  return `${describeLost(name, lost)}${saved}`;
+}
+
+function describeLost(name: string, lost: HealthLost["lost"]): string {
   const causes = lost.map(
     ({ cause, health }) => `${health} to ${healthLossCauses[cause]}`,
   );
@@ -27,9 +38,9 @@ export function SummaryHealthLost({
         <GameText>Health lost</GameText>
       </h2>
       <ul>
-        {healthLost.map(({ name, lost }) => (
-          <li key={name}>
-            <GameText>{describe(name, lost)}</GameText>
+        {healthLost.map((member) => (
+          <li key={member.name}>
+            <GameText>{describe(member)}</GameText>
           </li>
         ))}
       </ul>

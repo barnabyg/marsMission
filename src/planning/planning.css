@@ -142,6 +142,16 @@
   min-width: 11rem;
 }
 
+/* The Crew's choices take two lines, the second lined up after the tick box's label above it. */
+.crew-choice {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.crew-choice-second-line {
+  padding-left: calc(20rem + 0.8rem);
+}
+
 /* In a crowded row, with a wider font than Segoe UI, the tags move under the name rather than past the panel's edge.
    Lines a little closer than usual keep a name with tags under it no taller than the row's choices. */
 .panel .asset-choices label {

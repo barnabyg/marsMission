@@ -9,6 +9,7 @@ import {
   type HealthLost,
 } from "./health";
 import type { CrewLoss } from "./lostCrew";
+import { protectionOf } from "./protection";
 import {
   kilogramsOf,
   suppliesCourse,
@@ -68,7 +69,13 @@ export interface MissionOutcome {
    * The Health of each Crew member it carried, who wasn't lost with the Mission, as their flight ended: on arriving,
    * on getting home, at a Decision Point, or at 0 if it ran out on the way. Set once the Mission has flown.
    */
-  crewHealth: { name: string; health: number; lost: HealthLost[] }[];
+  crewHealth: {
+    name: string;
+    health: number;
+    lost: HealthLost[];
+    /** How much more radiation would have taken on the way with no Protection. */
+    saved: number;
+  }[];
   /** The Supplies, in kilograms, the Crew had left as their flight ended, which those who arrive bring with them. Set once the Mission has flown. */
   crewSuppliesKg: number;
   /** The day the Crew's Supplies ran out on the way, if they did. Set once the Mission has flown. */
@@ -112,6 +119,8 @@ export interface Flight {
   assets: Asset[];
   /** The names of the Crew on board, which is none for a Robotic Mission. */
   crew: string[];
+  /** By what share, in percent, the Crew's Protection slows radiation's harm. */
+  radiationCutPercent: number;
   landingSite: LandingSite | undefined;
   freeReturn: Trajectory["freeReturn"];
   outcome: MissionOutcome;
@@ -213,6 +222,8 @@ export function startFlight(
     catalogue.assets.filter((candidate) => candidate.id === assetId),
   );
   const crew = crewNamesFor(catalogue, program, mission);
+  const radiationCutPercent =
+    protectionOf(catalogue, mission)?.radiationCutPercent ?? 0;
   const landingSite = rules.landingSiteById(mission?.landingSiteId);
   const outcome: MissionOutcome = {
     vehicleName: vehicle?.name ?? null,
@@ -261,7 +272,7 @@ export function startFlight(
         fromDay: 0,
         untilDay: healthCourse(
           catalogue.crew.maxHealth,
-          drainsInFlight(catalogue, turnDays),
+          drainsInFlight(catalogue, turnDays, radiationCutPercent),
           blowsTo(name),
         ).diedOn,
       })),
@@ -287,6 +298,7 @@ export function startFlight(
     answers,
     assets,
     crew,
+    radiationCutPercent,
     landingSite,
     freeReturn: rules.trajectoryFor(mission).freeReturn,
     outcome,
@@ -308,7 +320,7 @@ export function startFlight(
       healthCourse(
         catalogue.crew.maxHealth,
         [
-          ...drainsInFlight(catalogue, toDay),
+          ...drainsInFlight(catalogue, toDay, radiationCutPercent),
           ...drainsWithoutSupplies(catalogue, suppliesOutages(), 0, toDay),
         ],
         blowsTo(name),

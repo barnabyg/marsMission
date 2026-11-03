@@ -245,7 +245,13 @@ describe("saving Supplies", () => {
       },
     };
     const restored = simulation.restoreProgram(formatTen);
-    expect(restored.crew).toEqual(formatTen.program.crew);
+    // Later formats give them no Protection.
+    expect(restored.crew).toEqual(
+      formatTen.program.crew.map((member) => ({
+        ...member,
+        protectionId: "test-protection-none",
+      })),
+    );
     // The Long Supplies' 2,000 kg, at a quarter of a kilogram a day each.
     expect(
       simulation

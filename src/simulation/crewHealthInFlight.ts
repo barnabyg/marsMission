@@ -33,10 +33,11 @@ export function endCrewFlight(flight: Flight): void {
         ),
       };
     });
-  outcome.crewHealth = flown.map(({ name, health, lost }) => ({
+  outcome.crewHealth = flown.map(({ name, health, lost, saved }) => ({
     name,
     health,
     lost,
+    saved,
   }));
   const flightEnds = outcome.returned?.backOnDay ?? stoppedOn;
   const outages = flight.suppliesOutages();

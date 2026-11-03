@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ProgramView, TurnSummary } from "../simulation/simulation";
 import { crewProblems } from "./invalidCrew";
 import { playProgram } from "./playProgram";
+import { balanceReport } from "./report";
 import { strategies } from "./strategies";
 import { certain, simulationOf, turns } from "./testHelpers";
 
@@ -75,6 +76,10 @@ describe("strategies that fly Crew", () => {
             (location.kind === "lost" &&
               ["health", "supplies"].includes(location.cause)),
         ),
+      ).toBe(true);
+      // Each Crew carries the most Protection that it can afford and that fits.
+      expect(
+        crew.some(({ protectionId }) => protectionId !== "protection-none"),
       ).toBe(true);
     },
   );
@@ -387,7 +392,80 @@ describe("the checks for invalid Crew", () => {
         }),
       /but none ran out/,
     ],
+    [
+      "Health lost to a solar particle event with no Crew aboard",
+      () =>
+        changedSummary({
+          healthLost: [
+            {
+              name: firstName,
+              lost: [{ cause: "solarParticleEvent", health: 5 }],
+            },
+          ],
+        }),
+      /solar particle event cost Health to Crew it didn't harm/,
+    ],
+    [
+      "a solar particle event costing Crew Health when its radiation passed",
+      () =>
+        changedSummary({
+          solarParticleEvent: {
+            answer: "carryOn",
+            outcome: "unharmed",
+            assets: [],
+            serviceLifeLossPercent: 0,
+            crew: [firstName],
+            crewHealthLoss: 35,
+          },
+        }),
+      /solar particle event cost Health to Crew it didn't harm/,
+    ],
+    [
+      "Protection that saved nothing",
+      () =>
+        changedSummary({
+          healthLost: [
+            {
+              name: firstName,
+              lost: [{ cause: "timeAtMars", health: 5 }],
+              savedByProtection: 0,
+            },
+          ],
+        }),
+      /Protection saved a Crew member no Health/,
+    ],
   ])("catch %s", (_, check, expected) => {
     expect(check().join(" ")).toMatch(expected);
+  });
+});
+
+describe("solar particle events with Crew aboard", () => {
+  // One comes to most Missions on their way, as often as the longest Trajectory allows.
+  const stormy = {
+    ...colossusFromTheStart,
+    hazards: {
+      ...colossusFromTheStart.hazards,
+      solarParticleEvent: {
+        ...colossusFromTheStart.hazards.solarParticleEvent,
+        chancePerDayInFlight: 1 / 220,
+      },
+    },
+  };
+  const flyingCrew = strategies.filter(({ name }) => name.includes("Crew"));
+
+  it("are a kind of Decision Point of their own, with rows of their own in the report", () => {
+    const report = balanceReport(stormy, 5, flyingCrew);
+    expect(report).toMatch(
+      /Decision Points: .*solar particle event with Crew \d+\.\d/,
+    );
+    const rows = report
+      .split("\n")
+      .filter((line) => line.startsWith("solar particle event with Crew"))
+      .map((line) => line.trim().split(/\s{2,}/));
+    expect(rows.map(([kind, answer]) => [kind, answer])).toContainEqual([
+      "solar particle event with Crew",
+      "safeMode",
+    ]);
+    for (const row of rows) expect(row).toHaveLength(7);
   });
 });

@@ -21,7 +21,7 @@ export interface PlannedMission {
   crew?: CrewChoices;
 }
 
-/** The choices made for a Crewed Mission's Crew. Protection will join them. */
+/** The choices made for a Crewed Mission's Crew. */
 interface CrewChoices {
   /** How many Crew fly, which must be one of the Catalogue's Crew sizes. */
   size: number;
@@ -34,6 +34,8 @@ interface CrewChoices {
   landsAtSite?: boolean;
   /** The Supplies they carry, by id, which they use from launch. Left out, it's the least the Catalogue offers. */
   suppliesId?: string;
+  /** The Protection it carries, by id, which slows the Health they lose to radiation. Left out, it's the first the Catalogue lists, which gives none. */
+  protectionId?: string;
 }
 
 export interface AssetChoices {
@@ -96,6 +98,8 @@ export interface CrewMember {
   /** The day they arrived at Mars, or null if they never did. */
   arrivedOn: string | null;
   location: CrewLocation;
+  /** The Protection their Mission carried, by id, which stays with them at Mars. */
+  protectionId: string;
 }
 
 type ProgramStatus =
@@ -181,7 +185,7 @@ export interface ProgramView {
     /** What it does for other Assets while it operates at Mars, or null if it gives no Benefit. */
     benefit: string | null;
   }[];
-  /** What a Crewed Mission can carry: the Crew sizes and Supplies on offer, what each costs and weighs, and the Health Crew start with. */
+  /** What a Crewed Mission can carry: the Crew sizes, Supplies and Protection on offer, what each costs and weighs, and the Health Crew start with. */
   crewedMission: {
     vehicleName: string;
     sizes: { crew: number; costMillions: number; massTonnes: number }[];
@@ -191,6 +195,14 @@ export interface ProgramView {
       name: string;
       costMillions: number;
       massTonnes: number;
+    }[];
+    /** The Protection on offer, from none to the most, with by what share each slows the Health Crew lose to radiation. */
+    protection: {
+      id: string;
+      name: string;
+      costMillions: number;
+      massTonnes: number;
+      radiationCutPercent: number;
     }[];
     maxHealth: number;
     /** How many names are left to give Crew, which limits the Crew that can still fly. */

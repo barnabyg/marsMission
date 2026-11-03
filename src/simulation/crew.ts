@@ -4,6 +4,7 @@ import { drainsInFlight, healthCourse } from "./health";
 import { earningsPerTurn } from "./ongoingResearch";
 import type { Activity, Rules } from "./rules";
 import type { PlannedActivity } from "./previews";
+import { protectionOf } from "./protection";
 import { daysOfSupplies, kilogramsOf, suppliesOptionOf } from "./supplies";
 import type {
   CrewMember,
@@ -48,7 +49,7 @@ export interface PlannedCrew {
   activities: PlannedActivity[];
   /** Where they would join Crew already operating, whose Activity they take up, or null if none are there. */
   joining: string | null;
-  /** The Health each would have left on arriving, after radiation on the way, if nothing else harms them. */
+  /** The Health each would have left on arriving, after radiation on the way slowed by their Protection, if nothing else harms them. */
   arrivalHealth: number;
   /** The Supplies they carry, by id. */
   suppliesId: string;
@@ -59,6 +60,20 @@ export interface PlannedCrew {
     costMillions: number;
     massTonnes: number;
     days: number;
+  }[];
+  /** The Protection they carry, by id. */
+  protectionId: string;
+  /**
+   * The Protection on offer, from none to the most, with by what share each slows radiation's harm and the Health each
+   * would leave this Crew on arriving.
+   */
+  protection: {
+    id: string;
+    name: string;
+    costMillions: number;
+    massTonnes: number;
+    radiationCutPercent: number;
+    arrivalHealth: number;
   }[];
 }
 
@@ -213,7 +228,8 @@ export function crewedMissionView(
   catalogue: Catalogue,
   program: Program,
 ): ProgramView["crewedMission"] {
-  const { vehicleName, sizes, maxHealth, supplies } = catalogue.crew;
+  const { vehicleName, sizes, maxHealth, supplies, protection } =
+    catalogue.crew;
   return {
     vehicleName,
     sizes: sizes.map(({ crew, costMillions, massTonnes }) => ({
@@ -227,6 +243,15 @@ export function crewedMissionView(
         name,
         costMillions,
         massTonnes,
+      }),
+    ),
+    protection: protection.map(
+      ({ id, name, costMillions, massTonnes, radiationCutPercent }) => ({
+        id,
+        name,
+        costMillions,
+        massTonnes,
+        radiationCutPercent,
       }),
     ),
     maxHealth,
@@ -292,6 +317,14 @@ export function previewCrew(
   const { size } = mission.crew;
   const plan = { mission };
   const place = placeFor(mission);
+  const arrivalDay = rules.deliveryDay(rules.crewOf(mission), mission);
+  const arrivalHealth = (radiationCutPercent: number) =>
+    healthCourse(
+      catalogue.crew.maxHealth,
+      drainsInFlight(catalogue, arrivalDay, radiationCutPercent),
+      [],
+    ).health;
+  const protection = protectionOf(catalogue, mission);
   return {
     size,
     names: crewNamesFor(catalogue, program, mission),
@@ -303,14 +336,7 @@ export function previewCrew(
       activityNowAt(program, plan, place) === undefined
         ? null
         : locationNameOf(rules, place),
-    arrivalHealth: healthCourse(
-      catalogue.crew.maxHealth,
-      drainsInFlight(
-        catalogue,
-        rules.deliveryDay(rules.crewOf(mission), mission),
-      ),
-      [],
-    ).health,
+    arrivalHealth: arrivalHealth(protection?.radiationCutPercent ?? 0),
     suppliesId: suppliesOptionOf(catalogue, mission)?.id ?? "",
     supplies: catalogue.crew.supplies.options.map((option) => ({
       id: option.id,
@@ -318,6 +344,15 @@ export function previewCrew(
       costMillions: option.costMillions,
       massTonnes: option.massTonnes,
       days: daysOfSupplies(catalogue, kilogramsOf(option), size),
+    })),
+    protectionId: protection?.id ?? "",
+    protection: catalogue.crew.protection.map((level) => ({
+      id: level.id,
+      name: level.name,
+      costMillions: level.costMillions,
+      massTonnes: level.massTonnes,
+      radiationCutPercent: level.radiationCutPercent,
+      arrivalHealth: arrivalHealth(level.radiationCutPercent),
     })),
   };
 }
@@ -357,7 +392,7 @@ export function operatingCrewProblems(
   );
 }
 
-/** What a Mission's Crew and their Supplies cost and weigh, and what's wrong with them, if anything. */
+/** What a Mission's Crew, their Supplies and their Protection cost and weigh, and what's wrong with them, if anything. */
 export function checkCrew(
   catalogue: Catalogue,
   rules: Rules,
@@ -368,15 +403,25 @@ export function checkCrew(
   if (!crew) return { costMillions: 0, massTonnes: 0, problems: [] };
   const size = crewSizeOf(catalogue, mission);
   const supplies = suppliesOptionOf(catalogue, mission);
+  const protection = protectionOf(catalogue, mission);
   const left = namesLeft(catalogue, program).length;
   return {
-    costMillions: (size?.costMillions ?? 0) + (supplies?.costMillions ?? 0),
-    massTonnes: (size?.massTonnes ?? 0) + (supplies?.massTonnes ?? 0),
+    costMillions:
+      (size?.costMillions ?? 0) +
+      (supplies?.costMillions ?? 0) +
+      (protection?.costMillions ?? 0),
+    massTonnes:
+      (size?.massTonnes ?? 0) +
+      (supplies?.massTonnes ?? 0) +
+      (protection?.massTonnes ?? 0),
     problems: [
       ...(size ? [] : [`There is no Crew size of ${crew.size}.`]),
       ...(supplies
         ? []
         : [`There are no Supplies called "${crew.suppliesId}".`]),
+      ...(protection
+        ? []
+        : [`There is no Protection called "${crew.protectionId}".`]),
       ...(size && left < size.crew
         ? [
             `Only ${left} Crew ${left === 1 ? "member is" : "members are"} left to fly, too few for a Crew of ${size.crew}.`,

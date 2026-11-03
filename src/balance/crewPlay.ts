@@ -22,7 +22,7 @@ function crewLandingSite(view: ProgramView): string | undefined {
 }
 
 /**
- * Crewed Missions with no Asset aboard, largest Crew first and then the most Supplies, each on the cheapest Launch
+ * Crewed Missions with no Asset aboard, largest Crew first, then the most Supplies, then the most Protection, each on the cheapest Launch
  * Vehicle that is built and can carry it, with the Activity that earns the most Science. They go to Mars orbit, or land
  * at a surveyed Landing Site if `lands` and there is one. None if no Launch Vehicle can carry Crew.
  */
@@ -33,15 +33,20 @@ export function crewedMissions(
 ): PlannedMission[] {
   const landingSiteId = lands ? crewLandingSite(view) : undefined;
   const supplies = view.crewedMission.supplies.toReversed();
+  const protection = view.crewedMission.protection.toReversed();
   return view.crewedMission.sizes
     .toSorted((first, second) => second.crew - first.crew)
     .flatMap((size) => supplies.map((carried) => ({ size, carried })))
-    .flatMap(({ size: { crew, massTonnes }, carried }) => {
+    .flatMap((choice) =>
+      protection.map((shielding) => ({ ...choice, shielding })),
+    )
+    .flatMap(({ size: { crew, massTonnes }, carried, shielding }) => {
       const vehicle = view.launchVehicles
         .filter(
           (candidate) =>
             canFly(candidate) &&
-            candidate.capacityTonnes >= massTonnes + carried.massTonnes,
+            candidate.capacityTonnes >=
+              massTonnes + carried.massTonnes + shielding.massTonnes,
         )
         .toSorted(
           (first, second) => first.costMillions - second.costMillions,
@@ -54,6 +59,7 @@ export function crewedMissions(
           size: crew,
           landsAtSite: landingSiteId !== undefined,
           suppliesId: carried.id,
+          protectionId: shielding.id,
         },
         ...(landingSiteId === undefined ? {} : { landingSiteId }),
       };
