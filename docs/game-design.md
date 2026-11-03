@@ -17,7 +17,7 @@ Phases are defined in the [Build order](#build-order). Phases 1 to 6 are built:
 
 - **Phase 5:** Decision Points, with no time limit and End Turn stopping at each one; Contingency, a gamble bought in Planning Mode and used for a second roll when its Mission Event fails; Slow, Fast and Free-return Trajectories; dust storms and solar particle events, the first Hazards; go/no-go checks before a landing in a dust storm; the spacecraft view, which Mission Mode moves to for a solar particle event or a failed Mars transfer burn; the balance report on Decision Points, and the numbers tuned with it. With no Crew yet, a solar particle event harms hardware, costing Service Life or losing the Mission, and Protection waits for Phase 7; holding off a landing costs Service Life, as there are no Supplies to spend.
 
-- **Phase 6:** Technology Readiness on every Asset and Launch Vehicle, and Flight-proven status, with the Pinpoint Lander, built but not yet flown, as the first technology that starts unproven; Development, with the Endurance Rover as the first technology that needs it; the Meridian Colossus, a Launch Vehicle that needs Development and carries the most mass, but only with Orbital refuelling, whose Tanker launch and Rendezvous are Mission Events, shown in Earth orbit in the spacecraft view, which Mission Mode moves to for the Rendezvous; the Courier Relay, a relay orbiter whose Benefit, the first between Assets, raises the Ongoing Research of everything on the surface; tooltips for every new term; the balance report on technology, with strategies that develop technology and ones that keep to what is Flight-proven, and the numbers tuned with it.
+- **Phase 6:** Technology Readiness on every Asset and Launch Vehicle, and Flight-proven status, with the Pinpoint Lander, built but not yet flown, as the first technology that starts unproven; Development, with the Endurance Rover as the first technology that needs it; the Meridian Colossus, a Launch Vehicle that needs Development and carries the most mass, but only with Orbital refuelling, whose Tanker launch and Rendezvous are Mission Events, shown in Earth orbit in the spacecraft view, which Mission Mode moves to for the Rendezvous; the Courier Relay, a relay orbiter whose Benefit, the first between Assets, raises the Ongoing Research of everything on the surface; tooltips for every new term; the balance report on technology, with strategies that develop technology and ones that keep to what is Flight-proven, and the numbers tuned with it. The Meridian Colossus doesn't yet earn its place: a Mission can't carry two of the same Asset, so few Missions need more than the Meridian Heavy carries, and in the balance runs filling the Meridian Heavy does better than developing the Meridian Colossus. Phase 7 gives it a Mission that needs it.
 
 Any rule in this document beyond these is planned, so its absence from the code isn't a bug.
 
@@ -120,7 +120,7 @@ The work is split into phases, each ending in a game the player can play and com
 4. **Doing Science:** a rover, the surface view, Activities, Ongoing Research, Research Grants and automated balance runs.
 5. **Tough Choices:** Decision Points, Contingency, Hazards, go/no-go checks, Trajectories and the spacecraft view.
 6. **Better Technology:** Technology Readiness, Development, Flight-proven status, more Launch Vehicles and benefits between Assets.
-7. **First Crew:** Crewed Missions, Crew and Health, Supplies and Protection.
+7. **First Crew:** Crewed Missions, Crew and Health, Supplies and Protection, with a Crewed Mission too heavy for the Meridian Heavy, so that the Meridian Colossus earns its place.
 8. **Coming Home:** return journeys, returning samples, a fuel plant, a habitat and a Mars lab.
 
 ## Saving
@@ -167,6 +167,7 @@ The work is split into phases, each ending in a game the player can play and com
 - A later Mission can fetch Crew already at Mars if it carries a return vehicle.
 - Each Crew member has a single Health value. Radiation, time at Mars and failed Mission Events lower it, Protection slows the decline, and at zero they die.
 - Crew need Supplies. When Supplies run out, Health falls quickly.
+- A Crewed Mission, with its Crew, Supplies and Protection, weighs more than the Meridian Heavy can carry, so it needs the Meridian Colossus, or a Launch Vehicle at least as large. Developing the Meridian Colossus is then the step towards Crew, rather than a bigger launcher with nothing to fill.
 
 ## Technology
 
