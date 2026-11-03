@@ -1,6 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { sum } from "./rules";
-import type { Technology } from "./technologyReadiness";
+import { everyTechnology, type Technology } from "./technologyReadiness";
 import type { PlannedDevelopment, Program, TurnPlan } from "./types";
 
 /** A technology that isn't built yet, with what its Development costs and takes. */
@@ -15,9 +15,7 @@ export function needingDevelopment(catalogue: Catalogue): NeedsDevelopment[] {
   ): technology is NeedsDevelopment =>
     technology.technologyReadiness === "not-built" &&
     technology.development !== undefined;
-  return [...catalogue.launchVehicles, ...catalogue.assets].filter(
-    needsDevelopment,
-  );
+  return everyTechnology(catalogue).filter(needsDevelopment);
 }
 
 /** A technology's Development in this Program, as Planning Mode shows it. */
@@ -62,7 +60,7 @@ export function developmentsStarting(
     problems.push("A plan can't start the same Development twice.");
   }
   for (const id of new Set(developmentIds)) {
-    const technology = [...catalogue.launchVehicles, ...catalogue.assets].find(
+    const technology = everyTechnology(catalogue).find(
       (candidate) => candidate.id === id,
     );
     if (!technology) {

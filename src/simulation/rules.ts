@@ -1,6 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { PlannedMission, Program } from "./types";
-import { unprovenMultiplier, type Technology } from "./technologyReadiness";
+import { technologiesOn, unprovenMultiplier } from "./technologyReadiness";
 import type { SurfaceMotion } from "./timeline";
 
 export type MissionEvent = Catalogue["missionEvents"][number];
@@ -87,16 +87,11 @@ export function createRules(catalogue: Catalogue) {
 
   /** The Mission Events a Mission goes through, in the order the Catalogue lists them. */
   function eventsOf(mission: PlannedMission | null): MissionEvent[] {
-    const vehicle = catalogue.launchVehicles.find(
-      (candidate) => candidate.id === mission?.launchVehicleId,
+    const eventIds = new Set(
+      technologiesOn(catalogue, mission).flatMap(
+        ({ missionEvents }) => missionEvents,
+      ),
     );
-    const assets = catalogue.assets.filter((asset) =>
-      mission?.assetIds.includes(asset.id),
-    );
-    const eventIds = new Set([
-      ...(vehicle?.missionEvents ?? []),
-      ...assets.flatMap((asset) => asset.missionEvents),
-    ]);
     return [...eventIds].flatMap((eventId) =>
       catalogue.missionEvents.filter((event) => event.id === eventId),
     );
@@ -271,16 +266,6 @@ export function createRules(catalogue: Catalogue) {
     return catalogue.landingSites.find((site) => site.id === id);
   }
 
-  /** The Launch Vehicle and Assets a Mission carries, which are skipped if they aren't in the catalogue. */
-  function technologiesOn(mission: PlannedMission | null): Technology[] {
-    return [
-      ...catalogue.launchVehicles.filter(
-        ({ id }) => id === mission?.launchVehicleId,
-      ),
-      ...catalogue.assets.filter(({ id }) => mission?.assetIds.includes(id)),
-    ];
-  }
-
   /** What a landing's risk is multiplied by for what it lands, which is as risky as the riskiest Asset in it. */
   function landingRiskMultiplierOf(mission: PlannedMission | null): number {
     return Math.max(
@@ -307,7 +292,7 @@ export function createRules(catalogue: Catalogue) {
   ): number {
     const unproven = Math.max(
       1,
-      ...technologiesOn(mission)
+      ...technologiesOn(catalogue, mission)
         .filter(({ missionEvents }) => missionEvents.includes(event.id))
         .map((technology) => unprovenMultiplier(program, technology)),
     );

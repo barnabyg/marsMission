@@ -7,6 +7,34 @@ export type Technology =
 
 export type TechnologyReadiness = Technology["technologyReadiness"];
 
+/** Launch Vehicles and Assets, as the Catalogue lists them or the player sees them. */
+interface Technologies<Vehicle, Asset> {
+  launchVehicles: readonly Vehicle[];
+  assets: readonly Asset[];
+}
+
+/** Every technology, Launch Vehicles first, in the order they are listed. */
+export function everyTechnology<Vehicle, Asset>({
+  launchVehicles,
+  assets,
+}: Technologies<Vehicle, Asset>): (Vehicle | Asset)[] {
+  return [...launchVehicles, ...assets];
+}
+
+/** The Launch Vehicle and Assets a Mission carries, in the order they are listed, skipping any that aren't. */
+export function technologiesOn<
+  Vehicle extends { id: string },
+  Asset extends { id: string },
+>(
+  { launchVehicles, assets }: Technologies<Vehicle, Asset>,
+  mission: { launchVehicleId: string; assetIds: string[] } | null,
+): (Vehicle | Asset)[] {
+  return [
+    ...launchVehicles.filter(({ id }) => id === mission?.launchVehicleId),
+    ...assets.filter(({ id }) => mission?.assetIds.includes(id)),
+  ];
+}
+
 /** Whether a technology can be chosen for a Mission, which it can't until its Development has finished. */
 export function canFly({
   technologyReadiness,

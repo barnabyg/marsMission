@@ -1,7 +1,8 @@
-import type {
-  ProgramView,
-  Timeline,
-  TurnSummary,
+import {
+  everyTechnology,
+  type ProgramView,
+  type Timeline,
+  type TurnSummary,
 } from "../simulation/simulation";
 import { sum } from "./sum";
 
@@ -18,7 +19,7 @@ export function invalidStates(
   const milestoneIds = after.milestones.map(({ id }) => id);
   const siteIds = after.landingSites.map(({ id }) => id);
   const flightProven = (view: ProgramView) =>
-    [...view.launchVehicles, ...view.assets]
+    everyTechnology(view)
       .filter(
         ({ technologyReadiness }) => technologyReadiness === "flight-proven",
       )
@@ -242,7 +243,7 @@ function developmentProblems(
     ({ id, status }) =>
       status !== "notStarted" && beforeOf(id)?.status === "notStarted",
   );
-  const notBuiltBefore = [...before.launchVehicles, ...before.assets]
+  const notBuiltBefore = everyTechnology(before)
     .filter(({ technologyReadiness }) => technologyReadiness === "not-built")
     .map(({ name }) => name);
   const flown = [
@@ -278,16 +279,14 @@ function developmentProblems(
       "A Development didn't go on by one Turn.",
     ],
     [
-      [...after.launchVehicles, ...after.assets].some(
-        ({ id, technologyReadiness }) => {
-          const development = after.developments.find((each) => each.id === id);
-          return (
-            development !== undefined &&
-            (technologyReadiness === "not-built") !==
-              (development.status !== "finished")
-          );
-        },
-      ),
+      everyTechnology(after).some(({ id, technologyReadiness }) => {
+        const development = after.developments.find((each) => each.id === id);
+        return (
+          development !== undefined &&
+          (technologyReadiness === "not-built") !==
+            (development.status !== "finished")
+        );
+      }),
       "A technology's Technology Readiness doesn't match its Development.",
     ],
     [

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseCatalogue } from "../catalogue/catalogue";
-import { createSimulation, type TurnPlan } from "./simulation";
+import { createSimulation, everyTechnology, type TurnPlan } from "./simulation";
 import { testCatalogueFiles } from "./testCatalogue";
 import { setup, withFailures } from "./testHelpers";
 
@@ -367,7 +367,7 @@ describe("saving which technologies are Flight-proven", () => {
       view.operatingAssets.map(({ flewUnproven }) => flewUnproven),
     ).toEqual([false]);
     expect(
-      [...view.launchVehicles, ...view.assets]
+      everyTechnology(view)
         .filter(({ technologyReadiness }) => technologyReadiness === "built")
         .map(({ id }) => id),
     ).toEqual(["test-prototype", "test-new-lander"]);

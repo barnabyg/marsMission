@@ -1,13 +1,14 @@
-import type {
-  DecisionAnswer,
-  DecisionAnswers,
-  DecisionPoint,
-  Program,
-  ProgramView,
-  Simulation,
-  TurnPlan,
-  TurnResult,
-  TurnSummary,
+import {
+  technologiesOn,
+  type DecisionAnswer,
+  type DecisionAnswers,
+  type DecisionPoint,
+  type Program,
+  type ProgramView,
+  type Simulation,
+  type TurnPlan,
+  type TurnResult,
+  type TurnSummary,
 } from "../simulation/simulation";
 import { invalidStates, missionEventProblems } from "./invalidStates";
 import type { PlanningTools, Strategy } from "./playStyle";
@@ -109,13 +110,8 @@ function recordOf(
 }
 
 /** The technologies on a plan's Mission that aren't Flight-proven as the Turn starts, by name. */
-function unprovenOn({ launchVehicles, assets }: ProgramView, plan: TurnPlan) {
-  const { mission } = plan;
-  if (!mission) return [];
-  return [
-    ...launchVehicles.filter(({ id }) => id === mission.launchVehicleId),
-    ...assets.filter(({ id }) => mission.assetIds.includes(id)),
-  ]
+function unprovenOn(view: ProgramView, plan: TurnPlan) {
+  return technologiesOn(view, plan.mission)
     .filter(
       ({ technologyReadiness }) => technologyReadiness !== "flight-proven",
     )

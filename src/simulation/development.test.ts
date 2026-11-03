@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ProgramView, TurnPlan } from "./simulation";
+import { everyTechnology, type ProgramView, type TurnPlan } from "./simulation";
 import { sendOrbiter, setup, skipTurn, withFailures } from "./testHelpers";
 
 const sendFutureOrbiter: TurnPlan = {
@@ -286,7 +286,7 @@ describe("saving Development", () => {
       "notStarted",
     ]);
     expect(
-      [...view.launchVehicles, ...view.assets]
+      everyTechnology(view)
         .filter(
           ({ technologyReadiness }) => technologyReadiness === "not-built",
         )
