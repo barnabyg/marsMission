@@ -24,7 +24,7 @@ test("explains a game term on hover and on keyboard focus", async ({
   await term.hover();
   await expect(tooltip).toContainText(tooltips["Public Support"]);
 
-  await page.getByRole("heading", { name: "Mission", exact: true }).hover();
+  await page.getByRole("heading", { name: "New Mission", exact: true }).hover();
   await page.mouse.move(0, 0);
   await expect(tooltip).toHaveCount(0);
 
@@ -45,6 +45,7 @@ test("explains the terms of Doing Science in Planning Mode and on the surface pa
   page,
 }) => {
   await page.goto(`/?seed=${landingSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await expect(page.getByLabel("Activity for Pathfinder Orbiter")).toHaveValue(
     "survey",
   );
@@ -192,6 +193,7 @@ test("explains the terms of technology in Planning Mode, Mission Mode and the Tu
 }) => {
   // Over 5 s: waits at 1x for the landing, then plays on to the Turn summary.
   await page.goto(`/?seed=${pinpointLandingSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   const pinpoint = page.locator(".asset-choice", {
     hasText: "Pinpoint Lander",
   });
@@ -256,6 +258,7 @@ test("no button highlights a game term, while the text around it keeps its toolt
   page,
 }) => {
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   expect(await termsInButtons(page)).toEqual([]);
 
   const launch = page.getByRole("button", { name: "Launch Mission" });

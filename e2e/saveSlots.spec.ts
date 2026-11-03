@@ -39,6 +39,7 @@ test("saves to a slot, moves on a Turn, loads the slot and sees the earlier stat
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Cancel" }).click();
 
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(
     page.getByRole("heading", { name: "Mission Mode" }),

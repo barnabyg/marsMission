@@ -24,6 +24,7 @@ function endTurn(page: Page) {
 /** Launches the first Mission, with Reserve fuel if asked, which Planning Mode offers for the orbiter it starts with. */
 async function launch(page: Page, seed: number, reserveFuel = true) {
   await page.goto(`/?seed=${seed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page
     .getByRole("checkbox", { name: /Reserve fuel/ })
     .setChecked(reserveFuel);
@@ -34,6 +35,7 @@ test("Planning Mode offers Reserve fuel only for a Mission with Mars orbit inser
   page,
 }) => {
   await page.goto("/?seed=1");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   const reserveFuel = page.getByRole("checkbox", { name: /Reserve fuel/ });
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
   await expect(page.getByTestId("mission-mass")).toHaveText("2.5 of 4 tonnes");

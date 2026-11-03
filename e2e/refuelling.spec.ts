@@ -30,6 +30,7 @@ test("develops the Meridian Colossus, then fills it with more than any other Lau
   await listenForSounds(page);
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
   await page.goto(`/?seed=${colossusSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await expect(
     launchVehicle(page).locator("option", { hasText: "Meridian Colossus" }),
   ).toHaveJSProperty("disabled", true);

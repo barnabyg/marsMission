@@ -79,6 +79,7 @@ test("shows an orbiter going round Mars from the day it arrives, only in the Mar
   // Over 5 s: waits at 1x for the arrival, then plays into the next Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await pauseAtEvent(page, "Launch", () =>
     page.getByRole("button", { name: "Launch Mission" }).click(),
   );
@@ -194,6 +195,7 @@ test("keeps the controls still as the date changes, even in a window too small f
 }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await holdTurnWhenShown(page);
   await page
     .getByRole("button", { name: "End Turn without launching" })

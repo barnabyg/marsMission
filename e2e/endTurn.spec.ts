@@ -4,6 +4,7 @@ import {
   overrideProgramData,
   pauseAtEvent,
   watchForProblems,
+  chooseAssets,
 } from "./helpers";
 import { seedFailingAt, successSeed } from "./seeds";
 
@@ -34,6 +35,7 @@ test("ending a Turn partway gives the same outcome as playing it to the end", as
 }) => {
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await page.getByRole("button", { name: "10x" }).click();
   await expect(page.getByTestId("turn-summary")).toBeVisible();
@@ -43,6 +45,7 @@ test("ending a Turn partway gives the same outcome as playing it to the end", as
     localStorage.clear();
   });
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await pauseAtEvent(page, "Launch", () =>
     page.getByRole("button", { name: "Launch Mission" }).click(),
   );
@@ -62,6 +65,7 @@ test("ending a Turn after a Mission fails still reports the failure", async ({
   page,
 }) => {
   await page.goto(`/?seed=${seedFailingAt("Launch")}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(
     page.getByRole("heading", { name: "Launch failed" }),

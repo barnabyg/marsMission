@@ -138,13 +138,15 @@
   min-width: 11rem;
 }
 
-/* In a crowded row, with a wider font than Segoe UI, the tags move under the name rather than past the panel's edge. */
+/* In a crowded row, with a wider font than Segoe UI, the tags move under the name rather than past the panel's edge.
+   Lines a little closer than usual keep a name with tags under it no taller than the row's choices. */
 .panel .asset-choices label {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0 0.45rem;
   min-width: 20rem;
+  line-height: 1.15;
   color: var(--text);
   white-space: nowrap;
 }
@@ -162,7 +164,8 @@
   color: var(--accent);
 }
 
-.benefit-tag {
+.benefit-tag,
+.operating-tag {
   color: var(--muted);
 }
 

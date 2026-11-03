@@ -269,13 +269,14 @@ export function orbiterLabels(page: Page) {
   return page.getByTestId("mars-orbit-asset");
 }
 
-/** Launches the first Mission as planned, holding the Turn at the event with this title if there is one. */
+/** Launches the first Mission with Pathfinder Orbiter, holding the Turn at the event with this title if there is one. */
 export async function launchFirstMission(
   page: Page,
   seed: number,
   pauseAt?: string,
 ): Promise<void> {
   await page.goto(`/?seed=${seed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   const launch = () =>
     page.getByRole("button", { name: "Launch Mission" }).click();
   await (pauseAt === undefined

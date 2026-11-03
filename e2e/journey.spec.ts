@@ -23,6 +23,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
     page.getByRole("heading", { name: "Planning Mode" }),
   ).toBeVisible();
   await expect(page.getByTestId("turn-number")).toHaveText("1");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await expect(page.getByTestId("launch-window")).toHaveText("December 2028");
   await expect(page.getByTestId("money")).toHaveText("$2.3B");
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
@@ -104,6 +105,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(page.getByTestId("current-speed")).toHaveText("10x");
   expect(problems).toEqual([]);
@@ -123,6 +125,7 @@ for (const { missionEvent, before } of [
     // Over 5 s: for a later Mission Event, waits at 1x for the failure, then plays on to the next Turn.
     const problems = watchForProblems(page);
     await page.goto(`/?seed=${seedFailingAt(missionEvent)}`);
+    await chooseAssets(page, ["Pathfinder Orbiter"]);
 
     await pauseAtEvent(page, `${missionEvent} failed`, () =>
       page.getByRole("button", { name: "Launch Mission" }).click(),
@@ -168,6 +171,7 @@ test("uses a known seed in a production build, as the playtest command runs it",
   page,
 }) => {
   await page.goto(`${productionBaseURL}/?seed=${seedFailingAt("Launch")}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(eventEntries(page).first().getByRole("heading")).toHaveText(
     "Launch failed",
@@ -185,6 +189,7 @@ test("loads the data files, Mission Mode's view and its art from a production bu
     }
   });
   await page.goto(`${productionBaseURL}/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(
     page.getByTestId("mission-scene").locator("canvas"),
@@ -202,6 +207,7 @@ test("pauses Mission Mode and resumes from exactly where it stopped, without car
   // Over 5 s: this tests playback itself, across a whole Turn and into the next.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   const current = page.getByTestId("current-speed");
   await expect(current).toHaveText("1x");
@@ -252,6 +258,7 @@ test("pauses Mission Mode and resumes from exactly where it stopped, without car
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 
   // The next Turn starts at the speed last chosen.
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(current).toHaveText("10x");
   expect(problems).toEqual([]);
@@ -262,6 +269,7 @@ test("keeps the events column beside the solar system view, scrolling by itself 
 }) => {
   // Over 5 s: waits at 1x for the Funding Threshold, with enough entries to fill the column.
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await pauseAtEvent(page, "Launch", () =>
     page.getByRole("button", { name: "Launch Mission" }).click(),
   );
@@ -322,6 +330,7 @@ test("lists the planned Mission's Mission Events with rough risk bands, which ch
     });
   });
   await page.goto("/");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
 
   const events = page.getByTestId("mission-event");
   await expect(events).toHaveCount(3);
@@ -345,6 +354,7 @@ test("buys Reliability, sees the risk band and cost change, and launches", async
 }) => {
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
 
   const insertion = page
     .getByTestId("mission-event")
@@ -369,6 +379,7 @@ test("buys Reliability, sees the risk band and cost change, and launches", async
 
   // Reliability applied to that Mission only.
   await expect(page.getByTestId("turn-number")).toHaveText("2");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await expect(page.getByTestId("mission-cost")).toHaveText(costBefore ?? "");
   await expect(insertion.getByRole("combobox")).toHaveValue("none");
   expect(problems).toEqual([]);
@@ -453,6 +464,7 @@ test("shows why a plan the player can't afford is rejected", async ({
 }) => {
   await overrideProgramData(page, { startingMoneyMillions: 500 });
   await page.goto("/");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
 
   await expect(page.getByRole("alert")).toContainText("costs $1B");
   await expect(page.getByRole("alert")).toContainText("$500M");

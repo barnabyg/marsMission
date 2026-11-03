@@ -34,6 +34,7 @@ async function launchOnColossus(
 ): Promise<void> {
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
   await page.goto(`/?seed=${seed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page
     .getByTestId("development")
     .filter({ hasText: "Meridian Colossus" })
