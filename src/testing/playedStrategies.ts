@@ -53,8 +53,9 @@ function play(name: string) {
 const playedByName = new Map<string, ReturnType<typeof play>>();
 
 /**
- * Means over many seeds of a strategy from the balance runs on the real data files, so that the tests of the tuned
- * balance read like the balance report. Each strategy is played once, however many tests ask for it.
+ * Means over many seeds of a strategy played as in the balance runs, but on the calm data files, so that the tests of
+ * the tuned balance read like the balance report. Each strategy is played once in each test file, however many tests
+ * ask for it.
  */
 export function played(name: string): ReturnType<typeof play> {
   const known = playedByName.get(name);
