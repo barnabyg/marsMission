@@ -28,7 +28,7 @@
 .view-label > span {
   display: block;
   transform: translate(-50%, -100%);
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   white-space: nowrap;
   text-shadow: 0 0 0.3rem #000;
 }
@@ -94,7 +94,7 @@
 }
 
 .mission-side h2 {
-  font-size: 1rem;
+  font-size: var(--text-md);
   color: var(--muted);
 }
 
@@ -227,7 +227,7 @@
 }
 
 .events-column h2 {
-  font-size: 1rem;
+  font-size: var(--text-md);
   color: var(--muted);
 }
 
@@ -255,13 +255,13 @@
 }
 
 .event-entry time {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--muted);
 }
 
 .event-entry h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--text-md);
   font-weight: 600;
 }
 
