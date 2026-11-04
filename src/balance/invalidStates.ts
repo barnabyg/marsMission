@@ -68,6 +68,10 @@ export function invalidStates(
       `Science fell from ${before.science} to ${after.science}.`,
     ],
     [
+      summary.scienceStart !== before.science,
+      "scienceStart doesn't match the Program's Science before the Turn.",
+    ],
+    [
       before.science + summary.scienceGained !== after.science,
       "scienceGained doesn't match the next Program's Science.",
     ],

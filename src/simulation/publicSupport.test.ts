@@ -68,8 +68,23 @@ describe("Milestones", () => {
       scienceGained: 100,
       publicSupportStart: 100,
       publicSupportEnd: 255,
-      milestones: [{ name: "First orbiter", science: 100, publicSupport: 200 }],
+      milestones: [
+        {
+          name: "First orbiter",
+          description: "An orbiter reached Mars.",
+          science: 100,
+          publicSupport: 200,
+        },
+      ],
     });
+  });
+
+  it("reports the Science the Program had before the Turn, beside what it gained", () => {
+    const { simulation, program } = setup();
+    const first = simulation.runTurn(program, sendOrbiter);
+    const second = simulation.runTurn(first.program, skipTurn);
+    expect(first.summary.scienceStart).toBe(0);
+    expect(second.summary.scienceStart).toBe(100);
   });
 
   it("awards a Milestone for each kind of Asset that arrives", () => {

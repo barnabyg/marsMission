@@ -186,7 +186,12 @@ describe("Crew at Mars", () => {
     const { simulation, program } = wealthy();
     const first = simulation.runTurn(program, sendCrew);
     expect(first.summary.milestones).toEqual([
-      { name: "First Crew at Mars", science: 30, publicSupport: 150 },
+      {
+        name: "First Crew at Mars",
+        description: "Crew reached Mars.",
+        science: 30,
+        publicSupport: 150,
+      },
     ]);
     expect(
       first.timeline.entries.find(({ kind }) => kind === "milestone")?.day,

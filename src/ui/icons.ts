@@ -10,6 +10,10 @@ export const icons = {
     ["path", { d: "M12 5v14" }],
     ["path", { d: "m19 12-7 7-7-7" }],
   ],
+  "arrow-right": [
+    ["path", { d: "M5 12h14" }],
+    ["path", { d: "m12 5 7 7-7 7" }],
+  ],
   "arrow-up": [
     ["path", { d: "m5 12 7-7 7 7" }],
     ["path", { d: "M12 19V5" }],

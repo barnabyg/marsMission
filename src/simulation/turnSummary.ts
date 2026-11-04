@@ -3,6 +3,8 @@ import type { CrewLossCause, DecisionAnswer } from "./types";
 
 interface AwardedMilestone {
   name: string;
+  /** A line about what the Program achieved, from the catalogue. */
+  description: string;
   science: number;
   publicSupport: number;
 }
@@ -34,6 +36,8 @@ export interface TurnSummary {
   developmentCostMillions: number;
   moneyStartMillions: number;
   moneyEndMillions: number;
+  /** The Program's Science before the Turn, which scienceGained adds to. */
+  scienceStart: number;
   scienceGained: number;
   publicSupportStart: number;
   publicSupportGained: number;

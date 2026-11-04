@@ -29,6 +29,7 @@ describe("a Science Milestone", () => {
     ).toBe("A lot of Science. It awards 5 Science and 7 Public Support.");
     expect(result.summary.milestones).toContainEqual({
       name: "130 Science",
+      description: "A lot of Science.",
       science: 5,
       publicSupport: 7,
     });

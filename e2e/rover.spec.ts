@@ -100,6 +100,7 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   const summary = page.getByTestId("turn-summary");
   await expect(summary).toContainText("First landing on Mars: 150 Science");
   await expect(summary).toContainText("First rover on Mars: 60 Science");
+  await expect(summary.getByTestId("summary-milestone")).toHaveCount(2);
   await expect(page.getByTestId("summary-first-landing")).toContainText(
     "120 Science",
   );

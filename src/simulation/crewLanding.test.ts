@@ -112,8 +112,18 @@ describe("Crew at a Landing Site", () => {
       science: 50,
     });
     expect(first.summary.milestones).toEqual([
-      { name: "First Crew at Mars", science: 30, publicSupport: 150 },
-      { name: "First Crew landing", science: 50, publicSupport: 100 },
+      {
+        name: "First Crew at Mars",
+        description: "Crew reached Mars.",
+        science: 30,
+        publicSupport: 150,
+      },
+      {
+        name: "First Crew landing",
+        description: "Crew reached the surface.",
+        science: 50,
+        publicSupport: 100,
+      },
     ]);
     // A second Crew landing at the same site earns neither again.
     const second = simulation.runTurn(first.program, landCrew);
