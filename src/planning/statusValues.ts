@@ -1,5 +1,3 @@
-import { formatMoney } from "../simulation/simulation";
-
 /** How far above the Cancellation Level, as a share of it, Public Support has to be before the gauge stops warning. */
 const warningMargin = 0.5;
 /** The gauge runs up to at least this many times the Cancellation Level, so the level sits low on it when all is well. */
@@ -56,14 +54,4 @@ export function changesSinceLastTurn(
     if (change !== 0) changes[key] = change;
   }
   return changes;
-}
-
-/** A change with its sign, such as "+155" or "−$250M", using a true minus sign. */
-export function formatChange(
-  change: number,
-  unit: "points" | "money" = "points",
-): string {
-  const size = Math.abs(change);
-  const sign = change < 0 ? "−" : "+";
-  return `${sign}${unit === "money" ? formatMoney(size) : String(size)}`;
 }

@@ -1,12 +1,8 @@
 import { formatMoney, type ProgramView } from "../simulation/simulation";
-import { formatLaunchWindow } from "../ui/format";
+import { formatChange, formatLaunchWindow } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { Icon, type IconName } from "../ui/Icon";
-import {
-  changesSinceLastTurn,
-  formatChange,
-  publicSupportGauge,
-} from "./statusValues";
+import { changesSinceLastTurn, publicSupportGauge } from "./statusValues";
 
 interface StatusBarProps {
   view: ProgramView;

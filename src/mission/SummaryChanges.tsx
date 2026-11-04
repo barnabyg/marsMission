@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { formatChange } from "../planning/statusValues";
+import { formatChange } from "../ui/format";
 import { formatMoney, type TurnSummary } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { Icon, type IconName } from "../ui/Icon";

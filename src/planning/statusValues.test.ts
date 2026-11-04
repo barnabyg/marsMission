@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  changesSinceLastTurn,
-  formatChange,
-  publicSupportGauge,
-} from "./statusValues";
+import { changesSinceLastTurn, publicSupportGauge } from "./statusValues";
 
 describe("the Public Support gauge", () => {
   it("warns when Public Support is under one and a half times the Cancellation Level", () => {
@@ -48,20 +44,5 @@ describe("changes since the last Turn", () => {
         cancellationLevel: 50,
       }),
     ).toEqual({ moneyMillions: -250, publicSupport: 155, science: 40 });
-  });
-});
-
-describe("a change as shown", () => {
-  it("has a plus sign when the value went up", () => {
-    expect(formatChange(155)).toBe("+155");
-  });
-
-  it("has a minus sign when the value went down", () => {
-    expect(formatChange(-15)).toBe("−15");
-  });
-
-  it("is in money for Money", () => {
-    expect(formatChange(-1250, "money")).toBe("−$1.25B");
-    expect(formatChange(80, "money")).toBe("+$80M");
   });
 });
