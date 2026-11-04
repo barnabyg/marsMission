@@ -45,7 +45,7 @@ describe("Protection in the real data files", () => {
   });
 
   // The Phase 7 playtest guide asks players to choose: the largest Crew can't carry the most of both.
-  it("lets the largest Crew carry the most Protection, with the least Supplies, on the Meridian Colossus, but not the most Supplies too", () => {
+  it("fits the largest Crew and the most Protection on the Meridian Colossus only with the least Supplies", () => {
     const colossus = launchVehicles.find(
       ({ id }) => id === "meridian-colossus",
     );
@@ -53,9 +53,11 @@ describe("Protection in the real data files", () => {
     const largest = crew.sizes.at(-1)?.massTonnes ?? Infinity;
     const most = crew.protection.at(-1)?.massTonnes ?? Infinity;
     const leastSupplies = crew.supplies.options[0]?.massTonnes ?? Infinity;
+    // 0, not Infinity, so that missing data fails this check too.
     const mostSupplies = crew.supplies.options.at(-1)?.massTonnes ?? 0;
-    expect(largest + most + leastSupplies).toBeLessThanOrEqual(capacity);
-    expect(largest + most + mostSupplies).toBeGreaterThan(capacity);
+    const crewAndProtection = largest + most;
+    expect(crewAndProtection + leastSupplies).toBeLessThanOrEqual(capacity);
+    expect(crewAndProtection + mostSupplies).toBeGreaterThan(capacity);
   });
 
   it("makes carrying on through a solar particle event risk far more Health than safe mode", () => {
