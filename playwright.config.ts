@@ -10,7 +10,7 @@ export const productionBaseURL = `http://localhost:${productionPort}`;
 export default defineConfig({
   testDir: "e2e",
   // Every test opens its own browser context, so its saves and routes stay its own, and the workers can share the two servers.
-  // Each worker renders 4K in software, so CI's 4-core runners take two; locally four ran the suite in under 5 minutes against 12 on one.
+  // Each worker renders 4K in software, so CI's 4-core runners take two; locally four ran the suite in about 5 minutes against 12 on one.
   fullyParallel: true,
   workers: process.env.CI ? 2 : 4,
   forbidOnly: true,
