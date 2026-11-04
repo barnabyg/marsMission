@@ -1,4 +1,4 @@
-/* The New Mission's budget bar: the cost and mass gauges and the buttons on one row, under the Mission's problems. */
+/* The New Mission's budget bar: the cost and mass gauges and the buttons on one row, under the Mission's problems. Its gauges build on the gauge in statusBar.css, which loads first. */
 .budget-bar {
   display: grid;
   justify-items: start;
