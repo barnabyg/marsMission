@@ -2,7 +2,32 @@
 // Warning output counts as failure even when a tool exits successfully.
 import { spawn } from "node:child_process";
 
-const gates = [
+// CI splits the gates across jobs: one runs every gate but the browser tests, and the browser tests run in shards,
+// each in a job of its own. With no options, every gate runs, as it does locally.
+//   --without-browser-tests      every gate but the browser tests
+//   --browser-tests-only         only the browser tests
+//   --shard=N/M                  with the browser tests, only the Nth of M equal parts of them
+const args = process.argv.slice(2);
+const known =
+  /^(--without-browser-tests|--browser-tests-only|--shard=\d+\/\d+)$/;
+const unknown = args.filter((arg) => !known.test(arg));
+if (unknown.length > 0) {
+  console.error(`Unknown option: ${unknown.join(" ")}`);
+  process.exit(1);
+}
+const withoutBrowserTests = args.includes("--without-browser-tests");
+const browserTestsOnly = args.includes("--browser-tests-only");
+const shard = args.find((arg) => arg.startsWith("--shard="));
+if (withoutBrowserTests && (browserTestsOnly || shard)) {
+  console.error(
+    "--without-browser-tests can't be used with the browser test options.",
+  );
+  process.exit(1);
+}
+
+const browserGate = "Browser tests";
+
+const allGates = [
   ["Formatting", "npx prettier --check ."],
   ["Lint", "npx eslint . --max-warnings=0"],
   [
@@ -11,7 +36,7 @@ const gates = [
   ],
   ["Static analysis (unused code and dependencies)", "npx knip"],
   ["Unit tests", "npx vitest run"],
-  ["Browser tests", "npx playwright test"],
+  [browserGate, `npx playwright test${shard ? ` ${shard}` : ""}`],
   ["Dependency tree", "npm ls --all --silent"],
   ["Vulnerabilities", "npm audit --audit-level=low"],
   ["Secrets", "npm run secrets --silent"],
@@ -52,6 +77,12 @@ function runGate(command) {
   });
 }
 
+const gates = allGates.filter(([name]) =>
+  browserTestsOnly
+    ? name === browserGate
+    : !(withoutBrowserTests && name === browserGate),
+);
+
 for (const [name, command] of gates) {
   console.log(`\n=== ${name} ===`);
   const { status, warnings } = await runGate(command);
@@ -66,4 +97,8 @@ for (const [name, command] of gates) {
   }
 }
 
-console.log("\nAll verification gates passed.");
+console.log(
+  gates.length === allGates.length
+    ? "\nAll verification gates passed."
+    : `\nThese verification gates passed: ${gates.map(([name]) => name).join(", ")}.`,
+);

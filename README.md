@@ -160,6 +160,8 @@ To add a strategy, add an object to the `strategies` list, with no other change.
 
 Package validation doesn't apply, because the game is private and isn't published as a package.
 
+CI runs on pull requests and on pushes to `main`, and splits the same gates across jobs that run at the same time: one runs `npm run verify -- --without-browser-tests`, and three each run a third of the browser tests with `npm run verify -- --browser-tests-only --shard=N/3`. Together they cover every gate. Run the same options locally to repeat one job.
+
 ### Documented exceptions
 
 - `e2e/helpers.ts` and `scripts/verify.mjs` allow one browser warning, `THREE.Clock` deprecated, because it comes from inside `@react-three/fiber`. Remove it once an upgrade stops the warning.
