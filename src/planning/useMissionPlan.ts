@@ -34,6 +34,8 @@ interface MissionPlan {
   chooseCrewSupplies: (suppliesId: string) => void;
   /** Chooses the Protection the Crewed Mission carries, by id. */
   chooseCrewProtection: (protectionId: string) => void;
+  /** Whether the Mission carries an Asset or Crew that land at a Landing Site. */
+  landsOnMars: boolean;
   /** The Landing Site chosen, which only a Mission carrying an Asset or Crew that land has. */
   landingSite: ProgramView["landingSites"][number] | undefined;
   chooseLandingSite: (siteId: string) => void;
@@ -203,6 +205,7 @@ export function useMissionPlan(
     },
     chooseCrewSupplies: setCrewSuppliesId,
     chooseCrewProtection: setCrewProtectionId,
+    landsOnMars,
     landingSite,
     chooseLandingSite: setChosenSiteId,
     plannedEvents,

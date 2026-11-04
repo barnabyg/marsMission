@@ -60,3 +60,52 @@ test("starts each Turn's New Mission with nothing ticked, and tags an Asset alre
   );
   expect(problems).toEqual([]);
 });
+
+test("plans a Mission in four numbered steps, opening Landing Site and Mission Events once they apply", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+  const steps = page.getByTestId("mission-step");
+  await expect(steps.getByRole("heading")).toHaveText([
+    "1Launch Vehicle and Trajectory",
+    "2Assets and Crew",
+    "3Landing Site",
+    "4Mission Events, Reliability and Contingency",
+  ]);
+  const landingSite = page.getByRole("region", { name: "3 Landing Site" });
+  const events = page.getByRole("region", { name: /^4 Mission Events/ });
+
+  // With nothing ticked, neither applies yet, and each says why.
+  await expect(landingSite.getByTestId("mission-step-collapsed")).toHaveText(
+    "Opens when the Mission carries a lander, a rover or Crew who land.",
+  );
+  await expect(landingSite.getByRole("combobox")).toHaveCount(0);
+  await expect(events.getByTestId("mission-step-collapsed")).toBeVisible();
+  await expect(page.getByTestId("mission-event")).toHaveCount(0);
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  // An orbiter goes through Mission Events but doesn't land.
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await expect(events.getByTestId("mission-step-collapsed")).toHaveCount(0);
+  await expect(page.getByTestId("mission-event").first()).toBeVisible();
+  await expect(landingSite.getByTestId("mission-step-collapsed")).toBeVisible();
+
+  // A lander opens the Landing Site.
+  await chooseAssets(page, ["Prospector Lander"]);
+  await expect(landingSite.getByTestId("mission-step-collapsed")).toHaveCount(
+    0,
+  );
+  await expect(landingSite.getByRole("combobox")).toBeVisible();
+  await expect(page.getByTestId("landing-site-details")).toBeVisible();
+
+  // So does Crew who land, on a Mission with no lander.
+  await chooseAssets(page, []);
+  await page.getByRole("checkbox", { name: /Crewed Mission/ }).check();
+  await expect(landingSite.getByTestId("mission-step-collapsed")).toBeVisible();
+  await page
+    .getByRole("combobox", { name: "Crew destination" })
+    .selectOption("landingSite");
+  await expect(landingSite.getByRole("combobox")).toBeVisible();
+  expect(problems).toEqual([]);
+});

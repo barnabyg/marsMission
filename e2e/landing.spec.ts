@@ -87,7 +87,9 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
   ).toBeDisabled();
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-heavy");
   await expect(page.getByTestId("mission-mass")).toHaveText("5.5 of 8 tonnes");
   await expect(page.getByTestId("mission-cost")).toHaveText("$2.2B");
   await expect(page.getByTestId("mission-event")).toHaveCount(4);
@@ -129,7 +131,9 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
   await expect(landingRiskBand(page)).toHaveText("Over 30%");
-  const sites = page.getByLabel("Landing Site").getByRole("option");
+  const sites = page
+    .getByRole("combobox", { name: "Landing Site" })
+    .getByRole("option");
   await expect(sites).toHaveCount(2);
   await expect(page.getByTestId("landing-site-details")).toContainText(
     "Not surveyed",
@@ -200,9 +204,9 @@ test("turns Surveying off, sees no Survey that Turn, keeps that through a reload
   await page.getByRole("button", { name: "Continue this Program" }).click();
   await expect(operatingActivity).toHaveValue("nothing");
   await chooseAssets(page, ["Prospector Lander"]);
-  await expect(page.getByLabel("Landing Site").getByRole("option")).toHaveCount(
-    2,
-  );
+  await expect(
+    page.getByRole("combobox", { name: "Landing Site" }).getByRole("option"),
+  ).toHaveCount(2);
 
   await operatingActivity.selectOption("survey");
   await page

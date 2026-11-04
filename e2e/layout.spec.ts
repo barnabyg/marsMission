@@ -10,11 +10,15 @@ const screenSizes = [
   { width: 3840, height: 2160 },
 ];
 
-/** Whether the page, or any panel in Planning Mode, has more to show than fits on screen. */
+/**
+ * Whether the page, or any panel in Planning Mode, has more to show than fits on screen. The New Mission steps may
+ * scroll up and down by themselves, under the New Mission's buttons, which stay in view, but never sideways.
+ */
 function somethingScrolls(page: Page): Promise<boolean> {
   return page.evaluate(() => {
     const { scrollHeight, scrollWidth } = document.documentElement;
     const panels = [...document.querySelectorAll(".planning-columns .panel")];
+    const steps = [...document.querySelectorAll(".mission-steps")];
     return (
       scrollHeight > innerHeight ||
       scrollWidth > innerWidth ||
@@ -22,7 +26,8 @@ function somethingScrolls(page: Page): Promise<boolean> {
         (panel) =>
           panel.scrollHeight > panel.clientHeight ||
           panel.scrollWidth > panel.clientWidth,
-      )
+      ) ||
+      steps.some((each) => each.scrollWidth > each.clientWidth)
     );
   });
 }

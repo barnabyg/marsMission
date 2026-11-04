@@ -139,7 +139,9 @@ test("a switch away holds until the next Mission Event with a view of its own", 
   });
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
-  await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-heavy");
   const current = page.getByTestId("current-view");
 
   await pauseAtEvent(page, "Mars orbit insertion", () =>
@@ -166,7 +168,9 @@ test("ends up on the surface when several Mission Events pass at 10x", async ({
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
-  await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-heavy");
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await page.getByRole("button", { name: "10x" }).click();
   await expect(page.getByTestId("current-view")).toHaveText("Surface");

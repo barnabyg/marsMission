@@ -5,7 +5,6 @@ import type {
   PlannedAsset,
   ProgramView,
 } from "../simulation/simulation";
-import { GameText } from "../ui/GameText";
 import { MissionAssetChoice } from "./MissionAssetChoice";
 import {
   isSurveying,
@@ -38,10 +37,8 @@ export function MissionAssets({
 }: MissionAssetsProps) {
   return (
     <>
-      <fieldset className="asset-choices">
-        <legend>
-          <GameText>Assets</GameText>
-        </legend>
+      {/* The step's heading names the Assets, so the group needs no legend of its own. */}
+      <fieldset className="asset-choices" aria-label="Assets">
         {view.assets.map((asset) => (
           <MissionAssetChoice
             key={asset.id}
