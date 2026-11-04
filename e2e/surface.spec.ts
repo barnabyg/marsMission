@@ -22,12 +22,15 @@ import {
   successSeed,
 } from "./seeds";
 
-/** Waits for the unavailable surface button, with the reason on screen beside the views. */
+/** Waits for the unavailable surface button, which gives the reason itself, so the info box needn't. */
 async function expectSurfaceUnavailable(page: Page): Promise<void> {
   await expect(viewButton(page, "Surface")).toBeDisabled();
-  await expect(page.getByTestId("surface-unavailable")).toBeVisible();
-  await expect(page.getByTestId("surface-unavailable")).toHaveText(
+  await expect(viewButton(page, "Surface")).toHaveAttribute(
+    "title",
     "Surface view: nothing is on the surface and no landing is on its way.",
+  );
+  await expect(page.getByTestId("mission-info")).not.toContainText(
+    "Surface view",
   );
   await expect(viewButton(page, "Surface")).toHaveAccessibleDescription(
     "Surface view: nothing is on the surface and no landing is on its way.",
@@ -78,7 +81,9 @@ test("switches to the surface view and back during a Turn, at any speed and whil
   );
   await expect(surfaceAssets(page)).toHaveCount(0);
   await expect(page.getByLabel("Landing Site to show")).toHaveCount(0);
-  await expect(page.getByTestId("surface-unavailable")).toHaveCount(0);
+  await expect(viewButton(page, "Surface")).not.toHaveAccessibleDescription(
+    /./,
+  );
 
   // Paused, which holds the date and the events column.
   await expect(speed).toHaveText("Paused");

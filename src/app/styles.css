@@ -50,6 +50,16 @@ h2 {
   vertical-align: -0.2em;
 }
 
+/* Text for a screen reader, such as the name of a button that shows only an icon. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 button,
 select {
   font: inherit;

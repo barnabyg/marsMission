@@ -107,46 +107,78 @@
   padding-left: 1.2rem;
 }
 
+/* Three groups: the title, date and view tabs on the left, playback in the centre and End Turn on the right, with the Turn's progress beneath. */
 .mission-bar {
   grid-row: 1;
   grid-column: 1 / -1;
-  display: flex;
+  display: grid;
+  /* Each side at least as wide as what it holds, so that a crowded side moves playback over rather than under it. */
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 3rem;
+  column-gap: 3rem;
+  row-gap: 0.8rem;
   padding: 1rem 3rem;
   white-space: nowrap;
+}
+
+.mission-bar-start,
+.mission-tabs,
+.mission-playback,
+.speed-controls {
+  display: flex;
+  align-items: center;
+}
+
+.mission-bar-start {
+  gap: 2rem;
 }
 
 .mission-bar p {
   margin: 0;
   /* Room for the longest date, so that the controls don't move as the days pass. */
   min-width: 10em;
-  font-size: 1.3rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .mission-bar progress {
-  flex: 1;
+  grid-column: 1 / -1;
+  width: 100%;
   height: 0.6rem;
   accent-color: var(--accent);
 }
 
+.mission-tabs,
 .speed-controls {
-  display: flex;
-  align-items: center;
   gap: 0.6rem;
 }
 
-.speed-controls span {
-  margin-right: 0.6rem;
+/* Playback sits apart from the view tabs, in a panel of its own, with mute beside the speeds. */
+.mission-playback {
+  gap: 1.2rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.5rem;
+  background: rgb(23 27 40 / 60%);
 }
 
-.mission-bar > button[aria-pressed="true"],
-.speed-controls button[aria-pressed="true"] {
+.mission-playback button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mission-tabs button[aria-pressed="true"],
+.mission-playback button[aria-pressed="true"] {
   background: var(--accent);
   border-color: var(--accent);
   color: #10121a;
+}
+
+.end-turn {
+  justify-self: end;
+  padding: 0.5rem 1.6rem;
 }
 
 .decision-point {

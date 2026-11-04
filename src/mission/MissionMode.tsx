@@ -7,6 +7,7 @@ import {
 } from "../simulation/simulation";
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
+import { Icon, type IconName } from "../ui/Icon";
 import { DecisionPointPanel } from "./DecisionPointPanel";
 import { EventsColumn } from "./EventsColumn";
 import { missionViews, viewName, type MissionViewId } from "./missionViews";
@@ -20,7 +21,7 @@ import {
 import { sitesToShow } from "./surface/surface";
 import {
   SurfaceControls,
-  surfaceUnavailableId,
+  surfaceUnavailableReason,
 } from "./surface/SurfaceControls";
 import {
   solarParticleEventShowing,
@@ -34,13 +35,20 @@ import {
 } from "./spacecraft/refuelling";
 import {
   SpacecraftControls,
-  spacecraftUnavailableId,
+  spacecraftUnavailableReason,
 } from "./spacecraft/SpacecraftControls";
 import { useMissionView } from "./useMissionView";
 import { usePlayback } from "./usePlayback";
 import { useSounds } from "./useSounds";
 
 const MissionScene = lazy(() => import("./MissionScene"));
+
+/** The icon beside each speed, faster ones with more arrows. */
+const speedIcons: Record<(typeof speeds)[number], IconName> = {
+  1: "play",
+  5: "fast-forward",
+  10: "chevrons-right",
+};
 
 interface MissionModeProps {
   timeline: Timeline;
@@ -91,10 +99,10 @@ export function MissionMode({
       : spacecraftFallback(timeline.mission, state.day),
     (entryIndex) => rendezvousHasPlayed(refuelling, state, entryIndex),
   );
-  /** The explanation tied to each view's button while it has nothing to show. */
+  /** Why each view's button is disabled, while its view has nothing to show. */
   const unavailable: Partial<Record<MissionViewId, string>> = {
-    ...(site === null ? { surface: surfaceUnavailableId } : {}),
-    ...(spacecraftAvailable ? {} : { spacecraft: spacecraftUnavailableId }),
+    ...(site === null ? { surface: surfaceUnavailableReason } : {}),
+    ...(spacecraftAvailable ? {} : { spacecraft: spacecraftUnavailableReason }),
   };
 
   useEffect(() => {
@@ -121,74 +129,82 @@ export function MissionMode({
         />
       </Suspense>
       <header className="mission-bar">
-        <h1>
-          <GameText>Mission Mode</GameText>
-        </h1>
-        <p data-testid="mission-date">
-          {formatDate(addDays(timeline.startDate, Math.floor(state.day)))}
-        </p>
-        <progress
-          aria-label="Progress through the Turn"
-          max={100}
-          value={turnProgress}
-        />
-        <button
-          type="button"
-          aria-pressed={muted}
-          onClick={() => {
-            setMuted(!muted);
-          }}
-        >
-          Mute sound
-        </button>
-        <div role="group" aria-label="View" className="speed-controls">
-          <span>
-            View: <strong data-testid="current-view">{viewName(view)}</strong>
-          </span>
-          {missionViews.map(({ id, name }) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={view === id}
-              disabled={unavailable[id] !== undefined}
-              aria-describedby={unavailable[id]}
-              onClick={() => {
-                chooseView(id);
-              }}
-            >
-              {name}
-            </button>
-          ))}
+        <div className="mission-bar-start">
+          <h1>
+            <GameText>Mission Mode</GameText>
+          </h1>
+          <p data-testid="mission-date">
+            {formatDate(addDays(timeline.startDate, Math.floor(state.day)))}
+          </p>
+          <div role="group" aria-label="View" className="mission-tabs">
+            {/* The pressed tab shows the view, so this is for a screen reader. */}
+            <span className="visually-hidden">
+              View: <strong data-testid="current-view">{viewName(view)}</strong>
+            </span>
+            {missionViews.map(({ id, name }) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={view === id}
+                disabled={unavailable[id] !== undefined}
+                title={unavailable[id]}
+                onClick={() => {
+                  chooseView(id);
+                }}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
         </div>
-        <div role="group" aria-label="Speed" className="speed-controls">
-          <span>
-            Speed:{" "}
-            <strong data-testid="current-speed">
-              {state.paused || deciding ? "Paused" : `${state.speed}x`}
-            </strong>
-          </span>
+        <div className="mission-playback" data-testid="mission-playback">
+          <div role="group" aria-label="Speed" className="speed-controls">
+            {/* The pressed button shows the speed, so this is for a screen reader. */}
+            <span className="visually-hidden">
+              Speed:{" "}
+              <strong data-testid="current-speed">
+                {state.paused || deciding ? "Paused" : `${state.speed}x`}
+              </strong>
+            </span>
+            <button
+              type="button"
+              aria-pressed={state.paused || deciding}
+              onClick={pause}
+            >
+              <Icon name="pause" />
+              <span className="visually-hidden">Pause</span>
+            </button>
+            {speeds.map((speed) => (
+              <button
+                key={speed}
+                type="button"
+                aria-pressed={
+                  !state.paused && !deciding && state.speed === speed
+                }
+                onClick={() => {
+                  setSpeed(speed);
+                }}
+              >
+                <Icon name={speedIcons[speed]} />
+                {speed}x
+              </button>
+            ))}
+          </div>
           <button
             type="button"
-            aria-pressed={state.paused || deciding}
-            onClick={pause}
+            className="mute"
+            aria-pressed={muted}
+            onClick={() => {
+              setMuted(!muted);
+            }}
           >
-            Pause
+            <Icon name={muted ? "volume-x" : "volume-2"} />
+            <span className="visually-hidden">Mute sound</span>
           </button>
-          {speeds.map((speed) => (
-            <button
-              key={speed}
-              type="button"
-              aria-pressed={!state.paused && !deciding && state.speed === speed}
-              onClick={() => {
-                setSpeed(speed);
-              }}
-            >
-              {speed}x
-            </button>
-          ))}
         </div>
         <button
           type="button"
+          className="primary end-turn"
           title={
             decisionPoint
               ? "Skip to the next Decision Point, which you must answer."
@@ -199,8 +215,13 @@ export function MissionMode({
         >
           End Turn
         </button>
+        <progress
+          aria-label="Progress through the Turn"
+          max={100}
+          value={turnProgress}
+        />
       </header>
-      <aside className="mission-side">
+      <aside className="mission-side" data-testid="mission-info">
         <p data-testid="journey-progress">
           <GameText>{describeJourney(timeline.mission, state.day)}</GameText>
         </p>
