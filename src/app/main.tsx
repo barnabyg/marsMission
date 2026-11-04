@@ -11,6 +11,7 @@ import { TooltipLayer } from "../ui/TooltipLayer";
 import "./styles.css";
 import "../planning/planning.css";
 import "../planning/missionSteps.css";
+import "../planning/budgetBar.css";
 import "../planning/statusBar.css";
 import "../ui/dialog.css";
 import "../save/saveSlots.css";

@@ -1,11 +1,11 @@
 import {
-  formatMoney,
   type Program,
   type ProgramView,
   type Simulation,
   type TurnPlan,
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
+import { BudgetBar } from "./BudgetBar";
 import { LandingSiteChoice } from "./LandingSiteChoice";
 import { MissionAssets } from "./MissionAssets";
 import { MissionCrew } from "./MissionCrew";
@@ -29,8 +29,8 @@ interface MissionPanelProps {
 }
 
 /**
- * Everything the player chooses for this Turn's Mission, as numbered steps, and the buttons that end the Turn. The steps
- * scroll by themselves when they don't fit, under the buttons, which stay in view. The choices and the plan they make
+ * Everything the player chooses for this Turn's Mission, as numbered steps, and the budget bar with the buttons that end
+ * the Turn. The steps scroll by themselves when they don't fit, under the budget bar, which stays in view. The choices and the plan they make
  * are in `useMissionPlan`, and each part of the panel has its own component.
  */
 export function MissionPanel({
@@ -59,7 +59,6 @@ export function MissionPanel({
     capacityTonnes,
     problems,
   } = choices.check;
-  const canEndWithoutLaunching = withoutLaunchingProblems.length === 0;
   const nothingTicked =
     choices.assetIds.length === 0 && choices.plannedCrew === null;
   const [launchStep, assetsStep, landingStep, eventsStep] = missionSteps({
@@ -129,26 +128,21 @@ export function MissionPanel({
           </MissionStepCard>
         )}
       </div>
-      <div className="mission-footer">
-        <p className="total-cost">
-          <GameText>Mission cost</GameText>:{" "}
-          <strong data-testid="mission-cost">
-            {formatMoney(costMillions)}
-          </strong>
-          {" · "}Mass:{" "}
-          <strong data-testid="mission-mass">
-            {massTonnes} of {capacityTonnes} tonnes
-          </strong>
-          {developmentCostMillions > 0 && (
-            <>
-              {" · "}
-              <GameText>Development</GameText>:{" "}
-              <strong data-testid="development-cost">
-                {formatMoney(developmentCostMillions)}
-              </strong>
-            </>
-          )}
-        </p>
+      <BudgetBar
+        costMillions={costMillions}
+        developmentCostMillions={developmentCostMillions}
+        moneyMillions={view.moneyMillions}
+        massTonnes={massTonnes}
+        capacityTonnes={capacityTonnes}
+        launchProblems={problems}
+        withoutLaunchingProblems={withoutLaunchingProblems}
+        onLaunch={() => {
+          onSubmit(plan);
+        }}
+        onEndWithoutLaunching={() => {
+          onSubmit(withoutLaunching);
+        }}
+      >
         {nothingTicked && (
           <p data-testid="nothing-ticked">
             <GameText>
@@ -165,28 +159,7 @@ export function MissionPanel({
             </p>
           ),
         )}
-        <div className="mission-buttons">
-          <button
-            type="button"
-            className="primary"
-            disabled={problems.length > 0}
-            onClick={() => {
-              onSubmit(plan);
-            }}
-          >
-            Launch Mission
-          </button>
-          <button
-            type="button"
-            disabled={!canEndWithoutLaunching}
-            onClick={() => {
-              onSubmit(withoutLaunching);
-            }}
-          >
-            End Turn without launching
-          </button>
-        </div>
-      </div>
+      </BudgetBar>
     </section>
   );
 }

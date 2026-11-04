@@ -1,5 +1,5 @@
 /* The New Mission panel: its heading, the numbered steps, which scroll by themselves when they don't fit, and the
-   footer with the buttons, which stays in view under them. */
+   budget bar, which stays in view under them. */
 .planning-columns .mission-panel {
   grid-template-rows: auto minmax(0, 1fr) auto;
   align-content: stretch;
@@ -65,12 +65,4 @@
 .mission-step.collapsed .mission-step-number {
   background: var(--panel-border);
   color: var(--muted);
-}
-
-.mission-footer {
-  display: grid;
-  justify-items: start;
-  gap: 0.75rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--panel-border);
 }
