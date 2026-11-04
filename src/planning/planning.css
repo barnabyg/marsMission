@@ -32,38 +32,6 @@
   overflow: auto;
 }
 
-.status-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 3rem;
-}
-
-.status-bar h1 {
-  white-space: nowrap;
-}
-
-.status-bar dd {
-  white-space: nowrap;
-}
-
-.status-bar dl {
-  display: flex;
-  gap: 3rem;
-  margin: 0;
-}
-
-.status-bar dt {
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
-.status-bar dd {
-  margin: 0;
-  font-size: 1.3rem;
-  font-weight: 600;
-}
-
 .panel {
   display: grid;
   gap: 1rem;

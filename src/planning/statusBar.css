@@ -1,0 +1,109 @@
+/* Planning Mode's status bar: each value with its icon and its change over the last Turn, and the Public Support gauge. */
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
+  line-height: 1.2;
+}
+
+.status-bar h1 {
+  white-space: nowrap;
+  font-size: var(--text-xl);
+}
+
+.status-bar dl {
+  display: flex;
+  align-items: flex-start;
+  gap: 2.5rem;
+  margin: 0;
+}
+
+.status-bar dt {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: var(--text-md);
+  white-space: nowrap;
+}
+
+.status-bar dt .icon {
+  color: var(--accent);
+}
+
+.status-bar dd {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.status-value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.status-change {
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.status-change.up {
+  color: var(--good);
+}
+
+.status-change.down {
+  color: var(--problem);
+}
+
+/* Public Support and the Cancellation Level on one bar, with a mark where the Program would be cancelled. */
+.support-gauge dd {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.gauge-track {
+  position: relative;
+  display: block;
+  width: 14rem;
+  height: 0.6rem;
+  border-radius: 0.3rem;
+  background: var(--background);
+  border: 1px solid var(--panel-border);
+}
+
+.gauge-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--good);
+}
+
+.gauge-level {
+  position: absolute;
+  top: -0.3rem;
+  bottom: -0.3rem;
+  width: 0.2rem;
+  margin-left: -0.1rem;
+  background: var(--problem);
+}
+
+.gauge-caption {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.support-gauge.warning .gauge-fill {
+  background: var(--warning);
+}
+
+.support-gauge.warning .status-value,
+.support-gauge.warning .gauge-caption {
+  color: var(--warning);
+}
