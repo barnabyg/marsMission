@@ -33,7 +33,7 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
   await expect(
     page.locator(".asset-choice", { hasText: "Prospector Lander" }),
   ).toContainText("Flight-proven");
-  await expect(pinpointRow(page)).toContainText("Pinpoint Lander ($1.1B, 3 t)");
+  await expect(pinpointRow(page).getByTestId("asset-cost")).toHaveText("$1.1B");
   await expect(
     pinpointRow(page).getByTestId("technology-readiness"),
   ).toHaveText("Unproven");
@@ -63,7 +63,7 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
     .click();
 
   await expect(page.getByTestId("turn-number")).toHaveText("2");
-  await expect(pinpointRow(page)).toContainText("Pinpoint Lander ($900M, 3 t)");
+  await expect(pinpointRow(page).getByTestId("asset-cost")).toHaveText("$900M");
   await expect(
     pinpointRow(page).getByTestId("technology-readiness"),
   ).toHaveText("Flight-proven");

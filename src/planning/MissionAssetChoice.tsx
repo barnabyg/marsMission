@@ -6,7 +6,10 @@ import {
   type ProgramView,
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
+import { Icon } from "../ui/Icon";
 import { ActivitySelect } from "./ActivitySelect";
+import { FitWarning } from "./FitWarning";
+import type { Fit } from "./missionFit";
 import { ReadinessTag } from "./ReadinessTag";
 
 interface MissionAssetChoiceProps {
@@ -16,32 +19,58 @@ interface MissionAssetChoiceProps {
   /** How many of this Asset are operating at Mars this Turn, which keep working without being launched again. */
   operatingCount: number;
   carried: boolean;
+  /** Whether ticking it would take the Mission over its Launch Vehicle's capacity or the Money. */
+  fit: Fit;
   onCarriedChange: (carried: boolean) => void;
   onChoicesChange: (choices: AssetChoices) => void;
 }
 
-/** One Asset the Mission can carry and, if it does, the choices for that Asset. */
+/**
+ * One Asset the Mission can carry, as a card: its cost, mass, Technology Readiness, Benefit and how many are at Mars,
+ * and whether it would fit. Ticking it reveals its choices.
+ */
 export function MissionAssetChoice({
   asset,
   planned,
   operatingCount,
   carried,
+  fit,
   onCarriedChange,
   onChoicesChange,
 }: MissionAssetChoiceProps) {
+  const flies = canFly(asset);
   return (
-    <div className="asset-choice">
-      <label>
+    <div
+      className={[
+        "asset-choice",
+        "asset-card",
+        carried && "carried",
+        !flies && "unavailable",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <label className="asset-card-title">
         <input
           type="checkbox"
           checked={carried}
           // It can't fly until its Development has finished, which the Development panel shows.
-          disabled={!canFly(asset)}
+          disabled={!flies}
           onChange={(event) => {
             onCarriedChange(event.target.checked);
           }}
         />
-        {asset.name} ({formatMoney(asset.costMillions)}, {asset.massTonnes} t)
+        {asset.name}
+      </label>
+      <div className="asset-card-facts">
+        <span data-testid="asset-cost">
+          <Icon name="coins" label="Cost" />
+          {formatMoney(asset.costMillions)}
+        </span>
+        <span data-testid="asset-mass">
+          <Icon name="weight" label="Mass" />
+          {asset.massTonnes} t
+        </span>
         <ReadinessTag
           readiness={asset.technologyReadiness}
           testId="technology-readiness"
@@ -70,9 +99,11 @@ export function MissionAssetChoice({
             {operatingCount} at Mars
           </span>
         )}
-      </label>
+      </div>
+      {/* Only before ticking, and only for an Asset that could be ticked: once on the Mission, the budget bar says it. */}
+      {!carried && flies && <FitWarning fit={fit} />}
       {planned && (
-        <>
+        <div className="asset-card-choices">
           <span>
             <GameText>Activity</GameText>
           </span>
@@ -117,10 +148,10 @@ export function MissionAssetChoice({
               </option>
             ))}
           </select>
-          <strong data-testid="asset-risk-band">
+          <strong className="asset-card-risk" data-testid="asset-risk-band">
             <GameText>{`${planned.riskBand} per Turn`}</GameText>
           </strong>
-        </>
+        </div>
       )}
     </div>
   );

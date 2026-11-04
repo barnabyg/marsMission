@@ -1,0 +1,149 @@
+/* The Assets a Mission can carry, as cards three to a row, with the Crewed Mission as a card across the full width
+   under them. */
+.asset-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 0.6rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.asset-card,
+.crew-choice {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.4rem;
+  background: var(--panel);
+}
+
+.asset-card.carried,
+.crew-choice.carried {
+  border-color: var(--accent);
+}
+
+/* An Asset that needs Development can't be ticked, so its card steps back. */
+.asset-card.unavailable {
+  opacity: 0.7;
+}
+
+.panel .asset-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.asset-card-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 1rem;
+  color: var(--muted);
+}
+
+.asset-card-facts > span:not(.term) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.fit-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--warning);
+}
+
+/* A ticked Asset's choices, each named on its left, with its Risk Band under them. */
+.asset-card-choices {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.3rem 0.6rem;
+  width: 100%;
+}
+
+.asset-card-choices > span {
+  color: var(--muted);
+}
+
+.panel .asset-card-choices select {
+  min-width: 0;
+  width: 100%;
+}
+
+.asset-card-risk {
+  grid-column: 2;
+}
+
+/* Technology Readiness as a badge on each card; elsewhere it is a plain word. */
+.technology-readiness {
+  color: var(--muted);
+}
+
+.technology-readiness.unproven {
+  color: var(--accent);
+}
+
+.asset-card .technology-readiness {
+  padding: 0 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 1rem;
+  font-size: var(--text-sm);
+}
+
+.asset-card .technology-readiness.flight-proven {
+  color: var(--good);
+}
+
+.asset-card .technology-readiness.needs-development {
+  color: var(--problem);
+}
+
+.benefit-tag,
+.operating-tag {
+  color: var(--muted);
+}
+
+/* The Crewed Mission's choices take two lines, the second lined up after the tick box's label above it. */
+.crew-choice {
+  grid-column: 1 / -1;
+}
+
+.asset-choice-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.asset-choice-row > span {
+  color: var(--muted);
+}
+
+/* The choices keep their width, so that the words around them give way instead. */
+.asset-choice-row select {
+  flex-shrink: 0;
+  min-width: 11rem;
+}
+
+.crew-choice-second-line {
+  padding-left: calc(20rem + 0.8rem);
+}
+
+.panel .crew-choice label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 0.45rem;
+  min-width: 20rem;
+  line-height: 1.15;
+  color: var(--text);
+  white-space: nowrap;
+}

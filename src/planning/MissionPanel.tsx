@@ -11,6 +11,7 @@ import { MissionAssets } from "./MissionAssets";
 import { MissionCrew } from "./MissionCrew";
 import { MissionEventChoices } from "./MissionEventChoices";
 import { MissionLaunchChoice } from "./MissionLaunchChoice";
+import { fitOfAdding } from "./missionFit";
 import { MissionStepCard } from "./MissionStepCard";
 import { missionSteps } from "./missionSteps";
 import { useMissionPlan } from "./useMissionPlan";
@@ -91,12 +92,34 @@ export function MissionPanel({
               assetIds={choices.assetIds}
               plannedAssets={choices.plannedAssets}
               crewActivities={choices.plannedCrew?.activities ?? []}
+              fitOf={(addition) =>
+                fitOfAdding(
+                  simulation,
+                  program,
+                  plan,
+                  view.moneyMillions,
+                  addition,
+                )
+              }
               onCarriedChange={choices.setCarried}
               onChoicesChange={choices.changeAssetChoices}
             >
               <MissionCrew
                 crewedMission={view.crewedMission}
                 planned={choices.plannedCrew}
+                fit={
+                  view.crewedMission.sizes[0]
+                    ? fitOfAdding(
+                        simulation,
+                        program,
+                        plan,
+                        view.moneyMillions,
+                        {
+                          crewSize: view.crewedMission.sizes[0].crew,
+                        },
+                      )
+                    : { overCapacity: false, overMoney: false }
+                }
                 onCrewSizeChange={choices.chooseCrewSize}
                 onActivityChange={choices.chooseCrewActivity}
                 lands={choices.crewLands}
