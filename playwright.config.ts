@@ -10,9 +10,11 @@ export const productionBaseURL = `http://localhost:${productionPort}`;
 export default defineConfig({
   testDir: "e2e",
   // Every test opens its own browser context, so its saves and routes stay its own, and the workers can share the two servers.
-  // Each worker renders 4K in software, so CI's 4-core runners take two; locally four ran the suite in about 5 minutes against 12 on one.
+  // Each worker renders 4K in software, and playback moves at most 250 ms a frame, so a starved worker falls behind real time.
+  // Two workers on one of CI's 4-core runners did, and a 1x Turn timed out, so CI runs one per shard and the shards run side by side.
+  // Locally, a worker for every 5 cores: four on 20 cores ran the suite in about 5 minutes, against 12 on one.
   fullyParallel: true,
-  workers: process.env.CI ? 2 : 4,
+  workers: process.env.CI ? 1 : "20%",
   forbidOnly: true,
   // One failure is enough to stop and look. A direct local run still reports every failure.
   maxFailures: process.env.CI ? 1 : 0,
