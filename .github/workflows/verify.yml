@@ -7,8 +7,8 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    # About three times a normal run, so a hang fails instead of waiting out the default 6 hours.
-    timeout-minutes: 20
+    # A normal run takes 14 to 20 minutes, so this is room for a slow runner, while a hang still fails instead of waiting out the default 6 hours.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
