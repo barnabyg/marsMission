@@ -1,5 +1,5 @@
 /** How close a budget is to its limit: comfortably within it, near it, or over it. */
-export type BudgetLevel = "within" | "near" | "over";
+type BudgetLevel = "within" | "near" | "over";
 
 export interface BudgetGauge {
   /** How full the bar is, from 0 to 100. */

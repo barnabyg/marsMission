@@ -1,7 +1,7 @@
 // Generated from lucide-static 1.68.0 (icon-nodes.json), ISC licence: see LICENSE-lucide.txt and SOURCES.md beside this file.
 // Each icon is drawn in a 24 by 24 box with a 2-unit stroke in the current text colour.
 
-export type IconTag = "circle" | "path" | "polyline" | "rect";
+type IconTag = "circle" | "path" | "polyline" | "rect";
 
 export type IconNode = [IconTag, Record<string, string>];
 
