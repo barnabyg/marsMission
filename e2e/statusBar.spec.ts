@@ -10,7 +10,7 @@ async function playTurnWithoutLaunching(page: Page): Promise<void> {
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 }
 
-test("the Public Support gauge warns when Public Support is close to the Cancellation Level", async ({
+test("the Public Support gauge turns amber when Public Support is close to the Cancellation Level", async ({
   page,
 }) => {
   await overrideProgramData(page, {
@@ -21,6 +21,11 @@ test("the Public Support gauge warns when Public Support is close to the Cancell
 
   const gauge = page.getByTestId("support-gauge");
   await expect(gauge).toHaveClass(/warning/);
+  // Amber: the --warning colour, #ffb547.
+  await expect(page.getByTestId("public-support")).toHaveCSS(
+    "color",
+    "rgb(255, 181, 71)",
+  );
   await expect(gauge).toContainText("Close to the Cancellation Level of 70");
   await expect(page.getByTestId("public-support")).toHaveText("100");
 });
