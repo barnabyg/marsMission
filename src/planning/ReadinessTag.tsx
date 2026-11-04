@@ -21,9 +21,11 @@ export function ReadinessTag({
   return (
     <span
       className={
-        readiness === "flight-proven"
-          ? "term technology-readiness"
-          : "term technology-readiness unproven"
+        {
+          "flight-proven": "term technology-readiness flight-proven",
+          built: "term technology-readiness unproven",
+          "not-built": "term technology-readiness unproven needs-development",
+        }[readiness]
       }
       data-term="Technology Readiness"
       data-testid={testId}

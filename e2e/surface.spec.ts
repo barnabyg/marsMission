@@ -44,7 +44,9 @@ async function launchLanderAndRover(page: Page): Promise<void> {
   });
   await page.goto(`/?seed=${landerAndRoverSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-heavy");
   await chooseAssets(page, ["Prospector Lander", "Trailblazer Rover"]);
   await holdTurnWhenShown(page);
   await page.getByRole("button", { name: "Launch Mission" }).click();
@@ -389,7 +391,9 @@ test("shows a crash at its own site where other sites have Assets, and then goes
   });
   await openTwoSites(page, true);
   await chooseAssets(page, ["Prospector Lander"]);
-  await page.getByLabel("Landing Site").selectOption("meridiani-planum");
+  await page
+    .getByRole("combobox", { name: "Landing Site" })
+    .selectOption("meridiani-planum");
   const site = page.getByTestId("surface-site");
 
   // The player is looking at another site, which gives way when the crash happens.

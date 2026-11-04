@@ -68,7 +68,9 @@ test("keeps Survey progress, sites landed at and time left through saving to a s
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterAndLanderSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
-  await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-heavy");
   // Not the shortest option, which is what an upgraded save gets.
   await page
     .getByLabel("Service Life for Prospector Lander")
@@ -98,7 +100,9 @@ test("keeps Survey progress, sites landed at and time left through saving to a s
     "Prospector Lander at Jezero Crater: 1535 days of Service Life left",
   );
   await chooseAssets(page, ["Prospector Lander"]);
-  const sites = page.getByLabel("Landing Site").getByRole("option");
+  const sites = page
+    .getByRole("combobox", { name: "Landing Site" })
+    .getByRole("option");
   await expect(sites).toHaveCount(3);
   await expect(sites.last()).toContainText("Meridiani Planum");
   const details = page.getByTestId("landing-site-details");
@@ -115,6 +119,8 @@ test("resets the plan when loading a slot of the same Program and Turn", async (
   await openSaveDialog(page);
   await slot.getByRole("button", { name: "Save here" }).click();
 
+  // The Mission Events show once something is ticked.
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   const launchReliability = page
     .getByTestId("mission-event")
     .filter({ hasText: "Launch" })
@@ -124,6 +130,10 @@ test("resets the plan when loading a slot of the same Program and Turn", async (
   await openLoadDialog(page);
   await slot.getByRole("button", { name: "Load" }).click();
   await page.getByRole("button", { name: "Yes, load it" }).click();
+  await expect(
+    page.getByRole("checkbox", { name: /Pathfinder Orbiter/ }),
+  ).not.toBeChecked();
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await expect(launchReliability).toHaveValue("none");
 });
 
