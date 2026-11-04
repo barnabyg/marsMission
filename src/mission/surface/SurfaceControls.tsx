@@ -4,8 +4,9 @@ import type { MissionViewId } from "../missionViews";
 import { sequenceStatus, type SequenceNow } from "./sequence";
 import { describeSite, dustStormAt } from "./surface";
 
-/** Ties the reason on screen to the disabled button it explains. */
-export const surfaceUnavailableId = "surface-unavailable";
+/** Why the surface view's button is disabled, which the button itself tells the player. */
+export const surfaceUnavailableReason =
+  "Surface view: nothing is on the surface and no landing is on its way.";
 
 interface SurfaceControlsProps {
   timeline: Pick<Timeline, "assetsAtMars" | "mission" | "dustStorms">;
@@ -17,7 +18,7 @@ interface SurfaceControlsProps {
   onPickSite: (siteName: string) => void;
 }
 
-/** Why the surface view can't be chosen, or else which Landing Site it's showing and what's there. */
+/** Which Landing Site the surface view is showing and what's there, while it's showing one. */
 export function SurfaceControls({
   timeline,
   day,
@@ -27,14 +28,7 @@ export function SurfaceControls({
   sequence,
   onPickSite,
 }: SurfaceControlsProps) {
-  if (site === null) {
-    return (
-      <p id={surfaceUnavailableId} data-testid={surfaceUnavailableId}>
-        Surface view: nothing is on the surface and no landing is on its way.
-      </p>
-    );
-  }
-  if (view !== "surface") return null;
+  if (site === null || view !== "surface") return null;
   const status = sequenceStatus(sequence, site);
   const storm = dustStormAt(timeline, day, site);
   return (

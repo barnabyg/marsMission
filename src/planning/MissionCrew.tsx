@@ -4,7 +4,10 @@ import {
   type ProgramView,
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
+import { Icon } from "../ui/Icon";
 import { ActivitySelect } from "./ActivitySelect";
+import { FitWarning } from "./FitWarning";
+import type { Fit } from "./missionFit";
 
 /** What each level of Protection would leave the Crew on arriving, such as " (with Protection: None 80, Light shielding 85)". */
 function protectionDetail({ protection }: PlannedCrew): string {
@@ -19,6 +22,8 @@ interface MissionCrewProps {
   crewedMission: ProgramView["crewedMission"];
   /** The Crew chosen for the Mission, which only a Crewed Mission has. */
   planned: PlannedCrew | null;
+  /** Whether adding the smallest Crew would take the Mission over its Launch Vehicle's capacity or the Money. */
+  fit: Fit;
   onCrewSizeChange: (size: number | null) => void;
   onActivityChange: (activityId: string) => void;
   /** Whether the Crew land at the Mission's Landing Site, rather than staying in Mars orbit. */
@@ -30,13 +35,15 @@ interface MissionCrewProps {
 
 /**
  * Whether the Mission carries Crew and, if it does, how many, who they are, whether they land, the Supplies and
- * Protection they carry and what they will do at Mars. It is a row among the Assets, without their class, so that
- * ticking Assets leaves it alone, with the Supplies and Protection on a second line. Landing brings in the Landing Site
+ * Protection they carry and what they will do at Mars. It is a card across the width of the Assets' cards, without
+ * their `asset-choice` class, so that ticking Assets leaves it alone, with the Supplies and Protection on a second
+ * line. Before it is ticked, it shows what the smallest Crew costs and weighs, and whether they would fit. Landing brings in the Landing Site
  * choice below the Assets, which a lander shares.
  */
 export function MissionCrew({
   crewedMission,
   planned,
+  fit,
   onCrewSizeChange,
   onActivityChange,
   lands,
@@ -47,7 +54,7 @@ export function MissionCrew({
   const { vehicleName, sizes, maxHealth, namesLeft } = crewedMission;
   const smallest = sizes[0];
   return (
-    <div className="crew-choice">
+    <div className={planned ? "crew-choice carried" : "crew-choice"}>
       <div className="asset-choice-row">
         <label>
           <input
@@ -78,6 +85,19 @@ export function MissionCrew({
             </span>
           )}
         </label>
+        {!planned && smallest && (
+          <span className="asset-card-facts" data-testid="crew-facts">
+            <span>
+              <Icon name="coins" label="Cost" />
+              from {formatMoney(smallest.costMillions)}
+            </span>
+            <span>
+              <Icon name="weight" label="Mass" />
+              {smallest.massTonnes} t
+            </span>
+          </span>
+        )}
+        {!planned && <FitWarning fit={fit} />}
         {planned && (
           <>
             <span>

@@ -4,8 +4,9 @@ import type { MissionViewId } from "../missionViews";
 import { earthOrbitStatus, type EarthOrbitNow } from "./refuelling";
 import { assetsOnBoard } from "./spacecraft";
 
-/** Ties the reason on screen to the disabled button it explains. */
-export const spacecraftUnavailableId = "spacecraft-unavailable";
+/** Why the spacecraft view's button is disabled, which the button itself tells the player. */
+export const spacecraftUnavailableReason =
+  "Spacecraft view: no Mission is in flight.";
 
 interface SpacecraftControlsProps {
   timeline: Pick<Timeline, "mission">;
@@ -44,7 +45,7 @@ function onBoardLines(
   );
 }
 
-/** Why the spacecraft view can't be chosen, or else what's on board and what's happening to it. */
+/** What's on board and what's happening to it, while the spacecraft view is showing. */
 export function SpacecraftControls({
   timeline,
   day,
@@ -53,14 +54,7 @@ export function SpacecraftControls({
   particles,
   earthOrbit,
 }: SpacecraftControlsProps) {
-  if (!available) {
-    return (
-      <p id={spacecraftUnavailableId} data-testid={spacecraftUnavailableId}>
-        <GameText>Spacecraft view: no Mission is in flight.</GameText>
-      </p>
-    );
-  }
-  if (view !== "spacecraft") return null;
+  if (!available || view !== "spacecraft") return null;
   return (
     <>
       <h2>On board</h2>

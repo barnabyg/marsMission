@@ -1,14 +1,36 @@
 name: Verify
 
 on:
+  # Pushes to a pull request's branch are checked by the pull_request run, so a push run there would only repeat it.
   push:
+    branches: [main]
   pull_request:
 
 jobs:
-  verify:
+  # Every gate of npm run verify but the browser tests.
+  checks:
     runs-on: ubuntu-latest
-    # About three times a normal run, so a hang fails instead of waiting out the default 6 hours.
-    timeout-minutes: 20
+    # A normal run takes about 3 minutes; a hang fails instead of waiting out the default 6 hours.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run verify -- --without-browser-tests
+
+  # The browser tests, split into equal parts that run at the same time, each on a machine of its own.
+  browser-tests:
+    runs-on: ubuntu-latest
+    # A normal shard takes about 7 minutes; a hang fails instead of waiting out the default 6 hours.
+    timeout-minutes: 25
+    strategy:
+      # The default fail-fast stays: the first failing shard cancels the rest, as one failure is enough to stop and look.
+      matrix:
+        shard: [1, 2, 3]
+    name: browser tests (${{ matrix.shard }} of 3)
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -17,4 +39,4 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run verify
+      - run: npm run verify -- --browser-tests-only --shard=${{ matrix.shard }}/3

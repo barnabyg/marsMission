@@ -1,6 +1,12 @@
 /* Ordinary pixels, so that text follows the player's display scaling. Spacing and widths are in rem and shrink with it (ADR 0001). */
 :root {
-  font-size: 18px;
+  /* The type scale: every font size comes from here. */
+  --text-sm: 16px;
+  --text-md: 18px;
+  --text-lg: 22px;
+  --text-xl: 28px;
+  --text-2xl: 40px;
+  font-size: var(--text-md);
   font-family: "Segoe UI", system-ui, sans-serif;
   color-scheme: dark;
   --background: #0b0d14;
@@ -10,6 +16,8 @@
   --muted: #a3aabd;
   --accent: #e2703a;
   --problem: #ff8f7a;
+  --warning: #ffb547;
+  --good: #7fd18b;
 }
 
 * {
@@ -32,6 +40,24 @@ h1,
 h2 {
   margin: 0;
   font-weight: 600;
+}
+
+/* A line icon from src/ui/Icon.tsx, the height of the text around it. */
+.icon {
+  width: 1.1em;
+  height: 1.1em;
+  flex: none;
+  vertical-align: -0.2em;
+}
+
+/* Text for a screen reader, such as the name of a button that shows only an icon. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 button,

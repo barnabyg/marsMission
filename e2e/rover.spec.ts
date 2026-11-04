@@ -100,6 +100,7 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   const summary = page.getByTestId("turn-summary");
   await expect(summary).toContainText("First landing on Mars: 150 Science");
   await expect(summary).toContainText("First rover on Mars: 60 Science");
+  await expect(summary.getByTestId("summary-milestone")).toHaveCount(2);
   await expect(page.getByTestId("summary-first-landing")).toContainText(
     "120 Science",
   );
@@ -132,7 +133,9 @@ test("lands a rover and a lander at one site, each with its own Activity", async
   });
   await page.goto(`/?seed=${landerAndRoverSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-heavy");
   await chooseAssets(page, ["Prospector Lander", "Trailblazer Rover"]);
   await page
     .getByLabel("Activity for Trailblazer Rover")
@@ -208,7 +211,9 @@ test("loses a rover and a lander together in one crash", async ({ page }) => {
   });
   await page.goto(`/?seed=${landerAndRoverCrashSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await page.getByLabel("Launch Vehicle").selectOption("meridian-heavy");
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-heavy");
   await chooseAssets(page, ["Prospector Lander", "Trailblazer Rover"]);
 
   await pauseAtEvent(page, "Entry/descent/landing failed", () =>

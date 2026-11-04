@@ -57,6 +57,7 @@ export function App({ services, firstScreen }: AppProps) {
         key={screen.visit}
         simulation={simulation}
         program={program}
+        lastTurn={screen.lastTurn}
         saved={screen.saved}
         saveStore={saveStore}
         onLoad={(loaded) => {
@@ -121,13 +122,13 @@ export function App({ services, firstScreen }: AppProps) {
           if (simulation.readProgram(result.program).status.kind !== "active") {
             saveStore.clear("automatic");
           }
-          setScreen({ mode: "turnSummary", result });
+          setScreen({ mode: "turnSummary", result, lastTurn: screen.program });
         }}
       />
     );
   }
 
-  const { result } = screen;
+  const { result, lastTurn } = screen;
   return (
     <TurnSummaryScreen
       summary={result.summary}
@@ -136,7 +137,7 @@ export function App({ services, firstScreen }: AppProps) {
         const active = simulation.readProgram(program).status.kind === "active";
         setScreen(
           active
-            ? planningScreen(services, program)
+            ? planningScreen(services, program, lastTurn)
             : { mode: "programSummary", program },
         );
       }}

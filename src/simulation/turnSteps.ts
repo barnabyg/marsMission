@@ -337,14 +337,16 @@ export function resolveTurn(
       developmentCostMillions: development.costMillions,
       moneyStartMillions: program.moneyMillions,
       moneyEndMillions,
+      scienceStart: program.science,
       scienceGained,
       publicSupportStart: program.publicSupport,
       publicSupportGained,
       publicSupportDrained: publicSupportBeforeDrain - faded.end,
       publicSupportEnd: faded.end,
       milestones: awards.map(
-        ({ milestone: { name, science, publicSupport } }) => ({
+        ({ milestone: { name, description, science, publicSupport } }) => ({
           name,
+          description,
           science,
           publicSupport,
         }),

@@ -5,8 +5,8 @@ import type {
   PlannedAsset,
   ProgramView,
 } from "../simulation/simulation";
-import { GameText } from "../ui/GameText";
 import { MissionAssetChoice } from "./MissionAssetChoice";
+import type { Addition, Fit } from "./missionFit";
 import {
   isSurveying,
   NothingLeftToSurvey,
@@ -20,28 +20,29 @@ interface MissionAssetsProps {
   plannedAssets: PlannedAsset[];
   /** The Activities on offer to the Mission's Crew, if it has Crew, whose earnings show with the Assets'. */
   crewActivities: PlannedActivity[];
+  /** Whether adding this to the Mission would take it over its Launch Vehicle's capacity or the Money. */
+  fitOf: (addition: Addition) => Fit;
   onCarriedChange: (assetId: string, carried: boolean) => void;
   onChoicesChange: (assetId: string, choices: AssetChoices) => void;
   /** The choice of Crew, shown after the Assets. */
   children: ReactNode;
 }
 
-/** The Assets the Mission can carry, the choices for each one it does, and what they would earn at Mars. */
+/** The Assets the Mission can carry, as cards, the choices for each one it does, and what they would earn at Mars. */
 export function MissionAssets({
   view,
   assetIds,
   plannedAssets,
   crewActivities,
+  fitOf,
   onCarriedChange,
   onChoicesChange,
   children,
 }: MissionAssetsProps) {
   return (
     <>
-      <fieldset className="asset-choices">
-        <legend>
-          <GameText>Assets</GameText>
-        </legend>
+      {/* The step's heading names the Assets, so the group needs no legend of its own. */}
+      <fieldset className="asset-choices" aria-label="Assets">
         {view.assets.map((asset) => (
           <MissionAssetChoice
             key={asset.id}
@@ -53,6 +54,7 @@ export function MissionAssets({
               ).length
             }
             carried={assetIds.includes(asset.id)}
+            fit={fitOf({ assetId: asset.id })}
             onCarriedChange={(carried) => {
               onCarriedChange(asset.id, carried);
             }}

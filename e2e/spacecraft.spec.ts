@@ -28,8 +28,12 @@ function carried(page: Page) {
 
 async function expectSpacecraftUnavailable(page: Page): Promise<void> {
   await expect(viewButton(page, "Spacecraft")).toBeDisabled();
-  await expect(page.getByTestId("spacecraft-unavailable")).toHaveText(
+  await expect(viewButton(page, "Spacecraft")).toHaveAttribute(
+    "title",
     unavailable,
+  );
+  await expect(page.getByTestId("mission-info")).not.toContainText(
+    "Spacecraft view",
   );
   await expect(viewButton(page, "Spacecraft")).toHaveAccessibleDescription(
     unavailable,
@@ -46,7 +50,9 @@ test("switches to the spacecraft view by hand on the way to Mars, and moves on o
   await holdTurnWhenShown(page);
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
-  await expect(page.getByTestId("spacecraft-unavailable")).toHaveCount(0);
+  await expect(viewButton(page, "Spacecraft")).not.toHaveAccessibleDescription(
+    /./,
+  );
 
   // The camera eases across in steps, rather than jumping.
   const canvas = scene(page).locator("canvas");

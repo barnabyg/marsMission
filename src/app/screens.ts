@@ -14,7 +14,14 @@ import type {
 
 export type Screen =
   | { mode: "opening"; automaticSave: LoadedSave }
-  | { mode: "planning"; program: Program; saved: boolean; visit: number }
+  | {
+      mode: "planning";
+      program: Program;
+      /** The Program at the start of the last Turn, to show what changed, or null on the first Turn or after a Load. */
+      lastTurn: Program | null;
+      saved: boolean;
+      visit: number;
+    }
   | {
       mode: "mission";
       program: Program;
@@ -22,7 +29,7 @@ export type Screen =
       answers: DecisionAnswers;
       progress: TurnProgress;
     }
-  | { mode: "turnSummary"; result: TurnResult }
+  | { mode: "turnSummary"; result: TurnResult; lastTurn: Program }
   | { mode: "programSummary"; program: Program };
 
 export interface GameServices {
@@ -37,10 +44,12 @@ let planningVisits = 0;
 export function planningScreen(
   { saveStore }: GameServices,
   program: Program,
+  lastTurn: Program | null = null,
 ): Screen {
   return {
     mode: "planning",
     program,
+    lastTurn,
     saved: saveStore.save("automatic", program),
     // Each visit starts a fresh plan, even when a load returns to the same Program and Turn.
     visit: ++planningVisits,

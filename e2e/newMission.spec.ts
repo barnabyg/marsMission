@@ -60,3 +60,116 @@ test("starts each Turn's New Mission with nothing ticked, and tags an Asset alre
   );
   expect(problems).toEqual([]);
 });
+
+test("plans a Mission in four numbered steps, opening Landing Site and Mission Events once they apply", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+  const steps = page.getByTestId("mission-step");
+  await expect(steps.getByRole("heading")).toHaveText([
+    "1Launch Vehicle and Trajectory",
+    "2Assets and Crew",
+    "3Landing Site",
+    "4Mission Events, Reliability and Contingency",
+  ]);
+  const landingSite = page.getByRole("region", { name: "3 Landing Site" });
+  const events = page.getByRole("region", { name: /^4 Mission Events/ });
+
+  // With nothing ticked, neither applies yet, and each says why.
+  await expect(landingSite.getByTestId("mission-step-collapsed")).toHaveText(
+    "Opens when the Mission carries a lander, a rover or Crew who land.",
+  );
+  await expect(landingSite.getByRole("combobox")).toHaveCount(0);
+  await expect(events.getByTestId("mission-step-collapsed")).toBeVisible();
+  await expect(page.getByTestId("mission-event")).toHaveCount(0);
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  // An orbiter goes through Mission Events but doesn't land.
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await expect(events.getByTestId("mission-step-collapsed")).toHaveCount(0);
+  await expect(page.getByTestId("mission-event").first()).toBeVisible();
+  await expect(landingSite.getByTestId("mission-step-collapsed")).toBeVisible();
+
+  // A lander opens the Landing Site.
+  await chooseAssets(page, ["Prospector Lander"]);
+  await expect(landingSite.getByTestId("mission-step-collapsed")).toHaveCount(
+    0,
+  );
+  await expect(landingSite.getByRole("combobox")).toBeVisible();
+  await expect(page.getByTestId("landing-site-details")).toBeVisible();
+
+  // So does Crew who land, on a Mission with no lander.
+  await chooseAssets(page, []);
+  await page.getByRole("checkbox", { name: /Crewed Mission/ }).check();
+  await expect(landingSite.getByTestId("mission-step-collapsed")).toBeVisible();
+  await page
+    .getByRole("combobox", { name: "Crew destination" })
+    .selectOption("landingSite");
+  await expect(landingSite.getByRole("combobox")).toBeVisible();
+  expect(problems).toEqual([]);
+});
+
+test("shows each Asset as a card, marks those that wouldn't fit, and reveals an Asset's choices once ticked", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+  const card = (name: string) =>
+    page.locator(".asset-choice", { hasText: name });
+
+  const orbiter = card("Pathfinder Orbiter");
+  await expect(orbiter.getByTestId("asset-cost")).toHaveText("$700M");
+  await expect(orbiter.getByTestId("asset-mass")).toHaveText("2.5 t");
+  await expect(orbiter.getByTestId("technology-readiness")).toHaveText(
+    "Flight-proven",
+  );
+  await expect(
+    card("Pinpoint Lander").getByTestId("technology-readiness"),
+  ).toHaveText("Unproven");
+  const rover = card("Endurance Rover");
+  await expect(rover.getByTestId("technology-readiness")).toHaveText(
+    "Needs Development",
+  );
+  // It can't be ticked until its Development has finished, so it isn't marked as not fitting either.
+  await expect(rover.getByRole("checkbox")).toBeDisabled();
+  await expect(rover.getByTestId("fit-warning")).toHaveCount(0);
+  await expect(page.getByTestId("crew-facts")).toContainText("from $3B");
+
+  // Nothing ticked: on the Meridian Medium, which carries 4 tonnes, every Asset fits alone.
+  await expect(orbiter.getByTestId("fit-warning")).toHaveCount(0);
+  await expect(orbiter.getByRole("combobox")).toHaveCount(0);
+
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await expect(
+    orbiter.getByRole("combobox", { name: "Activity for Pathfinder Orbiter" }),
+  ).toBeVisible();
+  await expect(
+    orbiter.getByRole("combobox", {
+      name: "Service Life for Pathfinder Orbiter",
+    }),
+  ).toBeVisible();
+  await expect(
+    orbiter.getByRole("combobox", {
+      name: "Reliability for Pathfinder Orbiter in service",
+    }),
+  ).toBeVisible();
+  // With the orbiter's 2.5 tonnes aboard, a 3-tonne lander would be too heavy, but is within the Money.
+  await expect(card("Prospector Lander").getByTestId("fit-warning")).toHaveText(
+    "Too heavy for the Launch Vehicle",
+  );
+  await expect(page.getByTestId("crew-facts")).toBeVisible();
+  await expect(
+    page.locator(".crew-choice").getByTestId("fit-warning"),
+  ).toHaveText(
+    "Too heavy for the Launch Vehicle · Costs more than the Money left",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await chooseAssets(page, []);
+  await expect(orbiter.getByRole("combobox")).toHaveCount(0);
+  await expect(
+    card("Prospector Lander").getByTestId("fit-warning"),
+  ).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
