@@ -1,3 +1,4 @@
+import { useId } from "react";
 import {
   formatMoney,
   type PlannedCrew,
@@ -7,8 +8,8 @@ import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
 import { ActivitySelect } from "./ActivitySelect";
 import { assetImageUrl, crewImageKind } from "./assetImages";
-import { FitWarning } from "./FitWarning";
-import type { Fit } from "./missionFit";
+import { fitReason, type Fit } from "./missionFit";
+import { UnavailableReason } from "./UnavailableReason";
 
 /** What each level of Protection would leave the Crew on arriving, such as " (with Protection: None 80, Light shielding 85)". */
 function protectionDetail({ protection }: PlannedCrew): string {
@@ -38,7 +39,7 @@ interface MissionCrewProps {
  * Whether the Mission carries Crew and, if it does, how many, who they are, whether they land, the Supplies and
  * Protection they carry and what they will do at Mars. It is a card across the width of the Assets' cards, without
  * their `asset-choice` class, so that ticking Assets leaves it alone, with the Supplies and Protection on a second
- * line. Before it is ticked, it shows what the smallest Crew costs and weighs, and whether they would fit. Landing brings in the Landing Site
+ * line. Before it is ticked, it shows what the smallest Crew costs and weighs, greyed out with the reason on hovering if they wouldn't fit. Landing brings in the Landing Site
  * choice below the Assets, which a lander shares.
  */
 export function MissionCrew({
@@ -54,8 +55,24 @@ export function MissionCrew({
 }: MissionCrewProps) {
   const { vehicleName, sizes, maxHealth, namesLeft } = crewedMission;
   const smallest = sizes[0];
+  const reasonId = useId();
+  // Crew already chosen can always be taken off.
+  const reason = planned
+    ? undefined
+    : !smallest || namesLeft < smallest.crew
+      ? "Not enough Crew are left to fly."
+      : fitReason(fit);
   return (
-    <div className={planned ? "crew-choice carried" : "crew-choice"}>
+    <div
+      className={
+        planned
+          ? "crew-choice carried"
+          : reason
+            ? "crew-choice unavailable"
+            : "crew-choice"
+      }
+      title={reason}
+    >
       <div className="asset-choice-row">
         {/* Its words are beside it, so the picture of the Crew's lander adds nothing for a screen reader. */}
         <img
@@ -67,15 +84,9 @@ export function MissionCrew({
           <input
             type="checkbox"
             checked={planned !== null}
-            // Every name has been given, so no one is left to fly, or the smallest Crew wouldn't fit or can't be afforded,
-            // which its warning says. Crew already chosen can always be taken off.
-            disabled={
-              planned === null &&
-              (!smallest ||
-                namesLeft < smallest.crew ||
-                fit.overCapacity ||
-                fit.overMoney)
-            }
+            // Every name has been given, so no one is left to fly, or the smallest Crew wouldn't fit or can't be afforded.
+            disabled={reason !== undefined}
+            aria-describedby={reason && reasonId}
             onChange={(event) => {
               onCrewSizeChange(
                 event.target.checked ? (smallest?.crew ?? null) : null,
@@ -111,7 +122,7 @@ export function MissionCrew({
             </span>
           </span>
         )}
-        {!planned && <FitWarning fit={fit} />}
+        <UnavailableReason id={reasonId} reason={reason} />
         {planned && (
           <>
             <span>

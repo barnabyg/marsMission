@@ -35,3 +35,12 @@ export function fitOfAdding(
       check.costMillions + check.developmentCostMillions > moneyMillions,
   };
 }
+
+/** Why something that would take the Mission over a limit can't be ticked, or undefined if it fits. */
+export function fitReason(fit: Fit): string | undefined {
+  const reasons = [
+    ...(fit.overCapacity ? ["Too heavy for the Launch Vehicle"] : []),
+    ...(fit.overMoney ? ["Costs more than the Money left"] : []),
+  ];
+  return reasons.length > 0 ? `${reasons.join(" · ")}.` : undefined;
+}

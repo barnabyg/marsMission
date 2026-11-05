@@ -234,7 +234,9 @@ for (const size of screenSizes) {
         if (await box.isEnabled()) await box.check();
       }
       await expect(page.getByRole("alert")).toHaveCount(0);
-      await expect(page.getByTestId("fit-warning").first()).toBeVisible();
+      await expect(
+        page.locator(".asset-choice.unavailable").first(),
+      ).toBeVisible();
       expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "End Turn without launching" }),

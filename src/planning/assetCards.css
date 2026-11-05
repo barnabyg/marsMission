@@ -51,9 +51,16 @@
   height: 3.4rem;
 }
 
-/* An Asset that needs Development can't be ticked, so its card steps back. */
-.asset-card.unavailable {
-  opacity: 0.7;
+/* An Asset or Crew that can't be ticked, because it needs Development, wouldn't fit or can't be afforded, is greyed
+   out, with the reason on hovering rather than on the card. */
+.asset-card.unavailable,
+.crew-choice.unavailable {
+  opacity: 0.45;
+}
+
+.asset-card.unavailable img,
+.crew-choice.unavailable img {
+  filter: grayscale(1);
 }
 
 .panel .asset-card-title {
@@ -76,13 +83,6 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-}
-
-.fit-warning {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--warning);
 }
 
 /* A ticked Asset's choices, each named on its left, with its Risk Band under them. */

@@ -1,3 +1,4 @@
+import { useId } from "react";
 import {
   canFly,
   formatMoney,
@@ -9,9 +10,9 @@ import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
 import { ActivitySelect } from "./ActivitySelect";
 import { assetImageUrl } from "./assetImages";
-import { FitWarning } from "./FitWarning";
-import type { Fit } from "./missionFit";
+import { fitReason, type Fit } from "./missionFit";
 import { ReadinessTag } from "./ReadinessTag";
+import { UnavailableReason } from "./UnavailableReason";
 
 interface MissionAssetChoiceProps {
   asset: ProgramView["assets"][number];
@@ -28,7 +29,7 @@ interface MissionAssetChoiceProps {
 
 /**
  * One Asset the Mission can carry, as a card: a picture of its model, its cost, mass, Technology Readiness, Benefit and how many are at Mars,
- * and whether it would fit. Ticking it reveals its Activity and Service Life; its Reliability is with the Mission Events'.
+ * greyed out, with the reason on hovering, when it can't be ticked. Ticking it reveals its Activity and Service Life; its Reliability is with the Mission Events'.
  */
 export function MissionAssetChoice({
   asset,
@@ -40,18 +41,24 @@ export function MissionAssetChoice({
   onChoicesChange,
 }: MissionAssetChoiceProps) {
   const flies = canFly(asset);
+  const reasonId = useId();
   // Something ticked can always be unticked, even once it no longer fits.
-  const blocked = !carried && (fit.overCapacity || fit.overMoney);
+  const reason = carried
+    ? undefined
+    : flies
+      ? fitReason(fit)
+      : "Needs Development before it can fly.";
   return (
     <div
       className={[
         "asset-choice",
         "asset-card",
         carried && "carried",
-        (!flies || blocked) && "unavailable",
+        reason && "unavailable",
       ]
         .filter(Boolean)
         .join(" ")}
+      title={reason}
     >
       {/* Its name is beside it, so the picture adds nothing for a screen reader. */}
       <img
@@ -64,8 +71,9 @@ export function MissionAssetChoice({
           type="checkbox"
           checked={carried}
           // It can't fly until its Development has finished, which the Development panel shows, and can't be ticked
-          // while it wouldn't fit or can't be afforded, which its warning says.
-          disabled={!flies || blocked}
+          // while it wouldn't fit or can't be afforded.
+          disabled={reason !== undefined}
+          aria-describedby={reason && reasonId}
           onChange={(event) => {
             onCarriedChange(event.target.checked);
           }}
@@ -110,8 +118,7 @@ export function MissionAssetChoice({
           </span>
         )}
       </div>
-      {/* Only before ticking, and only for an Asset that could be ticked: once on the Mission, the budget bar says it. */}
-      {!carried && flies && <FitWarning fit={fit} />}
+      <UnavailableReason id={reasonId} reason={reason} />
       {planned && (
         <div className="asset-card-choices">
           <span>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createSimulation, type TurnPlan } from "../simulation/simulation";
 import { testCatalogue } from "../simulation/testCatalogue";
-import { fitOfAdding } from "./missionFit";
+import { fitOfAdding, fitReason } from "./missionFit";
 
 const simulation = createSimulation(testCatalogue());
 const program = simulation.startProgram(1);
@@ -54,5 +54,22 @@ describe("whether adding to a Mission would fit", () => {
 
   it("marks Crew too heavy for the Launch Vehicle", () => {
     expect(adding({ crewSize: 2 }).overCapacity).toBe(true);
+  });
+});
+
+describe("why something can't be added", () => {
+  it("gives no reason for something that fits", () => {
+    expect(
+      fitReason({ overCapacity: false, overMoney: false }),
+    ).toBeUndefined();
+  });
+
+  it("names every limit it would go over", () => {
+    expect(fitReason({ overCapacity: true, overMoney: true })).toBe(
+      "Too heavy for the Launch Vehicle · Costs more than the Money left.",
+    );
+    expect(fitReason({ overCapacity: false, overMoney: true })).toBe(
+      "Costs more than the Money left.",
+    );
   });
 });
