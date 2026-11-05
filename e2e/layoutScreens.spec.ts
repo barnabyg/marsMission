@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { chooseAssets, openSaveDialog, viewButton } from "./helpers";
+import {
+  chooseAssets,
+  openLoadDialog,
+  openSaveDialog,
+  viewButton,
+} from "./helpers";
 import { onOneLine, screenSizes, somethingScrolls } from "./layoutHelpers";
 import { successSeed } from "./seeds";
 
@@ -34,11 +39,27 @@ for (const size of screenSizes) {
       }
     });
 
-    test("the Save dialog fits on screen", async ({ page }) => {
+    test("the Save and Load dialogs fit on screen, in Planning Mode and on the opening screen", async ({
+      page,
+    }) => {
       await page.goto(`/?seed=${successSeed}`);
       await openSaveDialog(page);
-      const dialog = page.getByRole("dialog", { name: "Save to a Save Slot" });
-      await expect(dialog).toBeInViewport({ ratio: 1 });
+      const save = page.getByRole("dialog", { name: "Save to a Save Slot" });
+      await expect(save).toBeInViewport({ ratio: 1 });
+      expect(await somethingScrolls(page)).toBe(false);
+      await save
+        .getByTestId("save-slot-1")
+        .getByRole("button", { name: "Save here" })
+        .click();
+
+      await openLoadDialog(page);
+      const load = page.getByRole("dialog", { name: "Load from a Save Slot" });
+      await expect(load).toBeInViewport({ ratio: 1 });
+      expect(await somethingScrolls(page)).toBe(false);
+
+      await page.reload();
+      await page.getByRole("button", { name: "Load…" }).click();
+      await expect(load).toBeInViewport({ ratio: 1 });
       expect(await somethingScrolls(page)).toBe(false);
     });
 
