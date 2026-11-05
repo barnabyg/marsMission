@@ -12,19 +12,29 @@ interface StatusBarProps {
   lastTurn: ProgramView | null;
   /** What the choices made so far would spend this Turn, which the status bar shows beside the Money. */
   spendMillions: number;
+  /** The Program's own buttons, such as Save and Load, which sit under the heading so that they take no row of their own. */
+  actions?: ReactNode;
 }
 
 /** Planning Mode's header: where the Program stands, with how each value changed over the last Turn. */
-export function StatusBar({ view, lastTurn, spendMillions }: StatusBarProps) {
+export function StatusBar({
+  view,
+  lastTurn,
+  spendMillions,
+  actions,
+}: StatusBarProps) {
   const changes = changesSinceLastTurn(lastTurn, view);
   const gauge = publicSupportGauge(view.publicSupport, view.cancellationLevel);
   const threshold = view.nextFundingThreshold;
 
   return (
     <header className="status-bar">
-      <h1>
-        <GameText heading>Planning Mode</GameText>
-      </h1>
+      <div className="status-title">
+        <h1>
+          <GameText heading>Planning Mode</GameText>
+        </h1>
+        {actions}
+      </div>
       <dl>
         <StatusValue icon="hourglass" term="Turn" testId="turn-number">
           {String(view.turnNumber)}

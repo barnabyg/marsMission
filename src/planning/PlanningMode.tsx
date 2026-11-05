@@ -77,39 +77,40 @@ export function PlanningMode({
         view={view}
         lastTurn={lastTurn ? simulation.readProgram(lastTurn) : null}
         spendMillions={choices.spendMillions}
+        actions={
+          <div className="program-actions">
+            <button
+              type="button"
+              onClick={() => {
+                open("save");
+              }}
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                open("load");
+              }}
+            >
+              Load
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                open("restart");
+              }}
+            >
+              Restart Program
+            </button>
+            {savedToSlot !== null && (
+              <p role="status">
+                <GameText>{`Saved to Save Slot ${savedToSlot}.`}</GameText>
+              </p>
+            )}
+          </div>
+        }
       />
-
-      <div className="program-actions">
-        <button
-          type="button"
-          onClick={() => {
-            open("save");
-          }}
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            open("load");
-          }}
-        >
-          Load
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            open("restart");
-          }}
-        >
-          Restart Program
-        </button>
-        {savedToSlot !== null && (
-          <p role="status">
-            <GameText>{`Saved to Save Slot ${savedToSlot}.`}</GameText>
-          </p>
-        )}
-      </div>
 
       {!saved && (
         <p className="problem" role="alert">
