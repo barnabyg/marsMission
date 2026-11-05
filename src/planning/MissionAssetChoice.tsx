@@ -28,7 +28,7 @@ interface MissionAssetChoiceProps {
 
 /**
  * One Asset the Mission can carry, as a card: a picture of its model, its cost, mass, Technology Readiness, Benefit and how many are at Mars,
- * and whether it would fit. Ticking it reveals its choices.
+ * and whether it would fit. Ticking it reveals its Activity and Service Life; its Reliability is with the Mission Events'.
  */
 export function MissionAssetChoice({
   asset,
@@ -141,26 +141,6 @@ export function MissionAssetChoice({
               </option>
             ))}
           </select>
-          <span>
-            <GameText>Reliability</GameText>
-          </span>
-          <select
-            aria-label={`Reliability for ${asset.name} in service`}
-            value={planned.reliabilityLevelId}
-            onChange={(event) => {
-              onChoicesChange({ reliabilityLevelId: event.target.value });
-            }}
-          >
-            {planned.reliabilityLevels.map((level) => (
-              <option key={level.id} value={level.id}>
-                {level.name} ({formatMoney(level.costMillions)},{" "}
-                {level.riskBand})
-              </option>
-            ))}
-          </select>
-          <strong className="asset-card-risk" data-testid="asset-risk-band">
-            <GameText>{`${planned.riskBand} per Turn`}</GameText>
-          </strong>
         </div>
       )}
     </div>

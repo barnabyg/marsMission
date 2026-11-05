@@ -168,6 +168,12 @@
   gap: 0.3rem 1.5rem;
 }
 
+/* Over each list of risks: those on the way, then those in service at Mars. */
+.mission-events-heading {
+  margin: 0.4rem 0 0.2rem;
+  color: var(--muted);
+}
+
 .mission-event-name {
   min-width: 18rem;
 }

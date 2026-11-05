@@ -42,9 +42,7 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
   await expect(page.getByTestId("mission-cost")).toHaveText("$1.4B");
   // Half the landing risk, but one and a half times that until it is Flight-proven, as is the chance of failing in service.
   await expect(landingRiskBand(page)).toHaveText("Over 30%");
-  await expect(pinpointRow(page).getByTestId("asset-risk-band")).toHaveText(
-    "~20% per Turn",
-  );
+  await expect(page.getByTestId("asset-risk-band")).toHaveText("~20% per Turn");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await pauseAtEvent(page, "Pinpoint Lander is Flight-proven", () =>
@@ -70,9 +68,7 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
   await chooseAssets(page, ["Pinpoint Lander"]);
   await expect(page.getByTestId("mission-cost")).toHaveText("$1.2B");
   await expect(landingRiskBand(page)).toHaveText("~20%");
-  await expect(pinpointRow(page).getByTestId("asset-risk-band")).toHaveText(
-    "~10% per Turn",
-  );
+  await expect(page.getByTestId("asset-risk-band")).toHaveText("~10% per Turn");
   expect(problems).toEqual([]);
 });
 

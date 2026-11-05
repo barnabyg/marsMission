@@ -130,7 +130,11 @@ export function MissionPanel({
           <MissionStepCard step={eventsStep}>
             <MissionEventChoices
               plannedEvents={choices.plannedEvents}
+              plannedAssets={choices.plannedAssets}
               onReliabilityChange={choices.chooseReliability}
+              onAssetReliabilityChange={(assetId, reliabilityLevelId) => {
+                choices.changeAssetChoices(assetId, { reliabilityLevelId });
+              }}
               onContingencyChange={choices.setContingencyBought}
             />
           </MissionStepCard>

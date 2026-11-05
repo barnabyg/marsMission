@@ -141,8 +141,15 @@ test("shows each Asset as a card, marks those that wouldn't fit, and reveals an 
       name: "Service Life for Pathfinder Orbiter",
     }),
   ).toBeVisible();
+  // Its Reliability in service is with the Mission Events', so every Reliability choice is in one step.
   await expect(
-    orbiter.getByRole("combobox", {
+    orbiter.getByRole("combobox", { name: /Reliability/ }),
+  ).toHaveCount(0);
+  const inService = page.getByTestId("asset-in-service");
+  await expect(inService).toHaveCount(1);
+  await expect(inService).toContainText("Pathfinder Orbiter");
+  await expect(
+    inService.getByRole("combobox", {
       name: "Reliability for Pathfinder Orbiter in service",
     }),
   ).toBeVisible();
