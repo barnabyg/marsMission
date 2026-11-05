@@ -22,10 +22,15 @@
   gap: 0.4rem;
 }
 
+/* The caption wraps between its parts when the Mission's cost has several, so it never widens the panel, but each
+amount stays whole. */
 .budget-gauge-caption {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+.budget-gauge-caption strong {
   white-space: nowrap;
 }
 
