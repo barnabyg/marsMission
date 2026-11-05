@@ -23,7 +23,7 @@ function landingRiskBand(page: Page) {
 test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plans with its lower cost and risk", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays on to the next Turn.
+  // Over 5 s: plays to the landing, then on to the next Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${pinpointLandingSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);

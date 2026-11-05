@@ -174,6 +174,7 @@ test("shows a lander coming down and then on the surface", async ({ page }) => {
 test("shows a crash in red in the Mars orbit view, when the player goes there from the surface", async ({
   page,
 }) => {
+  // Over 5 s: plays to the crash, the last months of the way at 1x.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${crashSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);

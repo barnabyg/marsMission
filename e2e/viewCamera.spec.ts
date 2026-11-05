@@ -115,6 +115,7 @@ test("stays on the solar system when Launch fails", async ({ page }) => {
 test("a switch away holds until the next Mission Event with a view of its own", async ({
   page,
 }) => {
+  // Over 5 s: plays across 200 days between two Mission Events, which is what the switch has to hold across.
   const problems = watchForProblems(page);
   // Spaced out, because in real data these two are too close together to stop between at this test speed.
   await page.route("**/data/mission-events.json", async (route) => {

@@ -326,6 +326,7 @@ async function openTwoSites(page: Page, lasting = false): Promise<void> {
 test("picks between Landing Sites, and drops each from the day its Assets stop", async ({
   page,
 }) => {
+  // Over 5 s: plays to the two days the Assets stop, which is what the test is about.
   const problems = watchForProblems(page);
   await openTwoSites(page);
   await holdTurnWhenShown(page);

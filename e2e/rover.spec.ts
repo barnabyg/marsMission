@@ -39,7 +39,7 @@ async function expectApart(labels: Locator): Promise<void> {
 test("lands a rover, gives it an Activity and sees its Science in the Turn summary", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays on to the next Turn.
+  // Over 5 s: plays to the landing, then on to the next Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${roverSeed}`);
   await chooseAssets(page, ["Trailblazer Rover"]);
@@ -134,7 +134,7 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
 test("lands a rover and a lander at one site, each with its own Activity", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing.
+  // Over 5 s: plays to the landing, the last months of the way at 1x.
   const problems = watchForProblems(page);
   await overrideProgramData(page, {
     startingMoneyMillions: landerAndRoverMoney,
@@ -216,7 +216,6 @@ test("lands a rover and a lander at one site, each with its own Activity", async
 });
 
 test("loses a rover and a lander together in one crash", async ({ page }) => {
-  // Over 5 s: waits at 1x for the landing.
   const problems = watchForProblems(page);
   await overrideProgramData(page, {
     startingMoneyMillions: landerAndRoverMoney,

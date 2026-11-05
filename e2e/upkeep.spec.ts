@@ -11,7 +11,7 @@ import { successSeed } from "./seeds";
 test("pays Upkeep for an Asset kept at Mars, shown before the Turn and in its summary, until its mission is ended", async ({
   page,
 }) => {
-  // Over 5 s: plays a Turn at 10x, then two more.
+  // Over 5 s: ends three Turns.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);

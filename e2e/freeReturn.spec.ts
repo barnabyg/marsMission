@@ -36,7 +36,7 @@ test("Free-return is offered only for a Mission with Mars orbit insertion, and s
 test("a Free-return Mission whose arrival burn fails comes back, at no Public Support and with a refund", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the Mission to get back to Earth, watching it move on its way.
+  // Over 5 s: plays on until the Mission gets back to Earth, watching it move on its way.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${freeReturnSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
@@ -67,7 +67,7 @@ test("a Free-return Mission whose arrival burn fails comes back, at no Public Su
   const placeAtTheBurn = await place();
 
   await holdTurnWhenShown(page, "Mission back at Earth");
-  await page.getByRole("button", { name: "1x", exact: true }).click();
+  await page.getByRole("button", { name: "5x", exact: true }).click();
   await expect
     .poll(place, { message: "The Mission should move on its way home" })
     .not.toBe(placeAtTheBurn);

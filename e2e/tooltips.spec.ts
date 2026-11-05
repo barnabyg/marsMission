@@ -200,7 +200,6 @@ test("explains each research Activity wherever Mission Mode names it", async ({
 test("explains the terms of technology in Planning Mode, Mission Mode and the Turn summary", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays on to the Turn summary.
   await page.goto(`/?seed=${pinpointLandingSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   const pinpoint = page.locator(".asset-choice", {

@@ -36,7 +36,7 @@ function landingRiskBand(page: Page) {
 test("plans a landing, plays it through and reaches the next Turn", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays on to the next Turn.
+  // Over 5 s: plays to the landing, then on to the next Turn.
   const problems = watchForProblems(page);
   await planLanding(page, landingSeed);
 
@@ -80,7 +80,6 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
 test("refuses a too-heavy Mission, then launches an orbiter and a lander together", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays out the Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   // Both are chosen on the Meridian Heavy, as neither can be ticked once it wouldn't fit, then moved to the smaller one.
@@ -136,7 +135,6 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
 test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site when planning a landing", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the Survey, then plays out the Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
@@ -182,7 +180,7 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
 test("turns Surveying off, sees no Survey that Turn, keeps that through a reload, and turns it back on", async ({
   page,
 }) => {
-  // Over 5 s: plays two Turns, because turning Surveying back on needs an Asset already operating.
+  // Over 5 s: ends two Turns, because turning Surveying back on needs an Asset already operating.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterLastsSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
@@ -362,7 +360,6 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
 test("reports a failed landing as a crash at the Landing Site", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays out the Turn.
   const problems = watchForProblems(page);
   await planLanding(page, crashSeed);
 
