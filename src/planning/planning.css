@@ -110,7 +110,8 @@
 
 .operating-assets {
   display: grid;
-  gap: 0.4rem;
+  /* Tight enough for a busy Program's Assets and Crew to fit under the status bar at 2560×1440. */
+  gap: 0.25rem;
   width: 100%;
   padding: 0;
   list-style: none;

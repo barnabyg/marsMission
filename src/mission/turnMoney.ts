@@ -31,6 +31,7 @@ export function turnMoney(
     | "upkeepMillions"
     | "fundingPayouts"
     | "researchGrantMillions"
+    | "baseFundingMillions"
     | "failure"
   >,
 ): TurnMoney {
@@ -48,6 +49,7 @@ export function turnMoney(
       ),
     },
     { name: "Research Grants", millions: summary.researchGrantMillions },
+    { name: "Base funding", millions: summary.baseFundingMillions },
     // What came back from Assets a Free-return brought home.
     { name: "Refund", millions: summary.failure?.refundMillions ?? 0 },
   ]);

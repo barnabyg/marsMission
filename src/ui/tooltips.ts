@@ -93,6 +93,8 @@ export const tooltips = {
     "A one-off reward for a feat, such as the first orbiter at Mars, reaching a total of Science, or returning a sample to Earth. It awards Science and Public Support.",
   "Ongoing Research":
     "Science earned at a steady rate for as long as an Asset or Crew is actively doing it, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time. It also adds a small, steady amount of Public Support.",
+  "Base funding":
+    "What the Program's backers pay as each Turn ends: a fixed amount for each point of Public Support the Program had as the Turn started, up to a most for a Turn. It keeps a Program that has lost a Mission able to try again in time, but never pays as much as Research Grants.",
   "Research Grant":
     "Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none.",
   "Public Support":

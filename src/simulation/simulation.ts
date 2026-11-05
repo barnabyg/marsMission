@@ -1,3 +1,4 @@
+import { baseFundingFor } from "./baseFunding";
 import type { Catalogue } from "../catalogue/catalogue";
 import {
   createRules,
@@ -301,6 +302,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
             }
           : null,
         cancellationLevel: catalogue.program.cancellationLevel,
+        baseFundingMillions: baseFundingFor(catalogue, program.publicSupport),
         turnNumber: program.turnNumber,
         date: program.date,
         moneyMillions: program.moneyMillions,

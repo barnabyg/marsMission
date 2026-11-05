@@ -118,7 +118,7 @@ test("develops the Endurance Rover over two Turns, then chooses it for a Mission
     .click();
 
   await expect(page.getByTestId("turn-number")).toHaveText("2");
-  await expect(page.getByTestId("money")).toHaveText("$2.8B");
+  await expect(page.getByTestId("money")).toHaveText("$3B");
   await expect(
     enduranceDevelopment(page).getByTestId("development-progress"),
   ).toHaveText("In Development: 1 Turn left");

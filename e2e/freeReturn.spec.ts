@@ -85,7 +85,7 @@ test("a Free-return Mission whose arrival burn fails comes back, at no Public Su
   );
   await page.getByRole("button", { name: "Continue" }).click();
   // $2.3B, less $1.03B for the Mission, plus the $350M refund.
-  await expect(page.getByTestId("money")).toHaveText("$1.62B");
+  await expect(page.getByTestId("money")).toHaveText("$1.82B");
   expect(problems).toEqual([]);
 });
 

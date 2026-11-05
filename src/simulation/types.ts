@@ -152,6 +152,8 @@ export interface ProgramView {
   publicSupport: number;
   science: number;
   milestones: { id: string; name: string }[];
+  /** What the Program's backers will pay as this Turn ends, for its Public Support now. */
+  baseFundingMillions: number;
   nextFundingThreshold: {
     publicSupport: number;
     payoutMillions: number;

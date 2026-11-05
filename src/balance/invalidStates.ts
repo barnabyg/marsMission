@@ -55,6 +55,7 @@ export function invalidStates(
         summary.upkeepMillions +
         thresholdMillions +
         summary.researchGrantMillions +
+        summary.baseFundingMillions +
         (summary.failure?.refundMillions ?? 0) !==
         summary.moneyEndMillions,
       "The Turn's money doesn't add up.",

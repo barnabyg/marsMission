@@ -179,7 +179,11 @@ describe("every strategy on the real data files", () => {
       ({ name }) => name === "steady: Soil analysis",
     );
     if (!steady) throw new Error("Expected the steady strategy");
-    const certainly = simulationOf(certain);
+    // Without base funding, which by Turn 2 would leave enough for a rover and a retry.
+    const certainly = simulationOf({
+      ...certain,
+      program: { ...certain.program, baseFunding: undefined },
+    });
     let program = certainly.startProgram(1);
     const carried: (string | undefined)[] = [];
     for (let turn = 0; turn < 3; turn++) {

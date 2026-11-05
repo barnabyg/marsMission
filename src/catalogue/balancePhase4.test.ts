@@ -90,10 +90,15 @@ describe("the rover in the real data files", () => {
   });
 
   it("leaves too little for a retry of anything if it fails on the first Turn", () => {
-    const { program } = failing.runTurn(
+    // What the gamble left, before base funding, which since Phase 8 pays for a retry in time.
+    const { program: after, summary } = failing.runTurn(
       failing.startProgram(1),
       landing("rover"),
     );
+    const program = {
+      ...after,
+      moneyMillions: after.moneyMillions - summary.baseFundingMillions,
+    };
     expect(failing.validatePlan(program, plainMission).problems).toHaveLength(
       1,
     );
@@ -217,6 +222,20 @@ describe("a productive Program in the real data files", () => {
 describe("the balance of Phase 4", () => {
   const real = createSimulation(parseCatalogue(files));
   const steady = played("steady: Soil analysis");
+  // Played here, as a test that plays several would take longer than a test may now that base funding keeps more
+  // Programs going for longer.
+  for (const name of [
+    "steady: Tested rovers",
+    "steady: Tested everything",
+    "steady: shortest Service Life",
+    "steady: shortest, Tested",
+    "steady: Survey once",
+    "research orbiter, then land",
+    "survey first",
+  ]) {
+    played(name);
+  }
+
   const upToTurn = (last: number) =>
     Array.from({ length: last }, (_, index) => index + 1);
 
@@ -351,11 +370,12 @@ describe("the balance of Phase 4", () => {
     // Close enough either way to be a choice, which a Survey doesn't simply win or lose.
     expect(once.science / steady.science).toBeGreaterThan(0.85);
     expect(once.science / steady.science).toBeLessThan(1.15);
-    // The same goes for a Program that never Surveys at all and lands at greater risk.
+    // Never Surveying at all is the bolder opening: since base funding (Phase 8) rescues more Programs that Survey
+    // first, landing at greater risk is cancelled far more often and earns less.
     const neverSurveys = played("research orbiter, then land");
     const surveys = played("survey first");
-    expect(neverSurveys.science / surveys.science).toBeGreaterThan(0.75);
-    expect(neverSurveys.science / surveys.science).toBeLessThan(1.25);
+    expect(neverSurveys.cancelled).toBeGreaterThan(surveys.cancelled + 0.2);
+    expect(neverSurveys.science).toBeLessThan(surveys.science);
   });
 
   it("makes Soil analysis and Long traverse each worth choosing sometimes", () => {
@@ -387,13 +407,12 @@ describe("the balance of Phase 4", () => {
     const tested = played("steady: Tested rovers");
     expect(tested.money).toBeGreaterThan(steady.money);
     expect(tested.science).toBeGreaterThan(steady.science);
+    // Since base funding (Phase 8), Reliability on everything pays its way in money, but earns no more Science.
     const everything = played("steady: Tested everything");
-    expect(everything.money).toBeLessThan(steady.money);
+    expect(everything.science).toBeLessThan(1.02 * steady.science);
     const shortest = played("steady: shortest Service Life");
     const shortestTested = played("steady: shortest, Tested");
-    // Compared by cancellations, not money: with upkeep, more of these Programs are cancelled just short of the money
-    // for another Mission, which leaves them more money at the end, not less.
-    expect(shortestTested.cancelled).toBeGreaterThan(shortest.cancelled);
+    expect(shortestTested.money).toBeLessThan(shortest.money);
     expect(shortestTested.science).toBeLessThan(shortest.science);
   });
 

@@ -15,7 +15,8 @@
 .status-bar dl {
   display: flex;
   align-items: flex-start;
-  gap: 2.5rem;
+  /* Tight enough for every value, with the Money's caption, at 1920×1080 in a Program with large figures. */
+  gap: 2rem;
   margin: 0;
 }
 
@@ -127,4 +128,13 @@
 
 .turn-spend.over .turn-spend-left {
   color: var(--problem);
+}
+
+/* A small line under a value, such as the base funding that comes in as the Turn ends. */
+.status-bar .status-caption {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  /* Tight, so that it adds as little as it can to the bar's height, which the panels below give up. */
+  line-height: 1;
+  white-space: nowrap;
 }

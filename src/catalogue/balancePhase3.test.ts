@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { parseCatalogue } from "./catalogue";
-import { createSimulation, type TurnPlan } from "../simulation/simulation";
+import {
+  createSimulation,
+  type Program,
+  type TurnPlan,
+  type TurnResult,
+} from "../simulation/simulation";
 import {
   failing,
   succeeding,
@@ -24,6 +29,14 @@ function missionWithEveryEventAt(levelId: string): TurnPlan {
 }
 
 /** The first Mission's result under a seed where it fails, which Reliability makes less likely. */
+/** The Program after a Turn, without the base funding paid as it ended. */
+function beforeBaseFunding({ program, summary }: TurnResult): Program {
+  return {
+    ...program,
+    moneyMillions: program.moneyMillions - summary.baseFundingMillions,
+  };
+}
+
 function firstMissionFailing(plan: TurnPlan) {
   for (let seed = 1; seed < 1000; seed++) {
     const result = failing.runTurn(failing.startProgram(seed), plan);
@@ -63,8 +76,9 @@ describe("the balance of the first Missions", () => {
       failing.validatePlan(failing.startProgram(1), plan).problems,
     ).toEqual([]);
     const first = firstMissionFailing(plan);
+    // What the gamble left, before base funding, which since Phase 8 pays for a retry in time.
     expect(
-      failing.validatePlan(first.program, plainMission).problems,
+      failing.validatePlan(beforeBaseFunding(first), plainMission).problems,
     ).toHaveLength(1);
   });
 
@@ -179,7 +193,9 @@ describe("the balance of Phase 3", () => {
         reliability: { "entry-descent-landing": "redundant" },
       },
     };
-    const { program } = failing.runTurn(failing.startProgram(1), plan);
+    const program = beforeBaseFunding(
+      failing.runTurn(failing.startProgram(1), plan),
+    );
     expect(failing.validatePlan(program, landerPlan).problems).toHaveLength(1);
     expect(failing.validatePlan(program, orbiterPlan).problems).toEqual([]);
   });

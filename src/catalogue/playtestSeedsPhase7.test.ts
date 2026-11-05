@@ -45,7 +45,7 @@ describe("the known seeds in the Phase 7 playtest guide", () => {
     expect(real.validatePlan(start, rover).costMillions).toBe(1700);
     const first = turnWithNoDecision(start, rover);
     expect(first.summary).toMatchObject({
-      moneyEndMillions: 3680,
+      moneyEndMillions: 3880,
       publicSupportEnd: 388,
       failure: null,
     });
@@ -55,17 +55,17 @@ describe("the known seeds in the Phase 7 playtest guide", () => {
     });
     expect(second.summary).toMatchObject({
       developmentCostMillions: 1200,
-      moneyEndMillions: 3265,
+      moneyEndMillions: 3715,
       developmentsStarted: ["Meridian Colossus"],
     });
     const third = turnWithNoDecision(second.program, { mission: null });
     expect(third.summary).toMatchObject({
-      moneyEndMillions: 4050,
+      moneyEndMillions: 4750,
       developmentsFinished: ["Meridian Colossus"],
     });
     const fourth = turnWithNoDecision(third.program, { mission: null });
     expect(fourth.summary).toMatchObject({
-      moneyEndMillions: 4735,
+      moneyEndMillions: 5685,
       publicSupportEnd: 256,
       assetsEnded: ["Trailblazer Rover"],
     });
@@ -93,7 +93,7 @@ describe("the known seeds in the Phase 7 playtest guide", () => {
 
     const fifth = turnWithNoDecision(ready, crewed());
     expect(fifth.summary).toMatchObject({
-      moneyEndMillions: 2771,
+      moneyEndMillions: 3971,
       publicSupportEnd: 657,
       failure: null,
       crewLost: [],
@@ -125,7 +125,7 @@ describe("the known seeds in the Phase 7 playtest guide", () => {
 
     const lost = turnWithNoDecision(ready, crewed());
     expect(lost.summary).toMatchObject({
-      moneyEndMillions: 535,
+      moneyEndMillions: 1735,
       publicSupportEnd: 73,
       failure: {
         missionEventName: "Mars orbit insertion",
@@ -146,7 +146,7 @@ describe("the known seeds in the Phase 7 playtest guide", () => {
     );
     const home = turnWithNoDecision(ready, crewed("free-return"));
     expect(home.summary).toMatchObject({
-      moneyEndMillions: 505,
+      moneyEndMillions: 1705,
       publicSupportEnd: 217,
       failure: {
         missionEventName: "Mars orbit insertion",

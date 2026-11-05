@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { formatMoney, type ProgramView } from "../simulation/simulation";
 import { formatChange, formatLaunchWindow } from "../ui/format";
 import { GameText } from "../ui/GameText";
@@ -41,6 +42,14 @@ export function StatusBar({ view, lastTurn, spendMillions }: StatusBarProps) {
           testId="money"
           change={changes.moneyMillions}
           unit="money"
+          caption={
+            view.baseFundingMillions > 0 && (
+              <span data-testid="base-funding">
+                {`+${formatMoney(view.baseFundingMillions)} `}
+                <GameText>Base funding</GameText>
+              </span>
+            )
+          }
         >
           {formatMoney(view.moneyMillions)}
         </StatusValue>
@@ -155,6 +164,8 @@ interface StatusValueProps {
   children: string;
   change?: number | undefined;
   unit?: "points" | "money";
+  /** A small line under the value, such as what will come in as the Turn ends. */
+  caption?: ReactNode;
 }
 
 function StatusValue({
@@ -164,6 +175,7 @@ function StatusValue({
   children,
   change,
   unit,
+  caption,
 }: StatusValueProps) {
   return (
     <div>
@@ -175,6 +187,7 @@ function StatusValue({
         <span data-testid={testId}>{children}</span>
         <Change change={change} unit={unit} testId={`${testId}-change`} />
       </dd>
+      {caption && <dd className="status-caption">{caption}</dd>}
     </div>
   );
 }
