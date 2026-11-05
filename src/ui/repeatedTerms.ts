@@ -33,14 +33,15 @@ export function watchRepeatedTerms(): () => void {
     frame = 0;
     markRepeatedTerms(document);
   };
-  // Marking only changes attributes, which this doesn't watch, so it can't set itself off.
+  // Only terms coming, going or changing matter, so text changing inside them, such as Mission Mode's date each day,
+  // doesn't set it off. Marking changes only data-repeat, which this doesn't watch, so it can't set itself off either.
   const observer = new MutationObserver(() => {
     frame ||= requestAnimationFrame(update);
   });
   observer.observe(document.body, {
     childList: true,
     subtree: true,
-    characterData: true,
+    attributeFilter: ["data-term"],
   });
   update();
   return () => {
