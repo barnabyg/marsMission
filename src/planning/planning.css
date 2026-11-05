@@ -26,6 +26,25 @@
   gap: 1.5rem;
 }
 
+/* With nothing at Mars, Operating at Mars shrinks to a line like any other empty panel, and gives its room back. */
+.planning-side:has(> .panel.empty:first-child) {
+  grid-template-rows: auto minmax(0, auto) minmax(0, auto);
+  align-content: start;
+}
+
+/* An empty panel is one compact line: its heading and an encouraging note. */
+.planning-side .panel.empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 1.5rem;
+  padding: 1rem 2rem;
+}
+
+.empty-note {
+  color: var(--muted);
+}
+
 /* A panel with too much to show scrolls by itself, so that Planning Mode stays on one screen. */
 .planning-columns .panel {
   align-content: start;
