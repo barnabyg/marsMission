@@ -102,7 +102,7 @@ test("plans a Mission in four numbered steps, opening Landing Site and Mission E
   expect(problems).toEqual([]);
 });
 
-test("shows each Asset as a card, marks those that wouldn't fit, and reveals an Asset's choices once ticked", async ({
+test("shows each Asset as a card, greys out those that wouldn't fit, and reveals an Asset's choices once ticked", async ({
   page,
 }) => {
   const problems = watchForProblems(page);
@@ -123,13 +123,18 @@ test("shows each Asset as a card, marks those that wouldn't fit, and reveals an 
   await expect(rover.getByTestId("technology-readiness")).toHaveText(
     "Needs Development",
   );
-  // It can't be ticked until its Development has finished, so it isn't marked as not fitting either.
+  // It can't be ticked until its Development has finished, so it is greyed out, saying why on hovering.
   await expect(rover.getByRole("checkbox")).toBeDisabled();
-  await expect(rover.getByTestId("fit-warning")).toHaveCount(0);
+  await expect(rover).toHaveClass(/unavailable/);
+  await expect(rover).toHaveAttribute(
+    "title",
+    "Needs Development before it can fly.",
+  );
   await expect(page.getByTestId("crew-facts")).toContainText("from $3B");
 
   // Nothing ticked: on the Meridian Medium, which carries 4 tonnes, every Asset fits alone.
-  await expect(orbiter.getByTestId("fit-warning")).toHaveCount(0);
+  await expect(orbiter).not.toHaveClass(/unavailable/);
+  await expect(orbiter.getByTestId("unavailable-reason")).toHaveCount(0);
   await expect(orbiter.getByRole("combobox")).toHaveCount(0);
 
   await chooseAssets(page, ["Pathfinder Orbiter"]);
@@ -154,17 +159,23 @@ test("shows each Asset as a card, marks those that wouldn't fit, and reveals an 
     }),
   ).toBeVisible();
   // With the orbiter's 2.5 tonnes aboard, a 3-tonne lander would be too heavy, but is within the Money, so it can't
-  // be ticked.
+  // be ticked. It is greyed out, with the reason on hovering and for a screen reader, and no warning on the card.
   const lander = card("Prospector Lander");
-  await expect(lander.getByTestId("fit-warning")).toHaveText(
-    "Too heavy for the Launch Vehicle",
+  await expect(lander).toHaveClass(/unavailable/);
+  await expect(lander).toHaveAttribute(
+    "title",
+    "Too heavy for the Launch Vehicle.",
   );
   await expect(lander.getByRole("checkbox")).toBeDisabled();
+  await expect(lander.getByRole("checkbox")).toHaveAccessibleDescription(
+    "Too heavy for the Launch Vehicle.",
+  );
   await expect(page.getByTestId("crew-facts")).toBeVisible();
-  await expect(
-    page.locator(".crew-choice").getByTestId("fit-warning"),
-  ).toHaveText(
-    "Too heavy for the Launch Vehicle · Costs more than the Money left",
+  const crew = page.locator(".crew-choice");
+  await expect(crew).toHaveClass(/unavailable/);
+  await expect(crew).toHaveAttribute(
+    "title",
+    "Too heavy for the Launch Vehicle · Costs more than the Money left.",
   );
   await expect(
     page.getByRole("checkbox", { name: /Crewed Mission/ }),
@@ -176,7 +187,8 @@ test("shows each Asset as a card, marks those that wouldn't fit, and reveals an 
 
   await chooseAssets(page, []);
   await expect(orbiter.getByRole("combobox")).toHaveCount(0);
-  await expect(lander.getByTestId("fit-warning")).toHaveCount(0);
+  await expect(lander).not.toHaveClass(/unavailable/);
+  await expect(lander).not.toHaveAttribute("title");
   await expect(lander.getByRole("checkbox")).toBeEnabled();
   expect(problems).toEqual([]);
 });
