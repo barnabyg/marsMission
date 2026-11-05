@@ -35,6 +35,14 @@ describe("the balance of Phase 7", () => {
   const neither = played(
     "big Program: land Crew, no Protection, least Supplies",
   );
+  // Played here, as a test that plays several would take longer than a test may now that base funding keeps more
+  // Programs going for longer.
+  for (const name of [
+    "big Program: develop the Meridian Colossus and fly Crew when rich",
+    "big Program: fill the Meridian Heavy when rich",
+  ]) {
+    played(name);
+  }
 
   it("makes flying Crew the better choice in some strategies and not in others", () => {
     // Crew who land, with Field research and the Milestones, are worth what they cost.

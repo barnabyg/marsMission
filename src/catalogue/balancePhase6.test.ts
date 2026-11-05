@@ -77,6 +77,23 @@ const pinpointMission = {
 
 describe("the balance of Phase 6", () => {
   const steady = played("steady: Soil analysis");
+  // Every other strategy these tests compare, played here, as a test that plays several would take longer than a test
+  // may now that base funding keeps more Programs going for longer.
+  for (const name of [
+    "steady: develop the Endurance Rover when rich",
+    "steady: develop the Endurance Rover",
+    "survey first, Pinpoint Lander",
+    "survey first",
+    "big Program: develop the Meridian Colossus when rich",
+    "steady: relay beside rovers",
+    "steady: Courier Relay",
+    "big Program: one Asset per Mission",
+    "steady: develop the Meridian Colossus when rich",
+    "steady: develop the Meridian Colossus",
+    "land straight away, Pinpoint Lander",
+  ]) {
+    played(name);
+  }
 
   it("makes developing technology the better choice in some strategies and not in others", () => {
     // Developing the Endurance Rover once rich pays in Science and money.

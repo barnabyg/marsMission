@@ -222,6 +222,20 @@ describe("a productive Program in the real data files", () => {
 describe("the balance of Phase 4", () => {
   const real = createSimulation(parseCatalogue(files));
   const steady = played("steady: Soil analysis");
+  // Played here, as a test that plays several would take longer than a test may now that base funding keeps more
+  // Programs going for longer.
+  for (const name of [
+    "steady: Tested rovers",
+    "steady: Tested everything",
+    "steady: shortest Service Life",
+    "steady: shortest, Tested",
+    "steady: Survey once",
+    "research orbiter, then land",
+    "survey first",
+  ]) {
+    played(name);
+  }
+
   const upToTurn = (last: number) =>
     Array.from({ length: last }, (_, index) => index + 1);
 
