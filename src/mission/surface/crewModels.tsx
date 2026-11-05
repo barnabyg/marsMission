@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Quaternion, Vector3 } from "three";
-import type { Point } from "../sceneParts";
+import { Box, Drum } from "./modelParts";
 
 /**
  * The Crew on the surface: the lander they come down in, what's left of it after a crash, and each Crew member in a
@@ -12,25 +12,6 @@ const hullWhite = "#eceef2";
 const stageGrey = "#a9adb6";
 const windowDark = "#1b2433";
 const legGrey = "#c9cdd6";
-
-function Box({
-  size,
-  position,
-  rotation,
-  color,
-}: {
-  size: [width: number, height: number, depth: number];
-  position: Point;
-  rotation?: Point;
-  color: string;
-}) {
-  return (
-    <mesh position={position} rotation={rotation ?? [0, 0, 0]}>
-      <boxGeometry args={size} />
-      <meshBasicMaterial color={color} toneMapped={false} />
-    </mesh>
-  );
-}
 
 /** Each of the Crew lander's legs, from its foot on the ground up to the descent stage, wider set than a robot's. */
 const crewLanderLegs = (
@@ -75,10 +56,36 @@ export const CrewLander = memo(function CrewLander() {
           </mesh>
         </group>
       ))}
+      {/* The descent stage's engines, opening downward between the legs. */}
+      {crewLanderLegs.map(({ key, foot }) => (
+        <Drum
+          key={key}
+          radii={[0.05, 0.1]}
+          height={0.14}
+          position={[foot[0] * 0.3, 0.48, foot[2] * 0.3]}
+          sides={14}
+          color="#55585f"
+        />
+      ))}
       <mesh position={[0, 0.72, 0]}>
         <cylinderGeometry args={[0.6, 0.6, 0.36, 8]} />
         <meshBasicMaterial color={stageGrey} toneMapped={false} />
       </mesh>
+      {/* A darker band at the stage's foot and a lighter rim at its top. */}
+      <Drum
+        radii={[0.61, 0.61]}
+        height={0.06}
+        position={[0, 0.57, 0]}
+        sides={8}
+        color="#8a8e97"
+      />
+      <Drum
+        radii={[0.62, 0.62]}
+        height={0.03}
+        position={[0, 0.89, 0]}
+        sides={8}
+        color="#c2c6ce"
+      />
       <mesh position={[0, 1.22, 0]}>
         <cylinderGeometry args={[0.42, 0.46, 0.64, 16]} />
         <meshBasicMaterial color={hullWhite} toneMapped={false} />
@@ -87,6 +94,37 @@ export const CrewLander = memo(function CrewLander() {
         <cylinderGeometry args={[0.16, 0.42, 0.28, 16]} />
         <meshBasicMaterial color="#d7dae0" toneMapped={false} />
       </mesh>
+      {/* Seams around the cabin, a docking ring on top, and a block of thrusters at each corner. */}
+      <Drum
+        radii={[0.455, 0.46]}
+        height={0.03}
+        position={[0, 0.95, 0]}
+        color="#c2c6ce"
+      />
+      <Drum
+        radii={[0.425, 0.43]}
+        height={0.03}
+        position={[0, 1.5, 0]}
+        color="#c2c6ce"
+      />
+      <Drum
+        radii={[0.15, 0.15]}
+        height={0.05}
+        position={[0, 1.84, 0]}
+        color={stageGrey}
+      />
+      {[1, 3, 5, 7].map((eighth) => {
+        const angle = (eighth * Math.PI) / 4;
+        return (
+          <Box
+            key={eighth}
+            size={[0.08, 0.1, 0.08]}
+            position={[Math.cos(angle) * 0.46, 1.3, Math.sin(angle) * 0.46]}
+            rotation={[0, -angle, 0]}
+            color="#8f939c"
+          />
+        );
+      })}
       {/* Two windows and the hatch, on the side facing the camera. */}
       {[-0.17, 0.17].map((x) => (
         <Box

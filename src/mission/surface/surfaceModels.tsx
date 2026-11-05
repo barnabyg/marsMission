@@ -1,34 +1,14 @@
 import { memo } from "react";
-import { Quaternion, Vector3 } from "three";
 import type { Point } from "../sceneParts";
 import { CrewLander, CrewLanderWreck } from "./crewModels";
+import { Lander, landerGold } from "./landerModel";
+import { Box as Part, Drum } from "./modelParts";
+import { deckBlue, Rover, wheelDark, wheelRadius } from "./roverModel";
 import type { SurfaceModel } from "./surface";
 
-const landerGold = "#f2c14e";
-const roverTeal = "#37c9b5";
-
-function Part({
-  size,
-  position,
-  rotation,
-  color,
-}: {
-  size: [width: number, height: number, depth: number];
-  position: Point;
-  rotation?: Point;
-  color: string;
-}) {
-  return (
-    <mesh position={position} rotation={rotation ?? [0, 0, 0]}>
-      <boxGeometry args={size} />
-      <meshBasicMaterial color={color} toneMapped={false} />
-    </mesh>
-  );
-}
-
 const shadowRadii: Record<SurfaceModel, number> = {
-  lander: 0.7,
-  rover: 0.62,
+  lander: 0.85,
+  rover: 0.66,
   crewLander: 0.9,
 };
 
@@ -45,97 +25,6 @@ export function Shadow({ model }: { model: SurfaceModel }) {
     </mesh>
   );
 }
-
-/** Each leg of a lander, from its foot on the ground up to the body. */
-const landerLegs = (
-  [
-    [-1, -1],
-    [1, -1],
-    [-1, 1],
-    [1, 1],
-  ] as const
-).map(([x, z]) => {
-  const foot = new Vector3(x * 0.46, 0.03, z * 0.46);
-  const top = new Vector3(x * 0.22, 0.6, z * 0.22);
-  const along = top.clone().sub(foot);
-  return {
-    key: `${x},${z}`,
-    foot: foot.toArray(),
-    middle: foot.clone().add(top).multiplyScalar(0.5).toArray(),
-    length: along.length(),
-    turn: new Quaternion().setFromUnitVectors(
-      new Vector3(0, 1, 0),
-      along.normalize(),
-    ),
-  };
-});
-
-/** A lander is tall and gold, and stands still on four spread legs. */
-const Lander = memo(function Lander() {
-  return (
-    <group>
-      {landerLegs.map(({ key, foot, middle, length, turn }) => (
-        <group key={key}>
-          <mesh position={middle} quaternion={turn}>
-            <cylinderGeometry args={[0.03, 0.03, length, 6]} />
-            <meshBasicMaterial color="#c9cdd6" toneMapped={false} />
-          </mesh>
-          <mesh position={foot}>
-            <cylinderGeometry args={[0.1, 0.12, 0.05, 10]} />
-            <meshBasicMaterial color="#8f939c" toneMapped={false} />
-          </mesh>
-        </group>
-      ))}
-      <mesh position={[0, 0.72, 0]}>
-        <cylinderGeometry args={[0.32, 0.46, 0.5, 8]} />
-        <meshBasicMaterial color={landerGold} toneMapped={false} />
-      </mesh>
-      <mesh position={[0, 1.03, 0]}>
-        <cylinderGeometry args={[0.12, 0.32, 0.14, 8]} />
-        <meshBasicMaterial color="#b98a2e" toneMapped={false} />
-      </mesh>
-      <mesh position={[0, 1.28, 0]} rotation={[0.5, 0, 0.3]}>
-        <coneGeometry args={[0.24, 0.12, 14, 1, true]} />
-        <meshBasicMaterial color="#f5f1e3" toneMapped={false} side={2} />
-      </mesh>
-      <Part size={[0.04, 0.2, 0.04]} position={[0, 1.17, 0]} color="#c9cdd6" />
-    </group>
-  );
-});
-
-/** A rover is low and teal, on six dark wheels, with a mast. Its front is along x. */
-const Rover = memo(function Rover() {
-  const wheels: [x: number, z: number][] = [-0.38, 0, 0.38].flatMap((x) => [
-    [x, -0.32] as [number, number],
-    [x, 0.32] as [number, number],
-  ]);
-  return (
-    <group>
-      {wheels.map(([x, z]) => (
-        <mesh
-          key={`${x},${z}`}
-          position={[x, 0.11, z]}
-          rotation={[Math.PI / 2, 0, 0]}
-        >
-          <cylinderGeometry args={[0.11, 0.11, 0.09, 12]} />
-          <meshBasicMaterial color="#1c1e24" toneMapped={false} />
-        </mesh>
-      ))}
-      <Part size={[0.95, 0.2, 0.5]} position={[0, 0.3, 0]} color={roverTeal} />
-      <Part size={[1.05, 0.03, 0.62]} position={[0, 0.42, 0]} color="#23324f" />
-      <Part
-        size={[0.05, 0.36, 0.05]}
-        position={[0.34, 0.6, 0]}
-        color="#d8dbe2"
-      />
-      <Part
-        size={[0.18, 0.1, 0.12]}
-        position={[0.34, 0.82, 0]}
-        color="#d8dbe2"
-      />
-    </group>
-  );
-});
 
 export const models: Record<SurfaceModel, typeof Lander> = {
   lander: Lander,
@@ -187,6 +76,15 @@ const LanderWreck = memo(function LanderWreck() {
         rotation={[0.1, 0.8, 0.1]}
         color={landerGold}
       />
+      {/* A solar panel, torn off and lying cracked on the ground. */}
+      <Drum
+        radii={[0.28, 0.28]}
+        height={0.025}
+        position={[-0.7, 0.06, 0.25]}
+        rotation={[0.15, 0, -0.1]}
+        sides={10}
+        color="#1d2a47"
+      />
     </group>
   );
 });
@@ -211,7 +109,7 @@ const RoverWreck = memo(function RoverWreck() {
         size={[1.05, 0.03, 0.62]}
         position={[-0.55, 0.1, -0.4]}
         rotation={[0.2, 1.1, 0.15]}
-        color="#23324f"
+        color={deckBlue}
       />
       <Part
         size={[0.05, 0.42, 0.05]}
@@ -225,8 +123,8 @@ const RoverWreck = memo(function RoverWreck() {
           position={position}
           rotation={[Math.PI / 2, 0, 0.4]}
         >
-          <cylinderGeometry args={[0.11, 0.11, 0.09, 12]} />
-          <meshBasicMaterial color="#1c1e24" toneMapped={false} />
+          <cylinderGeometry args={[wheelRadius, wheelRadius, 0.09, 16]} />
+          <meshBasicMaterial color={wheelDark} toneMapped={false} />
         </mesh>
       ))}
     </group>
