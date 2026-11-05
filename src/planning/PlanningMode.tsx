@@ -12,6 +12,7 @@ import { DevelopmentPanel } from "./DevelopmentPanel";
 import { MissionPanel } from "./MissionPanel";
 import { OperatingPanel } from "./OperatingPanel";
 import { StatusBar } from "./StatusBar";
+import { useMissionPlan } from "./useMissionPlan";
 
 interface PlanningModeProps {
   simulation: Simulation;
@@ -23,10 +24,11 @@ interface PlanningModeProps {
   saveStore: SaveStore;
   onLoad: (program: Program) => void;
   onSubmit: (plan: TurnPlan) => void;
-  onRetire: () => void;
+  /** Ends this Program and starts a new one straight away. */
+  onRestart: () => void;
 }
 
-type PlanningDialog = "save" | "load" | "retire";
+type PlanningDialog = "save" | "load" | "restart";
 
 export function PlanningMode({
   simulation,
@@ -36,7 +38,7 @@ export function PlanningMode({
   saveStore,
   onLoad,
   onSubmit,
-  onRetire,
+  onRestart,
 }: PlanningModeProps) {
   const view = simulation.readProgram(program);
   const [openDialog, setOpenDialog] = useState<PlanningDialog | null>(null);
@@ -48,6 +50,14 @@ export function PlanningMode({
   const [developmentIds, setDevelopmentIds] = useState<string[]>([]);
   const [crewActivities, setCrewActivities] = useState<Record<string, string>>(
     {},
+  );
+  const choices = useMissionPlan(
+    simulation,
+    program,
+    view,
+    operatingActivities,
+    developmentIds,
+    crewActivities,
   );
 
   function open(dialog: PlanningDialog) {
@@ -64,6 +74,7 @@ export function PlanningMode({
       <StatusBar
         view={view}
         lastTurn={lastTurn ? simulation.readProgram(lastTurn) : null}
+        spendMillions={choices.spendMillions}
       />
 
       <div className="program-actions">
@@ -86,10 +97,10 @@ export function PlanningMode({
         <button
           type="button"
           onClick={() => {
-            open("retire");
+            open("restart");
           }}
         >
-          Retire Program
+          Restart Program
         </button>
         {savedToSlot !== null && (
           <p role="status">
@@ -112,9 +123,7 @@ export function PlanningMode({
           simulation={simulation}
           program={program}
           view={view}
-          operatingActivities={operatingActivities}
-          developmentIds={developmentIds}
-          crewActivities={crewActivities}
+          choices={choices}
           onSubmit={onSubmit}
         />
 
@@ -169,19 +178,22 @@ export function PlanningMode({
         </div>
       </div>
 
-      {openDialog === "retire" && (
+      {openDialog === "restart" && (
         <Dialog
-          title="Retire Program"
+          title="Restart Program"
           cancelLabel="Keep going"
           onClose={close}
           actions={
-            <button type="button" className="primary" onClick={onRetire}>
-              Yes, retire the Program
+            <button type="button" className="primary" onClick={onRestart}>
+              Yes, start a new Program
             </button>
           }
         >
           <p>
-            <GameText>Retire this Program? This ends it for good.</GameText>
+            <GameText>
+              Restart with a new Program? This one ends for good, unless you
+              saved it to a Save Slot.
+            </GameText>
           </p>
         </Dialog>
       )}

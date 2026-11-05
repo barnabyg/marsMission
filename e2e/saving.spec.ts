@@ -3,6 +3,7 @@ import { storageKeyFor } from "../src/save/saveStore";
 import {
   chooseAssets,
   cancelledAfterOneTurn,
+  endTurnWithoutLaunching,
   eventEntries,
   overrideProgramData,
   playToNextTurn,
@@ -78,17 +79,19 @@ test("starts a new Program instead of continuing, when asked", async ({
   await expect(page.getByTestId("turn-number")).toHaveText("1");
 });
 
-test("can't continue a Program that has ended", async ({ page }) => {
+test("continues the new Program after a restart, not the one it replaced", async ({
+  page,
+}) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Retire Program" }).click();
-  await page.getByRole("button", { name: "Yes, retire the Program" }).click();
-  await expect(page.getByTestId("program-summary")).toBeVisible();
+  await endTurnWithoutLaunching(page);
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
+  await page.getByRole("button", { name: "Restart Program" }).click();
+  await page.getByRole("button", { name: "Yes, start a new Program" }).click();
+  await expect(page.getByTestId("turn-number")).toHaveText("1");
 
   await page.reload();
+  await page.getByRole("button", { name: "Continue this Program" }).click();
   await expect(page.getByTestId("turn-number")).toHaveText("1");
-  await expect(
-    page.getByRole("button", { name: "Continue this Program" }),
-  ).toHaveCount(0);
 });
 
 for (const [name, contents, message] of [

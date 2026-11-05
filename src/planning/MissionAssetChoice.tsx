@@ -20,7 +20,7 @@ interface MissionAssetChoiceProps {
   /** How many of this Asset are operating at Mars this Turn, which keep working without being launched again. */
   operatingCount: number;
   carried: boolean;
-  /** Whether ticking it would take the Mission over its Launch Vehicle's capacity or the Money. */
+  /** Whether ticking it would take the Mission over its Launch Vehicle's capacity or the Money, which stops it being ticked. */
   fit: Fit;
   onCarriedChange: (carried: boolean) => void;
   onChoicesChange: (choices: AssetChoices) => void;
@@ -28,7 +28,7 @@ interface MissionAssetChoiceProps {
 
 /**
  * One Asset the Mission can carry, as a card: a picture of its model, its cost, mass, Technology Readiness, Benefit and how many are at Mars,
- * and whether it would fit. Ticking it reveals its choices.
+ * and whether it would fit. Ticking it reveals its Activity and Service Life; its Reliability is with the Mission Events'.
  */
 export function MissionAssetChoice({
   asset,
@@ -40,13 +40,15 @@ export function MissionAssetChoice({
   onChoicesChange,
 }: MissionAssetChoiceProps) {
   const flies = canFly(asset);
+  // Something ticked can always be unticked, even once it no longer fits.
+  const blocked = !carried && (fit.overCapacity || fit.overMoney);
   return (
     <div
       className={[
         "asset-choice",
         "asset-card",
         carried && "carried",
-        !flies && "unavailable",
+        (!flies || blocked) && "unavailable",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -61,8 +63,9 @@ export function MissionAssetChoice({
         <input
           type="checkbox"
           checked={carried}
-          // It can't fly until its Development has finished, which the Development panel shows.
-          disabled={!flies}
+          // It can't fly until its Development has finished, which the Development panel shows, and can't be ticked
+          // while it wouldn't fit or can't be afforded, which its warning says.
+          disabled={!flies || blocked}
           onChange={(event) => {
             onCarriedChange(event.target.checked);
           }}
@@ -138,26 +141,6 @@ export function MissionAssetChoice({
               </option>
             ))}
           </select>
-          <span>
-            <GameText>Reliability</GameText>
-          </span>
-          <select
-            aria-label={`Reliability for ${asset.name} in service`}
-            value={planned.reliabilityLevelId}
-            onChange={(event) => {
-              onChoicesChange({ reliabilityLevelId: event.target.value });
-            }}
-          >
-            {planned.reliabilityLevels.map((level) => (
-              <option key={level.id} value={level.id}>
-                {level.name} ({formatMoney(level.costMillions)},{" "}
-                {level.riskBand})
-              </option>
-            ))}
-          </select>
-          <strong className="asset-card-risk" data-testid="asset-risk-band">
-            <GameText>{`${planned.riskBand} per Turn`}</GameText>
-          </strong>
         </div>
       )}
     </div>

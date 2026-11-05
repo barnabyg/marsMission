@@ -23,7 +23,7 @@ interface MissionCrewProps {
   crewedMission: ProgramView["crewedMission"];
   /** The Crew chosen for the Mission, which only a Crewed Mission has. */
   planned: PlannedCrew | null;
-  /** Whether adding the smallest Crew would take the Mission over its Launch Vehicle's capacity or the Money. */
+  /** Whether adding the smallest Crew would take the Mission over its Launch Vehicle's capacity or the Money, which stops it being ticked. */
   fit: Fit;
   onCrewSizeChange: (size: number | null) => void;
   onActivityChange: (activityId: string) => void;
@@ -67,8 +67,15 @@ export function MissionCrew({
           <input
             type="checkbox"
             checked={planned !== null}
-            // Every name has been given, so no one is left to fly.
-            disabled={!smallest || namesLeft < smallest.crew}
+            // Every name has been given, so no one is left to fly, or the smallest Crew wouldn't fit or can't be afforded,
+            // which its warning says. Crew already chosen can always be taken off.
+            disabled={
+              planned === null &&
+              (!smallest ||
+                namesLeft < smallest.crew ||
+                fit.overCapacity ||
+                fit.overMoney)
+            }
             onChange={(event) => {
               onCrewSizeChange(
                 event.target.checked ? (smallest?.crew ?? null) : null,

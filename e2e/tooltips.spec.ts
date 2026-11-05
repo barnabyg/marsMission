@@ -365,7 +365,7 @@ test("no button highlights a game term, while the text around it keeps its toolt
   await expect(page.getByRole("tooltip")).toContainText(tooltips.Mission);
   await page.mouse.move(0, 0);
 
-  await page.getByRole("button", { name: "Retire Program" }).click();
+  await page.getByRole("button", { name: "Restart Program" }).click();
   expect(await termsInButtons(page)).toEqual([]);
   await expect(page.locator("p [data-term='Program']")).toBeVisible();
   await page.getByRole("button", { name: "Keep going" }).click();
@@ -381,11 +381,6 @@ test("no button highlights a game term, while the text around it keeps its toolt
   await page.reload();
   await expect(page.getByTestId("opening-screen")).toBeVisible();
   expect(await termsInButtons(page)).toEqual([]);
-  await page.getByRole("button", { name: "Continue this Program" }).click();
-  await page.getByRole("button", { name: "Retire Program" }).click();
-  await page.getByRole("button", { name: "Yes, retire the Program" }).click();
-  await expect(page.getByTestId("program-summary")).toBeVisible();
-  expect(await termsInButtons(page)).toEqual([]);
 });
 
 function overlap(
@@ -400,7 +395,7 @@ function overlap(
   );
 }
 
-test("opens the Planning Mode heading's tooltip clear of Save, Load and Retire Program", async ({
+test("opens the Planning Mode heading's tooltip clear of Save, Load and Restart Program", async ({
   page,
 }) => {
   await page.goto(`/?seed=${successSeed}`);
@@ -417,7 +412,7 @@ test("opens the Planning Mode heading's tooltip clear of Save, Load and Retire P
     await expect(tooltip).toBeVisible();
     const shown = await tooltip.boundingBox();
     if (!shown) throw new Error("The tooltip isn't on screen");
-    for (const name of ["Save", "Load", "Retire Program"]) {
+    for (const name of ["Save", "Load", "Restart Program"]) {
       const button = await page
         .getByRole("button", { name, exact: true })
         .boundingBox();
@@ -453,6 +448,9 @@ test("underlines each game term once in the New Mission panel, and none in a hea
   page,
 }) => {
   await page.goto(`/?seed=${successSeed}`);
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-heavy");
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
   const panel = page.locator(".mission-panel");
   await expect(panel.getByTestId("landing-site-details")).toBeVisible();

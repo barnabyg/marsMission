@@ -390,46 +390,47 @@ test("buys Reliability, sees the risk band and cost change, and launches", async
   expect(problems).toEqual([]);
 });
 
-test("retires a Program and starts a new one from the Program summary", async ({
-  page,
-}) => {
+test("restarts with a new Program after asking first", async ({ page }) => {
   const problems = watchForProblems(page);
   await page.goto("/");
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page
+    .getByTestId("turn-summary")
+    .getByRole("button", { name: "Continue" })
+    .click();
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
 
   // Beside Save and Load, with no section of its own.
-  await expect(page.getByRole("heading", { name: "Retire" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Restart" })).toHaveCount(0);
   const actions = page.locator(".program-actions");
   await expect(actions.getByRole("button")).toHaveText([
     "Save",
     "Load",
-    "Retire Program",
+    "Restart Program",
   ]);
 
-  const retire = page.getByRole("button", { name: "Retire Program" });
-  const dialog = page.getByRole("dialog", { name: "Retire Program" });
-  await retire.click();
-  await expect(dialog).toContainText("This ends it for good");
+  const restart = page.getByRole("button", { name: "Restart Program" });
+  const dialog = page.getByRole("dialog", { name: "Restart Program" });
+  await restart.click();
+  await expect(dialog).toContainText("This one ends for good");
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await dialog.getByRole("button", { name: "Keep going" }).click();
   await expect(dialog).toHaveCount(0);
 
-  await retire.click();
+  await restart.click();
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
-  await expect(
-    page.getByRole("heading", { name: "Planning Mode" }),
-  ).toBeVisible();
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
 
-  await retire.click();
-  await dialog.getByRole("button", { name: "Yes, retire the Program" }).click();
-
-  const summary = page.getByTestId("program-summary");
-  await expect(summary).toContainText("You retired this Program");
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-  await expect(summary.getByTestId("total-science")).toHaveText("0");
-
-  await page.getByRole("button", { name: "Start a new Program" }).click();
+  await restart.click();
+  await dialog
+    .getByRole("button", { name: "Yes, start a new Program" })
+    .click();
   await expect(page.getByTestId("turn-number")).toHaveText("1");
+  await expect(page.getByTestId("program-summary")).toHaveCount(0);
   expect(problems).toEqual([]);
 });
 
@@ -462,21 +463,6 @@ test("lets a Turn pass without launching, and cancels the Program when Public Su
     "below the Cancellation Level of 90",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
-});
-
-test("shows why a plan the player can't afford is rejected", async ({
-  page,
-}) => {
-  await overrideProgramData(page, { startingMoneyMillions: 500 });
-  await page.goto("/");
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
-
-  await expect(page.getByRole("alert")).toContainText("costs $1B");
-  await expect(page.getByRole("alert")).toContainText("$500M");
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-  await expect(
-    page.getByRole("button", { name: "Launch Mission" }),
-  ).toBeDisabled();
 });
 
 test("refuses to load invalid data files, with a clear error", async ({

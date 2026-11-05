@@ -5,7 +5,7 @@ A planning and simulation game in which the player runs a Mars exploration Progr
 ## Program structure
 
 **Program**:
-One complete game: an open-ended sequence of Turns in which the player launches Missions and builds up Assets at Mars. It ends when the player retires it or when it is cancelled.
+One complete game: an open-ended sequence of Turns in which the player launches Missions and builds up Assets at Mars. It ends when the player restarts with a new one or when it is cancelled.
 _Avoid_: Campaign, run, playthrough
 
 **Turn**:

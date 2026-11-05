@@ -103,10 +103,6 @@
   width: 100%;
 }
 
-.asset-card-risk {
-  grid-column: 2;
-}
-
 /* Technology Readiness as a badge on each card; elsewhere it is a plain word. */
 .technology-readiness {
   color: var(--muted);

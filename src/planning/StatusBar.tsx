@@ -2,16 +2,19 @@ import { formatMoney, type ProgramView } from "../simulation/simulation";
 import { formatChange, formatLaunchWindow } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { Icon, type IconName } from "../ui/Icon";
+import { budgetGauge } from "./budgetGauge";
 import { changesSinceLastTurn, publicSupportGauge } from "./statusValues";
 
 interface StatusBarProps {
   view: ProgramView;
   /** What the player saw at the start of the last Turn, or null on the first Turn or after a Load, which show no changes. */
   lastTurn: ProgramView | null;
+  /** What the choices made so far would spend this Turn, which the status bar shows beside the Money. */
+  spendMillions: number;
 }
 
 /** Planning Mode's header: where the Program stands, with how each value changed over the last Turn. */
-export function StatusBar({ view, lastTurn }: StatusBarProps) {
+export function StatusBar({ view, lastTurn, spendMillions }: StatusBarProps) {
   const changes = changesSinceLastTurn(lastTurn, view);
   const gauge = publicSupportGauge(view.publicSupport, view.cancellationLevel);
   const threshold = view.nextFundingThreshold;
@@ -41,6 +44,10 @@ export function StatusBar({ view, lastTurn }: StatusBarProps) {
         >
           {formatMoney(view.moneyMillions)}
         </StatusValue>
+        <TurnSpend
+          spendMillions={spendMillions}
+          moneyMillions={view.moneyMillions}
+        />
         <div
           className={`support-gauge${gauge.warning ? " warning" : ""}`}
           data-testid="support-gauge"
@@ -105,6 +112,39 @@ export function StatusBar({ view, lastTurn }: StatusBarProps) {
         </StatusValue>
       </dl>
     </header>
+  );
+}
+
+/**
+ * What this Turn will spend and what that leaves, beside the Money and in its style, turning amber near the Money and
+ * red over it, as the budget bar's cost gauge does.
+ */
+function TurnSpend({
+  spendMillions,
+  moneyMillions,
+}: {
+  spendMillions: number;
+  moneyMillions: number;
+}) {
+  const { level } = budgetGauge(spendMillions, moneyMillions);
+  const leftMillions = moneyMillions - spendMillions;
+  return (
+    <div className={`turn-spend ${level}`} data-testid="turn-spend">
+      <dt>
+        <Icon name={level === "within" ? "coins" : "alert-triangle"} />
+        <GameText>Spend this Turn</GameText>
+      </dt>
+      <dd className="status-value">
+        <span data-testid="turn-spend-amount">
+          {formatMoney(spendMillions)}
+        </span>
+        <span className="turn-spend-left" data-testid="turn-spend-left">
+          {leftMillions < 0
+            ? `${formatMoney(-leftMillions)} over`
+            : `${formatMoney(leftMillions)} left`}
+        </span>
+      </dd>
+    </div>
   );
 }
 

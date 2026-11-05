@@ -43,10 +43,10 @@ async function launchLanderAndRover(page: Page): Promise<void> {
     startingMoneyMillions: landerAndRoverMoney,
   });
   await page.goto(`/?seed=${landerAndRoverSeed}`);
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-heavy");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await chooseAssets(page, ["Prospector Lander", "Trailblazer Rover"]);
   await holdTurnWhenShown(page);
   await page.getByRole("button", { name: "Launch Mission" }).click();

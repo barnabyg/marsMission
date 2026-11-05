@@ -108,3 +108,23 @@
 .support-gauge.warning .gauge-caption {
   color: var(--warning);
 }
+
+/* What this Turn will spend, beside the Money, in the colours of the budget bar's cost gauge. */
+.turn-spend .turn-spend-left {
+  color: var(--muted);
+  font-size: var(--text-md);
+}
+
+.turn-spend.near dt .icon,
+.turn-spend.near .turn-spend-left {
+  color: var(--warning);
+}
+
+.turn-spend.over dt .icon,
+.turn-spend.over .status-value {
+  color: var(--problem);
+}
+
+.turn-spend.over .turn-spend-left {
+  color: var(--problem);
+}

@@ -98,15 +98,7 @@ test("plans a Mission in four numbered steps, opening Landing Site and Mission E
   );
   await expect(landingSite.getByRole("combobox")).toBeVisible();
   await expect(page.getByTestId("landing-site-details")).toBeVisible();
-
-  // So does Crew who land, on a Mission with no lander.
-  await chooseAssets(page, []);
-  await page.getByRole("checkbox", { name: /Crewed Mission/ }).check();
-  await expect(landingSite.getByTestId("mission-step-collapsed")).toBeVisible();
-  await page
-    .getByRole("combobox", { name: "Crew destination" })
-    .selectOption("landingSite");
-  await expect(landingSite.getByRole("combobox")).toBeVisible();
+  // Crew who land open it too, which crew.spec.ts covers, as no Launch Vehicle a new Program has can carry them.
   expect(problems).toEqual([]);
 });
 
@@ -149,27 +141,42 @@ test("shows each Asset as a card, marks those that wouldn't fit, and reveals an 
       name: "Service Life for Pathfinder Orbiter",
     }),
   ).toBeVisible();
+  // Its Reliability in service is with the Mission Events', so every Reliability choice is in one step.
   await expect(
-    orbiter.getByRole("combobox", {
+    orbiter.getByRole("combobox", { name: /Reliability/ }),
+  ).toHaveCount(0);
+  const inService = page.getByTestId("asset-in-service");
+  await expect(inService).toHaveCount(1);
+  await expect(inService).toContainText("Pathfinder Orbiter");
+  await expect(
+    inService.getByRole("combobox", {
       name: "Reliability for Pathfinder Orbiter in service",
     }),
   ).toBeVisible();
-  // With the orbiter's 2.5 tonnes aboard, a 3-tonne lander would be too heavy, but is within the Money.
-  await expect(card("Prospector Lander").getByTestId("fit-warning")).toHaveText(
+  // With the orbiter's 2.5 tonnes aboard, a 3-tonne lander would be too heavy, but is within the Money, so it can't
+  // be ticked.
+  const lander = card("Prospector Lander");
+  await expect(lander.getByTestId("fit-warning")).toHaveText(
     "Too heavy for the Launch Vehicle",
   );
+  await expect(lander.getByRole("checkbox")).toBeDisabled();
   await expect(page.getByTestId("crew-facts")).toBeVisible();
   await expect(
     page.locator(".crew-choice").getByTestId("fit-warning"),
   ).toHaveText(
     "Too heavy for the Launch Vehicle · Costs more than the Money left",
   );
+  await expect(
+    page.getByRole("checkbox", { name: /Crewed Mission/ }),
+  ).toBeDisabled();
+  // Something ticked can always be unticked, even once a smaller choice leaves it too heavy.
+  await page.getByRole("combobox", { name: "Trajectory" }).selectOption("fast");
+  await expect(orbiter.getByRole("checkbox")).toBeEnabled();
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await chooseAssets(page, []);
   await expect(orbiter.getByRole("combobox")).toHaveCount(0);
-  await expect(
-    card("Prospector Lander").getByTestId("fit-warning"),
-  ).toHaveCount(0);
+  await expect(lander.getByTestId("fit-warning")).toHaveCount(0);
+  await expect(lander.getByRole("checkbox")).toBeEnabled();
   expect(problems).toEqual([]);
 });

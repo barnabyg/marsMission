@@ -49,10 +49,13 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   await expect(
     row.getByLabel("Service Life for Trailblazer Rover"),
   ).toBeVisible();
+  const inService = page
+    .getByTestId("asset-in-service")
+    .filter({ hasText: "Trailblazer Rover" });
   await expect(
-    row.getByLabel("Reliability for Trailblazer Rover in service"),
+    inService.getByLabel("Reliability for Trailblazer Rover in service"),
   ).toBeVisible();
-  await expect(row.getByTestId("asset-risk-band")).toBeVisible();
+  await expect(inService.getByTestId("asset-risk-band")).toBeVisible();
   const activity = page.getByLabel("Activity for Trailblazer Rover");
   await expect(activity).toHaveValue("soil-analysis");
   await expect(page.getByTestId("research-earnings")).toHaveText(
@@ -132,10 +135,10 @@ test("lands a rover and a lander at one site, each with its own Activity", async
     startingMoneyMillions: landerAndRoverMoney,
   });
   await page.goto(`/?seed=${landerAndRoverSeed}`);
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-heavy");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await chooseAssets(page, ["Prospector Lander", "Trailblazer Rover"]);
   await page
     .getByLabel("Activity for Trailblazer Rover")
@@ -210,10 +213,10 @@ test("loses a rover and a lander together in one crash", async ({ page }) => {
     startingMoneyMillions: landerAndRoverMoney,
   });
   await page.goto(`/?seed=${landerAndRoverCrashSeed}`);
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-heavy");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await chooseAssets(page, ["Prospector Lander", "Trailblazer Rover"]);
 
   await pauseAtEvent(page, "Entry/descent/landing failed", () =>

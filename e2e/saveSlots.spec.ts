@@ -67,10 +67,10 @@ test("keeps Survey progress, sites landed at and time left through saving to a s
 }) => {
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterAndLanderSeed}`);
-  await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
   await page
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-heavy");
+  await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
   // Not the shortest option, which is what an upgraded save gets.
   await page
     .getByLabel("Service Life for Prospector Lander")
@@ -196,9 +196,10 @@ test("reaches the slots when reopening the game, even with no automatic save", a
     .getByTestId("save-slot-2")
     .getByRole("button", { name: "Save here" })
     .click();
-  await page.getByRole("button", { name: "Retire Program" }).click();
-  await page.getByRole("button", { name: "Yes, retire the Program" }).click();
-  await expect(page.getByTestId("program-summary")).toBeVisible();
+  // With no automatic save, as after a Program that was cancelled.
+  await page.evaluate((key) => {
+    localStorage.removeItem(key);
+  }, storageKeyFor("automatic"));
 
   await page.reload();
   await expect(page.getByTestId("opening-screen")).toBeVisible();

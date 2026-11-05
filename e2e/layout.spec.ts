@@ -1,8 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
-import { chooseAssets } from "./helpers";
-import { screenSizes, somethingScrolls, unreadableText } from "./layoutHelpers";
+import {
+  chooseAssets,
+  endTurnWithoutLaunching,
+  overrideProgramData,
+} from "./helpers";
+import { screenSizes, whatScrolls, unreadableText } from "./layoutHelpers";
 import { successSeed } from "./seeds";
 
 const realFiles = realCatalogueFiles();
@@ -77,8 +81,8 @@ function busyProgram(allSurveyed: boolean) {
       seed: successSeed,
       turnNumber: 9,
       date: "2045-01-01",
-      // Enough for every Asset that can fly, so that the only problem with them all is their mass.
-      moneyMillions: 6000,
+      // Enough for every Asset that can fly, on the Meridian Colossus, with every Contingency and Development.
+      moneyMillions: 20000,
       publicSupport: 200,
       science: 800,
       milestoneIds: realMilestones.map(({ id }) => id),
@@ -122,6 +126,14 @@ function busyProgram(allSurveyed: boolean) {
   };
 }
 
+/** Ticks every Asset that can fly, on the Meridian Colossus, the only Launch Vehicle that carries them all. */
+async function chooseEveryAsset(page: Page): Promise<void> {
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-colossus");
+  await chooseAssets(page, allAssets);
+}
+
 for (const size of screenSizes) {
   const sizeName = `${size.width}×${size.height}`;
 
@@ -134,11 +146,11 @@ for (const size of screenSizes) {
       await page.goto(`/?seed=${successSeed}`);
       await chooseAssets(page, ["Pathfinder Orbiter"]);
       await expect(page.getByTestId("turn-number")).toHaveText("1");
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of [
         "Launch Mission",
         "End Turn without launching",
-        "Retire Program",
+        "Restart Program",
       ]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -150,12 +162,16 @@ for (const size of screenSizes) {
       page,
     }) => {
       await page.goto(`/?seed=${successSeed}`);
+      // On the Meridian Heavy, as the two are too heavy for the first Launch Vehicle.
+      await page
+        .getByRole("combobox", { name: "Launch Vehicle" })
+        .selectOption("meridian-heavy");
       await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
       await expect(page.getByTestId("research-earnings")).toContainText(
         "Surface research earns 100 Science and 9 Public Support, and pays a $50M Research Grant.",
       );
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
       ).toBeInViewport({ ratio: 1 });
@@ -168,7 +184,7 @@ for (const size of screenSizes) {
       await chooseAssets(page, ["Pathfinder Orbiter"]);
       // One in the Operating at Mars panel, and one for the orbiter on the Mission.
       await expect(page.getByTestId("research-earnings")).toHaveCount(2);
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
       ).toBeInViewport({ ratio: 1 });
@@ -187,26 +203,39 @@ for (const size of screenSizes) {
       page,
     }) => {
       await openBusyProgram(page);
+      // On the Meridian Heavy, as the two are too heavy for the first Launch Vehicle.
+      await page
+        .getByRole("combobox", { name: "Launch Vehicle" })
+        .selectOption("meridian-heavy");
       await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
       await expect(
         page
           .locator(".panel", { hasText: "Operating at Mars" })
           .getByTestId("research-earnings"),
       ).toContainText("Research Grant");
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
       ).toBeInViewport({ ratio: 1 });
     });
 
-    test("Planning Mode fits on one screen with every Asset ticked on a new Program", async ({
+    test("Planning Mode fits on one screen with every Asset that fits ticked on a new Program", async ({
       page,
     }) => {
       await page.goto(`/?seed=${successSeed}`);
-      await chooseAssets(page, allAssets);
-      // Too heavy and too dear for a new Program, so both problems show as well.
-      await expect(page.getByRole("alert")).toHaveCount(2);
-      expect(await somethingScrolls(page)).toBe(false);
+      await page
+        .getByRole("combobox", { name: "Launch Vehicle" })
+        .selectOption("meridian-heavy");
+      // Ticking one can leave the next unable to fit, so each is looked at in turn.
+      for (const box of await page
+        .locator(".asset-choice")
+        .getByRole("checkbox")
+        .all()) {
+        if (await box.isEnabled()) await box.check();
+      }
+      await expect(page.getByRole("alert")).toHaveCount(0);
+      await expect(page.getByTestId("fit-warning").first()).toBeVisible();
+      expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "End Turn without launching" }),
       ).toBeInViewport({ ratio: 1 });
@@ -215,9 +244,9 @@ for (const size of screenSizes) {
     test("Planning Mode fits on one screen with a busy Program and every Asset on the Mission", async ({
       page,
     }) => {
-      await openBusyProgram(page);
-      await chooseAssets(page, allAssets);
-      await expect(page.getByRole("alert")).toHaveCount(1);
+      await openBusyProgram(page, { colossusBuilt: true });
+      await chooseEveryAsset(page);
+      await expect(page.getByRole("alert")).toHaveCount(0);
       const mission = page
         .locator(".panel", { hasText: "Launch Vehicle" })
         .getByTestId("research-earnings");
@@ -227,7 +256,7 @@ for (const size of screenSizes) {
       await expect(
         page.getByTestId("operating-assets").getByRole("listitem").last(),
       ).toContainText("Trailblazer Rover at Jezero Crater");
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -238,8 +267,8 @@ for (const size of screenSizes) {
     test("Planning Mode fits on one screen with every Contingency on offer bought", async ({
       page,
     }) => {
-      await openBusyProgram(page);
-      await chooseAssets(page, allAssets);
+      await openBusyProgram(page, { colossusBuilt: true });
+      await chooseEveryAsset(page);
       const contingencies = page.getByRole("checkbox", {
         name: /Contingency/,
       });
@@ -254,7 +283,7 @@ for (const size of screenSizes) {
         "Swings back",
       );
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       expect(
         await unreadableText(
           page.locator(
@@ -273,10 +302,7 @@ for (const size of screenSizes) {
       page,
     }) => {
       await openBusyProgram(page, { colossusBuilt: true });
-      await page
-        .getByRole("combobox", { name: "Launch Vehicle" })
-        .selectOption("meridian-colossus");
-      await chooseAssets(page, allAssets);
+      await chooseEveryAsset(page);
       await expect(
         page.getByTestId("mission-event").filter({ hasText: "Rendezvous" }),
       ).toBeVisible();
@@ -294,7 +320,7 @@ for (const size of screenSizes) {
         .getByRole("combobox", { name: "Trajectory" })
         .selectOption("free-return");
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -331,7 +357,7 @@ for (const size of screenSizes) {
       );
       await expect(page.getByRole("alert")).toHaveCount(0);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -373,7 +399,7 @@ for (const size of screenSizes) {
       ).toBeVisible();
       await expect(page.getByRole("alert")).toHaveCount(0);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -384,8 +410,8 @@ for (const size of screenSizes) {
     test("Planning Mode fits on one screen with a busy Program, every Asset and every Development chosen", async ({
       page,
     }) => {
-      await openBusyProgram(page);
-      await chooseAssets(page, allAssets);
+      await openBusyProgram(page, { colossusBuilt: true });
+      await chooseEveryAsset(page);
       const developments = page.getByRole("checkbox", {
         name: "Start Development",
       });
@@ -394,7 +420,7 @@ for (const size of screenSizes) {
         await development.check();
       }
       await expect(page.getByTestId("development-cost")).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -405,11 +431,11 @@ for (const size of screenSizes) {
     test("Planning Mode fits on one screen with notes that nothing is left to Survey", async ({
       page,
     }) => {
-      await openBusyProgram(page, { allSurveyed: true });
-      await chooseAssets(page, allAssets);
+      await openBusyProgram(page, { allSurveyed: true, colossusBuilt: true });
+      await chooseEveryAsset(page);
       await expect(page.getByTestId("nothing-left-to-survey")).toHaveCount(2);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -420,17 +446,15 @@ for (const size of screenSizes) {
     test("the Program summary fits on one screen with every Milestone earned", async ({
       page,
     }) => {
+      // Cancelled at the end of the Turn, as nothing else ends a Program now.
+      await overrideProgramData(page, { cancellationLevel: 1000 });
       await openBusyProgram(page);
-      await page.getByRole("button", { name: "Retire Program" }).click();
-      await page
-        .getByRole("dialog", { name: "Retire Program" })
-        .getByRole("button", { name: "Yes, retire the Program" })
-        .click();
+      await endTurnWithoutLaunching(page);
       const summary = page.getByTestId("program-summary");
       await expect(summary.getByRole("listitem")).toHaveCount(
         realMilestones.length,
       );
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "Start a new Program" }),
       ).toBeInViewport({ ratio: 1 });

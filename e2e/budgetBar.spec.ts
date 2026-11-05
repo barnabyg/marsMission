@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   chooseAssets,
+  overrideProgramData,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -37,7 +38,11 @@ test("turns the mass bar red and disables Launch Mission, saying why, when an As
 }) => {
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
+  // Ticked on the Meridian Heavy, as neither can be ticked once it wouldn't fit, then moved to a smaller one.
+  const vehicle = page.getByRole("combobox", { name: "Launch Vehicle" });
+  await vehicle.selectOption("meridian-heavy");
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
+  await vehicle.selectOption("meridian-medium");
 
   const mass = page.getByTestId("mass-gauge");
   await expect(page.getByTestId("mission-mass")).toHaveText("5.5 of 4 tonnes");
@@ -67,9 +72,7 @@ test("turns the mass bar red and disables Launch Mission, saying why, when an As
   }
 
   // A larger Launch Vehicle brings it back within its limits.
-  await page
-    .getByRole("combobox", { name: "Launch Vehicle" })
-    .selectOption("meridian-heavy");
+  await vehicle.selectOption("meridian-heavy");
   await expect(mass).not.toHaveAttribute("data-level", "over");
   await expect(launch).toBeEnabled();
   expect(problems).toEqual([]);
@@ -88,4 +91,23 @@ test("greys out Launch Mission with nothing ticked, saying why", async ({
   // A neutral grey, with none of the accent colour of an enabled Launch Mission.
   await expect(launch).toHaveCSS("background-color", "rgb(43, 47, 58)");
   await expect(launch).toHaveCSS("opacity", "1");
+});
+
+test("shows why a plan the player can't afford is rejected", async ({
+  page,
+}) => {
+  await overrideProgramData(page, { startingMoneyMillions: 1100 });
+  await page.goto("/");
+  // Affordable when ticked, until a dearer Launch Vehicle takes it over the Money.
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-heavy");
+
+  await expect(page.getByRole("alert")).toContainText("costs $1.4B");
+  await expect(page.getByRole("alert")).toContainText("$1.1B");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await expect(
+    page.getByRole("button", { name: "Launch Mission" }),
+  ).toBeDisabled();
 });
