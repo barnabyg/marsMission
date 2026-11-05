@@ -3,7 +3,9 @@ import { productionBaseURL } from "../playwright.config";
 import {
   cancelledAfterOneTurn,
   chooseAssets,
+  endTurnAndContinue,
   eventEntries,
+  launchFirstMission,
   overrideProgramData,
   pauseAtEvent,
   playToNextTurn,
@@ -15,7 +17,7 @@ import { seedFailingAt, successSeed } from "./seeds";
 test("plays from a new Program through a launch to the next Turn", async ({
   page,
 }) => {
-  // Over 5 s: a whole journey into the next Turn, stopping at two points at 1x.
+  // Over 5 s: a whole journey into the next Turn, stopping at two points.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
 
@@ -52,7 +54,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await pauseAtEvent(
     page,
     "Funding Threshold reached: 250 Public Support",
-    () => page.getByRole("button", { name: "1x" }).click(),
+    () => page.getByRole("button", { name: "5x" }).click(),
   );
   await expect(eventEntries(page).getByRole("heading")).toHaveText([
     "Funding Threshold reached: 250 Public Support",
@@ -137,14 +139,10 @@ for (const { missionEvent, before } of [
   test(`plays a Mission that fails at ${missionEvent} through to the next Turn`, async ({
     page,
   }) => {
-    // Over 5 s: for a later Mission Event, waits at 1x for the failure, then plays on to the next Turn.
+    // Over 5 s: plays on to the next Turn.
     const problems = watchForProblems(page);
-    await page.goto(`/?seed=${seedFailingAt(missionEvent)}`);
-    await chooseAssets(page, ["Pathfinder Orbiter"]);
-
-    await pauseAtEvent(page, `${missionEvent} failed`, () =>
-      page.getByRole("button", { name: "Launch Mission" }).click(),
-    );
+    const seed = seedFailingAt(missionEvent);
+    await launchFirstMission(page, seed, `${missionEvent} failed`, "5x");
     const failedEntry = eventEntries(page).first();
     await expect(eventEntries(page).getByRole("heading")).toHaveText([
       `${missionEvent} failed`,
@@ -288,7 +286,6 @@ test("pauses Mission Mode and resumes from exactly where it stopped, without car
 test("keeps the events column beside the solar system view, scrolling by itself if it fills", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the Funding Threshold, with enough entries to fill the column.
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await pauseAtEvent(page, "Launch", () =>
@@ -309,7 +306,7 @@ test("keeps the events column beside the solar system view, scrolling by itself 
   await pauseAtEvent(
     page,
     "Funding Threshold reached: 250 Public Support",
-    () => page.getByRole("button", { name: "1x" }).click(),
+    () => page.getByRole("button", { name: "5x" }).click(),
   );
   await page.setViewportSize({ width: 2560, height: 400 });
   const entries = page.getByTestId("event-entries");
@@ -396,7 +393,7 @@ test("buys Reliability, sees the risk band and cost change, and launches", async
   await expect(
     page.getByRole("heading", { name: "Mission Mode" }),
   ).toBeVisible();
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
 
   // Reliability applied to that Mission only.
   await expect(page.getByTestId("turn-number")).toHaveText("2");

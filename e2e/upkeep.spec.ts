@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import {
   chooseAssets,
+  endTurnAndContinue,
   endTurnWithoutLaunching,
-  playToNextTurn,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -20,7 +20,7 @@ test("pays Upkeep for an Asset kept at Mars, shown before the Turn and in its su
   const longest = await life.locator("option").last().getAttribute("value");
   await life.selectOption(longest ?? "");
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 
   // The orbiter costs Upkeep from the Turn after it arrives, which the Turn will spend even without a launch.

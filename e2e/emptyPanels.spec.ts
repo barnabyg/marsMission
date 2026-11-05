@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { chooseAssets, playToNextTurn, termsWithoutTooltips } from "./helpers";
+import {
+  chooseAssets,
+  endTurnAndContinue,
+  termsWithoutTooltips,
+} from "./helpers";
 import { successSeed } from "./seeds";
 
 test("empty Planning Mode panels shrink to a line, and grow once an Asset is operating and a Milestone earned", async ({
@@ -23,7 +27,7 @@ test("empty Planning Mode panels shrink to a line, and grow once an Asset is ope
 
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
   await expect(page.getByTestId("operating-assets")).toContainText(
     "Pathfinder Orbiter",

@@ -17,8 +17,11 @@ async function arrivalDate(page: Page, id: "slow" | "fast"): Promise<string> {
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await trajectory(page).selectOption(id);
-  await pauseAtEvent(page, "Mars orbit insertion", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Mars orbit insertion",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
   await expect(page.getByTestId("operating-at-mars")).toContainText(

@@ -60,14 +60,14 @@ function longestStep(positions: string[]): number {
 test("moves the view to Mars orbit on arrival, and leaves it where the player then puts it", async ({
   page,
 }) => {
-  // Over 5 s: stops at two points at 1x, then checks the view for the rest of the Turn.
+  // Over 5 s: stops at two points, then checks the view for the rest of the Turn.
   const problems = watchForProblems(page);
   await launchFirstMission(page, successSeed, "Mars transfer burn");
   const current = page.getByTestId("current-view");
   await expect(current).toHaveText("Solar system");
 
   await pauseAtEvent(page, "Mars orbit insertion", () =>
-    page.getByRole("button", { name: "1x" }).click(),
+    page.getByRole("button", { name: "5x" }).click(),
   );
   await expect(current).toHaveText("Mars orbit");
   await expect(orbiterLabels(page)).toHaveText(["Pathfinder Orbiter"]);
@@ -92,12 +92,12 @@ test("moves the view to Mars orbit on arrival, and leaves it where the player th
 test("moves the view to Mars orbit when orbit insertion fails", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the failure.
   const problems = watchForProblems(page);
   await launchFirstMission(
     page,
     seedFailingAt("Mars orbit insertion"),
     "Mars orbit insertion failed",
+    "5x",
   );
   await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
   expect(problems).toEqual([]);
@@ -115,7 +115,6 @@ test("stays on the solar system when Launch fails", async ({ page }) => {
 test("a switch away holds until the next Mission Event with a view of its own", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x between two Mission Events, which is what the switch has to hold across.
   const problems = watchForProblems(page);
   // Spaced out, because in real data these two are too close together to stop between at this test speed.
   await page.route("**/data/mission-events.json", async (route) => {
@@ -144,14 +143,17 @@ test("a switch away holds until the next Mission Event with a view of its own", 
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
   const current = page.getByTestId("current-view");
 
-  await pauseAtEvent(page, "Mars orbit insertion", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Mars orbit insertion",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   await expect(current).toHaveText("Mars orbit");
   await viewButton(page, "Solar system").click();
   await expect(current).toHaveText("Solar system");
   await pauseAtEvent(page, "Entry/descent/landing failed", async () => {
-    await page.getByRole("button", { name: "1x" }).click();
+    await page.getByRole("button", { name: "5x" }).click();
     await expect(page.getByTestId("mission-date")).not.toHaveText(
       "29 June 2029",
     );

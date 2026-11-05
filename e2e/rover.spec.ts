@@ -64,8 +64,11 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   await activity.selectOption("long-traverse");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await pauseAtEvent(page, "First landing at Jezero Crater", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "First landing at Jezero Crater",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   await expect(
     eventEntries(page).filter({ hasText: "Entry/descent/landing" }),
@@ -150,8 +153,11 @@ test("lands a rover and a lander at one site, each with its own Activity", async
       .filter({ hasText: "Entry/descent/landing" }),
   ).toHaveCount(1);
 
-  await pauseAtEvent(page, "First landing at Jezero Crater", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "First landing at Jezero Crater",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   await expect(
     eventEntries(page).filter({ hasText: "Entry/descent/landing" }),
@@ -219,8 +225,11 @@ test("loses a rover and a lander together in one crash", async ({ page }) => {
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await chooseAssets(page, ["Prospector Lander", "Trailblazer Rover"]);
 
-  await pauseAtEvent(page, "Entry/descent/landing failed", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Entry/descent/landing failed",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   const failed = eventEntries(page).first();
   await expect(failed).toContainText(

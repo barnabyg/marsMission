@@ -5,8 +5,11 @@ import {
   eventEntries,
   holdSequence,
   holdTurnWhenShown,
+  launchHeld,
   overrideProgramData,
   pauseAtEvent,
+  pauseAtEventAfter,
+  playFastUntil,
   surfaceAssets,
   switchViewWhilePlaying,
   termsWithoutTooltips,
@@ -55,7 +58,7 @@ async function launchLanderAndRover(page: Page): Promise<void> {
 test("switches to the surface view and back during a Turn, at any speed and while paused", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays the rest of the Turn at top speed.
+  // Over 5 s: a landing takes the same real time at any speed.
   const problems = watchForProblems(page);
   await launchLanderAndRover(page);
   const current = page.getByTestId("current-view");
@@ -102,9 +105,10 @@ test("switches to the surface view and back during a Turn, at any speed and whil
   expect(await eventEntries(page).count()).toBe(happened);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  // The landing plays here, and the Assets are at the site afterwards.
+  // The landing plays here, and the Assets are at the site afterwards. It's on 4 July 2029, and the Turn is slowed to
+  // 1x well before then, so there's time left in it for the whole landing.
   const landed = holdSequence(page);
-  await page.getByRole("button", { name: "1x" }).click();
+  await playFastUntil(page, "25 March 2029");
   await landed;
   await expect(current).toHaveText("Surface");
   await expect(surfaceAssets(page)).toHaveText([
@@ -197,17 +201,21 @@ test("moves from the surface to the spacecraft on the day the only landing on it
 test("plays a crash on the surface without showing it as operating, then moves to Mars orbit and says why", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then for the crash to play out, which takes real time.
+  // Over 5 s: waits for the crash to play out, which takes the same real time at any speed.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${crashSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
-  await pauseAtEvent(page, "Entry/descent/landing failed", async () => {
-    await page.getByRole("button", { name: "Launch Mission" }).click();
-    await viewButton(page, "Surface").click();
-    await expect(page.getByTestId("surface-status")).toContainText(
-      "On its way: Prospector Lander",
-    );
-  });
+  await launchHeld(page);
+  await viewButton(page, "Surface").click();
+  await expect(page.getByTestId("surface-status")).toContainText(
+    "On its way: Prospector Lander",
+  );
+  // Slowed to 1x well before the crash on 4 July 2029, so there's time left in the Turn for it to play out.
+  await pauseAtEventAfter(
+    page,
+    "Entry/descent/landing failed",
+    "25 March 2029",
+  );
   const current = page.getByTestId("current-view");
   await expect(current).toHaveText("Surface");
   await expect(page.getByTestId("surface-site")).toHaveText("Jezero Crater");
@@ -318,7 +326,6 @@ async function openTwoSites(page: Page, lasting = false): Promise<void> {
 test("picks between Landing Sites, and drops each from the day its Assets stop", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for two Assets to stop, which is what the test is about.
   const problems = watchForProblems(page);
   await openTwoSites(page);
   await holdTurnWhenShown(page);
@@ -348,7 +355,7 @@ test("picks between Landing Sites, and drops each from the day its Assets stop",
 
   // The player's pick goes with its last Asset, and the view moves to the other site.
   await pauseAtEvent(page, "Trailblazer Rover: Service Life ended", () =>
-    page.getByRole("button", { name: "1x" }).click(),
+    page.getByRole("button", { name: "5x" }).click(),
   );
   await expect(site).toHaveText("Jezero Crater");
   await expect(surfaceAssets(page)).toHaveText(["Prospector Lander"]);
@@ -357,7 +364,7 @@ test("picks between Landing Sites, and drops each from the day its Assets stop",
 
   // With no site left, the view moves to Mars orbit and says why it can't go back.
   await pauseAtEvent(page, "Prospector Lander: Service Life ended", () =>
-    page.getByRole("button", { name: "1x" }).click(),
+    page.getByRole("button", { name: "5x" }).click(),
   );
   await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
   await expectSurfaceUnavailable(page);
@@ -368,7 +375,7 @@ test("picks between Landing Sites, and drops each from the day its Assets stop",
 test("shows a crash at its own site where other sites have Assets, and then goes back to them", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the crash to play out, which takes real time.
+  // Over 5 s: waits for the crash to play out, which takes the same real time at any speed.
   const problems = watchForProblems(page);
   await page.route("**/data/landing-sites.json", async (route) => {
     const response = await route.fetch();
@@ -397,12 +404,11 @@ test("shows a crash at its own site where other sites have Assets, and then goes
   const site = page.getByTestId("surface-site");
 
   // The player is looking at another site, which gives way when the crash happens.
-  await pauseAtEvent(page, "Entry/descent/landing failed", async () => {
-    await page.getByRole("button", { name: "Launch Mission" }).click();
-    await viewButton(page, "Surface").click();
-    await page.getByLabel("Landing Site to show").selectOption("Jezero Crater");
-    await expect(site).toHaveText("Jezero Crater");
-  });
+  await launchHeld(page);
+  await viewButton(page, "Surface").click();
+  await page.getByLabel("Landing Site to show").selectOption("Jezero Crater");
+  await expect(site).toHaveText("Jezero Crater");
+  await pauseAtEventAfter(page, "Entry/descent/landing failed", "1 May 2045");
   await expect(site).toHaveText("Meridiani Planum");
   await expect(surfaceAssets(page)).toHaveCount(0);
   await expect(page.getByTestId("surface-crash")).toHaveText(

@@ -3,9 +3,9 @@ import { storageKeyFor } from "../src/save/saveStore";
 import { tooltips } from "../src/ui/tooltips";
 import {
   chooseAssets,
+  endTurnAndContinue,
   openLoadDialog,
   openSaveDialog,
-  playToNextTurn,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -47,7 +47,7 @@ test("saves to a slot, moves on a Turn, loads the slot and sees the earlier stat
   // Mission Mode offers no saving.
   await expect(page.getByRole("button", { name: "Save" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Load" })).toHaveCount(0);
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 
   await openLoadDialog(page);
@@ -76,7 +76,7 @@ test("keeps Survey progress, sites landed at and time left through saving to a s
     .getByLabel("Service Life for Prospector Lander")
     .selectOption("2100");
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 
   await openSaveDialog(page);
@@ -168,7 +168,7 @@ test("asks before overwriting a used slot", async ({ page }) => {
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 
   await openSaveDialog(page);

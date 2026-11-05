@@ -3,12 +3,12 @@ import { storageKeyFor } from "../src/save/saveStore";
 import { tooltips, type Term } from "../src/ui/tooltips";
 import {
   chooseAssets,
+  endTurnAndContinue,
   endTurnWithoutLaunching,
   eventEntries,
   holdTurnWhenShown,
   overrideProgramData,
   pauseAtEvent,
-  playToNextTurn,
   termsInButtons,
   termsWithoutTooltips,
 } from "./helpers";
@@ -218,8 +218,11 @@ test("explains the terms of technology in Planning Mode, Mission Mode and the Tu
   await chooseAssets(page, ["Pinpoint Lander"]);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await pauseAtEvent(page, "Pinpoint Lander is Flight-proven", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Pinpoint Lander is Flight-proven",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   await expectTooltip(
     page,
@@ -231,7 +234,7 @@ test("explains the terms of technology in Planning Mode, Mission Mode and the Tu
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   const proven = page.getByTestId("summary-flight-proven");
   await expect(proven).toHaveText("Now Flight-proven: Pinpoint Lander");
   await expectTooltip(
@@ -288,8 +291,11 @@ test("explains the terms of Crew in Planning Mode, Mission Mode and the Turn sum
     .getByRole("combobox", { name: "Crew destination" })
     .selectOption("marsOrbit");
 
-  await pauseAtEvent(page, "Crew in Mars orbit", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Crew in Mars orbit",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   const arrived = eventEntries(page).filter({ hasText: "Crew in Mars orbit" });
   await expectTooltip(
@@ -304,7 +310,7 @@ test("explains the terms of Crew in Planning Mode, Mission Mode and the Turn sum
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   const summary = page.getByTestId("turn-summary");
   await expectTooltip(
     page,
@@ -375,7 +381,7 @@ test("no button highlights a game term, while the text around it keeps its toolt
     page.getByRole("heading", { name: "Mission Mode" }),
   ).toBeVisible();
   expect(await termsInButtons(page)).toEqual([]);
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
   expect(await termsInButtons(page)).toEqual([]);
 
   await page.reload();

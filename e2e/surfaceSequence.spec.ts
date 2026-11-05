@@ -3,6 +3,8 @@ import {
   chooseAssets,
   holdSequence,
   holdTurnWhenShown,
+  launchHeld,
+  playFastUntil,
   surfaceAssets,
   termsWithoutTooltips,
   viewButton,
@@ -17,10 +19,19 @@ function scene(page: Page) {
   return page.getByTestId("mission-scene");
 }
 
+/** Launches a lander, holding the Turn as Mission Mode opens. */
 async function launchLanding(page: Page): Promise<void> {
   await page.goto(`/?seed=${landingSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await launchHeld(page);
+}
+
+/**
+ * Plays on to the landing on 4 July 2029, quickly until a few months before it and then at 1x, which leaves the Turn
+ * time enough for the whole landing.
+ */
+function playToLanding(page: Page): Promise<void> {
+  return playFastUntil(page, "25 March 2029");
 }
 
 function playedMs(page: Page) {
@@ -48,6 +59,7 @@ test("moves the view to the surface for a landing at 3840×2160, with a smooth c
       attributeFilter: ["data-camera-position"],
     });
   });
+  await playToLanding(page);
 
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
   await expect(scene(page)).toHaveAttribute("data-sequence", "landing");
@@ -88,7 +100,9 @@ test("holds a landing when paused, carries on without a jump at a new speed, and
   // Over 5 s: waits for the landing, and checks it stands still for a while.
   const problems = watchForProblems(page);
   await launchLanding(page);
-  await holdSequence(page, 1000);
+  const playing = holdSequence(page, 1000);
+  await playToLanding(page);
+  await playing;
 
   // Paused, it stands still in real time.
   const held = await playedMs(page);
@@ -151,7 +165,9 @@ test("lets the player switch away during a landing without pulling them back, an
   // Over 5 s: waits for the landing, then plays through it with the view elsewhere.
   const problems = watchForProblems(page);
   await launchLanding(page);
-  await holdSequence(page, 500);
+  const playing = holdSequence(page, 500);
+  await playToLanding(page);
+  await playing;
   const current = page.getByTestId("current-view");
   await expect(current).toHaveText("Surface");
 
@@ -202,8 +218,10 @@ test("moves a rover's label across the surface on a Long traverse", async ({
   await page
     .getByLabel("Activity for Trailblazer Rover")
     .selectOption("long-traverse");
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await holdSequence(page);
+  await launchHeld(page);
+  const landed = holdSequence(page);
+  await playToLanding(page);
+  await landed;
   // Only once the camera has stopped can a moving label be down to the rover.
   await expect(scene(page).locator("canvas")).toHaveAttribute(
     "data-camera-position",

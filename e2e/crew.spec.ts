@@ -1,12 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
+  endTurnAndContinue,
   endTurnWithoutLaunching,
   eventEntries,
   holdSequence,
+  launchHeld,
   listenForSounds,
   overrideProgramData,
   pauseAtEvent,
-  playToNextTurn,
+  pauseAtEventAfter,
   soundsHeard,
   surfaceAssets,
   termsWithoutTooltips,
@@ -30,7 +32,7 @@ function crewedMission(page: Page) {
 test("develops the Meridian Colossus, launches a Crewed Mission on it and sees its named Crew at Mars in the next Planning Mode", async ({
   page,
 }) => {
-  // Over 5 s: two Turns of Development, a Turn played at 10x, then two more Turns.
+  // Over 5 s: two Turns of Development, a Turn played at 5x to the Crew's arrival, then two more Turns.
   const problems = watchForProblems(page);
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
   await page.goto(`/?seed=${crewSeed}`);
@@ -110,8 +112,11 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await pauseAtEvent(page, "Crew in Mars orbit", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Crew in Mars orbit",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   await expect(
     eventEntries(page).filter({ hasText: "Crew in Mars orbit" }),
@@ -123,7 +128,7 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   ).toBeVisible();
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-crew")).toContainText(
     "Amara Okafor, in Mars orbit from this Turn: Health 65 of 100",
@@ -154,8 +159,12 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await expect(crew).toHaveText([
     /^Crew in Mars orbit: Amara Okafor \(Health 31\), Lena Petrova \(Health 31\), Kenji Sato \(Health 31\)\. Supplies for 523 days/,
   ]);
-  await pauseAtEvent(page, "Supplies out in Mars orbit", () =>
-    page.getByRole("button", { name: "End Turn without launching" }).click(),
+  await pauseAtEvent(
+    page,
+    "Supplies out in Mars orbit",
+    () =>
+      page.getByRole("button", { name: "End Turn without launching" }).click(),
+    "5x",
   );
   await expect(
     eventEntries(page).filter({ hasText: "Supplies out in Mars orbit" }),
@@ -177,7 +186,7 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
 test("lands a Crewed Mission at a Landing Site, and sees its Crew at work there in the next Planning Mode", async ({
   page,
 }) => {
-  // Over 5 s: two Turns of Development, then a Turn played at 10x.
+  // Over 5 s: two Turns of Development, then a Turn played to the landing, which takes the same real time at any speed.
   const problems = watchForProblems(page);
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
   await page.goto(`/?seed=${crewLandingSeed}`);
@@ -216,9 +225,9 @@ test("lands a Crewed Mission at a Landing Site, and sees its Crew at work there 
   await expect(page.getByRole("alert")).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await pauseAtEvent(page, "Crew in Jezero Crater", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
-  );
+  // It lands on 11 October 2033, and it's slowed to 1x well before then, so the Turn has time left for the landing.
+  await launchHeld(page);
+  await pauseAtEventAfter(page, "Crew in Jezero Crater", "1 July 2033");
   await expect(
     eventEntries(page).filter({ hasText: "Crew in Jezero Crater" }),
   ).toContainText(
@@ -251,7 +260,7 @@ test("lands a Crewed Mission at a Landing Site, and sees its Crew at work there 
   await expect(surfaceAssets(page)).toHaveText(["Odyssey"]);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-ongoing-research")).toContainText(
     "Crew in Jezero Crater, Field research",
@@ -290,7 +299,7 @@ test("keeps the Crew at Mars through saving and loading", async ({ page }) => {
   await launchVehicle(page).selectOption("meridian-colossus");
   await crewedMission(page).check();
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
   await expect(page.getByTestId("turn-number")).toHaveText("4");
   // The automatic save at the start of this Planning Mode holds the Crew.
   await page.reload();
