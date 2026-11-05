@@ -120,7 +120,8 @@ select:not(:disabled):hover {
   border-color: var(--muted);
 }
 
-button:not(:disabled):active {
+button:not(:disabled):active,
+select:not(:disabled):active {
   background-color: var(--pressed);
 }
 

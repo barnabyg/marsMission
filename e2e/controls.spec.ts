@@ -46,6 +46,12 @@ test("buttons change when hovered and pressed, and disabled ones don't", async (
   await page.mouse.up();
   await page.keyboard.press("Escape");
 
+  const trajectory = page.getByRole("combobox", { name: "Trajectory" });
+  await page.mouse.move(0, 0);
+  const selectResting = await backgroundOf(trajectory);
+  await trajectory.hover();
+  await expect.poll(() => backgroundOf(trajectory)).not.toBe(selectResting);
+
   // Nothing is ticked, so Launch Mission is disabled.
   const launch = page.getByRole("button", { name: "Launch Mission" });
   await expect(launch).toBeDisabled();
