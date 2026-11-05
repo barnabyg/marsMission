@@ -16,6 +16,7 @@ import "../planning/statusBar.css";
 import "../planning/budgetBar.css";
 import "../ui/dialog.css";
 import "../save/saveSlots.css";
+import "../save/titleScreen.css";
 import "../mission/mission.css";
 import "../ui/summaryScreen.css";
 import "../ui/tooltips.css";

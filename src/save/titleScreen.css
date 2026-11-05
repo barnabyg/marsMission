@@ -1,0 +1,70 @@
+/* The game's name over Mars (public/art/mars.jpg), darkened towards the bottom so the text and buttons stay readable. */
+.title-screen {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: 3rem;
+  background:
+    linear-gradient(
+      to bottom,
+      rgb(11 13 20 / 55%) 0%,
+      rgb(11 13 20 / 75%) 45%,
+      var(--background) 100%
+    ),
+    url("/art/mars.jpg") center / cover no-repeat var(--background);
+}
+
+.title-screen-content {
+  display: grid;
+  justify-items: center;
+  gap: 2.5rem;
+  width: min(100%, 44rem);
+}
+
+.title-screen h1 {
+  font-size: var(--text-3xl);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  text-shadow: 0 0.2rem 1.5rem rgb(0 0 0 / 70%);
+}
+
+.title-screen-content > .problem {
+  margin: 0;
+  text-align: center;
+}
+
+.title-screen-actions {
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 24rem);
+}
+
+.title-screen-actions button {
+  font-size: var(--text-lg);
+  padding: 0.9rem 1.5rem;
+}
+
+.title-screen-slots {
+  display: grid;
+  gap: 0.8rem;
+  width: 100%;
+  background: rgb(23 27 40 / 85%);
+  border: 1px solid var(--panel-border);
+  border-radius: 0.5rem;
+  padding: 1.2rem 1.5rem;
+}
+
+.title-screen-slots h2 {
+  font-size: var(--text-md);
+  color: var(--muted);
+}
+
+.save-slots.compact .save-slot-row {
+  gap: 1rem;
+}
+
+.save-slots.compact .save-slot-text {
+  flex: 1;
+  min-width: 0;
+}
