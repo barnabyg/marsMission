@@ -1,5 +1,5 @@
 import { type ProgramView, type TurnPlan } from "../simulation/simulation";
-import type { PlanningTools } from "./playStyle";
+import type { PlanningTools } from "./strategy";
 
 type PlannedMission = NonNullable<TurnPlan["mission"]>;
 

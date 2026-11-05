@@ -1,45 +1,15 @@
 import { crewedMissions, type CrewStyle } from "./crewPlay";
+import type { PlanningTools, Strategy } from "./strategy";
+import { ending, payUpkeep, toolsEnding } from "./upkeepPlay";
 import {
   canFly,
   type DecisionAnswer,
-  type DecisionPoint,
   type PlannedActivity,
-  type PlannedAsset,
-  type PlannedCrew,
-  type PlannedTrajectory,
   type ProgramView,
-  type Simulation,
   type TurnPlan,
 } from "../simulation/simulation";
 
 type PlannedMission = NonNullable<TurnPlan["mission"]>;
-
-/** What a strategy can ask the Simulation while it plans a Turn. */
-export interface PlanningTools {
-  previewAssets(mission: PlannedMission): PlannedAsset[];
-  previewMission(
-    mission: PlannedMission,
-  ): ReturnType<Simulation["previewMission"]>;
-  previewTrajectories(mission: PlannedMission): PlannedTrajectory[];
-  previewCrew(mission: PlannedMission): PlannedCrew | null;
-  /** What's wrong with a plan for this Turn, which is nothing if it can be submitted. */
-  problemsWith(plan: TurnPlan): string[];
-  /** What a plan for this Turn costs, with any Development it starts. */
-  costOf(plan: TurnPlan): number;
-}
-
-/** One way of playing the game. It sees what a player sees, so it can't know the seed or what will happen. */
-export interface Strategy {
-  name: string;
-  description: string;
-  plan(view: ProgramView, tools: PlanningTools): TurnPlan;
-  /** What it does at a Decision Point on a Turn it planned this way. It takes the first choice offered unless it says otherwise. */
-  answer?(
-    decisionPoint: DecisionPoint,
-    view: ProgramView,
-    plan: TurnPlan,
-  ): DecisionAnswer;
-}
 
 type Aim = "science" | "grants";
 
@@ -466,13 +436,52 @@ export function playStyle(
           "safeMode",
         goNoGo: chosen.goNoGo ?? "holdOff",
       })[kind],
-    plan(view, tools) {
-      const plan = missionPlan(view, tools, chosen);
-      const left =
-        view.moneyMillions - tools.costOf(plan) - reserveFor(view, chosen);
-      const developmentIds = developmentsToStart(view, chosen, left);
-      // Left out when empty, so that a strategy that never develops plans exactly as it did before Development.
-      return developmentIds.length > 0 ? { ...plan, developmentIds } : plan;
+    plan(given, givenTools) {
+      const kept = planPayingUpkeep(given, givenTools, chosen, 0);
+      // Only short of money, not holding back at its limit of Assets, which ending one would only churn.
+      if (kept.mission || inService(given) >= (chosen.assetLimit ?? Infinity)) {
+        return kept;
+      }
+      // With nothing to launch, ending the missions of the Assets with the least Service Life left may free the Money
+      // for one, which is worth more than keeping them.
+      for (
+        let alsoEnd = 1;
+        alsoEnd <= given.operatingAssets.length;
+        alsoEnd++
+      ) {
+        const freed = planPayingUpkeep(given, givenTools, chosen, alsoEnd);
+        if (freed.mission) return freed;
+      }
+      return kept;
     },
   };
+}
+
+/** The Turn's plan, paying the upkeep of the Assets it keeps, after ending the missions of `alsoEnd` of them. */
+function planPayingUpkeep(
+  given: ProgramView,
+  givenTools: PlanningTools,
+  chosen: PlayStyle,
+  alsoEnd: number,
+): TurnPlan {
+  const { view, endedAssetKeys } = payUpkeep(given, alsoEnd);
+  const tools = toolsEnding(givenTools, endedAssetKeys);
+  // The reserve for a retry is kept against the Money before upkeep, which comes out of it.
+  const style = {
+    ...chosen,
+    reserveMillions: Math.max(
+      0,
+      (chosen.reserveMillions ?? 0) -
+        (given.moneyMillions - view.moneyMillions),
+    ),
+  };
+  const plan = missionPlan(view, tools, style);
+  const left =
+    view.moneyMillions - tools.costOf(plan) - reserveFor(view, style);
+  const developmentIds = developmentsToStart(view, style, left);
+  // Left out when empty, so that a strategy that never develops plans exactly as it did before Development.
+  return ending(
+    developmentIds.length > 0 ? { ...plan, developmentIds } : plan,
+    endedAssetKeys,
+  );
 }

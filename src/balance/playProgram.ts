@@ -13,7 +13,7 @@ import {
 } from "../simulation/simulation";
 import { crewProblems } from "./invalidCrew";
 import { invalidStates, timelineMissionEventProblems } from "./invalidStates";
-import type { PlanningTools, Strategy } from "./playStyle";
+import type { PlanningTools, Strategy } from "./strategy";
 
 /** What a report needs from one Turn of one Program. */
 export interface TurnRecord {

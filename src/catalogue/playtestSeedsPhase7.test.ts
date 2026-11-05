@@ -55,17 +55,17 @@ describe("the known seeds in the Phase 7 playtest guide", () => {
     });
     expect(second.summary).toMatchObject({
       developmentCostMillions: 1200,
-      moneyEndMillions: 3280,
+      moneyEndMillions: 3265,
       developmentsStarted: ["Meridian Colossus"],
     });
     const third = turnWithNoDecision(second.program, { mission: null });
     expect(third.summary).toMatchObject({
-      moneyEndMillions: 4080,
+      moneyEndMillions: 4050,
       developmentsFinished: ["Meridian Colossus"],
     });
     const fourth = turnWithNoDecision(third.program, { mission: null });
     expect(fourth.summary).toMatchObject({
-      moneyEndMillions: 4780,
+      moneyEndMillions: 4735,
       publicSupportEnd: 256,
       assetsEnded: ["Trailblazer Rover"],
     });
@@ -93,7 +93,7 @@ describe("the known seeds in the Phase 7 playtest guide", () => {
 
     const fifth = turnWithNoDecision(ready, crewed());
     expect(fifth.summary).toMatchObject({
-      moneyEndMillions: 2816,
+      moneyEndMillions: 2771,
       publicSupportEnd: 657,
       failure: null,
       crewLost: [],
@@ -125,7 +125,7 @@ describe("the known seeds in the Phase 7 playtest guide", () => {
 
     const lost = turnWithNoDecision(ready, crewed());
     expect(lost.summary).toMatchObject({
-      moneyEndMillions: 580,
+      moneyEndMillions: 535,
       publicSupportEnd: 73,
       failure: {
         missionEventName: "Mars orbit insertion",
@@ -146,7 +146,7 @@ describe("the known seeds in the Phase 7 playtest guide", () => {
     );
     const home = turnWithNoDecision(ready, crewed("free-return"));
     expect(home.summary).toMatchObject({
-      moneyEndMillions: 550,
+      moneyEndMillions: 505,
       publicSupportEnd: 217,
       failure: {
         missionEventName: "Mars orbit insertion",

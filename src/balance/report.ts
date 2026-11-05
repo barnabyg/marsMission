@@ -1,7 +1,7 @@
 import { parseCatalogue, type CatalogueFiles } from "../catalogue/catalogue";
 import { createSimulation } from "../simulation/simulation";
 import { playProgram, type TurnRecord } from "./playProgram";
-import type { Strategy } from "./playStyle";
+import type { Strategy } from "./strategy";
 import { strategies as allStrategies } from "./strategies";
 import { sum } from "./sum";
 import { mean, percent, table, tenth, whole } from "./reportFormat";
