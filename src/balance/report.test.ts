@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { playProgram } from "./playProgram";
 import { balanceReport } from "./report";
-import type { Strategy } from "./playStyle";
+import type { Strategy } from "./strategy";
 import { strategies } from "./strategies";
 import {
   certain,

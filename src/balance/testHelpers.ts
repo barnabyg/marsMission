@@ -4,7 +4,7 @@ import {
   calmCatalogueFiles,
   realCatalogueFiles,
 } from "../testing/realCatalogue";
-import type { Strategy } from "./playStyle";
+import type { Strategy } from "./strategy";
 
 // Fixtures shared by the tests of balance runs and of their report.
 

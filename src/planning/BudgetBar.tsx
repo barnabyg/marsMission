@@ -8,6 +8,8 @@ interface BudgetBarProps {
   costMillions: number;
   /** What the Developments starting this Turn cost, which comes out of the same Money. */
   developmentCostMillions: number;
+  /** What keeping the Assets at Mars going costs this Turn, which comes out of the same Money. */
+  upkeepMillions: number;
   moneyMillions: number;
   massTonnes: number;
   capacityTonnes: number;
@@ -29,6 +31,7 @@ interface BudgetBarProps {
 export function BudgetBar({
   costMillions,
   developmentCostMillions,
+  upkeepMillions,
   moneyMillions,
   massTonnes,
   capacityTonnes,
@@ -38,7 +41,7 @@ export function BudgetBar({
   onLaunch,
   onEndWithoutLaunching,
 }: BudgetBarProps) {
-  const totalMillions = costMillions + developmentCostMillions;
+  const totalMillions = costMillions + developmentCostMillions + upkeepMillions;
   return (
     <div className="budget-bar" data-testid="budget-bar">
       {children}
@@ -60,6 +63,15 @@ export function BudgetBar({
               <GameText>Development</GameText>{" "}
               <strong data-testid="development-cost">
                 {formatMoney(developmentCostMillions)}
+              </strong>
+            </>
+          )}
+          {upkeepMillions > 0 && (
+            <>
+              {" + "}
+              <GameText>Upkeep</GameText>{" "}
+              <strong data-testid="upkeep-cost">
+                {formatMoney(upkeepMillions)}
               </strong>
             </>
           )}{" "}

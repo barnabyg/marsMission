@@ -1,5 +1,5 @@
 import type { TurnRecord } from "./playProgram";
-import type { Strategy } from "./playStyle";
+import type { Strategy } from "./strategy";
 import { ending, mean, percent, table, tenth } from "./reportFormat";
 import { sum } from "./sum";
 

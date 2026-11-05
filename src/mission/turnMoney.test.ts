@@ -7,6 +7,7 @@ describe("the Turn summary's Money", () => {
       turnMoney({
         missionCostMillions: 500,
         developmentCostMillions: 300,
+        upkeepMillions: 60,
         fundingPayouts: [
           { publicSupport: 300, payoutMillions: 1000 },
           { publicSupport: 600, payoutMillions: 500 },
@@ -18,12 +19,13 @@ describe("the Turn summary's Money", () => {
       spent: [
         { name: "Mission cost", millions: 500 },
         { name: "Development", millions: 300 },
+        { name: "Upkeep", millions: 60 },
       ],
       received: [
         { name: "Funding Thresholds", millions: 1500 },
         { name: "Research Grants", millions: 40 },
       ],
-      changeMillions: 740,
+      changeMillions: 680,
     });
   });
 
@@ -32,6 +34,7 @@ describe("the Turn summary's Money", () => {
       turnMoney({
         missionCostMillions: 0,
         developmentCostMillions: 0,
+        upkeepMillions: 0,
         fundingPayouts: [],
         researchGrantMillions: 25,
         failure: null,
@@ -48,6 +51,7 @@ describe("the Turn summary's Money", () => {
       turnMoney({
         missionCostMillions: 1000,
         developmentCostMillions: 0,
+        upkeepMillions: 0,
         fundingPayouts: [],
         researchGrantMillions: 0,
         failure: {

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ProgramView, TurnSummary } from "../simulation/simulation";
 import { invalidStates } from "./invalidStates";
 import { planningTools, playProgram } from "./playProgram";
-import type { Strategy } from "./playStyle";
+import type { Strategy } from "./strategy";
 import { strategies } from "./strategies";
 import { sum } from "./sum";
 import {

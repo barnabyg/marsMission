@@ -5,8 +5,8 @@ import {
   surveyorInService,
   surveyThenLand,
   type PlayStyle,
-  type Strategy,
 } from "./playStyle";
+import type { Strategy } from "./strategy";
 
 const surveyingLanders: PlayStyle = {
   order: surveyThenLand(["lander"]),

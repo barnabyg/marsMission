@@ -1,4 +1,4 @@
-import type { ProgramView } from "../simulation/simulation";
+import { formatMoney, type ProgramView } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
 import {
@@ -17,10 +17,14 @@ interface OperatingPanelProps {
   /** The new Activities chosen this Turn, by each Asset's key. */
   chosenActivities: Record<string, string>;
   onActivityChange: (key: string, activityId: string) => void;
+  /** The Assets whose missions the player has chosen to end as this Turn starts, by key. */
+  endedKeys: string[];
+  onEndedChange: (key: string, ended: boolean) => void;
 }
 
 /**
- * The Assets already at Mars, each with what is left of its Service Life and the choice of its Activity, and the Crew
+ * The Assets already at Mars, each with what is left of its Service Life, its Upkeep, the choice of its Activity and
+ * the choice to end its mission, and the Crew
  * there, with their Health and the choice of the Activity they share in each place.
  */
 export function OperatingPanel({
@@ -31,6 +35,8 @@ export function OperatingPanel({
   somethingLeftToSurvey,
   chosenActivities,
   onActivityChange,
+  endedKeys,
+  onEndedChange,
 }: OperatingPanelProps) {
   const empty = assets.length === 0 && crew.length === 0;
   return (
@@ -76,9 +82,17 @@ export function OperatingPanel({
         )
       ) : (
         <>
-          <p>
+          {/* Each row has no room for its own Upkeep, so the panel says the total; each End mission says what it saves. */}
+          <p data-testid="operating-upkeep">
             <GameText>
-              Each Asset keeps its Activity until you change it.
+              {`Each Asset keeps its Activity until you change it. Upkeep this Turn: ${formatMoney(
+                assets
+                  .filter(({ key }) => !endedKeys.includes(key))
+                  .reduce(
+                    (total, { upkeepMillions }) => total + upkeepMillions,
+                    0,
+                  ),
+              )}.`}
             </GameText>
           </p>
           <ResearchEarnings
@@ -92,35 +106,58 @@ export function OperatingPanel({
               isSurveying(chosenActivities[key] ?? activityId, activities),
             ) && <NothingLeftToSurvey />}
           <ul className="operating-assets" data-testid="operating-assets">
-            {assets.map((asset) => (
-              <li key={asset.key}>
-                <span>
-                  <GameText>
-                    {`${
-                      asset.landingSiteName
-                        ? `${asset.name} at ${asset.landingSiteName}`
-                        : asset.name
-                    }: ${
-                      asset.daysLeft > 0
-                        ? `${asset.daysLeft} days of Service Life left`
-                        : "Service Life ends as this Turn starts"
-                    }`}
-                  </GameText>
-                </span>
-                {asset.activities.length > 0 ? (
-                  <ActivitySelect
-                    assetName={asset.name}
-                    activityId={chosenActivities[asset.key] ?? asset.activityId}
-                    activities={asset.activities}
-                    onChange={(activityId) => {
-                      onActivityChange(asset.key, activityId);
-                    }}
-                  />
-                ) : (
-                  <GameText>{asset.activityName}</GameText>
-                )}
-              </li>
-            ))}
+            {assets.map((asset) => {
+              const ended = endedKeys.includes(asset.key);
+              const where = asset.landingSiteName
+                ? `${asset.name} at ${asset.landingSiteName}`
+                : asset.name;
+              return (
+                <li key={asset.key} className={ended ? "ended" : undefined}>
+                  <span>
+                    <GameText>
+                      {`${where}: ${
+                        ended
+                          ? "its mission ends as this Turn starts"
+                          : asset.daysLeft > 0
+                            ? `${asset.daysLeft} days of Service Life left`
+                            : "Service Life ends as this Turn starts"
+                      }`}
+                    </GameText>
+                  </span>
+                  {asset.activities.length > 0 ? (
+                    <ActivitySelect
+                      assetName={asset.name}
+                      activityId={
+                        chosenActivities[asset.key] ?? asset.activityId
+                      }
+                      activities={asset.activities}
+                      onChange={(activityId) => {
+                        onActivityChange(asset.key, activityId);
+                      }}
+                    />
+                  ) : (
+                    <GameText>{asset.activityName}</GameText>
+                  )}
+                  {/* Only one with Service Life left costs Upkeep, so only that one's mission is worth ending. */}
+                  {asset.daysLeft > 0 && (
+                    <label
+                      className="end-mission"
+                      title={`Takes it out of service as this Turn starts, saving its Upkeep of ${formatMoney(asset.upkeepMillions)} a Turn.`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={ended}
+                        aria-label={`End the mission of ${where}`}
+                        onChange={(event) => {
+                          onEndedChange(asset.key, event.target.checked);
+                        }}
+                      />
+                      End mission
+                    </label>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </>
       )}

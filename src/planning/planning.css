@@ -128,6 +128,19 @@
   min-width: 10rem;
 }
 
+/* Beside each Asset's Activity, ending its mission so that it costs no more Upkeep. */
+.operating-assets .end-mission {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.operating-assets li.ended > span {
+  color: var(--muted);
+}
+
 .developments {
   display: grid;
   gap: 0.4rem;

@@ -174,6 +174,7 @@ describe("a successful landing", () => {
           },
         ],
         daysLeft: 49_425,
+        upkeepMillions: 0,
         landingSiteName: "Alpha Plain",
       },
     ]);

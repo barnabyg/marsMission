@@ -51,7 +51,8 @@ export function invalidStates(
     [
       summary.moneyStartMillions -
         summary.missionCostMillions -
-        summary.developmentCostMillions +
+        summary.developmentCostMillions -
+        summary.upkeepMillions +
         thresholdMillions +
         summary.researchGrantMillions +
         (summary.failure?.refundMillions ?? 0) !==

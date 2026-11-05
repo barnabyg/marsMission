@@ -28,6 +28,7 @@ export function turnMoney(
     TurnSummary,
     | "missionCostMillions"
     | "developmentCostMillions"
+    | "upkeepMillions"
     | "fundingPayouts"
     | "researchGrantMillions"
     | "failure"
@@ -36,6 +37,7 @@ export function turnMoney(
   const spent = leaveOutNothing([
     { name: "Mission cost", millions: summary.missionCostMillions },
     { name: "Development", millions: summary.developmentCostMillions },
+    { name: "Upkeep", millions: summary.upkeepMillions },
   ]);
   const received = leaveOutNothing([
     {

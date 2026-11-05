@@ -391,7 +391,9 @@ describe("the balance of Phase 4", () => {
     expect(everything.money).toBeLessThan(steady.money);
     const shortest = played("steady: shortest Service Life");
     const shortestTested = played("steady: shortest, Tested");
-    expect(shortestTested.money).toBeLessThan(shortest.money);
+    // Compared by cancellations, not money: with upkeep, more of these Programs are cancelled just short of the money
+    // for another Mission, which leaves them more money at the end, not less.
+    expect(shortestTested.cancelled).toBeGreaterThan(shortest.cancelled);
     expect(shortestTested.science).toBeLessThan(shortest.science);
   });
 

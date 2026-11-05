@@ -13,7 +13,7 @@ import {
 } from "../simulation/simulation";
 import { crewProblems } from "./invalidCrew";
 import { invalidStates, timelineMissionEventProblems } from "./invalidStates";
-import type { PlanningTools, Strategy } from "./playStyle";
+import type { PlanningTools, Strategy } from "./strategy";
 
 /** What a report needs from one Turn of one Program. */
 export interface TurnRecord {
@@ -23,7 +23,7 @@ export interface TurnRecord {
   publicSupport: number;
   assetsOperating: number;
   cancelled: boolean;
-  /** From the Turn's summary. What its Mission and any Development cost. */
+  /** From the Turn's summary. What its Mission, any Development and the upkeep of the Assets at Mars cost. */
   spentMillions: number;
   thresholdMillions: number;
   researchGrantMillions: number;
@@ -92,7 +92,9 @@ function recordOf(
     assetsOperating: after.operatingAssets.length,
     cancelled: after.status.kind === "cancelled",
     spentMillions:
-      summary.missionCostMillions + summary.developmentCostMillions,
+      summary.missionCostMillions +
+      summary.developmentCostMillions +
+      summary.upkeepMillions,
     thresholdMillions: summary.fundingPayouts.reduce(
       (total, { payoutMillions }) => total + payoutMillions,
       0,

@@ -43,6 +43,7 @@ describe("validating a plan", () => {
     expect(simulation.validatePlan(program, sendOrbiter)).toEqual({
       costMillions: 500,
       developmentCostMillions: 0,
+      upkeepMillions: 0,
       massTonnes: 2,
       capacityTonnes: 5,
       problems: [],

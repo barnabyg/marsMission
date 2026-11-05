@@ -37,6 +37,8 @@ export const tooltips = {
     "A pre-designed piece of hardware chosen from a catalogue, such as an orbiter, lander, rover, drone, habitat or fuel plant. Assets remain in place and keep working after their Mission until their Service Life ends or they fail.",
   "Service Life":
     "How long an Asset keeps operating once in place. Longer Service Life costs more.",
+  Upkeep:
+    "What an Asset operating at Mars costs for each Turn it is kept going after the one it arrives in. The player can end an Asset's mission in Planning Mode, which takes it out of service as the Turn starts and stops its Upkeep.",
   Benefit:
     "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface. A second Asset giving the same Benefit adds nothing.",
   Activity:

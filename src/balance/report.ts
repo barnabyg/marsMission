@@ -1,7 +1,7 @@
 import { parseCatalogue, type CatalogueFiles } from "../catalogue/catalogue";
 import { createSimulation } from "../simulation/simulation";
 import { playProgram, type TurnRecord } from "./playProgram";
-import type { Strategy } from "./playStyle";
+import type { Strategy } from "./strategy";
 import { strategies as allStrategies } from "./strategies";
 import { sum } from "./sum";
 import { mean, percent, table, tenth, whole } from "./reportFormat";
@@ -341,7 +341,7 @@ function howToRead(programs: number): string[] {
     "A strategy's Turn table shows means over the Programs that played that Turn, at the end of it, so cancelled Programs",
     "drop out of later rows. Active% is out of all Programs. Thresh% and Grant% are shares of that Turn's income.",
     "Summary columns are means per Program: Turns played, final Science and Money, total income from Funding Thresholds and",
-    "Research Grants and the Grant% of it, total Spent on Missions and Development, Missions launched, Failed and Assets",
+    "Research Grants and the Grant% of it, total Spent on Missions, Development and Upkeep, Missions launched, Failed and Assets",
     "Lost in service, and Assets operating at the end of each Turn played.",
   ];
 }

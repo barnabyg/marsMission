@@ -50,7 +50,7 @@ export interface MissionPlan {
   withoutLaunchingProblems: string[];
   /** Whether no Asset or Crew is ticked, so the Turn can only end without launching. */
   nothingTicked: boolean;
-  /** What the Turn will spend: the Mission and Developments, or only the Developments with nothing ticked. */
+  /** What the Turn will spend: the Mission, Developments and Upkeep, or only the Developments and Upkeep with nothing ticked. */
   spendMillions: number;
 }
 
@@ -65,6 +65,8 @@ export function useMissionPlan(
   developmentIds: string[],
   /** The new Activities chosen for Crew already operating, which either plan sends. */
   crewActivities: Record<string, string>,
+  /** The Assets at Mars whose missions end as the Turn starts, which either plan sends. */
+  endedAssetKeys: string[],
 ): MissionPlan {
   // It starts on the first that can fly, because one that needs Development can't be chosen.
   const [launchVehicleId, setLaunchVehicleId] = useState(
@@ -137,6 +139,7 @@ export function useMissionPlan(
     operatingActivities,
     developmentIds,
     crewActivities,
+    endedAssetKeys,
     mission: {
       ...mission,
       // The Activity they will have, which may be that of Crew already there.
@@ -175,6 +178,7 @@ export function useMissionPlan(
     operatingActivities,
     developmentIds,
     crewActivities,
+    endedAssetKeys,
   };
 
   const check = simulation.validatePlan(program, plan);
@@ -232,8 +236,9 @@ export function useMissionPlan(
     withoutLaunchingProblems: simulation.validatePlan(program, withoutLaunching)
       .problems,
     nothingTicked,
-    spendMillions: nothingTicked
-      ? check.developmentCostMillions
-      : check.costMillions + check.developmentCostMillions,
+    spendMillions:
+      check.developmentCostMillions +
+      check.upkeepMillions +
+      (nothingTicked ? 0 : check.costMillions),
   };
 }

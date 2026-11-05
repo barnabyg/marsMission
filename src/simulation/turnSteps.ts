@@ -113,7 +113,11 @@ export function resolveTurn(
   rules: Rules,
   program: Program,
   plan: TurnPlan,
-  costMillions: number,
+  /** What the Mission cost, and what keeping the Assets at Mars going cost, which the plan has already been checked for. */
+  {
+    missionMillions: costMillions,
+    upkeepMillions,
+  }: { missionMillions: number; upkeepMillions: number },
   flown: MissionOutcome,
   answers: DecisionAnswers,
 ): {
@@ -218,7 +222,8 @@ export function resolveTurn(
   const moneyEndMillions =
     program.moneyMillions -
     costMillions -
-    development.costMillions +
+    development.costMillions -
+    upkeepMillions +
     sum(funding.payouts.map(({ payoutMillions }) => payoutMillions)) +
     research.researchGrantMillions +
     (flown.returned?.refundMillions ?? 0);
@@ -335,6 +340,7 @@ export function resolveTurn(
     summary: {
       missionCostMillions: costMillions,
       developmentCostMillions: development.costMillions,
+      upkeepMillions,
       moneyStartMillions: program.moneyMillions,
       moneyEndMillions,
       scienceStart: program.science,

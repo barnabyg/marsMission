@@ -48,6 +48,7 @@ export function PlanningMode({
     Record<string, string>
   >({});
   const [developmentIds, setDevelopmentIds] = useState<string[]>([]);
+  const [endedAssetKeys, setEndedAssetKeys] = useState<string[]>([]);
   const [crewActivities, setCrewActivities] = useState<Record<string, string>>(
     {},
   );
@@ -58,6 +59,7 @@ export function PlanningMode({
     operatingActivities,
     developmentIds,
     crewActivities,
+    endedAssetKeys,
   );
 
   function open(dialog: PlanningDialog) {
@@ -137,6 +139,14 @@ export function PlanningMode({
             }}
             somethingLeftToSurvey={view.somethingLeftToSurvey}
             chosenActivities={operatingActivities}
+            endedKeys={endedAssetKeys}
+            onEndedChange={(key, ended) => {
+              setEndedAssetKeys(
+                ended
+                  ? [...endedAssetKeys, key]
+                  : endedAssetKeys.filter((other) => other !== key),
+              );
+            }}
             onActivityChange={(key, activityId) => {
               setOperatingActivities({
                 ...operatingActivities,
