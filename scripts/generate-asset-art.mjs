@@ -46,10 +46,18 @@ try {
         `${error}. Add one to src/mission/assetArt/AssetArt.tsx.`,
       );
     }
-    // The canvas's own pixels, transparent around the model, rather than a screenshot of the page.
-    const dataUrl = await page
-      .locator("canvas")
-      .evaluate((canvas) => canvas.toDataURL("image/png"));
+    // The canvas's own pixels, transparent around the model, rather than a screenshot of the page. The page draws
+    // them at twice the size, and they're scaled down here so that thin parts come out smooth.
+    const dataUrl = await page.locator("canvas").evaluate((canvas, side) => {
+      const scaled = canvas.ownerDocument.createElement("canvas");
+      scaled.width = side;
+      scaled.height = side;
+      const context = scaled.getContext("2d");
+      if (!context) throw new Error("The browser gave no 2D canvas.");
+      context.imageSmoothingQuality = "high";
+      context.drawImage(canvas, 0, 0, side, side);
+      return scaled.toDataURL("image/png");
+    }, size);
     const file = `${outDir}/${kind}.png`;
     writeFileSync(file, Buffer.from(dataUrl.split(",")[1], "base64"));
     console.log(`Wrote ${file}`);
