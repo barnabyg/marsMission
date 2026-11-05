@@ -52,7 +52,7 @@ function CruiseStage({ lost }: { lost: boolean }) {
 }
 
 /** An orbiter folded up for the journey: a gold-wrapped body with its dish on top. */
-function Orbiter({ lost }: { lost: boolean }) {
+export function Orbiter({ lost }: { lost: boolean }) {
   return (
     <>
       <Part color="#d6a640" lost={lost}>

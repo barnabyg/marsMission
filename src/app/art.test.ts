@@ -11,9 +11,10 @@ function sectionFor(fileName: string): string {
 }
 
 describe("art files (ADR 0005)", () => {
-  const artFiles = readdirSync("public/art").filter(
-    (fileName) => fileName !== "SOURCES.md",
-  );
+  // The Asset pictures in public/art/assets are the game's own, checked in src/planning/assetImages.test.ts.
+  const artFiles = readdirSync("public/art", { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name !== "SOURCES.md")
+    .map(({ name }) => name);
 
   it("includes the Earth and Mars maps", () => {
     expect(artFiles).toEqual(expect.arrayContaining(["earth.jpg", "mars.jpg"]));

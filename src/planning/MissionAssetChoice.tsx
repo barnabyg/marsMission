@@ -8,6 +8,7 @@ import {
 import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
 import { ActivitySelect } from "./ActivitySelect";
+import { assetImageUrl } from "./assetImages";
 import { FitWarning } from "./FitWarning";
 import type { Fit } from "./missionFit";
 import { ReadinessTag } from "./ReadinessTag";
@@ -26,7 +27,7 @@ interface MissionAssetChoiceProps {
 }
 
 /**
- * One Asset the Mission can carry, as a card: its cost, mass, Technology Readiness, Benefit and how many are at Mars,
+ * One Asset the Mission can carry, as a card: a picture of its model, its cost, mass, Technology Readiness, Benefit and how many are at Mars,
  * and whether it would fit. Ticking it reveals its choices.
  */
 export function MissionAssetChoice({
@@ -50,6 +51,12 @@ export function MissionAssetChoice({
         .filter(Boolean)
         .join(" ")}
     >
+      {/* Its name is beside it, so the picture adds nothing for a screen reader. */}
+      <img
+        className="asset-card-image"
+        src={assetImageUrl(asset.kind)}
+        alt=""
+      />
       <label className="asset-card-title">
         <input
           type="checkbox"

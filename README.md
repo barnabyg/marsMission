@@ -59,6 +59,8 @@ The browser tests need Chromium, once per machine: `npx.cmd playwright install c
 
 The sound effects in `public/sounds` are synthesised by `node scripts/generate-sounds.mjs`, and the files it makes are committed. Rerun it only to change a sound.
 
+The Asset cards' pictures in `public/art/assets`, one for each kind of Asset and one for the Crewed Mission, are drawn from Mission Mode's own models by `node scripts/generate-asset-art.mjs`, and the files it makes are committed. It starts the development server and opens `src/mission/assetArt/assetArt.html`, a page that isn't built into the game, in Chromium for each kind, with the camera, lights and size fixed, so rerunning it gives the same files. It needs Chromium installed for the browser tests. Rerun it after changing a model; a new kind of Asset needs its model chosen in `src/mission/assetArt/AssetArt.tsx` first, and `src/planning/assetImages.test.ts` fails until its picture is made.
+
 ### The Catalogue's files
 
 `parseCatalogue` in `catalogue.ts` checks each data file against its schema in `schemas.ts`, then runs the cross-checks, which check the files against each other, one subject per file. A new field goes in `schemas.ts`. A check that needs another file goes in the cross-check for its subject, or, for a new subject such as Technology, in a new file beside them, added to the `crossChecks` list in `catalogue.ts`.
