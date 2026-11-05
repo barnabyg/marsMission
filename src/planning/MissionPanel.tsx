@@ -14,43 +14,29 @@ import { MissionLaunchChoice } from "./MissionLaunchChoice";
 import { fitOfAdding } from "./missionFit";
 import { MissionStepCard } from "./MissionStepCard";
 import { missionSteps } from "./missionSteps";
-import { useMissionPlan } from "./useMissionPlan";
+import type { MissionPlan } from "./useMissionPlan";
 
 interface MissionPanelProps {
   simulation: Simulation;
   program: Program;
   view: ProgramView;
-  /** The new Activities chosen for Assets already operating, which either button sends. */
-  operatingActivities: Record<string, string>;
-  /** The Developments chosen to start this Turn, which either button sends. */
-  developmentIds: string[];
-  /** The new Activities chosen for Crew already operating, which either button sends. */
-  crewActivities: Record<string, string>;
+  /** The choices made for the Mission and the plans they make, which Planning Mode keeps so its status bar can show the spend. */
+  choices: MissionPlan;
   onSubmit: (plan: TurnPlan) => void;
 }
 
 /**
  * Everything the player chooses for this Turn's Mission, as numbered steps, and the budget bar with the buttons that end
  * the Turn. The steps scroll by themselves when they don't fit, under the budget bar, which stays in view. The choices and the plan they make
- * are in `useMissionPlan`, and each part of the panel has its own component.
+ * come from `useMissionPlan`, and each part of the panel has its own component.
  */
 export function MissionPanel({
   simulation,
   program,
   view,
-  operatingActivities,
-  developmentIds,
-  crewActivities,
+  choices,
   onSubmit,
 }: MissionPanelProps) {
-  const choices = useMissionPlan(
-    simulation,
-    program,
-    view,
-    operatingActivities,
-    developmentIds,
-    crewActivities,
-  );
   const { plan, withoutLaunching, withoutLaunchingProblems, landingSite } =
     choices;
   const {
@@ -60,8 +46,7 @@ export function MissionPanel({
     capacityTonnes,
     problems,
   } = choices.check;
-  const nothingTicked =
-    choices.assetIds.length === 0 && choices.plannedCrew === null;
+  const { nothingTicked } = choices;
   const [launchStep, assetsStep, landingStep, eventsStep] = missionSteps({
     nothingTicked,
     landsOnMars: choices.landsOnMars,

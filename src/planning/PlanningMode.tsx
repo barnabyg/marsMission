@@ -12,6 +12,7 @@ import { DevelopmentPanel } from "./DevelopmentPanel";
 import { MissionPanel } from "./MissionPanel";
 import { OperatingPanel } from "./OperatingPanel";
 import { StatusBar } from "./StatusBar";
+import { useMissionPlan } from "./useMissionPlan";
 
 interface PlanningModeProps {
   simulation: Simulation;
@@ -50,6 +51,14 @@ export function PlanningMode({
   const [crewActivities, setCrewActivities] = useState<Record<string, string>>(
     {},
   );
+  const choices = useMissionPlan(
+    simulation,
+    program,
+    view,
+    operatingActivities,
+    developmentIds,
+    crewActivities,
+  );
 
   function open(dialog: PlanningDialog) {
     setSavedToSlot(null);
@@ -65,6 +74,7 @@ export function PlanningMode({
       <StatusBar
         view={view}
         lastTurn={lastTurn ? simulation.readProgram(lastTurn) : null}
+        spendMillions={choices.spendMillions}
       />
 
       <div className="program-actions">
@@ -113,9 +123,7 @@ export function PlanningMode({
           simulation={simulation}
           program={program}
           view={view}
-          operatingActivities={operatingActivities}
-          developmentIds={developmentIds}
-          crewActivities={crewActivities}
+          choices={choices}
           onSubmit={onSubmit}
         />
 

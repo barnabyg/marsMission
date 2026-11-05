@@ -12,7 +12,7 @@ import {
 } from "../simulation/simulation";
 
 /** The choices made so far for this Turn's Mission, what the Simulation previews of them, and the plans they make. */
-interface MissionPlan {
+export interface MissionPlan {
   launchVehicleId: string;
   chooseLaunchVehicle: (launchVehicleId: string) => void;
   trajectories: PlannedTrajectory[];
@@ -48,6 +48,10 @@ interface MissionPlan {
   /** The plan that ends the Turn without launching, which keeps the Activities and Developments chosen. */
   withoutLaunching: TurnPlan;
   withoutLaunchingProblems: string[];
+  /** Whether no Asset or Crew is ticked, so the Turn can only end without launching. */
+  nothingTicked: boolean;
+  /** What the Turn will spend: the Mission and Developments, or only the Developments with nothing ticked. */
+  spendMillions: number;
 }
 
 /** Everything the player has chosen for this Turn's Mission in the New Mission panel, and the plan it makes. */
@@ -173,6 +177,9 @@ export function useMissionPlan(
     crewActivities,
   };
 
+  const check = simulation.validatePlan(program, plan);
+  const nothingTicked = assetIds.length === 0 && plannedCrew === null;
+
   return {
     launchVehicleId,
     chooseLaunchVehicle: setLaunchVehicleId,
@@ -220,9 +227,13 @@ export function useMissionPlan(
       );
     },
     plan,
-    check: simulation.validatePlan(program, plan),
+    check,
     withoutLaunching,
     withoutLaunchingProblems: simulation.validatePlan(program, withoutLaunching)
       .problems,
+    nothingTicked,
+    spendMillions: nothingTicked
+      ? check.developmentCostMillions
+      : check.costMillions + check.developmentCostMillions,
   };
 }
