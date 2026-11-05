@@ -42,6 +42,7 @@ export function MissionPanel({
   const {
     costMillions,
     developmentCostMillions,
+    upkeepMillions,
     massTonnes,
     capacityTonnes,
     problems,
@@ -143,6 +144,7 @@ export function MissionPanel({
       <BudgetBar
         costMillions={costMillions}
         developmentCostMillions={developmentCostMillions}
+        upkeepMillions={upkeepMillions}
         moneyMillions={view.moneyMillions}
         massTonnes={massTonnes}
         capacityTonnes={capacityTonnes}

@@ -77,6 +77,10 @@ _Avoid_: Part, module, component, unit
 How long an Asset keeps operating once in place. Longer Service Life costs more.
 _Avoid_: Lifespan, durability
 
+**Upkeep**:
+What an Asset operating at Mars costs for each Turn it is kept going after the one it arrives in. The player can end an Asset's mission in Planning Mode, which takes it out of service as the Turn starts and stops its Upkeep.
+_Avoid_: Maintenance, running cost
+
 **Benefit**:
 What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface. A second Asset giving the same Benefit adds nothing.
 _Avoid_: Bonus, buff, synergy
