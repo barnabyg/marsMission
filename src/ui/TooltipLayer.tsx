@@ -17,10 +17,14 @@ function termElementFrom(target: EventTarget | null): Element | null {
     : null;
 }
 
-/** The controls on screen a tooltip shouldn't cover, leaving out any the term sits inside. */
+/**
+ * The controls on screen a tooltip shouldn't cover, leaving out any the term sits inside, and while a dialog is open,
+ * any behind it, which the player can't see.
+ */
 function controlsAround(anchor: Element): Box[] {
+  const within = document.querySelector("dialog[open]") ?? document;
   return [
-    ...document.querySelectorAll("button, select, input, textarea, a[href]"),
+    ...within.querySelectorAll("button, select, input, textarea, a[href]"),
   ]
     .filter((control) => !control.contains(anchor))
     .map((control) => control.getBoundingClientRect())
@@ -41,9 +45,12 @@ export function TooltipLayer() {
       )
         .split("|")
         .filter(Boolean) as Term[];
-      setShown(
+      // The same term keeps its tooltip where it is, rather than being placed again.
+      setShown((current) =>
         anchor && terms.length > 0
-          ? { terms, anchor, detail: anchor.getAttribute("data-detail") }
+          ? current?.anchor === anchor
+            ? current
+            : { terms, anchor, detail: anchor.getAttribute("data-detail") }
           : null,
       );
     };
@@ -74,7 +81,12 @@ export function TooltipLayer() {
   }, [shown]);
 
   const tooltip = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState<{ left: number; top: number }>();
+  /** Where the tooltip goes, and which one it was worked out for, so that a new one is first measured unplaced. */
+  const [position, setPosition] = useState<{
+    of: ShownTooltip;
+    left: number;
+    top: number;
+  }>();
 
   // Measured once it's drawn, then moved clear of the controls around its term before the player sees it.
   useLayoutEffect(() => {
@@ -83,14 +95,15 @@ export function TooltipLayer() {
     // Raises the tooltip above an open dialog, which otherwise covers everything else on the page.
     if (!element.matches(":popover-open")) element.showPopover();
     const { width, height } = element.getBoundingClientRect();
-    setPosition(
-      placeTooltip({
+    setPosition({
+      of: shown,
+      ...placeTooltip({
         anchor: shown.anchor.getBoundingClientRect(),
         size: { width, height },
         viewport: { width: window.innerWidth, height: window.innerHeight },
         controls: controlsAround(shown.anchor),
       }),
-    );
+    });
   }, [shown]);
 
   if (!shown) return null;
@@ -102,7 +115,7 @@ export function TooltipLayer() {
       role="tooltip"
       className="tooltip"
       style={
-        position
+        position?.of === shown
           ? { left: position.left, top: position.top }
           : { left: 0, top: 0, visibility: "hidden" }
       }

@@ -404,20 +404,26 @@ test("opens the Planning Mode heading's tooltip clear of Save, Load and Retire P
   page,
 }) => {
   await page.goto(`/?seed=${successSeed}`);
-  await page
-    .getByRole("heading", { name: "Planning Mode" })
-    .locator(".term-marker")
-    .hover();
-  const tooltip = page.getByRole("tooltip");
-  await expect(tooltip).toBeVisible();
-  const shown = await tooltip.boundingBox();
-  if (!shown) throw new Error("The tooltip isn't on screen");
-  for (const name of ["Save", "Load", "Retire Program"]) {
-    const button = await page
-      .getByRole("button", { name, exact: true })
-      .boundingBox();
-    if (!button) throw new Error(`${name} isn't on screen`);
-    expect(overlap(shown, button), name).toBe(false);
+  const heading = page.getByRole("heading", { name: "Planning Mode" });
+  // Both the heading's term and its ⓘ marker open a tooltip.
+  for (const target of [
+    heading.locator("[data-term]"),
+    heading.locator(".term-marker"),
+  ]) {
+    await page.mouse.move(0, 0);
+    await expect(page.getByRole("tooltip")).toHaveCount(0);
+    await target.hover();
+    const tooltip = page.getByRole("tooltip");
+    await expect(tooltip).toBeVisible();
+    const shown = await tooltip.boundingBox();
+    if (!shown) throw new Error("The tooltip isn't on screen");
+    for (const name of ["Save", "Load", "Retire Program"]) {
+      const button = await page
+        .getByRole("button", { name, exact: true })
+        .boundingBox();
+      if (!button) throw new Error(`${name} isn't on screen`);
+      expect(overlap(shown, button), name).toBe(false);
+    }
   }
 });
 
