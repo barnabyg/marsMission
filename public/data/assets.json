@@ -130,7 +130,7 @@
     "id": "courier-relay-orbiter",
     "name": "Courier Relay",
     "kind": "orbiter",
-    "costMillions": 900,
+    "costMillions": 800,
     "upkeepMillionsPerTurn": 10,
     "missionEvents": ["mars-orbit-insertion"],
     "massTonnes": 2.5,

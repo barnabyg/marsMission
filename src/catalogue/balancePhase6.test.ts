@@ -170,8 +170,11 @@ describe("the balance of Phase 6", () => {
     // For a little less money, and no more cancellations.
     expect(beside.money).toBeGreaterThan(0.9 * steady.money);
     expect(beside.cancelled).toBeLessThan(steady.cancelled + 0.02);
+    // As a Program's first orbiter it's no better than the cheaper Pathfinder Orbiter: about even since its cost came
+    // down to $800M, where any cheaper and it would simply be the better orbiter.
     const first = played("steady: Courier Relay");
-    expect(first.science).toBeLessThan(steady.science);
+    expect(first.science).toBeLessThan(1.02 * steady.science);
+    expect(first.money).toBeLessThan(1.02 * steady.money);
   });
 
   // Against filling the Meridian Heavy it pays only in a Program that flies Crew, which balancePhase7.test.ts tests.
