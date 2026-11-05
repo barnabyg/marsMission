@@ -197,8 +197,13 @@ test("loads the data files, Mission Mode's view and its art from a production bu
   // A failed file is only reported once its request ends, which can be after the canvas appears.
   await page.waitForLoadState("networkidle");
   expect(problems).toEqual([]);
-  // For a missing file, vite preview sends the game's page with status 200, and the browser reports no problem.
-  expect(artTypes).toEqual(["image/jpeg", "image/jpeg"]);
+  // For a missing file, vite preview sends the game's page with status 200, and the browser reports no problem, so each
+  // must come back as an image: Mars and Earth for the scene, and the Asset cards' pictures in Planning Mode.
+  expect(artTypes.filter((type) => type === "image/jpeg")).toHaveLength(2);
+  expect(
+    artTypes.filter((type) => type === "image/png").length,
+  ).toBeGreaterThan(0);
+  expect(artTypes.filter((type) => !type?.startsWith("image/"))).toEqual([]);
 });
 
 test("pauses Mission Mode and resumes from exactly where it stopped, without carrying into the next Turn", async ({
