@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { placeTooltip, type Box } from "./tooltipPlacement";
 import { tooltips, type Term } from "./tooltips";
 
 interface ShownTooltip {
@@ -12,9 +13,14 @@ function termElementFrom(target: EventTarget | null): Element | null {
   return target instanceof Element ? target.closest("[data-term]") : null;
 }
 
-/** Raises the tooltip above an open dialog, which otherwise covers everything else on the page. */
-function showInTopLayer(tooltip: HTMLDivElement | null) {
-  tooltip?.showPopover();
+/** The controls on screen a tooltip shouldn't cover, leaving out any the term sits inside. */
+function controlsAround(anchor: Element): Box[] {
+  return [
+    ...document.querySelectorAll("button, select, input, textarea, a[href]"),
+  ]
+    .filter((control) => !control.contains(anchor))
+    .map((control) => control.getBoundingClientRect())
+    .filter(({ width, height }) => width > 0 && height > 0);
 }
 
 /** Shows the tooltip for whichever game term is under the pointer or has keyboard focus. */
@@ -55,22 +61,39 @@ export function TooltipLayer() {
     };
   }, [shown]);
 
+  const tooltip = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{ left: number; top: number }>();
+
+  // Measured once it's drawn, then moved clear of the controls around its term before the player sees it.
+  useLayoutEffect(() => {
+    const element = tooltip.current;
+    if (!shown || !element) return;
+    // Raises the tooltip above an open dialog, which otherwise covers everything else on the page.
+    if (!element.matches(":popover-open")) element.showPopover();
+    const { width, height } = element.getBoundingClientRect();
+    setPosition(
+      placeTooltip({
+        anchor: shown.anchor.getBoundingClientRect(),
+        size: { width, height },
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+        controls: controlsAround(shown.anchor),
+      }),
+    );
+  }, [shown]);
+
   if (!shown) return null;
 
-  const box = shown.anchor.getBoundingClientRect();
-  const nearBottom = box.bottom > window.innerHeight * 0.7;
   return (
     <div
-      ref={showInTopLayer}
+      ref={tooltip}
       popover="manual"
       role="tooltip"
       className="tooltip"
-      style={{
-        left: Math.min(box.left, window.innerWidth * 0.72),
-        ...(nearBottom
-          ? { bottom: window.innerHeight - box.top + 12 }
-          : { top: box.bottom + 12 }),
-      }}
+      style={
+        position
+          ? { left: position.left, top: position.top }
+          : { left: 0, top: 0, visibility: "hidden" }
+      }
     >
       <strong>{shown.term}</strong>
       <p>{tooltips[shown.term]}</p>

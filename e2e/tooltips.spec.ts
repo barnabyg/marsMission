@@ -387,3 +387,48 @@ test("no button highlights a game term, while the text around it keeps its toolt
   await expect(page.getByTestId("program-summary")).toBeVisible();
   expect(await termsInButtons(page)).toEqual([]);
 });
+
+function overlap(
+  a: { x: number; y: number; width: number; height: number },
+  b: { x: number; y: number; width: number; height: number },
+): boolean {
+  return (
+    a.x < b.x + b.width &&
+    b.x < a.x + a.width &&
+    a.y < b.y + b.height &&
+    b.y < a.y + a.height
+  );
+}
+
+test("opens the Planning Mode heading's tooltip clear of Save, Load and Retire Program", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  await page
+    .getByRole("heading", { name: "Planning Mode" })
+    .locator("[data-term]")
+    .first()
+    .hover();
+  const tooltip = page.getByRole("tooltip");
+  await expect(tooltip).toBeVisible();
+  const shown = await tooltip.boundingBox();
+  if (!shown) throw new Error("The tooltip isn't on screen");
+  for (const name of ["Save", "Load", "Retire Program"]) {
+    const button = await page
+      .getByRole("button", { name, exact: true })
+      .boundingBox();
+    if (!button) throw new Error(`${name} isn't on screen`);
+    expect(overlap(shown, button), name).toBe(false);
+  }
+});
+
+test("keeps a tooltip near the window's edge fully on screen", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  // Science is the status bar's last value, at the window's right-hand edge.
+  await page.locator("dt [data-term='Science']").hover();
+  const tooltip = page.getByRole("tooltip");
+  await expect(tooltip).toBeVisible();
+  await expect(tooltip).toBeInViewport({ ratio: 1 });
+});
