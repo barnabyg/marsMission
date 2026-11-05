@@ -11,28 +11,42 @@ export const screenSizes = [
 const smallestHeight = 1080;
 
 /**
- * Whether the page, or any panel in Planning Mode, has more to show than fits on screen. The New Mission steps may
- * scroll up and down by themselves, under the New Mission's buttons, which stay in view, but never sideways. On a
- * 1920×1080 screen, the panels beside them may scroll up and down by themselves too, but never sideways.
+ * What has more to show than fits on screen, if anything: the page, or any panel in Planning Mode, each named with how
+ * far it overflows, so that a failure says what to fix. The New Mission steps may scroll up and down by themselves,
+ * under the New Mission's buttons, which stay in view, but never sideways. On a 1920×1080 screen, the panels beside
+ * them may scroll up and down by themselves too, but never sideways.
  */
-export function somethingScrolls(page: Page): Promise<boolean> {
+export function whatScrolls(page: Page): Promise<string[]> {
   const sidePanelsMayScroll =
     (page.viewportSize()?.height ?? Infinity) <= smallestHeight;
   return page.evaluate((sideMayScroll) => {
+    const found: string[] = [];
+    const describe = (element: Element) =>
+      element.querySelector("h2")?.textContent ?? element.className;
     const { scrollHeight, scrollWidth } = document.documentElement;
-    const panels = [...document.querySelectorAll(".planning-columns .panel")];
-    const steps = [...document.querySelectorAll(".mission-steps")];
-    return (
-      scrollHeight > innerHeight ||
-      scrollWidth > innerWidth ||
-      panels.some(
-        (panel) =>
-          (panel.scrollHeight > panel.clientHeight &&
-            !(sideMayScroll && panel.closest(".planning-side"))) ||
-          panel.scrollWidth > panel.clientWidth,
-      ) ||
-      steps.some((each) => each.scrollWidth > each.clientWidth)
-    );
+    if (scrollHeight > innerHeight) {
+      found.push(`page down by ${String(scrollHeight - innerHeight)}px`);
+    }
+    if (scrollWidth > innerWidth) {
+      found.push(`page sideways by ${String(scrollWidth - innerWidth)}px`);
+    }
+    for (const panel of document.querySelectorAll(".planning-columns .panel")) {
+      const down = panel.scrollHeight - panel.clientHeight;
+      if (down > 0 && !(sideMayScroll && panel.closest(".planning-side"))) {
+        found.push(`${describe(panel)} down by ${String(down)}px`);
+      }
+      const sideways = panel.scrollWidth - panel.clientWidth;
+      if (sideways > 0) {
+        found.push(`${describe(panel)} sideways by ${String(sideways)}px`);
+      }
+    }
+    for (const steps of document.querySelectorAll(".mission-steps")) {
+      const sideways = steps.scrollWidth - steps.clientWidth;
+      if (sideways > 0) {
+        found.push(`New Mission steps sideways by ${String(sideways)}px`);
+      }
+    }
+    return found;
   }, sidePanelsMayScroll);
 }
 

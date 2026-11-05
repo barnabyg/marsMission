@@ -6,7 +6,7 @@ import {
   endTurnWithoutLaunching,
   overrideProgramData,
 } from "./helpers";
-import { screenSizes, somethingScrolls, unreadableText } from "./layoutHelpers";
+import { screenSizes, whatScrolls, unreadableText } from "./layoutHelpers";
 import { successSeed } from "./seeds";
 
 const realFiles = realCatalogueFiles();
@@ -146,7 +146,7 @@ for (const size of screenSizes) {
       await page.goto(`/?seed=${successSeed}`);
       await chooseAssets(page, ["Pathfinder Orbiter"]);
       await expect(page.getByTestId("turn-number")).toHaveText("1");
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of [
         "Launch Mission",
         "End Turn without launching",
@@ -171,7 +171,7 @@ for (const size of screenSizes) {
       await expect(page.getByTestId("research-earnings")).toContainText(
         "Surface research earns 100 Science and 9 Public Support, and pays a $50M Research Grant.",
       );
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
       ).toBeInViewport({ ratio: 1 });
@@ -184,7 +184,7 @@ for (const size of screenSizes) {
       await chooseAssets(page, ["Pathfinder Orbiter"]);
       // One in the Operating at Mars panel, and one for the orbiter on the Mission.
       await expect(page.getByTestId("research-earnings")).toHaveCount(2);
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
       ).toBeInViewport({ ratio: 1 });
@@ -213,7 +213,7 @@ for (const size of screenSizes) {
           .locator(".panel", { hasText: "Operating at Mars" })
           .getByTestId("research-earnings"),
       ).toContainText("Research Grant");
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
       ).toBeInViewport({ ratio: 1 });
@@ -235,7 +235,7 @@ for (const size of screenSizes) {
       }
       await expect(page.getByRole("alert")).toHaveCount(0);
       await expect(page.getByTestId("fit-warning").first()).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "End Turn without launching" }),
       ).toBeInViewport({ ratio: 1 });
@@ -256,7 +256,7 @@ for (const size of screenSizes) {
       await expect(
         page.getByTestId("operating-assets").getByRole("listitem").last(),
       ).toContainText("Trailblazer Rover at Jezero Crater");
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -283,7 +283,7 @@ for (const size of screenSizes) {
         "Swings back",
       );
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       expect(
         await unreadableText(
           page.locator(
@@ -320,7 +320,7 @@ for (const size of screenSizes) {
         .getByRole("combobox", { name: "Trajectory" })
         .selectOption("free-return");
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -357,7 +357,7 @@ for (const size of screenSizes) {
       );
       await expect(page.getByRole("alert")).toHaveCount(0);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -399,7 +399,7 @@ for (const size of screenSizes) {
       ).toBeVisible();
       await expect(page.getByRole("alert")).toHaveCount(0);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -420,7 +420,7 @@ for (const size of screenSizes) {
         await development.check();
       }
       await expect(page.getByTestId("development-cost")).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -435,7 +435,7 @@ for (const size of screenSizes) {
       await chooseEveryAsset(page);
       await expect(page.getByTestId("nothing-left-to-survey")).toHaveCount(2);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -454,7 +454,7 @@ for (const size of screenSizes) {
       await expect(summary.getByRole("listitem")).toHaveCount(
         realMilestones.length,
       );
-      expect(await somethingScrolls(page)).toBe(false);
+      expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "Start a new Program" }),
       ).toBeInViewport({ ratio: 1 });
