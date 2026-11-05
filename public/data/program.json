@@ -4,5 +4,9 @@
   "startingMoneyMillions": 2300,
   "startingPublicSupport": 100,
   "publicSupportDrainPercent": 15,
-  "cancellationLevel": 50
+  "cancellationLevel": 50,
+  "baseFunding": {
+    "millionsPerPublicSupport": 2,
+    "mostMillions": 250
+  }
 }

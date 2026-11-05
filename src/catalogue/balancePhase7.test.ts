@@ -39,7 +39,8 @@ describe("the balance of Phase 7", () => {
   it("makes flying Crew the better choice in some strategies and not in others", () => {
     // Crew who land, with Field research and the Milestones, are worth what they cost.
     expect(landing.science).toBeGreaterThan(1.05 * robotic.science);
-    expect(landing.cancelled).toBeLessThan(robotic.cancelled + 0.02);
+    // A bold choice since base funding (Phase 8), which rescues robotic Programs more often than ones that spent on Crew.
+    expect(landing.cancelled).toBeLessThan(robotic.cancelled + 0.1);
     // Crew kept in Mars orbit are not: the same money on Assets earns more.
     const inOrbit = played(
       "big Program: develop the Meridian Colossus and fly Crew when rich",
@@ -52,7 +53,7 @@ describe("the balance of Phase 7", () => {
   it("makes the Meridian Colossus do better than filling the Meridian Heavy in a big Program that lands Crew", () => {
     const heavy = played("big Program: fill the Meridian Heavy when rich");
     expect(landing.science).toBeGreaterThan(1.03 * heavy.science);
-    expect(landing.cancelled).toBeLessThan(heavy.cancelled + 0.02);
+    expect(landing.cancelled).toBeLessThan(heavy.cancelled + 0.1);
     // Without Crew it doesn't, as Phase 6 found.
     expect(robotic.science).toBeLessThan(heavy.science);
   });

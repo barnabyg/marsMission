@@ -82,10 +82,10 @@ describe("the report", () => {
     expect(report).toContain(`  Turn  5 100.0% ${"#".repeat(40)}`);
     expect(report).toContain("First Mission failed: never");
     expect(turnRow(report, 4)).toEqual(
-      "4 100.0 2300 0 51 0.0 0 0 0 - -".split(" "),
+      "4 100.0 2930 0 51 0.0 0 0 0 - -".split(" "),
     );
     expect(turnRow(report, 5)).toEqual(
-      "5 0.0 2300 0 43 0.0 0 0 0 - -".split(" "),
+      "5 0.0 3030 0 43 0.0 0 0 0 - -".split(" "),
     );
     expect(turnRow(report, 6)).toBeUndefined();
   });
@@ -106,11 +106,12 @@ describe("the report", () => {
       }),
     };
     const text = balanceReport(certain, 2, [landOnce]);
-    // 2300 - 1100 + 1000 from the first Funding Threshold + a Research Grant of 37, with
+    // 2300 - 1100 + 1000 from the first Funding Threshold + a Research Grant of 37 + base funding of 200 for 100
+    // Public Support, with
     // 570 of 780 days at 100 Science a Turn being 73 Science, plus 150 and 120 for the landing.
     // (100 + 250 for the landing + 7 of research) less 15% is 303 Public Support.
     expect(turnRow(text, 1)).toEqual(
-      "1 100.0 2237 343 303 1.0 1100 1000 37 96.4 3.6".split(" "),
+      "1 100.0 2437 343 303 1.0 1100 1000 37 96.4 3.6".split(" "),
     );
     expect(text).toMatch(/^250 +1000 +100\.0 +1\.0$/m);
     expect(text).toMatch(/^425 +1500 +0\.0 +-$/m);
@@ -186,7 +187,8 @@ describe("the report on technology", () => {
         `^land straight away, Pinpoint Lander +Pinpoint Lander +${pattern}$`,
         "m",
       );
-    expect(text).toMatch(row(String.raw`100\.0 +\d+\.\d +1\.0`));
+    // Flown unproven at least once a Program, and again after a failed first flight that base funding pays to retry.
+    expect(text).toMatch(row(String.raw`100\.0 +\d+\.\d +1\.\d`));
     expect(text).toMatch(row(String.raw`worked +\d+\.\d +\d+ +\d+ +\d+\.\d`));
     expect(text).toMatch(row(String.raw`failed +\d+\.\d +\d+ +\d+ +\d+\.\d`));
   });
