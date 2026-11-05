@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { storageKeyFor } from "../src/save/saveStore";
 import {
   openSaveDialog,
   termsWithoutTooltips,
@@ -50,9 +51,10 @@ test("lists only the used Save Slots, with Turn, Launch Window and Money, and lo
     .getByTestId("save-slot-2")
     .getByRole("button", { name: "Save here" })
     .click();
-  await page.getByRole("button", { name: "Retire Program" }).click();
-  await page.getByRole("button", { name: "Yes, retire the Program" }).click();
-  await expect(page.getByTestId("program-summary")).toBeVisible();
+  // With no automatic save, as after a Program that was cancelled.
+  await page.evaluate((key) => {
+    localStorage.removeItem(key);
+  }, storageKeyFor("automatic"));
   await page.reload();
 
   const screen = page.getByTestId("opening-screen");

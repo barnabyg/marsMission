@@ -196,9 +196,10 @@ test("reaches the slots when reopening the game, even with no automatic save", a
     .getByTestId("save-slot-2")
     .getByRole("button", { name: "Save here" })
     .click();
-  await page.getByRole("button", { name: "Retire Program" }).click();
-  await page.getByRole("button", { name: "Yes, retire the Program" }).click();
-  await expect(page.getByTestId("program-summary")).toBeVisible();
+  // With no automatic save, as after a Program that was cancelled.
+  await page.evaluate((key) => {
+    localStorage.removeItem(key);
+  }, storageKeyFor("automatic"));
 
   await page.reload();
   await expect(page.getByTestId("opening-screen")).toBeVisible();

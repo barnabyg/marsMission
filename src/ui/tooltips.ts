@@ -4,7 +4,7 @@
  */
 export const tooltips = {
   Program:
-    "One complete game: an open-ended sequence of Turns in which the player launches Missions and builds up Assets at Mars. It ends when the player retires it or when it is cancelled.",
+    "One complete game: an open-ended sequence of Turns in which the player launches Missions and builds up Assets at Mars. It ends when the player restarts with a new one or when it is cancelled.",
   Turn: "The period from one Launch Window to the next. It is made up of Planning Mode followed by Mission Mode.",
   "Launch Window":
     "The recurring opportunity, roughly every 26 months, when an Earth–Mars transfer is practical. Each Turn begins at one.",

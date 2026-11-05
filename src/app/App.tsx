@@ -63,12 +63,9 @@ export function App({ services, firstScreen }: AppProps) {
             progress: simulation.workOutTurn(program, plan),
           });
         }}
-        onRetire={() => {
-          saveStore.clear("automatic");
-          setScreen({
-            mode: "programSummary",
-            program: simulation.retireProgram(program),
-          });
+        onRestart={() => {
+          // The new Program's automatic save replaces this one's.
+          setScreen(newProgramScreen(services));
         }}
       />
     );

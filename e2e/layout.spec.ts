@@ -1,7 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
-import { chooseAssets } from "./helpers";
+import {
+  chooseAssets,
+  endTurnWithoutLaunching,
+  overrideProgramData,
+} from "./helpers";
 import { screenSizes, somethingScrolls, unreadableText } from "./layoutHelpers";
 import { successSeed } from "./seeds";
 
@@ -138,7 +142,7 @@ for (const size of screenSizes) {
       for (const name of [
         "Launch Mission",
         "End Turn without launching",
-        "Retire Program",
+        "Restart Program",
       ]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -420,12 +424,10 @@ for (const size of screenSizes) {
     test("the Program summary fits on one screen with every Milestone earned", async ({
       page,
     }) => {
+      // Cancelled at the end of the Turn, as nothing else ends a Program now.
+      await overrideProgramData(page, { cancellationLevel: 1000 });
       await openBusyProgram(page);
-      await page.getByRole("button", { name: "Retire Program" }).click();
-      await page
-        .getByRole("dialog", { name: "Retire Program" })
-        .getByRole("button", { name: "Yes, retire the Program" })
-        .click();
+      await endTurnWithoutLaunching(page);
       const summary = page.getByTestId("program-summary");
       await expect(summary.getByRole("listitem")).toHaveCount(
         realMilestones.length,
