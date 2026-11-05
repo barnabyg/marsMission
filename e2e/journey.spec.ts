@@ -8,6 +8,7 @@ import {
   launchFirstMission,
   overrideProgramData,
   pauseAtEvent,
+  pauseAtEventAfter,
   playToNextTurn,
   termsWithoutTooltips,
   watchForProblems,
@@ -51,10 +52,11 @@ test("plays from a new Program through a launch to the next Turn", async ({
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   // Nothing needs dismissing, so time just carries on when a speed is chosen.
-  await pauseAtEvent(
+  // Fast to three months before it, so the hold lands on its day and no later event slips in.
+  await pauseAtEventAfter(
     page,
     "Funding Threshold reached: 250 Public Support",
-    () => page.getByRole("button", { name: "5x" }).click(),
+    "1 April 2029",
   );
   await expect(eventEntries(page).getByRole("heading")).toHaveText([
     "Funding Threshold reached: 250 Public Support",
@@ -303,10 +305,11 @@ test("keeps the events column beside the solar system view, scrolling by itself 
   );
   expect((columnBox?.x ?? 0) + (columnBox?.width ?? 0)).toBeCloseTo(3840);
 
-  await pauseAtEvent(
+  // Fast to three months before it, so the hold lands on its day and no later event slips in.
+  await pauseAtEventAfter(
     page,
     "Funding Threshold reached: 250 Public Support",
-    () => page.getByRole("button", { name: "5x" }).click(),
+    "1 April 2029",
   );
   await page.setViewportSize({ width: 2560, height: 400 });
   const entries = page.getByTestId("event-entries");

@@ -342,9 +342,10 @@ function howToRead(programs: number): string[] {
     "drop out of later rows, which can rise as weaker Programs go. Active% is the share of all Programs still going.",
     "Thresh$M and Grants$M are that Turn's income from Funding Thresholds and Research Grants, Thresh% and Grant% their",
     "shares of it, and Spent$M its cost of Missions, Development and Upkeep.",
-    "Summary columns are means per Program: Cancel% of Programs cancelled, Turns played, final Science and Money, total income from Funding Thresholds and",
-    "Research Grants and the Grant% of it, total Spent on Missions, Development and Upkeep, Missions launched, Failed and Assets",
-    "Lost in service, and Assets operating at the end of each Turn played.",
+    "Summary columns: Cancel% is the share of Programs cancelled, and the rest are means per Program: Turns played, final",
+    "Science and Money, total income from Funding Thresholds and Research Grants and the Grant% of it, total Spent on",
+    "Missions, Development and Upkeep, Missions launched, Failed and Assets Lost in service, and Assets operating at the end",
+    "of each Turn played.",
   ];
 }
 

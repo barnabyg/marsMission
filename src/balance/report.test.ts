@@ -72,7 +72,7 @@ describe("the report", () => {
     expect(balanceReport(files, 3)).toBe(balanceReport(files, 3));
   });
 
-  it("explains every money column of the Turn table before the tables", () => {
+  it("explains the Turn table's share and money columns before the tables", () => {
     const legend = report.slice(0, report.indexOf("== Summary =="));
     for (const column of [
       "Active%",

@@ -350,7 +350,7 @@ export function viewButton(page: Page, name: ViewName) {
  */
 export function switchViewWhilePlaying(
   page: Page,
-  speed: "1x" | "5x" | "10x",
+  speed: Speed,
   view: ViewName,
 ): Promise<{ view: string | null; speed: string | null }> {
   return page.evaluate(

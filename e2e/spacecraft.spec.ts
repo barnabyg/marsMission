@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   holdTurnWhenShown,
+  launchHeld,
   pauseAtEvent,
   termsWithoutTooltips,
   viewButton,
@@ -46,9 +47,7 @@ test("switches to the spacecraft view by hand on the way to Mars, and moves on o
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await holdTurnWhenShown(page);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
+  await launchHeld(page);
   await expect(viewButton(page, "Spacecraft")).not.toHaveAccessibleDescription(
     /./,
   );

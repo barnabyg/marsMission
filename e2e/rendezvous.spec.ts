@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
   continueFromSave,
-  holdTurnWhenShown,
+  launchHeld,
   overrideProgramData,
   pauseAtEvent,
   termsWithoutTooltips,
@@ -48,9 +48,7 @@ async function launchOnColossus(
     "Trailblazer Rover",
   ]);
   // Held as soon as Mission Mode opens, so the camera can be watched from its first shot.
-  await holdTurnWhenShown(page);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
+  await launchHeld(page);
   const canvas = scene(page).locator("canvas");
   await expect(canvas).toHaveAttribute(
     "data-camera-position",
