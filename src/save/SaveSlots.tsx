@@ -28,6 +28,8 @@ interface SaveSlotsProps {
   saveStore: SaveStore;
   /** What choosing a slot does. */
   action: SaveAction | LoadAction;
+  /** Lists only the slots in use, each with just its Turn, Launch Window and Money, as the title screen does. */
+  compact?: boolean;
 }
 
 type Confirming =
@@ -35,7 +37,12 @@ type Confirming =
   | { action: "load"; slot: ManualSlot; program: Program };
 
 /** Lists the Save Slots with what's in them, and saves to or loads from the one chosen. */
-export function SaveSlots({ simulation, saveStore, action }: SaveSlotsProps) {
+export function SaveSlots({
+  simulation,
+  saveStore,
+  action,
+  compact = false,
+}: SaveSlotsProps) {
   const [slots] = useState(() =>
     manualSlots.map((slot) => saveStore.load(slot)),
   );
@@ -52,6 +59,9 @@ export function SaveSlots({ simulation, saveStore, action }: SaveSlotsProps) {
     if (loaded.kind === "empty") return "Empty";
     if (loaded.kind === "problem") return loaded.message;
     const view = simulation.readProgram(loaded.program);
+    if (compact) {
+      return `Turn ${view.turnNumber} · ${formatLaunchWindow(view.date)} Launch Window · ${formatMoney(view.moneyMillions)}`;
+    }
     return `Turn ${view.turnNumber}, ${formatLaunchWindow(view.date)}, ${formatMoney(view.moneyMillions)}, ${view.publicSupport} Public Support`;
   }
 
@@ -62,13 +72,16 @@ export function SaveSlots({ simulation, saveStore, action }: SaveSlotsProps) {
           The browser wouldn't store that save.
         </p>
       )}
-      <ul className="save-slots">
+      <ul className={compact ? "save-slots compact" : "save-slots"}>
         {manualSlots.map((slot, index) => {
           const loaded = slots[index] ?? { kind: "empty" };
+          if (compact && loaded.kind === "empty") return null;
           return (
             <li key={slot} data-testid={`save-slot-${slot}`}>
               <div className="save-slot-row">
-                <strong>{slot}</strong>
+                <strong>
+                  {compact ? <GameText>{`Save Slot ${slot}`}</GameText> : slot}
+                </strong>
                 <span
                   className={
                     loaded.kind === "problem"
