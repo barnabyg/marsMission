@@ -2,8 +2,10 @@ import { expect, test, type Locator } from "@playwright/test";
 import {
   chooseAssets,
   eventEntries,
+  launchHeld,
   overrideProgramData,
   pauseAtEvent,
+  pauseAtEventAfter,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -153,11 +155,12 @@ test("lands a rover and a lander at one site, each with its own Activity", async
       .filter({ hasText: "Entry/descent/landing" }),
   ).toHaveCount(1);
 
-  await pauseAtEvent(
+  // Held close to the day of the landing, on 4 July 2029, when Mars turns its Landing Site to the camera.
+  await launchHeld(page);
+  await pauseAtEventAfter(
     page,
     "First landing at Jezero Crater",
-    () => page.getByRole("button", { name: "Launch Mission" }).click(),
-    "5x",
+    "25 March 2029",
   );
   await expect(
     eventEntries(page).filter({ hasText: "Entry/descent/landing" }),
@@ -225,11 +228,12 @@ test("loses a rover and a lander together in one crash", async ({ page }) => {
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await chooseAssets(page, ["Prospector Lander", "Trailblazer Rover"]);
 
-  await pauseAtEvent(
+  // Held close to the day of the crash, on 4 July 2029, when Mars turns its Landing Site to the camera.
+  await launchHeld(page);
+  await pauseAtEventAfter(
     page,
     "Entry/descent/landing failed",
-    () => page.getByRole("button", { name: "Launch Mission" }).click(),
-    "5x",
+    "25 March 2029",
   );
   const failed = eventEntries(page).first();
   await expect(failed).toContainText(

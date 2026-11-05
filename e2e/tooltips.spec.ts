@@ -3,8 +3,8 @@ import { storageKeyFor } from "../src/save/saveStore";
 import { tooltips, type Term } from "../src/ui/tooltips";
 import {
   chooseAssets,
+  continueFromSave,
   endTurnAndContinue,
-  endTurnWithoutLaunching,
   eventEntries,
   holdTurnWhenShown,
   overrideProgramData,
@@ -13,6 +13,7 @@ import {
   termsWithoutTooltips,
 } from "./helpers";
 import {
+  colossusBuiltSave,
   colossusMoney,
   crewSeed,
   landingSeed,
@@ -248,16 +249,9 @@ test("explains the terms of technology in Planning Mode, Mission Mode and the Tu
 test("explains the terms of Crew in Planning Mode, Mission Mode and the Turn summary", async ({
   page,
 }) => {
-  // Over 5 s: two Turns of Development, then a Turn of a Crewed Mission played at 10x.
+  // Over 5 s: a Turn of a Crewed Mission, played to the Crew's arrival.
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
-  await page.goto(`/?seed=${crewSeed}`);
-  await page
-    .getByTestId("development")
-    .filter({ hasText: "Meridian Colossus" })
-    .getByRole("checkbox", { name: "Start Development" })
-    .check();
-  await endTurnWithoutLaunching(page);
-  await endTurnWithoutLaunching(page);
+  await continueFromSave(page, colossusBuiltSave(crewSeed));
 
   await page
     .getByRole("combobox", { name: "Launch Vehicle" })

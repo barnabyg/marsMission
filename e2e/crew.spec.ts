@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
+  continueFromSave,
   endTurnAndContinue,
   endTurnWithoutLaunching,
   eventEntries,
@@ -15,6 +16,7 @@ import {
   watchForProblems,
 } from "./helpers";
 import {
+  colossusBuiltSave,
   colossusMoney,
   crewLandingSeed,
   crewLossSeed,
@@ -186,17 +188,10 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
 test("lands a Crewed Mission at a Landing Site, and sees its Crew at work there in the next Planning Mode", async ({
   page,
 }) => {
-  // Over 5 s: two Turns of Development, then a Turn played to the landing, which takes the same real time at any speed.
+  // Over 5 s: a landing takes the same real time at any speed.
   const problems = watchForProblems(page);
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
-  await page.goto(`/?seed=${crewLandingSeed}`);
-  await page
-    .getByTestId("development")
-    .filter({ hasText: "Meridian Colossus" })
-    .getByRole("checkbox", { name: "Start Development" })
-    .check();
-  await endTurnWithoutLaunching(page);
-  await endTurnWithoutLaunching(page);
+  await continueFromSave(page, colossusBuiltSave(crewLandingSeed));
 
   await launchVehicle(page).selectOption("meridian-colossus");
   await crewedMission(page).check();
@@ -288,14 +283,7 @@ test("lands a Crewed Mission at a Landing Site, and sees its Crew at work there 
 
 test("keeps the Crew at Mars through saving and loading", async ({ page }) => {
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
-  await page.goto(`/?seed=${crewSeed}`);
-  await page
-    .getByTestId("development")
-    .filter({ hasText: "Meridian Colossus" })
-    .getByRole("checkbox", { name: "Start Development" })
-    .check();
-  await endTurnWithoutLaunching(page);
-  await endTurnWithoutLaunching(page);
+  await continueFromSave(page, colossusBuiltSave(crewSeed));
   await launchVehicle(page).selectOption("meridian-colossus");
   await crewedMission(page).check();
   await page.getByRole("button", { name: "Launch Mission" }).click();
@@ -315,14 +303,7 @@ test("loses the Crew in a failed launch, and sees the drop in Public Support in 
   const problems = watchForProblems(page);
   await listenForSounds(page);
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
-  await page.goto(`/?seed=${crewLossSeed}`);
-  await page
-    .getByTestId("development")
-    .filter({ hasText: "Meridian Colossus" })
-    .getByRole("checkbox", { name: "Start Development" })
-    .check();
-  await endTurnWithoutLaunching(page);
-  await endTurnWithoutLaunching(page);
+  await continueFromSave(page, colossusBuiltSave(crewLossSeed));
   await expect(page.getByTestId("public-support")).toHaveText("72");
   await launchVehicle(page).selectOption("meridian-colossus");
   await crewedMission(page).check();

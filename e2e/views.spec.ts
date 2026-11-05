@@ -4,8 +4,10 @@ import {
   eventEntries,
   holdTurnWhenShown,
   launchFirstMission,
+  launchHeld,
   orbiterLabels,
   pauseAtEvent,
+  pauseAtEventAfter,
   switchViewWhilePlaying,
   termsWithoutTooltips,
   viewButton,
@@ -175,11 +177,12 @@ test("shows a crash in red in the Mars orbit view, when the player goes there fr
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${crashSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
-  await pauseAtEvent(
+  // Held close to the day of the crash, on 4 July 2029, when Mars turns its Landing Site to the camera.
+  await launchHeld(page);
+  await pauseAtEventAfter(
     page,
     "Entry/descent/landing failed",
-    () => page.getByRole("button", { name: "Launch Mission" }).click(),
-    "5x",
+    "25 March 2029",
   );
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
   await viewButton(page, "Mars orbit").click();
