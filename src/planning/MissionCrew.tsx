@@ -6,6 +6,7 @@ import {
 import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
 import { ActivitySelect } from "./ActivitySelect";
+import { assetImageUrl, crewImageKind } from "./assetImages";
 import { FitWarning } from "./FitWarning";
 import type { Fit } from "./missionFit";
 
@@ -56,6 +57,12 @@ export function MissionCrew({
   return (
     <div className={planned ? "crew-choice carried" : "crew-choice"}>
       <div className="asset-choice-row">
+        {/* Its words are beside it, so the picture of the Crew's lander adds nothing for a screen reader. */}
+        <img
+          className="crew-choice-image"
+          src={assetImageUrl(crewImageKind)}
+          alt=""
+        />
         <label>
           <input
             type="checkbox"
