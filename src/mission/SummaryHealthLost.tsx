@@ -35,7 +35,7 @@ export function SummaryHealthLost({
   return (
     <section data-testid="summary-health-lost">
       <h2>
-        <GameText>Health lost</GameText>
+        <GameText heading>Health lost</GameText>
       </h2>
       <ul>
         {healthLost.map((member) => (

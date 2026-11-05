@@ -33,7 +33,7 @@ function ValueChange({
     <section className="value-change">
       <h2>
         <Icon name={icon} />
-        <GameText>{name}</GameText>
+        <GameText heading>{name}</GameText>
       </h2>
       <p className="value-change-values">
         <span data-testid={testId}>

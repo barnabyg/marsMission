@@ -77,7 +77,7 @@ export function OpeningScreen({
             aria-labelledby="title-screen-slots"
           >
             <h2 id="title-screen-slots">
-              <GameText>Save Slots</GameText>
+              <GameText heading>Save Slots</GameText>
             </h2>
             <SaveSlots
               simulation={simulation}

@@ -33,7 +33,7 @@ export function Dialog({
   return (
     <dialog ref={dialog} aria-labelledby={titleId} onClose={onClose}>
       <h2 id={titleId}>
-        <GameText>{title}</GameText>
+        <GameText heading>{title}</GameText>
       </h2>
       {children}
       <div className="dialog-actions">

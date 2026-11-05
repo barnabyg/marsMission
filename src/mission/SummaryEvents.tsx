@@ -37,7 +37,7 @@ export function SummaryEvents({ summary }: { summary: TurnSummary }) {
       {summary.failure && (
         <section data-testid="summary-failure">
           <h2 className="problem">
-            <GameText>
+            <GameText heading>
               {summary.failure.returnedToEarth
                 ? "Mission came back to Earth"
                 : "Mission failed"}
@@ -68,7 +68,7 @@ export function SummaryEvents({ summary }: { summary: TurnSummary }) {
       {summary.crewLost.length > 0 && (
         <section data-testid="summary-crew-lost">
           <h2 className="problem">
-            <GameText>Crew lost</GameText>
+            <GameText heading>Crew lost</GameText>
           </h2>
           <ul>
             {summary.crewLost.map(({ description, publicSupportLost }) => (
@@ -91,7 +91,7 @@ export function SummaryEvents({ summary }: { summary: TurnSummary }) {
       {summary.contingencies.length > 0 && (
         <section data-testid="summary-contingencies">
           <h2>
-            <GameText>Decision Points</GameText>
+            <GameText heading>Decision Points</GameText>
           </h2>
           <ul>
             {summary.contingencies.map(
@@ -128,7 +128,7 @@ export function SummaryEvents({ summary }: { summary: TurnSummary }) {
       {summary.goNoGo && (
         <section data-testid="summary-go-no-go">
           <h2>
-            <GameText>Go/no-go check</GameText>
+            <GameText heading>Go/no-go check</GameText>
           </h2>
           <p>
             <GameText>
@@ -142,7 +142,7 @@ export function SummaryEvents({ summary }: { summary: TurnSummary }) {
       {summary.solarParticleEvent && (
         <section data-testid="summary-solar-particle-event">
           <h2>
-            <GameText>Solar particle event</GameText>
+            <GameText heading>Solar particle event</GameText>
           </h2>
           <p>
             <GameText>
@@ -154,7 +154,7 @@ export function SummaryEvents({ summary }: { summary: TurnSummary }) {
       {summary.dustStorms.length > 0 && (
         <section data-testid="summary-dust-storms">
           <h2>
-            <GameText>Hazards</GameText>
+            <GameText heading>Hazards</GameText>
           </h2>
           <ul>
             {summary.dustStorms.map(

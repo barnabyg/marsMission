@@ -138,7 +138,7 @@ export function PlanningMode({
 
           <section className="panel">
             <h2>
-              <GameText>Milestones</GameText>
+              <GameText heading>Milestones</GameText>
             </h2>
             {view.milestones.length === 0 ? (
               <p>None yet.</p>

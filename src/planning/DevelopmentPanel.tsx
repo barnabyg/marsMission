@@ -24,7 +24,7 @@ export function DevelopmentPanel({
   return (
     <section className="panel">
       <h2>
-        <GameText>Development</GameText>
+        <GameText heading>Development</GameText>
       </h2>
       {developments.length === 0 ? (
         <p>Nothing needs it.</p>

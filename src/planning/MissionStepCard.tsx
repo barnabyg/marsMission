@@ -26,7 +26,7 @@ export function MissionStepCard({
           <span className="mission-step-number">{step.number}</span>
           {/* One piece, so that the heading's gap doesn't split it at each game term. */}
           <span>
-            <GameText>{step.title}</GameText>
+            <GameText heading>{step.title}</GameText>
           </span>
         </h3>
         <p

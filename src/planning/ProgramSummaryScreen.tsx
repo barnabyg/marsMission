@@ -14,7 +14,7 @@ export function ProgramSummaryScreen({
   return (
     <main className="summary-screen" data-testid="program-summary">
       <h1>
-        <GameText>Program summary</GameText>
+        <GameText heading>Program summary</GameText>
       </h1>
       {status.kind === "cancelled" ? (
         <p className="problem">
@@ -39,7 +39,7 @@ export function ProgramSummaryScreen({
       </table>
       <section>
         <h2>
-          <GameText>Milestones</GameText>
+          <GameText heading>Milestones</GameText>
         </h2>
         {milestones.length === 0 ? (
           <p>None achieved.</p>

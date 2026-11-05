@@ -20,7 +20,7 @@ export function DecisionPointPanel({
       data-testid="decision-point"
     >
       <h2>
-        <GameText>{`Decision Point: ${title}`}</GameText>
+        <GameText heading>{`Decision Point: ${title}`}</GameText>
       </h2>
       <p>
         <GameText>{description}</GameText>

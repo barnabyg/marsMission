@@ -19,7 +19,7 @@ export function StatusBar({ view, lastTurn }: StatusBarProps) {
   return (
     <header className="status-bar">
       <h1>
-        <GameText>Planning Mode</GameText>
+        <GameText heading>Planning Mode</GameText>
       </h1>
       <dl>
         <StatusValue icon="hourglass" term="Turn" testId="turn-number">

@@ -1,16 +1,20 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { watchRepeatedTerms } from "./repeatedTerms";
 import { placeTooltip, type Box } from "./tooltipPlacement";
 import { tooltips, type Term } from "./tooltips";
 
 interface ShownTooltip {
-  term: Term;
+  /** One term, or every term a heading's ⓘ marker explains. */
+  terms: Term[];
   anchor: Element;
   /** What this particular one is, after what the term means, such as one Asset's Benefit. */
   detail: string | null;
 }
 
 function termElementFrom(target: EventTarget | null): Element | null {
-  return target instanceof Element ? target.closest("[data-term]") : null;
+  return target instanceof Element
+    ? target.closest("[data-term], [data-terms]")
+    : null;
 }
 
 /** The controls on screen a tooltip shouldn't cover, leaving out any the term sits inside. */
@@ -30,10 +34,16 @@ export function TooltipLayer() {
   useEffect(() => {
     const show = (event: Event) => {
       const anchor = termElementFrom(event.target);
-      const term = anchor?.getAttribute("data-term") as Term | undefined;
+      const terms = (
+        anchor?.getAttribute("data-term") ??
+        anchor?.getAttribute("data-terms") ??
+        ""
+      )
+        .split("|")
+        .filter(Boolean) as Term[];
       setShown(
-        anchor && term
-          ? { term, anchor, detail: anchor.getAttribute("data-detail") }
+        anchor && terms.length > 0
+          ? { terms, anchor, detail: anchor.getAttribute("data-detail") }
           : null,
       );
     };
@@ -49,6 +59,8 @@ export function TooltipLayer() {
       document.removeEventListener("focusout", hide);
     };
   }, []);
+
+  useEffect(watchRepeatedTerms, []);
 
   // Mission Mode can end its Turn under the pointer, taking the term with it.
   useEffect(() => {
@@ -95,8 +107,12 @@ export function TooltipLayer() {
           : { left: 0, top: 0, visibility: "hidden" }
       }
     >
-      <strong>{shown.term}</strong>
-      <p>{tooltips[shown.term]}</p>
+      {shown.terms.map((term) => (
+        <div key={term}>
+          <strong>{term}</strong>
+          <p>{tooltips[term]}</p>
+        </div>
+      ))}
       {shown.detail && <p data-testid="tooltip-detail">{shown.detail}</p>}
     </div>
   );

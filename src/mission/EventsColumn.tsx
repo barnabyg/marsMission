@@ -34,7 +34,7 @@ export function EventsColumn({ timeline, entriesHappened }: EventsColumnProps) {
                   {formatDate(addDays(timeline.startDate, entry.day))}
                 </time>
                 <h3>
-                  <GameText>{entry.title}</GameText>
+                  <GameText heading>{entry.title}</GameText>
                 </h3>
                 <p>
                   <GameText>{entry.description}</GameText>
