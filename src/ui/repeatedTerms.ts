@@ -6,7 +6,7 @@ const scopes =
   ".panel, dialog, .summary-screen, .status-bar, .mission-bar, .mission-side, .events-column, .decision-point";
 
 /** Marks with data-repeat each game term that already appeared, outside a heading, earlier in the same panel. */
-export function markRepeatedTerms(root: ParentNode): void {
+function markRepeatedTerms(root: ParentNode): void {
   const seen = new Map<Element | null, Set<string>>();
   for (const term of root.querySelectorAll(".term[data-term]")) {
     // Headings carry no underlines, so they don't use up a term's one underline either.
