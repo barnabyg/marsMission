@@ -22,6 +22,14 @@ const programSchema = z.strictObject({
   // At least 1%, and a level of at least 1, so a Program that only skips Turns is always cancelled.
   publicSupportDrainPercent: z.number().int().min(1).max(100),
   cancellationLevel: z.number().int().min(1),
+  // Base funding: paid as each Turn ends, while the Program is active, for each point of Public Support it had as the
+  // Turn started, up to a most for a Turn. Left out, there is none.
+  baseFunding: z
+    .strictObject({
+      millionsPerPublicSupport: z.number().nonnegative(),
+      mostMillions: money,
+    })
+    .optional(),
 });
 
 const trajectoriesSchema = z

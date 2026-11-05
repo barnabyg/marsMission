@@ -13,6 +13,7 @@ describe("the Turn summary's Money", () => {
           { publicSupport: 600, payoutMillions: 500 },
         ],
         researchGrantMillions: 40,
+        baseFundingMillions: 200,
         failure: null,
       }),
     ).toEqual({
@@ -24,8 +25,9 @@ describe("the Turn summary's Money", () => {
       received: [
         { name: "Funding Thresholds", millions: 1500 },
         { name: "Research Grants", millions: 40 },
+        { name: "Base funding", millions: 200 },
       ],
-      changeMillions: 680,
+      changeMillions: 880,
     });
   });
 
@@ -37,6 +39,7 @@ describe("the Turn summary's Money", () => {
         upkeepMillions: 0,
         fundingPayouts: [],
         researchGrantMillions: 25,
+        baseFundingMillions: 0,
         failure: null,
       }),
     ).toEqual({
@@ -54,6 +57,7 @@ describe("the Turn summary's Money", () => {
         upkeepMillions: 0,
         fundingPayouts: [],
         researchGrantMillions: 0,
+        baseFundingMillions: 0,
         failure: {
           missionEventName: "Arrival burn",
           assetsLost: ["Test orbiter"],

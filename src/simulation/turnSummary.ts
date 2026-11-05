@@ -106,6 +106,8 @@ export interface TurnSummary {
   /** What each Asset's Ongoing Research paid in Research Grants, leaving out any that came to nothing. moneyEndMillions includes it. */
   researchGrants: { name: string; millions: number }[];
   researchGrantMillions: number;
+  /** What the Program's backers paid as the Turn ended, for its Public Support as the Turn started. */
+  baseFundingMillions: number;
   /** The Mission Event that ended this Turn's Mission and what that cost, if one failed. Assets delivered before it are safe. */
   failure: {
     missionEventName: string;

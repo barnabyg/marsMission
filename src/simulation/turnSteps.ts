@@ -1,3 +1,4 @@
+import { baseFundingFor } from "./baseFunding";
 import type { Catalogue } from "../catalogue/catalogue";
 import {
   carryOutSurvey,
@@ -219,6 +220,8 @@ export function resolveTurn(
   });
   const faded = fadePublicSupport(catalogue, publicSupportBeforeDrain);
 
+  // Sized by Public Support as the Turn started, so that Planning Mode can say what it will be.
+  const baseFundingMillions = baseFundingFor(catalogue, program.publicSupport);
   const moneyEndMillions =
     program.moneyMillions -
     costMillions -
@@ -226,6 +229,7 @@ export function resolveTurn(
     upkeepMillions +
     sum(funding.payouts.map(({ payoutMillions }) => payoutMillions)) +
     research.researchGrantMillions +
+    baseFundingMillions +
     (flown.returned?.refundMillions ?? 0);
   const cutServiceLife = new Map(
     [...flown.cutServiceLife].map(([asset, days]) => [asset.id, days]),
@@ -383,6 +387,7 @@ export function resolveTurn(
       fundingPayouts: funding.payouts,
       researchGrants: research.researchGrants,
       researchGrantMillions: research.researchGrantMillions,
+      baseFundingMillions,
       failure: missionFailure(flown),
       contingencies: contingenciesAnswered(flown),
       cancellationReason: faded.cancellationReason,
