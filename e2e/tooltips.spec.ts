@@ -3,16 +3,17 @@ import { storageKeyFor } from "../src/save/saveStore";
 import { tooltips, type Term } from "../src/ui/tooltips";
 import {
   chooseAssets,
-  endTurnWithoutLaunching,
+  continueFromSave,
+  endTurnAndContinue,
   eventEntries,
   holdTurnWhenShown,
   overrideProgramData,
   pauseAtEvent,
-  playToNextTurn,
   termsInButtons,
   termsWithoutTooltips,
 } from "./helpers";
 import {
+  colossusBuiltSave,
   colossusMoney,
   crewSeed,
   landingSeed,
@@ -199,7 +200,6 @@ test("explains each research Activity wherever Mission Mode names it", async ({
 test("explains the terms of technology in Planning Mode, Mission Mode and the Turn summary", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays on to the Turn summary.
   await page.goto(`/?seed=${pinpointLandingSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   const pinpoint = page.locator(".asset-choice", {
@@ -218,8 +218,11 @@ test("explains the terms of technology in Planning Mode, Mission Mode and the Tu
   await chooseAssets(page, ["Pinpoint Lander"]);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await pauseAtEvent(page, "Pinpoint Lander is Flight-proven", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Pinpoint Lander is Flight-proven",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   await expectTooltip(
     page,
@@ -231,7 +234,7 @@ test("explains the terms of technology in Planning Mode, Mission Mode and the Tu
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   const proven = page.getByTestId("summary-flight-proven");
   await expect(proven).toHaveText("Now Flight-proven: Pinpoint Lander");
   await expectTooltip(
@@ -245,16 +248,9 @@ test("explains the terms of technology in Planning Mode, Mission Mode and the Tu
 test("explains the terms of Crew in Planning Mode, Mission Mode and the Turn summary", async ({
   page,
 }) => {
-  // Over 5 s: two Turns of Development, then a Turn of a Crewed Mission played at 10x.
+  // Over 5 s: a Turn of a Crewed Mission, played to the Crew's arrival.
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
-  await page.goto(`/?seed=${crewSeed}`);
-  await page
-    .getByTestId("development")
-    .filter({ hasText: "Meridian Colossus" })
-    .getByRole("checkbox", { name: "Start Development" })
-    .check();
-  await endTurnWithoutLaunching(page);
-  await endTurnWithoutLaunching(page);
+  await continueFromSave(page, colossusBuiltSave(crewSeed));
 
   await page
     .getByRole("combobox", { name: "Launch Vehicle" })
@@ -288,8 +284,11 @@ test("explains the terms of Crew in Planning Mode, Mission Mode and the Turn sum
     .getByRole("combobox", { name: "Crew destination" })
     .selectOption("marsOrbit");
 
-  await pauseAtEvent(page, "Crew in Mars orbit", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Crew in Mars orbit",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   const arrived = eventEntries(page).filter({ hasText: "Crew in Mars orbit" });
   await expectTooltip(
@@ -304,7 +303,7 @@ test("explains the terms of Crew in Planning Mode, Mission Mode and the Turn sum
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   const summary = page.getByTestId("turn-summary");
   await expectTooltip(
     page,
@@ -375,7 +374,7 @@ test("no button highlights a game term, while the text around it keeps its toolt
     page.getByRole("heading", { name: "Mission Mode" }),
   ).toBeVisible();
   expect(await termsInButtons(page)).toEqual([]);
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
   expect(await termsInButtons(page)).toEqual([]);
 
   await page.reload();

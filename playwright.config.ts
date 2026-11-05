@@ -12,7 +12,7 @@ export default defineConfig({
   // Every test opens its own browser context, so its saves and routes stay its own, and the workers can share the two servers.
   // Each worker renders 4K in software, and playback moves at most 250 ms a frame, so a starved worker falls behind real time.
   // Two workers on one of CI's 4-core runners did, and a 1x Turn timed out, so CI runs one per shard and the shards run side by side.
-  // Locally, a worker for every 5 cores: four on 20 cores ran the suite in about 5 minutes, against 12 on one.
+  // Locally, a worker for every 5 cores: four on 20 cores ran the suite in about 3.5 minutes, with the CPU 80-98% busy.
   fullyParallel: true,
   workers: process.env.CI ? 1 : "20%",
   forbidOnly: true,

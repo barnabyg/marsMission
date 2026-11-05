@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
-  endTurnWithoutLaunching,
+  continueFromSave,
   holdTurnWhenShown,
   overrideProgramData,
   pauseAtEvent,
@@ -9,7 +9,12 @@ import {
   viewButton,
   watchForProblems,
 } from "./helpers";
-import { colossusMoney, colossusSeed, rendezvousFailureSeed } from "./seeds";
+import {
+  colossusBuiltSave,
+  colossusMoney,
+  colossusSeed,
+  rendezvousFailureSeed,
+} from "./seeds";
 
 /** Where the camera is at each shot, as the scene reports it. */
 const solarSystemCamera = "0.000 3.500 2.100";
@@ -24,7 +29,7 @@ function scene(page: Page) {
 }
 
 /**
- * Develops the Meridian Colossus over two Turns, then launches it full and plays at 1x up to the event with this title,
+ * Continues a Program with the Meridian Colossus developed, then launches it full and plays at 1x up to the event with this title,
  * recording every position the camera takes from the solar system's shot.
  */
 async function launchOnColossus(
@@ -33,15 +38,7 @@ async function launchOnColossus(
   pauseAt: string,
 ): Promise<void> {
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
-  await page.goto(`/?seed=${seed}`);
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await page
-    .getByTestId("development")
-    .filter({ hasText: "Meridian Colossus" })
-    .getByRole("checkbox", { name: "Start Development" })
-    .check();
-  await endTurnWithoutLaunching(page);
-  await endTurnWithoutLaunching(page);
+  await continueFromSave(page, colossusBuiltSave(seed));
   await page
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-colossus");
@@ -104,7 +101,7 @@ function holdEarthOrbitAt(page: Page, stage: string): Promise<void> {
 test("moves smoothly to the spacecraft view for the rendezvous, which pausing holds, and shows the Tanker docking to refuel", async ({
   page,
 }) => {
-  // Over 5 s: develops the Meridian Colossus over two Turns, and waits 2 s on purpose to show that pausing holds it.
+  // Over 5 s: waits 2 s on purpose to show that pausing holds it, and plays the docking, which takes real time.
   const problems = watchForProblems(page);
   await launchOnColossus(page, colossusSeed, "Rendezvous");
 
@@ -159,7 +156,7 @@ test("moves smoothly to the spacecraft view for the rendezvous, which pausing ho
 test("moves to the spacecraft view for a failed rendezvous, shows the collision, and then moves on to the solar system", async ({
   page,
 }) => {
-  // Over 5 s: develops the Meridian Colossus over two Turns, then plays at 1x for the seconds the wreck stays on screen.
+  // Over 5 s: plays at 1x for the seconds the collision and the wreck stay on screen.
   const problems = watchForProblems(page);
   await launchOnColossus(page, rendezvousFailureSeed, "Rendezvous failed");
 

@@ -43,7 +43,6 @@ async function expectSpacecraftUnavailable(page: Page): Promise<void> {
 test("switches to the spacecraft view by hand on the way to Mars, and moves on once the Mission arrives", async ({
   page,
 }) => {
-  // Over 5 s: plays at 1x from launch to the arrival, which is what the view moves on from.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
@@ -94,7 +93,7 @@ test("switches to the spacecraft view by hand on the way to Mars, and moves on o
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await pauseAtEvent(page, "Mars orbit insertion", () =>
-    page.getByRole("button", { name: "1x" }).click(),
+    page.getByRole("button", { name: "5x" }).click(),
   );
   await expect(currentView(page)).toHaveText("Mars orbit");
   await expectSpacecraftUnavailable(page);

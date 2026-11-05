@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
 import {
-  chooseAssets,
   cancelledAfterOneTurn,
+  chooseAssets,
+  endTurnAndContinue,
   endTurnWithoutLaunching,
   eventEntries,
   overrideProgramData,
-  playToNextTurn,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -19,7 +19,7 @@ test("keeps a Program between sessions: launches, reaches the next Turn, reloads
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
   const state = {
     money: await page.getByTestId("money").textContent(),
@@ -71,7 +71,7 @@ test("starts a new Program instead of continuing, when asked", async ({
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 
   await page.reload();
@@ -127,7 +127,7 @@ test("can't continue a cancelled Program after seeing how it ended", async ({
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
   await expect(page.getByTestId("program-summary")).toContainText("cancelled");
 
   await page.reload();

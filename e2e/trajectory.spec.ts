@@ -17,8 +17,11 @@ async function arrivalDate(page: Page, id: "slow" | "fast"): Promise<string> {
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await trajectory(page).selectOption(id);
-  await pauseAtEvent(page, "Mars orbit insertion", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Mars orbit insertion",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
   await expect(page.getByTestId("operating-at-mars")).toContainText(
@@ -57,7 +60,7 @@ test("Planning Mode shows what a Trajectory changes", async ({ page }) => {
 test("a Fast Mission arrives earlier than a Slow one, with more research", async ({
   page,
 }) => {
-  // Over 5 s: flies two Missions at 1x to their arrival, one on each Trajectory, to compare the dates.
+  // Over 5 s: flies two Missions to their arrival, one on each Trajectory, to compare the dates.
   const problems = watchForProblems(page);
   const slow = await arrivalDate(page, "slow");
   await page.evaluate(() => {
