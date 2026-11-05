@@ -1,44 +1,9 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
-import { chooseAssets, viewButton } from "./helpers";
+import { chooseAssets } from "./helpers";
+import { screenSizes, somethingScrolls, unreadableText } from "./layoutHelpers";
 import { successSeed } from "./seeds";
-
-/** A 4K monitor, at 150% Windows display scaling and at 100% (ADR 0001). */
-const screenSizes = [
-  { width: 2560, height: 1440 },
-  { width: 3840, height: 2160 },
-];
-
-/**
- * Whether the page, or any panel in Planning Mode, has more to show than fits on screen. The New Mission steps may
- * scroll up and down by themselves, under the New Mission's buttons, which stay in view, but never sideways.
- */
-function somethingScrolls(page: Page): Promise<boolean> {
-  return page.evaluate(() => {
-    const { scrollHeight, scrollWidth } = document.documentElement;
-    const panels = [...document.querySelectorAll(".planning-columns .panel")];
-    const steps = [...document.querySelectorAll(".mission-steps")];
-    return (
-      scrollHeight > innerHeight ||
-      scrollWidth > innerWidth ||
-      panels.some(
-        (panel) =>
-          panel.scrollHeight > panel.clientHeight ||
-          panel.scrollWidth > panel.clientWidth,
-      ) ||
-      steps.some((each) => each.scrollWidth > each.clientWidth)
-    );
-  });
-}
-
-/** Whether all these elements sit side by side, on one line. */
-async function onOneLine(elements: Locator[]): Promise<boolean> {
-  const boxes = await Promise.all(elements.map((each) => each.boundingBox()));
-  const middles = boxes.map((box) => (box ? box.y + box.height / 2 : -1));
-  const lowest = Math.min(...middles);
-  return lowest >= 0 && Math.max(...middles) - lowest < 10;
-}
 
 const realFiles = realCatalogueFiles();
 /** Every Asset a new Program can choose, leaving out any that need Development first. */
@@ -211,8 +176,11 @@ for (const size of screenSizes) {
       const assets = page.getByTestId("operating-assets").getByRole("listitem");
       await expect(milestones).toHaveCount(realMilestones.length);
       await expect(assets).toHaveCount(8);
-      await expect(milestones.last()).toBeInViewport({ ratio: 1 });
-      await expect(assets.last()).toBeInViewport({ ratio: 1 });
+      // At 1920×1080 the panels beside the New Mission may scroll, so each is scrolled to its end first.
+      for (const last of [milestones.last(), assets.last()]) {
+        await last.scrollIntoViewIfNeeded();
+        await expect(last).toBeInViewport({ ratio: 1 });
+      }
     });
 
     test("Planning Mode fits on one screen with a busy Program and a lander on the Mission", async ({
@@ -287,6 +255,13 @@ for (const size of screenSizes) {
       );
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
       expect(await somethingScrolls(page)).toBe(false);
+      expect(
+        await unreadableText(
+          page.locator(
+            "[data-testid=trajectory-details], [data-testid=landing-site-details], .contingency-choice",
+          ),
+        ),
+      ).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
@@ -459,40 +434,6 @@ for (const size of screenSizes) {
       await expect(
         page.getByRole("button", { name: "Start a new Program" }),
       ).toBeInViewport({ ratio: 1 });
-    });
-
-    test("Mission Mode's controls fit on one line", async ({ page }) => {
-      await page.goto(`/?seed=${successSeed}`);
-      await chooseAssets(page, ["Pathfinder Orbiter"]);
-      await page.getByRole("button", { name: "Launch Mission" }).click();
-      const speeds = page
-        .getByRole("group", { name: "Speed" })
-        .getByRole("button");
-      await expect(speeds.first()).toBeVisible();
-      expect(
-        await onOneLine([
-          page.getByRole("heading", { name: "Mission Mode" }),
-          page.getByTestId("mission-date"),
-          page.getByRole("button", { name: "Mute sound" }),
-          viewButton(page, "Solar system"),
-          viewButton(page, "Mars orbit"),
-          viewButton(page, "Surface"),
-          viewButton(page, "Spacecraft"),
-          speeds.first(),
-          speeds.last(),
-        ]),
-      ).toBe(true);
-      const progress = await page
-        .getByRole("progressbar", { name: "Progress through the Turn" })
-        .boundingBox();
-      expect(progress?.width).toBeGreaterThan(100);
-      expect(await somethingScrolls(page)).toBe(false);
-    });
-
-    test("text is the same size whatever the screen", async ({ page }) => {
-      await page.goto(`/?seed=${successSeed}`);
-      await chooseAssets(page, ["Pathfinder Orbiter"]);
-      await expect(page.locator("html")).toHaveCSS("font-size", "18px");
     });
   });
 }

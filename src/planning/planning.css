@@ -68,7 +68,9 @@
 }
 
 .panel select {
-  min-width: 26rem;
+  /* As wide as its longest choice reads well, but never wider than the panel it sits in. */
+  min-width: min(26rem, 100%);
+  max-width: 100%;
   color: var(--text);
   background: var(--background);
 }
@@ -85,16 +87,19 @@
 
 .mission-launch {
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
-  gap: 1.5rem;
+  gap: 0.8rem 1.5rem;
 }
 
+/* The Trajectory's description takes what room is left, moving under the choices where there isn't enough. */
 .mission-launch p {
+  flex: 1 1 18rem;
   max-width: 34rem;
 }
 
 .mission-launch select {
-  min-width: 22rem;
+  min-width: min(22rem, 100%);
 }
 
 /* Two columns, so that a Program with every Milestone leaves room for what is operating at Mars. */
@@ -155,10 +160,12 @@
   list-style: none;
 }
 
+/* Each row wraps, so that where there isn't room a Contingency sits under its Mission Event rather than squeezing beside it. */
 .mission-events li {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.3rem 1.5rem;
 }
 
 .mission-event-name {
@@ -170,6 +177,7 @@
 }
 
 .mission-events .contingency-choice {
+  flex: 1 1 24rem;
   display: flex;
   align-items: center;
   gap: 0.6rem;

@@ -9,6 +9,8 @@
 
 .mission-steps {
   display: grid;
+  /* One column no wider than the panel, so that a step's choices wrap rather than scroll sideways at 1920×1080. */
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: 0.75rem;
   min-height: 0;
@@ -17,6 +19,7 @@
 
 .mission-step {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: start;
   gap: 0.6rem;
   padding: 0.75rem 1.25rem;
@@ -50,6 +53,10 @@
   color: var(--background);
   font-size: var(--text-sm);
   font-weight: 700;
+}
+
+.mission-step > * {
+  max-width: 100%;
 }
 
 .mission-step-note {

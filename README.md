@@ -10,7 +10,7 @@ You need [Node.js](https://nodejs.org/) 24 or later. From the repository root, r
 .\run.bat
 ```
 
-You can also double-click `run.bat`. It installs what's needed, builds the game and opens it in your browser. The game is designed for a 4K desktop, at 100% or 150% display scaling.
+You can also double-click `run.bat`. It installs what's needed, builds the game and opens it in your browser. The game is designed for a desktop monitor: 4K at 100% or 150% display scaling, or 1920×1080.
 
 To try the latest phase, follow the [Phase 7 playtest guide](docs/playtest/phase-7.md). The [Phase 1](docs/playtest/phase-1.md), [Phase 2](docs/playtest/phase-2.md), [Phase 3](docs/playtest/phase-3.md), [Phase 4](docs/playtest/phase-4.md), [Phase 5](docs/playtest/phase-5.md) and [Phase 6](docs/playtest/phase-6.md) guides are kept as records of those phases, so some controls and numbers have changed since they were written. The [Status](docs/game-design.md#status) section of the design doc lists what each phase built and what changed after its playtest. Only the current guide's known seeds are tested, in `src/catalogue/playtestSeedsPhase7.test.ts`, and those tests move to the new guide with each phase. If tuning breaks one, find a new seed that gives the same story and update the current guide, because earlier guides are records and aren't updated.
 
