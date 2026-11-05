@@ -3,8 +3,8 @@ import { useId, type ReactNode } from "react";
 // The parts the event pictures are drawn from, in a 320 by 110 box. Everything is drawn here, so the pictures are
 // CC0 like the rest of the repository (ADR 0005).
 
-export const width = 320;
-export const height = 110;
+const width = 320;
+const height = 110;
 
 /** The gradients a picture can fill with, by name. */
 type Paint =

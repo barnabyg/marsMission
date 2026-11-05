@@ -2,30 +2,27 @@ import type { TimelineEntry } from "../../simulation/simulation";
 import type { IconName } from "../../ui/Icon";
 
 /** The pictures the events column can show, one for each kind of thing that happens. */
-export const eventPictures = [
-  "launch",
-  "tankerLaunch",
-  "rendezvous",
-  "transferBurn",
-  "orbitInsertion",
-  "entryDescentLanding",
-  "spacecraft",
-  "missionReturned",
-  "dustStorm",
-  "solarParticleEvent",
-  "milestone",
-  "fundingThreshold",
-  "firstLanding",
-  "survey",
-  "flightProven",
-  "crewArrived",
-  "crewLost",
-  "suppliesOut",
-  "assetEnded",
-  "assetFailed",
-] as const;
-
-export type EventPicture = (typeof eventPictures)[number];
+export type EventPicture =
+  | "launch"
+  | "tankerLaunch"
+  | "rendezvous"
+  | "transferBurn"
+  | "orbitInsertion"
+  | "entryDescentLanding"
+  | "spacecraft"
+  | "missionReturned"
+  | "dustStorm"
+  | "solarParticleEvent"
+  | "milestone"
+  | "fundingThreshold"
+  | "firstLanding"
+  | "survey"
+  | "flightProven"
+  | "crewArrived"
+  | "crewLost"
+  | "suppliesOut"
+  | "assetEnded"
+  | "assetFailed";
 
 /** How the events column shows one entry: its picture, the tag beside its date, and whether it went wrong. */
 export interface EventCard {
