@@ -33,6 +33,8 @@
   --focus: #8cc8ff;
   --hover: #222839;
   --pressed: #10131d;
+  --disabled: #2b2f3a;
+  --disabled-text: #7d8394;
 }
 
 * {
@@ -120,12 +122,6 @@ button:not(:disabled):active {
   background-color: var(--pressed);
 }
 
-button:disabled,
-select:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
@@ -142,6 +138,19 @@ button.primary:not(:disabled):hover {
 button.primary:not(:disabled):active {
   background-color: var(--accent);
   filter: brightness(0.88);
+}
+
+/* A disabled control is a flat neutral grey, unlike both an ordinary control and a primary one, and says why on hover through its title. */
+button:disabled,
+button.primary:disabled,
+select:disabled,
+.mission-tabs button:disabled {
+  cursor: not-allowed;
+  background: var(--disabled);
+  border-color: var(--disabled);
+  color: var(--disabled-text);
+  font-weight: inherit;
+  filter: none;
 }
 
 /* One clearly visible focus ring for every control reached by keyboard, including game terms. */

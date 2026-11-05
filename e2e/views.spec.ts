@@ -259,3 +259,21 @@ test("groups the toolbar: views on the left, playback with icons in the centre a
     ).toBeVisible();
   }
 });
+
+test("greys out a view with nothing to show, saying why on hover", async ({
+  page,
+}) => {
+  // An orbiter alone: nothing lands, so the Surface view has nothing to show.
+  await launchFirstMission(page, successSeed);
+  const surface = viewButton(page, "Surface");
+  await expect(surface).toBeDisabled();
+  await expect(surface).toHaveAttribute(
+    "title",
+    "Surface view: nothing is on the surface and no landing is on its way.",
+  );
+  await expect(surface).toHaveCSS("background-color", "rgb(43, 47, 58)");
+  await expect(viewButton(page, "Mars orbit")).not.toHaveCSS(
+    "background-color",
+    "rgb(43, 47, 58)",
+  );
+});

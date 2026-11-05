@@ -74,3 +74,18 @@ test("turns the mass bar red and disables Launch Mission, saying why, when an As
   await expect(launch).toBeEnabled();
   expect(problems).toEqual([]);
 });
+
+test("greys out Launch Mission with nothing ticked, saying why", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  const launch = page.getByRole("button", { name: "Launch Mission" });
+  await expect(launch).toBeDisabled();
+  await expect(launch).toHaveAttribute(
+    "title",
+    "A Mission must carry at least one Asset or Crew.",
+  );
+  // A neutral grey, with none of the accent colour of an enabled Launch Mission.
+  await expect(launch).toHaveCSS("background-color", "rgb(43, 47, 58)");
+  await expect(launch).toHaveCSS("opacity", "1");
+});
