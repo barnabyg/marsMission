@@ -90,7 +90,7 @@ describe("the rover in the real data files", () => {
   });
 
   it("leaves too little for a retry of anything if it fails on the first Turn", () => {
-    // What the gamble left, before base funding, which since Phase 8 pays for a retry in time.
+    // What the gamble left, before base funding, which pays for a retry in time.
     const { program: after, summary } = failing.runTurn(
       failing.startProgram(1),
       landing("rover"),
@@ -370,7 +370,7 @@ describe("the balance of Phase 4", () => {
     // Close enough either way to be a choice, which a Survey doesn't simply win or lose.
     expect(once.science / steady.science).toBeGreaterThan(0.85);
     expect(once.science / steady.science).toBeLessThan(1.15);
-    // Never Surveying at all is the bolder opening: since base funding (Phase 8) rescues more Programs that Survey
+    // Never Surveying at all is the bolder opening: since base funding rescues more Programs that Survey
     // first, landing at greater risk is cancelled far more often and earns less.
     const neverSurveys = played("research orbiter, then land");
     const surveys = played("survey first");
@@ -407,7 +407,7 @@ describe("the balance of Phase 4", () => {
     const tested = played("steady: Tested rovers");
     expect(tested.money).toBeGreaterThan(steady.money);
     expect(tested.science).toBeGreaterThan(steady.science);
-    // Since base funding (Phase 8), Reliability on everything pays its way in money, but earns no more Science.
+    // Since base funding, Reliability on everything pays its way in money, but earns no more Science.
     const everything = played("steady: Tested everything");
     expect(everything.science).toBeLessThan(1.02 * steady.science);
     const shortest = played("steady: shortest Service Life");

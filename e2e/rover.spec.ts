@@ -2,8 +2,10 @@ import { expect, test, type Locator } from "@playwright/test";
 import {
   chooseAssets,
   eventEntries,
+  launchHeld,
   overrideProgramData,
   pauseAtEvent,
+  pauseAtEventAfter,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -37,7 +39,7 @@ async function expectApart(labels: Locator): Promise<void> {
 test("lands a rover, gives it an Activity and sees its Science in the Turn summary", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays on to the next Turn.
+  // Over 5 s: plays to the landing, then on to the next Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${roverSeed}`);
   await chooseAssets(page, ["Trailblazer Rover"]);
@@ -64,8 +66,11 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   await activity.selectOption("long-traverse");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await pauseAtEvent(page, "First landing at Jezero Crater", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "First landing at Jezero Crater",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   await expect(
     eventEntries(page).filter({ hasText: "Entry/descent/landing" }),
@@ -129,7 +134,7 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
 test("lands a rover and a lander at one site, each with its own Activity", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing.
+  // Over 5 s: plays to the landing, the last months of the way at 1x.
   const problems = watchForProblems(page);
   await overrideProgramData(page, {
     startingMoneyMillions: landerAndRoverMoney,
@@ -150,8 +155,12 @@ test("lands a rover and a lander at one site, each with its own Activity", async
       .filter({ hasText: "Entry/descent/landing" }),
   ).toHaveCount(1);
 
-  await pauseAtEvent(page, "First landing at Jezero Crater", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  // Held close to the day of the landing, on 4 July 2029, when Mars turns its Landing Site to the camera.
+  await launchHeld(page);
+  await pauseAtEventAfter(
+    page,
+    "First landing at Jezero Crater",
+    "25 March 2029",
   );
   await expect(
     eventEntries(page).filter({ hasText: "Entry/descent/landing" }),
@@ -207,7 +216,6 @@ test("lands a rover and a lander at one site, each with its own Activity", async
 });
 
 test("loses a rover and a lander together in one crash", async ({ page }) => {
-  // Over 5 s: waits at 1x for the landing.
   const problems = watchForProblems(page);
   await overrideProgramData(page, {
     startingMoneyMillions: landerAndRoverMoney,
@@ -219,8 +227,12 @@ test("loses a rover and a lander together in one crash", async ({ page }) => {
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await chooseAssets(page, ["Prospector Lander", "Trailblazer Rover"]);
 
-  await pauseAtEvent(page, "Entry/descent/landing failed", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  // Held close to the day of the crash, on 4 July 2029, when Mars turns its Landing Site to the camera.
+  await launchHeld(page);
+  await pauseAtEventAfter(
+    page,
+    "Entry/descent/landing failed",
+    "25 March 2029",
   );
   const failed = eventEntries(page).first();
   await expect(failed).toContainText(

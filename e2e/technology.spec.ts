@@ -23,7 +23,7 @@ function landingRiskBand(page: Page) {
 test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plans with its lower cost and risk", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays on to the next Turn.
+  // Over 5 s: plays to the landing, then on to the next Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${pinpointLandingSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
@@ -45,13 +45,16 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
   await expect(page.getByTestId("asset-risk-band")).toHaveText("~20% per Turn");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await pauseAtEvent(page, "Pinpoint Lander is Flight-proven", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Pinpoint Lander is Flight-proven",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   await expect(
     eventEntries(page).filter({ hasText: "Pinpoint Lander is Flight-proven" }),
   ).toContainText("From the next Turn on, it costs $900M");
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   await expect(page.getByTestId("summary-flight-proven")).toHaveText(
     "Now Flight-proven: Pinpoint Lander",
   );

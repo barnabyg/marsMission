@@ -377,6 +377,22 @@ function colossusSeedWhere(
   );
 }
 
+/**
+ * The automatic save of a Program on this seed, with the Meridian Colossus developed over its first two Turns and
+ * nothing launched, as the game itself saves it at the start of Turn 3. Loading it skips playing those two Turns, for a
+ * test about what comes after. It needs the game's data to give the Program colossusMoney, as overrideProgramData does.
+ */
+export function colossusBuiltSave(seed: number): string {
+  const developing = colossusSimulation.runTurn(
+    colossusSimulation.startProgram(seed),
+    { mission: null, developmentIds: ["meridian-colossus"] },
+  );
+  const built = colossusSimulation.runTurn(developing.program, {
+    mission: null,
+  });
+  return JSON.stringify(colossusSimulation.saveProgram(built.program));
+}
+
 /** A seed where the Meridian Colossus carries its first Mission through the tanker launch and the rendezvous to Mars. */
 export const colossusSeed = colossusSeedWhere(null);
 

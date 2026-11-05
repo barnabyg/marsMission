@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
-  playToNextTurn,
+  endTurnAndContinue,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -40,7 +40,7 @@ test("starts each Turn's New Mission with nothing ticked, and tags an Asset alre
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await expect(page.getByTestId("nothing-ticked")).toHaveCount(0);
   await launchMission(page).click();
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
 
   // The orbiter at Mars keeps working, so the New Mission doesn't start with another ticked.
   await expect(page.getByTestId("turn-number")).toHaveText("2");

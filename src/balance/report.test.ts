@@ -72,6 +72,20 @@ describe("the report", () => {
     expect(balanceReport(files, 3)).toBe(balanceReport(files, 3));
   });
 
+  it("explains the Turn table's share and money columns before the tables", () => {
+    const legend = report.slice(0, report.indexOf("== Summary =="));
+    for (const column of [
+      "Active%",
+      "Spent$M",
+      "Thresh$M",
+      "Grants$M",
+      "Thresh%",
+      "Grant%",
+    ]) {
+      expect(legend).toContain(column);
+    }
+  });
+
   it("covers a strategy with no change to anything else", () => {
     expect(report).toContain("== test: launch nothing ==");
     expect(report).toContain("seeds 1 to 3");

@@ -1,11 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
+  endTurnAndContinue,
   eventEntries,
   holdTurnWhenShown,
   openLoadDialog,
   openSaveDialog,
   pauseAtEvent,
+  playFastUntil,
   playToNextTurn,
   termsWithoutTooltips,
   watchForProblems,
@@ -34,7 +36,7 @@ function landingRiskBand(page: Page) {
 test("plans a landing, plays it through and reaches the next Turn", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays on to the next Turn.
+  // Over 5 s: plays to the landing, then on to the next Turn.
   const problems = watchForProblems(page);
   await planLanding(page, landingSeed);
 
@@ -44,8 +46,11 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await pauseAtEvent(page, "First landing at Jezero Crater", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "First landing at Jezero Crater",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   await expect(
     eventEntries(page).getByRole("heading", { name: "First landing on Mars" }),
@@ -75,7 +80,6 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
 test("refuses a too-heavy Mission, then launches an orbiter and a lander together", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays out the Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterSafeSeed}`);
   // Both are chosen on the Meridian Heavy, as neither can be ticked once it wouldn't fit, then moved to the smaller one.
@@ -96,8 +100,11 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
   await expect(page.getByTestId("mission-cost")).toHaveText("$2.2B");
   await expect(page.getByTestId("mission-event")).toHaveCount(4);
 
-  await pauseAtEvent(page, "Entry/descent/landing failed", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Entry/descent/landing failed",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   const failed = eventEntries(page).first();
   await expect(failed).toContainText(
@@ -115,7 +122,7 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
     "Pathfinder Orbiter: Survey",
   );
 
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   const summary = page.getByTestId("summary-failure");
   await expect(summary).toContainText("Assets lost: Prospector Lander");
   await expect(summary).not.toContainText("Pathfinder Orbiter");
@@ -128,7 +135,6 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
 test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site when planning a landing", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the Survey, then plays out the Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
@@ -142,8 +148,11 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
   );
 
   await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await pauseAtEvent(page, "Survey from orbit", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Survey from orbit",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   const survey = eventEntries(page).filter({ hasText: "Survey from orbit" });
   await expect(survey).toContainText("29 June 2029");
@@ -151,7 +160,7 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
     "A new Landing Site is known: Meridiani Planum",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   await expect(page.getByTestId("summary-survey")).toContainText(
     "Meridiani Planum",
   );
@@ -171,7 +180,7 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
 test("turns Surveying off, sees no Survey that Turn, keeps that through a reload, and turns it back on", async ({
   page,
 }) => {
-  // Over 5 s: plays two Turns, because turning Surveying back on needs an Asset already operating.
+  // Over 5 s: ends two Turns, because turning Surveying back on needs an Asset already operating.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterLastsSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
@@ -189,7 +198,7 @@ test("turns Surveying off, sees no Survey that Turn, keeps that through a reload
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
     "Pathfinder Orbiter: Nothing",
   );
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   await expect(page.getByTestId("turn-summary")).toBeVisible();
   await expect(page.getByTestId("summary-survey")).toHaveCount(0);
   await page.getByRole("button", { name: "Continue" }).click();
@@ -217,7 +226,7 @@ test("turns Surveying off, sees no Survey that Turn, keeps that through a reload
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
     "Pathfinder Orbiter: Survey",
   );
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   await expect(page.getByTestId("summary-survey")).toContainText(
     "Meridiani Planum",
   );
@@ -231,7 +240,7 @@ test("forgets an Activity chosen but not yet carried out when a save is loaded",
   await page.goto(`/?seed=${orbiterLastsSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
 
   await openSaveDialog(page);
   await page
@@ -268,7 +277,7 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await playToNextTurn(page);
+  await endTurnAndContinue(page);
   await expect(page.getByTestId("operating-assets")).toContainText(
     "Pathfinder Orbiter: 730 days of Service Life left",
   );
@@ -283,8 +292,8 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   );
   const ended = "Pathfinder Orbiter: Service Life ended";
   await holdTurnWhenShown(page, ended);
-  // At 10x the Turn could finish in the same frame, with so little of it left.
-  await page.getByRole("button", { name: "1x" }).click();
+  // At speed the Turn could finish in the same frame, with so little of it left, so it slows to 1x months before.
+  await playFastUntil(page, "10 September 2032");
   await expect(eventEntries(page).first().getByRole("heading")).toHaveText(
     ended,
   );
@@ -294,7 +303,7 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   await expect(page.getByTestId("summary-assets-ended")).toContainText(
     "Pathfinder Orbiter",
   );
@@ -340,7 +349,7 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
   await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   await expect(page.getByTestId("summary-assets-failed")).toContainText(
     "Pathfinder Orbiter",
   );
@@ -351,12 +360,14 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
 test("reports a failed landing as a crash at the Landing Site", async ({
   page,
 }) => {
-  // Over 5 s: waits at 1x for the landing, then plays out the Turn.
   const problems = watchForProblems(page);
   await planLanding(page, crashSeed);
 
-  await pauseAtEvent(page, "Entry/descent/landing failed", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
+  await pauseAtEvent(
+    page,
+    "Entry/descent/landing failed",
+    () => page.getByRole("button", { name: "Launch Mission" }).click(),
+    "5x",
   );
   const failed = eventEntries(page).first();
   await expect(failed).toHaveClass(/failed/);
@@ -367,7 +378,7 @@ test("reports a failed landing as a crash at the Landing Site", async ({
   await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "10x" }).click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
   await expect(page.getByTestId("summary-failure")).toContainText(
     "Entry/descent/landing",
   );
