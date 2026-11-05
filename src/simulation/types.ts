@@ -75,6 +75,18 @@ interface OperatingAsset {
   flewUnproven: boolean;
 }
 
+/**
+ * What an Asset's Benefit would add this Turn, going by the Assets and Crew doing research on the surface as the Turn
+ * starts: how many it would raise, and the extra Science over a whole Turn. If Assets already at Mars give as much,
+ * they are named in alreadyGivenBy and it adds nothing.
+ */
+export interface BenefitImpact {
+  assets: number;
+  crew: number;
+  extraScience: number;
+  alreadyGivenBy: string[];
+}
+
 /** A place at Mars where Crew operate: Mars orbit, or a Landing Site. */
 export type PlaceAtMars =
   { kind: "marsOrbit" } | { kind: "landingSite"; landingSiteId: string };
@@ -190,6 +202,8 @@ export interface ProgramView {
     technologyReadiness: TechnologyReadiness;
     /** What it does for other Assets while it operates at Mars, or null if it gives no Benefit. */
     benefit: string | null;
+    /** What its Benefit would add to what is on the surface as the Turn starts, or null if it gives no Benefit. */
+    benefitImpact: BenefitImpact | null;
   }[];
   /** What a Crewed Mission can carry: the Crew sizes, Supplies and Protection on offer, what each costs and weighs, and the Health Crew start with. */
   crewedMission: {

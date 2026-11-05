@@ -6,6 +6,7 @@ import {
   operatingKey,
   type Activity,
 } from "./rules";
+import { benefitImpact } from "./benefitImpact";
 import { describeBenefit, largestRaise, type Raise } from "./benefits";
 import {
   crewAtMarsView,
@@ -53,6 +54,7 @@ export type { PlannedCrew } from "./crew";
 export { healthLossCauses } from "./health";
 export type {
   AssetChoices,
+  BenefitImpact,
   CrewLossCause,
   DecisionAnswer,
   DecisionAnswers,
@@ -356,6 +358,18 @@ export function createSimulation(catalogue: Catalogue): Simulation {
           landsAtSite: asset.landsAtSite === true,
           technologyReadiness: readinessOf(program, asset),
           benefit: asset.benefit ? describeBenefit(asset.benefit) : null,
+          benefitImpact: asset.benefit
+            ? benefitImpact(
+                catalogue,
+                rules,
+                program,
+                asset.benefit,
+                surfaceRaise(program),
+                surfaceRaise(program, [
+                  { assetId: asset.id, name: asset.name },
+                ]),
+              )
+            : null,
         })),
       };
     },

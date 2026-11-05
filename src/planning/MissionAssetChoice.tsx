@@ -10,6 +10,7 @@ import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
 import { ActivitySelect } from "./ActivitySelect";
 import { assetImageUrl } from "./assetImages";
+import { describeBenefitImpact } from "./benefitImpact";
 import { fitReason, type Fit } from "./missionFit";
 import { ReadinessTag } from "./ReadinessTag";
 import { UnavailableReason } from "./UnavailableReason";
@@ -93,16 +94,17 @@ export function MissionAssetChoice({
           readiness={asset.technologyReadiness}
           testId="technology-readiness"
         />
-        {asset.benefit && (
-          // Its tooltip says what this Asset's Benefit does, after what a Benefit is.
+        {asset.benefit && asset.benefitImpact && (
+          // It shows the Science its Benefit would add this Turn, and its tooltip says what the Benefit does and why
+          // it adds that much, after what a Benefit is.
           <span
             className="term benefit-tag"
             data-term="Benefit"
-            data-detail={`${asset.name}: ${asset.benefit}`}
+            data-detail={`${asset.name}: ${asset.benefit} ${describeBenefitImpact(asset.benefitImpact)}`}
             data-testid="benefit-tag"
             tabIndex={0}
           >
-            Benefit
+            Benefit +{asset.benefitImpact.extraScience} Science
           </span>
         )}
         {operatingCount > 0 && (

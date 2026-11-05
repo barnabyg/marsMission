@@ -28,11 +28,15 @@ test("puts a relay orbiter at Mars beside a lander and sees the raised earnings"
   const tag = page
     .locator(".asset-choice", { hasText: "Courier Relay" })
     .getByTestId("benefit-tag");
-  await expect(tag).toHaveText("Benefit");
+  // Nothing is on the surface yet, so it would add nothing this Turn.
+  await expect(tag).toHaveText("Benefit +0 Science");
   await expect(page.getByTestId("benefit-tag")).toHaveCount(1);
   await tag.hover();
   await expect(page.getByRole("tooltip")).toContainText(
     "Courier Relay: Raises the Ongoing Research of every Asset and Crew on the surface",
+  );
+  await expect(page.getByRole("tooltip")).toContainText(
+    "nothing on the surface is doing research",
   );
   await chooseAssets(page, ["Prospector Lander"]);
   await expect(page.getByTestId("research-earnings")).not.toContainText(
@@ -59,6 +63,12 @@ test("puts a relay orbiter at Mars beside a lander and sees the raised earnings"
   const operating = page.locator(".panel", { hasText: "Operating at Mars" });
   await expect(operating.getByTestId("research-earnings")).toContainText(
     raised,
+  );
+  // With one already operating, another would add nothing.
+  await expect(tag).toHaveText("Benefit +0 Science");
+  await tag.hover();
+  await expect(page.getByRole("tooltip")).toContainText(
+    "Courier Relay at Mars already gives this Benefit",
   );
   expect(problems).toEqual([]);
 });
