@@ -54,6 +54,8 @@ export interface TurnPlan {
   developmentIds?: string[];
   /** New Activities for the Crew already operating in each place, by the place's `key`. Any left out keep the one they have. */
   crewActivities?: Record<string, string>;
+  /** Assets already operating whose missions end as this Turn starts, by their `key`, so that they cost no more upkeep. */
+  endedAssetKeys?: string[];
 }
 
 interface OperatingAsset {
@@ -164,6 +166,8 @@ export interface ProgramView {
     landingSiteName: string | null;
     /** How many days of Service Life are left, which is 0 if it ends as the coming Turn starts. */
     daysLeft: number;
+    /** What keeping it going costs this Turn, which is 0 once its Service Life has ended. */
+    upkeepMillions: number;
   })[];
   launchVehicles: {
     id: string;

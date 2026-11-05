@@ -123,6 +123,9 @@ const assetsSchema = z.array(
     name: z.string().min(1),
     kind: id,
     costMillions: money,
+    // What it costs for each Turn it is kept operating at Mars after the one it arrives in, until its Service Life
+    // ends or the player ends its mission. Left out, it costs nothing.
+    upkeepMillionsPerTurn: money.optional(),
     massTonnes: z.number().positive(),
     // The chance of failing in each Turn after the one it arrives in, before Reliability.
     failureChancePerTurn: z.number().min(0).max(1),

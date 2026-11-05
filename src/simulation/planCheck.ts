@@ -5,6 +5,7 @@ import { checkCrew, operatingCrewProblems } from "./crew";
 import { developmentsStarting } from "./development";
 import type { PlanCheck } from "./previews";
 import type { PlannedMission, Program, TurnPlan } from "./types";
+import { endedAssetProblems, upkeepFor } from "./upkeep";
 
 const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
 
@@ -69,6 +70,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
       return {
         ...noMission,
         developmentCostMillions: 0,
+        upkeepMillions: 0,
         problems: ["This Program has ended."],
       };
     }
@@ -82,12 +84,19 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     );
     const problems = [
       ...operatingActivityProblems(program, plan),
+      ...endedAssetProblems(program, plan),
       ...operatingCrewProblems(catalogue, rules, program, plan),
       ...mission.problems,
       ...developments.problems,
     ];
-    const totalMillions = mission.costMillions + developments.costMillions;
-    if (totalMillions > program.moneyMillions) {
+    const upkeepMillions = upkeepFor(catalogue, program, plan);
+    const totalMillions =
+      mission.costMillions + developments.costMillions + upkeepMillions;
+    if (upkeepMillions > program.moneyMillions) {
+      problems.push(
+        `Upkeep of the Assets at Mars costs ${formatMoney(upkeepMillions)}, but the Program only has ${formatMoney(program.moneyMillions)}. End some of their missions.`,
+      );
+    } else if (totalMillions > program.moneyMillions) {
       const paying = !plan.mission
         ? developments.technologies.length > 1
           ? "These Developments cost"
@@ -97,13 +106,17 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
           : developments.technologies.length > 1
             ? "This Mission and these Developments cost"
             : "This Mission and Development cost";
+      const left = program.moneyMillions - upkeepMillions;
       problems.push(
-        `${paying} ${formatMoney(totalMillions)}, but the Program only has ${formatMoney(program.moneyMillions)}.`,
+        upkeepMillions > 0
+          ? `${paying} ${formatMoney(totalMillions - upkeepMillions)}, but the Program only has ${formatMoney(left)} after Upkeep of the Assets at Mars.`
+          : `${paying} ${formatMoney(totalMillions)}, but the Program only has ${formatMoney(program.moneyMillions)}.`,
       );
     }
     return {
       ...mission,
       developmentCostMillions: developments.costMillions,
+      upkeepMillions,
       problems,
     };
   }
@@ -112,7 +125,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
   function checkMission(
     program: Program,
     planned: PlannedMission,
-  ): Omit<PlanCheck, "developmentCostMillions"> {
+  ): Omit<PlanCheck, "developmentCostMillions" | "upkeepMillions"> {
     const {
       launchVehicleId,
       assetIds,

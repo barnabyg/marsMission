@@ -341,7 +341,7 @@ function howToRead(programs: number): string[] {
     "A strategy's Turn table shows means over the Programs that played that Turn, at the end of it, so cancelled Programs",
     "drop out of later rows. Active% is out of all Programs. Thresh% and Grant% are shares of that Turn's income.",
     "Summary columns are means per Program: Turns played, final Science and Money, total income from Funding Thresholds and",
-    "Research Grants and the Grant% of it, total Spent on Missions and Development, Missions launched, Failed and Assets",
+    "Research Grants and the Grant% of it, total Spent on Missions, Development and Upkeep, Missions launched, Failed and Assets",
     "Lost in service, and Assets operating at the end of each Turn played.",
   ];
 }

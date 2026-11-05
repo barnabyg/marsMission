@@ -34,6 +34,8 @@ export interface TurnSummary {
   missionCostMillions: number;
   /** What the Developments started this Turn cost, which moneyEndMillions takes off as well as the Mission's cost. */
   developmentCostMillions: number;
+  /** What keeping the Assets at Mars going cost this Turn, which moneyEndMillions takes off too. */
+  upkeepMillions: number;
   moneyStartMillions: number;
   moneyEndMillions: number;
   /** The Program's Science before the Turn, which scienceGained adds to. */

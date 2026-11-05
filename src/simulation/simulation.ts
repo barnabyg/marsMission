@@ -20,6 +20,7 @@ import { createPlanCheck } from "./planCheck";
 import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
 import { costOf, isFlightProven, readinessOf } from "./technologyReadiness";
 import { resolveTurn } from "./turnSteps";
+import { upkeepOf, withMissionsEnded } from "./upkeep";
 import type {
   PlanCheck,
   PlannedActivity,
@@ -192,12 +193,14 @@ export function createSimulation(catalogue: Catalogue): Simulation {
   }
 
   function workOutTurn(
-    program: Program,
+    planned: Program,
     plan: TurnPlan,
     answers: DecisionAnswers = {},
   ): TurnProgress {
-    const { costMillions, problems } = checkPlan(program, plan);
+    const { costMillions, upkeepMillions, problems } = checkPlan(planned, plan);
     if (problems.length > 0) throw new Error(problems.join(" "));
+    // The Assets whose missions the player ended leave service as the Turn starts, before anything else happens.
+    const program = withMissionsEnded(planned, plan);
 
     const fly = (given: DecisionAnswers) =>
       flyMission(catalogue, rules, program, plan, given);
@@ -215,7 +218,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       rules,
       program,
       plan,
-      costMillions,
+      { missionMillions: costMillions, upkeepMillions },
       asIfCautious,
       answers,
     );
@@ -315,6 +318,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
             .flatMap(activitiesOf)
             .map(plannedActivity(asset.landingSiteId === null ? null : raised)),
           daysLeft: Math.max(0, daysUntilServiceEnds(program.date, asset)),
+          upkeepMillions: upkeepOf(catalogue, program, asset),
           landingSiteName: landingSiteById(asset.landingSiteId)?.name ?? null,
         })),
         crewedMission: crewedMissionView(catalogue, program),

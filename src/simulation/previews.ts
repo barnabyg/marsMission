@@ -6,6 +6,8 @@ export interface PlanCheck {
   costMillions: number;
   /** What the Developments started this Turn cost, on top of the Mission's cost. */
   developmentCostMillions: number;
+  /** What keeping the Assets at Mars that the plan doesn't end costs this Turn, on top of the rest. */
+  upkeepMillions: number;
   /** What the Mission's Assets weigh, against what its Launch Vehicle can carry. */
   massTonnes: number;
   capacityTonnes: number;
