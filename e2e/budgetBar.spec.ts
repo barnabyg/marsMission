@@ -37,7 +37,11 @@ test("turns the mass bar red and disables Launch Mission, saying why, when an As
 }) => {
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
+  // Ticked on the Meridian Heavy, as neither can be ticked once it wouldn't fit, then moved to a smaller one.
+  const vehicle = page.getByRole("combobox", { name: "Launch Vehicle" });
+  await vehicle.selectOption("meridian-heavy");
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
+  await vehicle.selectOption("meridian-medium");
 
   const mass = page.getByTestId("mass-gauge");
   await expect(page.getByTestId("mission-mass")).toHaveText("5.5 of 4 tonnes");
@@ -67,9 +71,7 @@ test("turns the mass bar red and disables Launch Mission, saying why, when an As
   }
 
   // A larger Launch Vehicle brings it back within its limits.
-  await page
-    .getByRole("combobox", { name: "Launch Vehicle" })
-    .selectOption("meridian-heavy");
+  await vehicle.selectOption("meridian-heavy");
   await expect(mass).not.toHaveAttribute("data-level", "over");
   await expect(launch).toBeEnabled();
   expect(problems).toEqual([]);

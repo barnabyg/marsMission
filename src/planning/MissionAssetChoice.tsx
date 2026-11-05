@@ -20,7 +20,7 @@ interface MissionAssetChoiceProps {
   /** How many of this Asset are operating at Mars this Turn, which keep working without being launched again. */
   operatingCount: number;
   carried: boolean;
-  /** Whether ticking it would take the Mission over its Launch Vehicle's capacity or the Money. */
+  /** Whether ticking it would take the Mission over its Launch Vehicle's capacity or the Money, which stops it being ticked. */
   fit: Fit;
   onCarriedChange: (carried: boolean) => void;
   onChoicesChange: (choices: AssetChoices) => void;
@@ -40,13 +40,15 @@ export function MissionAssetChoice({
   onChoicesChange,
 }: MissionAssetChoiceProps) {
   const flies = canFly(asset);
+  // Something ticked can always be unticked, even once it no longer fits.
+  const blocked = !carried && (fit.overCapacity || fit.overMoney);
   return (
     <div
       className={[
         "asset-choice",
         "asset-card",
         carried && "carried",
-        !flies && "unavailable",
+        (!flies || blocked) && "unavailable",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -61,8 +63,9 @@ export function MissionAssetChoice({
         <input
           type="checkbox"
           checked={carried}
-          // It can't fly until its Development has finished, which the Development panel shows.
-          disabled={!flies}
+          // It can't fly until its Development has finished, which the Development panel shows, and can't be ticked
+          // while it wouldn't fit or can't be afforded, which its warning says.
+          disabled={!flies || blocked}
           onChange={(event) => {
             onCarriedChange(event.target.checked);
           }}

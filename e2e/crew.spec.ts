@@ -43,9 +43,13 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await endTurnWithoutLaunching(page);
   await expect(page.getByTestId("turn-number")).toHaveText("3");
 
-  // Too heavy for the Meridian Heavy, even with the smallest Crew and the least Supplies.
+  // Too heavy for the Meridian Heavy, even with the smallest Crew and the least Supplies, so they can't be ticked
+  // on it, only chosen on the Meridian Colossus and then moved.
   await launchVehicle(page).selectOption("meridian-heavy");
+  await expect(crewedMission(page)).toBeDisabled();
+  await launchVehicle(page).selectOption("meridian-colossus");
   await crewedMission(page).check();
+  await launchVehicle(page).selectOption("meridian-heavy");
   await expect(page.getByRole("combobox", { name: "Crew size" })).toHaveValue(
     "2",
   );
