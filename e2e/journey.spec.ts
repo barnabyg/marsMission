@@ -64,6 +64,20 @@ test("plays from a new Program through a launch to the next Turn", async ({
   ]);
   await expect(eventEntries(page).first()).toContainText("29 June 2029");
   await expect(eventEntries(page).first()).toContainText("pay out $1B");
+  expect(
+    await eventEntries(page)
+      .getByTestId("event-picture")
+      .evaluateAll((pictures) =>
+        pictures.map((picture) => picture.getAttribute("data-picture")),
+      ),
+  ).toEqual([
+    "fundingThreshold",
+    "survey",
+    "milestone",
+    "orbitInsertion",
+    "transferBurn",
+    "launch",
+  ]);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Continue" })).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);

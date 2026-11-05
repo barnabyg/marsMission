@@ -3,6 +3,7 @@ import {
   chooseAssets,
   eventEntries,
   holdSequence,
+  holdTurnWhenShown,
   pauseAtEvent,
   surfaceAssets,
   watchForProblems,
@@ -65,6 +66,8 @@ test("using a Contingency that works saves the orbiter with a shorter Service Li
   await expect(decisionPoint(page)).toContainText("35 Public Support");
   await expect(decisionPoint(page)).toContainText("20 Public Support");
 
+  // At 10x the Turn can end before the checks below finish, taking End Turn with it, so it holds when the answer shows.
+  await holdTurnWhenShown(page, "Mars orbit insertion: saved by Reserve fuel");
   await decisionPoint(page)
     .getByRole("button", { name: /Use Reserve fuel/ })
     .click();
