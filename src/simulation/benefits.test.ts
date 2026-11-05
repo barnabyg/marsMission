@@ -302,6 +302,37 @@ describe("the raised rate in Planning Mode", () => {
     expect(landerResearch(["test-lander"])).not.toHaveProperty("raisedBy");
   });
 
+  it("says what the relay orbiter would add to the research on the surface this Turn", () => {
+    const simulation = relaySimulation();
+    const impact = (program: Program) =>
+      simulation
+        .readProgram(program)
+        .assets.find(({ id }) => id === "test-relay")?.benefitImpact;
+    expect(impact(simulation.startProgram(42))).toEqual({
+      assets: 0,
+      crew: 0,
+      extraScience: 0,
+      alreadyGivenBy: [],
+    });
+    // Half the lander's 780 Science a Turn. The orbiter isn't on the surface, so isn't raised.
+    expect(
+      impact(withOperating(simulation, ["test-lander", "test-orbiter"])),
+    ).toEqual({ assets: 1, crew: 0, extraScience: 390, alreadyGivenBy: [] });
+    expect(
+      impact(withOperating(simulation, ["test-lander", "test-relay"])),
+    ).toEqual({
+      assets: 1,
+      crew: 0,
+      extraScience: 0,
+      alreadyGivenBy: ["Test Relay"],
+    });
+    expect(
+      simulation
+        .readProgram(simulation.startProgram(42))
+        .assets.find(({ id }) => id === "test-lander")?.benefitImpact,
+    ).toBeNull();
+  });
+
   it("describes the relay orbiter's Benefit", () => {
     const simulation = relaySimulation();
     const relay = simulation
