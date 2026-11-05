@@ -76,7 +76,7 @@ describe("the balance of the first Missions", () => {
       failing.validatePlan(failing.startProgram(1), plan).problems,
     ).toEqual([]);
     const first = firstMissionFailing(plan);
-    // What the gamble left, before base funding, which since Phase 8 pays for a retry in time.
+    // What the gamble left, before base funding, which pays for a retry in time.
     expect(
       failing.validatePlan(beforeBaseFunding(first), plainMission).problems,
     ).toHaveLength(1);

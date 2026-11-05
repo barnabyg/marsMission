@@ -17,7 +17,7 @@ const firstMissionFailed = (plays: TurnRecord[][]) =>
     (play) => play.find(({ launched }) => launched)?.missionFailed === true,
   );
 
-describe("the balance of Phase 8", () => {
+describe("the balance of base funding", () => {
   const cautious = played("cautious");
   const bold = played("bold");
   // On the real data files and over many seeds, as a cautious first Mission rarely fails. Played here, as a test would

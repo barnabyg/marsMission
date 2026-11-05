@@ -185,7 +185,7 @@ describe("the balance of Phase 6", () => {
     );
     expect(colossus.science).toBeGreaterThan(1.03 * oneAtATime.science);
     expect(colossus.cancelled).toBeLessThan(oneAtATime.cancelled + 0.02);
-    // No real gain in a steady Program, which base funding (Phase 8) leaves about even.
+    // No real gain in a steady Program, which base funding leaves about even.
     expect(
       played("steady: develop the Meridian Colossus when rich").science,
     ).toBeLessThan(1.03 * steady.science);
@@ -201,7 +201,7 @@ describe("the balance of Phase 6", () => {
         mission: pinpointMission,
       });
       expect(failing.readProgram(first.program).status.kind).toBe("active");
-      // What the gamble left, before base funding, which since Phase 8 pays for a retry in time.
+      // What the gamble left, before base funding, which pays for a retry in time.
       expect(
         failing.validatePlan(
           {
@@ -213,7 +213,7 @@ describe("the balance of Phase 6", () => {
         ).problems,
       ).toHaveLength(1);
       // Landing straight away with it pays less than surveying first with the Flight-proven lander. Since base funding
-      // (Phase 8) it no longer pays less than landing straight away with that lander, as more of its gambles recover.
+      // it no longer pays less than landing straight away with that lander, as more of its gambles recover.
       expect(
         played("land straight away, Pinpoint Lander").science,
       ).toBeLessThan(played("survey first").science);

@@ -47,7 +47,7 @@ describe("the balance of Phase 7", () => {
   it("makes flying Crew the better choice in some strategies and not in others", () => {
     // Crew who land, with Field research and the Milestones, are worth what they cost.
     expect(landing.science).toBeGreaterThan(1.05 * robotic.science);
-    // A bold choice since base funding (Phase 8), which rescues robotic Programs more often than ones that spent on Crew.
+    // A bold choice since base funding, which rescues robotic Programs more often than ones that spent on Crew.
     expect(landing.cancelled).toBeLessThan(robotic.cancelled + 0.1);
     // Crew kept in Mars orbit are not: the same money on Assets earns more.
     const inOrbit = played(
