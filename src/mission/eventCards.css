@@ -1,0 +1,132 @@
+/* The cards in Mission Mode's events column, each with a picture of what happened. */
+
+.event-entry {
+  display: grid;
+  gap: 0.35rem;
+  background: var(--background);
+  border: 1px solid var(--panel-border);
+  border-left: 3px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 0 0.9rem 0.8rem;
+}
+
+.event-entry.latest {
+  border-color: var(--accent);
+  box-shadow: 0 0 1.2rem rgb(226 112 58 / 25%);
+  animation: event-arrives 0.45s ease-out;
+}
+
+.event-entry.failed {
+  border-left-color: var(--problem);
+}
+
+.event-entry.failed.latest {
+  border-color: var(--problem);
+  box-shadow: 0 0 1.2rem rgb(255 143 122 / 25%);
+}
+
+.event-picture {
+  position: relative;
+  /* Out to the card's edges, past its padding. */
+  margin: 0 -0.9rem 0.2rem;
+  height: 4.5rem;
+  /* Clipped here rather than on the card, which the scrolling list would then be free to squash. */
+  overflow: hidden;
+  border-radius: 0 5px 0 0;
+  border-bottom: 1px solid var(--panel-border);
+  transition: height 0.3s ease-out;
+}
+
+.event-entry.latest .event-picture {
+  height: 8.5rem;
+}
+
+.event-picture-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.event-entry.failed .event-picture::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgb(255 80 60 / 10%),
+    rgb(255 80 60 / 35%)
+  );
+  pointer-events: none;
+}
+
+.event-picture-badge {
+  position: absolute;
+  z-index: 1;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgb(11 13 20 / 80%);
+  color: var(--problem);
+}
+
+.event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+  font-size: var(--text-sm);
+}
+
+.event-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.event-entry.failed .event-tag {
+  color: var(--problem);
+}
+
+.event-entry time {
+  color: var(--muted);
+}
+
+.event-entry h3 {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.event-entry.latest h3 {
+  font-size: var(--text-lg);
+}
+
+.event-entry.failed h3 {
+  color: var(--problem);
+}
+
+@keyframes event-arrives {
+  from {
+    opacity: 0;
+    transform: translateY(-0.6rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-entry.latest {
+    animation: none;
+  }
+
+  .event-picture {
+    transition: none;
+  }
+}

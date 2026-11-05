@@ -18,6 +18,7 @@ import "../ui/dialog.css";
 import "../save/saveSlots.css";
 import "../save/titleScreen.css";
 import "../mission/mission.css";
+import "../mission/eventCards.css";
 import "../ui/summaryScreen.css";
 import "../ui/tooltips.css";
 
