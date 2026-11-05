@@ -20,6 +20,17 @@ const firstMissionFailed = (plays: TurnRecord[][]) =>
 describe("the balance of Phase 8", () => {
   const cautious = played("cautious");
   const bold = played("bold");
+  // On the real data files and over many seeds, as a cautious first Mission rarely fails. Played here, as a test would
+  // take longer than a test may.
+  const cautiousOnRealFiles = (() => {
+    const real = createSimulation(parseCatalogue(realCatalogueFiles()));
+    const strategy = strategies.find(({ name }) => name === "cautious");
+    if (!strategy) throw new Error("Expected the cautious strategy");
+    return Array.from(
+      { length: 1000 },
+      (_, index) => playProgram(real, strategy, index + 1, 20).turns,
+    );
+  })();
 
   it("makes cautious play slow but safe: rarely cancelled", () => {
     expect(cautious.cancelled).toBeLessThan(0.15);
@@ -36,15 +47,7 @@ describe("the balance of Phase 8", () => {
   });
 
   it("lets a cautious Program recover from a failed first Mission, which base funding pays to retry", () => {
-    // On the real data files and over many seeds, as a cautious first Mission rarely fails.
-    const real = createSimulation(parseCatalogue(realCatalogueFiles()));
-    const strategy = strategies.find(({ name }) => name === "cautious");
-    if (!strategy) throw new Error("Expected the cautious strategy");
-    const plays = Array.from(
-      { length: 1000 },
-      (_, index) => playProgram(real, strategy, index + 1, 20).turns,
-    );
-    const failed = firstMissionFailed(plays);
+    const failed = firstMissionFailed(cautiousOnRealFiles);
     expect(failed.length).toBeGreaterThan(20);
     expect(failed.filter(cancelled).length / failed.length).toBeLessThan(0.3);
   });
