@@ -32,8 +32,12 @@ export function OperatingPanel({
   chosenActivities,
   onActivityChange,
 }: OperatingPanelProps) {
+  const empty = assets.length === 0 && crew.length === 0;
   return (
-    <section className="panel">
+    <section
+      className={empty ? "panel empty" : "panel"}
+      data-testid="operating-panel"
+    >
       <h2>Operating at Mars</h2>
       {crew.length > 0 && (
         <ul className="operating-assets" data-testid="crew-at-mars">
@@ -63,7 +67,13 @@ export function OperatingPanel({
         </ul>
       )}
       {assets.length === 0 ? (
-        crew.length === 0 && <p>Nothing.</p>
+        empty && (
+          <p className="empty-note">
+            <GameText>
+              Nothing at Mars yet. Your first orbiter will appear here.
+            </GameText>
+          </p>
+        )
       ) : (
         <>
           <p>

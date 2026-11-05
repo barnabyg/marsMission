@@ -10,7 +10,7 @@ export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
       {summary.crew.length > 0 && (
         <section data-testid="summary-crew">
           <h2>
-            <GameText>Crew at Mars</GameText>
+            <GameText heading>Crew at Mars</GameText>
           </h2>
           <ul>
             {summary.crew.map(
@@ -66,7 +66,7 @@ export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
       {summary.ongoingResearch.length > 0 && (
         <section data-testid="summary-ongoing-research">
           <h2>
-            <GameText>Ongoing Research</GameText>
+            <GameText heading>Ongoing Research</GameText>
           </h2>
           <ul>
             {summary.ongoingResearch.map(
@@ -113,7 +113,7 @@ export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
       {summary.survey && (
         <section data-testid="summary-survey">
           <h2>
-            <GameText>Survey</GameText>
+            <GameText heading>Survey</GameText>
           </h2>
           <ul>
             {summary.survey.siteNamesSurveyed.length > 0 && (
@@ -136,7 +136,7 @@ export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
       {summary.fundingPayouts.length > 0 && (
         <section data-testid="summary-funding-payouts">
           <h2>
-            <GameText>Funding Thresholds reached</GameText>
+            <GameText heading>Funding Thresholds reached</GameText>
           </h2>
           <ul>
             {summary.fundingPayouts.map(({ publicSupport, payoutMillions }) => (
@@ -152,7 +152,7 @@ export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
       {summary.researchGrants.length > 0 && (
         <section data-testid="summary-research-grants">
           <h2>
-            <GameText>
+            <GameText heading>
               {`Research Grants for this Turn: ${formatMoney(summary.researchGrantMillions)}`}
             </GameText>
           </h2>

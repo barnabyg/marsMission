@@ -12,7 +12,7 @@ export function SummaryMilestones({
   return (
     <section className="summary-milestones">
       <h2>
-        <GameText>
+        <GameText heading>
           {milestones.length === 1 ? "Milestone earned" : "Milestones earned"}
         </GameText>
       </h2>
@@ -25,7 +25,7 @@ export function SummaryMilestones({
           >
             <Icon name="trophy" className="milestone-icon" />
             <h3>
-              <GameText>{name}</GameText>
+              <GameText heading>{name}</GameText>
               {/* So that a screen reader, and the text as a whole, reads "name: reward". */}
               <span className="visually-hidden">: </span>
             </h3>

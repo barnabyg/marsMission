@@ -34,7 +34,7 @@ export function SurfaceControls({
   return (
     <>
       <h2>
-        <GameText>Landing Site</GameText>
+        <GameText heading>Landing Site</GameText>
       </h2>
       <p>
         <strong data-testid="surface-site">{site}</strong>

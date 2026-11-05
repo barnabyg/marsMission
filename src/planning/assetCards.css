@@ -27,6 +27,30 @@
   border-color: var(--accent);
 }
 
+/* A picture of the Asset's model, made by scripts/generate-asset-art.mjs, beside its name and facts. Everything
+   else on the card takes the full width under them. */
+.asset-card {
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.7rem;
+}
+
+.asset-card > * {
+  grid-column: 1 / -1;
+}
+
+.asset-card > .asset-card-title,
+.asset-card > .asset-card-facts {
+  grid-column: 2;
+}
+
+.asset-card-image {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  align-self: center;
+  width: 3.4rem;
+  height: 3.4rem;
+}
+
 /* An Asset that needs Development can't be ticked, so its card steps back. */
 .asset-card.unavailable {
   opacity: 0.7;
@@ -119,6 +143,7 @@
 
 .asset-choice-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.8rem;
 }
@@ -133,8 +158,19 @@
   min-width: 11rem;
 }
 
+/* The Crew's lander, at the start of the first line, no taller than its choices. */
+.crew-choice {
+  --crew-image-size: 2.4rem;
+}
+
+.crew-choice-image {
+  flex-shrink: 0;
+  width: var(--crew-image-size);
+  height: var(--crew-image-size);
+}
+
 .crew-choice-second-line {
-  padding-left: calc(20rem + 0.8rem);
+  padding-left: calc(var(--crew-image-size) + 0.8rem + 20rem + 0.8rem);
 }
 
 .panel .crew-choice label {

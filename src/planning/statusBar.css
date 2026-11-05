@@ -38,6 +38,7 @@
 }
 
 .status-value {
+  font-family: var(--font-display);
   display: flex;
   align-items: baseline;
   gap: 0.6rem;

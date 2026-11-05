@@ -70,7 +70,7 @@ export function MissionPanel({
   return (
     <section className="panel mission-panel">
       <h2>
-        <GameText>New Mission</GameText>
+        <GameText heading>New Mission</GameText>
       </h2>
       <div className="mission-steps" data-testid="mission-steps">
         {launchStep && (

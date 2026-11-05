@@ -136,12 +136,19 @@ export function PlanningMode({
             }}
           />
 
-          <section className="panel">
+          <section
+            className={view.milestones.length === 0 ? "panel empty" : "panel"}
+            data-testid="milestones-panel"
+          >
             <h2>
-              <GameText>Milestones</GameText>
+              <GameText heading>Milestones</GameText>
             </h2>
             {view.milestones.length === 0 ? (
-              <p>None yet.</p>
+              <p className="empty-note">
+                <GameText>
+                  No Milestones yet. Your first arrival at Mars will earn one.
+                </GameText>
+              </p>
             ) : (
               <ul className="milestone-list" data-testid="milestones">
                 {view.milestones.map((milestone) => (
