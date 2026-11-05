@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   chooseAssets,
+  overrideProgramData,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -90,4 +91,23 @@ test("greys out Launch Mission with nothing ticked, saying why", async ({
   // A neutral grey, with none of the accent colour of an enabled Launch Mission.
   await expect(launch).toHaveCSS("background-color", "rgb(43, 47, 58)");
   await expect(launch).toHaveCSS("opacity", "1");
+});
+
+test("shows why a plan the player can't afford is rejected", async ({
+  page,
+}) => {
+  await overrideProgramData(page, { startingMoneyMillions: 1100 });
+  await page.goto("/");
+  // Affordable when ticked, until a dearer Launch Vehicle takes it over the Money.
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-heavy");
+
+  await expect(page.getByRole("alert")).toContainText("costs $1.4B");
+  await expect(page.getByRole("alert")).toContainText("$1.1B");
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await expect(
+    page.getByRole("button", { name: "Launch Mission" }),
+  ).toBeDisabled();
 });

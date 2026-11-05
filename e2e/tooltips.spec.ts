@@ -448,6 +448,9 @@ test("underlines each game term once in the New Mission panel, and none in a hea
   page,
 }) => {
   await page.goto(`/?seed=${successSeed}`);
+  await page
+    .getByRole("combobox", { name: "Launch Vehicle" })
+    .selectOption("meridian-heavy");
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
   const panel = page.locator(".mission-panel");
   await expect(panel.getByTestId("landing-site-details")).toBeVisible();

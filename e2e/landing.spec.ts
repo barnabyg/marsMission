@@ -78,7 +78,11 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
   // Over 5 s: waits at 1x for the landing, then plays out the Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterSafeSeed}`);
+  // Both are chosen on the Meridian Heavy, as neither can be ticked once it wouldn't fit, then moved to the smaller one.
+  const vehicle = page.getByRole("combobox", { name: "Launch Vehicle" });
+  await vehicle.selectOption("meridian-heavy");
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
+  await vehicle.selectOption("meridian-medium");
 
   await expect(page.getByTestId("mission-mass")).toHaveText("5.5 of 4 tonnes");
   await expect(page.getByRole("alert")).toContainText("weighs 5.5 tonnes");
@@ -87,9 +91,7 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
   ).toBeDisabled();
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page
-    .getByRole("combobox", { name: "Launch Vehicle" })
-    .selectOption("meridian-heavy");
+  await vehicle.selectOption("meridian-heavy");
   await expect(page.getByTestId("mission-mass")).toHaveText("5.5 of 8 tonnes");
   await expect(page.getByTestId("mission-cost")).toHaveText("$2.2B");
   await expect(page.getByTestId("mission-event")).toHaveCount(4);

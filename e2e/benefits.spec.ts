@@ -21,10 +21,10 @@ test("puts a relay orbiter at Mars beside a lander and sees the raised earnings"
     startingMoneyMillions: landerAndRoverMoney,
   });
   await page.goto(`/?seed=${relayAndLanderSeed}`);
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-heavy");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   const tag = page
     .locator(".asset-choice", { hasText: "Courier Relay" })
     .getByTestId("benefit-tag");

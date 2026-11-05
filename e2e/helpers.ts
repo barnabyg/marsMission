@@ -191,15 +191,20 @@ export function holdSequence(page: Page, atMs?: number): Promise<void> {
   );
 }
 
-/** Ticks exactly these Assets for the planned Mission. */
+/**
+ * Ticks exactly these Assets for the planned Mission. It unticks the others first, because an Asset can't be ticked
+ * while one that is ticked leaves it no room.
+ */
 export async function chooseAssets(page: Page, names: string[]): Promise<void> {
   const boxes = page.locator(".asset-choice");
   await expect(boxes.first()).toBeVisible();
-  for (const box of await boxes.all()) {
-    const text = (await box.textContent()) ?? "";
-    await box
-      .getByRole("checkbox")
-      .setChecked(names.some((name) => text.includes(name)));
+  for (const wanted of [false, true]) {
+    for (const box of await boxes.all()) {
+      const text = (await box.textContent()) ?? "";
+      if (names.some((name) => text.includes(name)) === wanted) {
+        await box.getByRole("checkbox").setChecked(wanted);
+      }
+    }
   }
 }
 

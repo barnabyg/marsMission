@@ -465,21 +465,6 @@ test("lets a Turn pass without launching, and cancels the Program when Public Su
   expect(await termsWithoutTooltips(page)).toEqual([]);
 });
 
-test("shows why a plan the player can't afford is rejected", async ({
-  page,
-}) => {
-  await overrideProgramData(page, { startingMoneyMillions: 500 });
-  await page.goto("/");
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
-
-  await expect(page.getByRole("alert")).toContainText("costs $1B");
-  await expect(page.getByRole("alert")).toContainText("$500M");
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-  await expect(
-    page.getByRole("button", { name: "Launch Mission" }),
-  ).toBeDisabled();
-});
-
 test("refuses to load invalid data files, with a clear error", async ({
   page,
 }) => {
