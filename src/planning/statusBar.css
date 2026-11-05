@@ -23,8 +23,9 @@
 .status-bar dl {
   display: flex;
   align-items: flex-start;
-  /* Tight enough for every value, with the Money's caption, at 1920×1080 in a Program with large figures. */
-  gap: 2rem;
+  /* Tight enough for every value, with the Money's caption and Save, Load and Restart Program under the heading, at
+     1920×1080 in a Program with large figures, with a little to spare for wider fonts on Linux. */
+  gap: 1.5rem;
   margin: 0;
 }
 
