@@ -135,7 +135,7 @@ test("sees which research pays a Research Grant, then sees it paid and the money
 
   // $2.3B less the $1.1B Mission, plus the $1B payout and the $37M Research Grant.
   await expect(page.getByTestId("turn-number")).toHaveText("2");
-  await expect(page.getByTestId("money")).toHaveText("$2.237B");
+  await expect(page.getByTestId("money")).toHaveText("$2.437B");
   expect(problems).toEqual([]);
 });
 

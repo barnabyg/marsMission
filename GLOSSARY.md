@@ -189,6 +189,10 @@ _Avoid_: Achievement, goal, objective
 Science earned at a steady rate for as long as an Asset or Crew is actively doing it, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time. It also adds a small, steady amount of Public Support.
 _Avoid_: Passive science, income
 
+**Base funding**:
+What the Program's backers pay as each Turn ends: a fixed amount for each point of Public Support the Program had as the Turn started, up to a most for a Turn. It keeps a Program that has lost a Mission able to try again in time, but never pays as much as Research Grants.
+_Avoid_: Budget, allowance, salary
+
 **Research Grant**:
 Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none. It is the main income late in a Program.
 _Avoid_: Science income, science payment

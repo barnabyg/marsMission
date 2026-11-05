@@ -48,10 +48,11 @@ test("Planning Mode shows how each value changed over the last Turn, and nothing
 
   await playTurnWithoutLaunching(page);
 
-  // With no Mission and nothing at Mars, only the fading of Public Support changes anything.
+  // With no Mission and nothing at Mars, only the fading of Public Support and base funding change anything.
   await expect(page.getByTestId("public-support")).toHaveText("85");
   await expect(page.getByTestId("public-support-change")).toHaveText("−15");
-  await expect(page.locator(".status-change")).toHaveCount(1);
+  await expect(page.getByTestId("money-change")).toHaveText("+$200M");
+  await expect(page.locator(".status-change")).toHaveCount(2);
   expect(problems).toEqual([]);
 });
 
@@ -91,5 +92,31 @@ test("shows what the Turn will spend beside the Money, and what it leaves, as ch
   await expect(spend).toHaveClass(/over/);
   await expect(left).toHaveText("$50M over");
   await expect(amount).toHaveCSS("color", "rgb(255, 143, 122)");
+  expect(problems).toEqual([]);
+});
+
+test("shows the base funding that comes in as the Turn ends, sized by Public Support, and lists it in the Turn summary", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+  // $2M for each of the 100 points of Public Support a new Program starts with.
+  await expect(page.getByTestId("base-funding")).toHaveText(
+    "+$200M Base funding",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  const received = page.getByTestId("summary-money-received");
+  await expect(received.getByRole("listitem")).toHaveText([
+    "Base funding$200M",
+  ]);
+  // Nothing at Mars earns any Science, which says so rather than show +0.
+  await expect(page.getByTestId("summary-science-change")).toHaveText(
+    "No change",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
   expect(problems).toEqual([]);
 });

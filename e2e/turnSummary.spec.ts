@@ -16,12 +16,13 @@ test("shows Money, Science and Public Support before and after, with the Money s
 }) => {
   const summary = await flyFirstOrbiter(page);
 
-  // The Funding Threshold paid back the Mission's cost, which the lines show rather than leave a puzzle.
+  // The Funding Threshold paid back the Mission's cost, which the lines show rather than leave a puzzle, and base
+  // funding added $200M for Public Support of 100.
   await expect(summary.getByTestId("summary-money")).toHaveText(
-    "$2.3B to $2.3B",
+    "$2.3B to $2.5B",
   );
   await expect(summary.getByTestId("summary-money-change")).toHaveText(
-    "No change",
+    "+$200M",
   );
   const spent = summary.getByTestId("summary-money-spent");
   const received = summary.getByTestId("summary-money-received");
@@ -30,10 +31,11 @@ test("shows Money, Science and Public Support before and after, with the Money s
   );
   await expect(spent.getByRole("listitem")).toHaveText(["Mission cost$1B"]);
   await expect(received.getByTestId("summary-money-received-total")).toHaveText(
-    "+$1B",
+    "+$1.2B",
   );
   await expect(received.getByRole("listitem")).toHaveText([
     "Funding Thresholds$1B",
+    "Base funding$200M",
   ]);
 
   await expect(summary.getByTestId("summary-science")).toHaveText("0 to 100");
