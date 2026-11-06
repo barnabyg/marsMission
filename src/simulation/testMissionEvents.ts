@@ -1,8 +1,8 @@
 import type { CatalogueFiles } from "../catalogue/catalogue";
 
 /**
- * The test catalogue's Mission Events, with orbital refuelling's between the launch and the burn, then the journey
- * home's, and the Contingency for each that has one.
+ * The test catalogue's Mission Events, with orbital refuelling's between the launch and the burn, then Mars ascent's
+ * and the journey home's, and the Contingency for each that has one.
  */
 export function testMissionEvents(
   refuellingEvents: CatalogueFiles["missionEvents"],
@@ -45,6 +45,24 @@ export function testMissionEvents(
         timing: { from: "arrival", days: 5 },
         failureProbability: "landingSite",
         publicSupportLoss: 50,
+      },
+      {
+        id: "test-ascent",
+        name: "Test ascent",
+        description: "Lifts off from the surface.",
+        failureDescription: "The ascent engine failed.",
+        timing: { from: "leavingMars", days: 0 },
+        failureProbability: 0,
+        publicSupportLoss: 15,
+      },
+      {
+        id: "test-docking",
+        name: "Test docking",
+        description: "Docks with the return stage.",
+        failureDescription: "It couldn't dock.",
+        timing: { from: "leavingMars", days: 0 },
+        failureProbability: 0,
+        publicSupportLoss: 10,
       },
       {
         id: "test-departure-home",
@@ -104,6 +122,19 @@ export function testMissionEvents(
         extraPublicSupportLoss: 15,
         troubleDescription: "{lander} came in too fast at {site}.",
         rescueDescription: "{lander} made a hard landing at {site}.",
+      },
+      {
+        id: "test-ascent-restart",
+        name: "Ascent restart",
+        description: "A second try at the ascent.",
+        missionEvent: "test-ascent",
+        costMillions: 30,
+        massTonnes: 0.5,
+        rescueFailureProbability: 0,
+        serviceLifeLossPercent: 0,
+        extraPublicSupportLoss: 5,
+        troubleDescription: "The ascent engine shut down early.",
+        rescueDescription: "The ascent engine relit.",
       },
       {
         id: "test-backup-engine",

@@ -72,6 +72,30 @@
     "publicSupportLoss": 20
   },
   {
+    "id": "mars-ascent",
+    "name": "Mars ascent",
+    "description": "The Crew lifted off from the surface of Mars and climbed into orbit, burning the ascent propellant made at their Landing Site.",
+    "failureDescription": "The ascent engine failed as the Crew lifted off from the surface of Mars.",
+    "timing": {
+      "from": "leavingMars",
+      "days": 0
+    },
+    "failureProbability": 0.06,
+    "publicSupportLoss": 20
+  },
+  {
+    "id": "mars-orbit-rendezvous",
+    "name": "Mars orbit rendezvous",
+    "description": "The Crew met their Earth return stage in Mars orbit and docked with it.",
+    "failureDescription": "The Crew couldn't dock with their Earth return stage and were stranded in Mars orbit.",
+    "timing": {
+      "from": "leavingMars",
+      "days": 0
+    },
+    "failureProbability": 0.03,
+    "publicSupportLoss": 20
+  },
+  {
     "id": "trans-earth-injection",
     "name": "Trans-Earth injection",
     "description": "The Earth return stage fires its engine and sends the Crew out of Mars orbit on their way home.",

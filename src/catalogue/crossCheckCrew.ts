@@ -2,8 +2,8 @@ import { findDuplicates } from "./crossCheckIds";
 import { catalogueFileNames, type Catalogue } from "./schemas";
 
 /**
- * The Crewed Mission: its Mission Events to Mars orbit, to a Landing Site and home from a round trip, Crew sizes,
- * Health, Supplies, Protection, Activities and names.
+ * The Crewed Mission: its Mission Events to Mars orbit, to a Landing Site and home from a round trip, with Mars ascent
+ * first for Crew who landed, Crew sizes, Health, Supplies, Protection, Activities and names.
  */
 export function crewProblems({
   crew,
@@ -146,7 +146,8 @@ function protectionProblems(
 
 /**
  * A round trip's journey home: Mission Events that exist, each timed from leaving Mars, none needing a Landing Site, and
- * home before the Turn it leaves in ends.
+ * home before the Turn it leaves in ends. Mars ascent's come no later than the journey home's first, so that Crew who
+ * landed reach their Earth return stage before it leaves, and no Mission Event is listed twice across the two.
  */
 function roundTripProblems(
   roundTrip: Catalogue["crew"]["roundTrip"],
@@ -155,33 +156,48 @@ function roundTripProblems(
 ): string[] {
   const file = catalogueFileNames.crew;
   const problems: string[] = [];
-  let lastDays = 0;
-  for (const eventId of roundTrip.missionEvents) {
-    const event = missionEvents.find(({ id }) => id === eventId);
-    if (!event) {
-      problems.push(
-        `${file}: the round trip refers to the Mission Event "${eventId}", which isn't in ${catalogueFileNames.missionEvents}`,
-      );
-      continue;
-    }
-    if (event.timing.from !== "leavingMars") {
-      problems.push(
-        `${file}: the round trip brings the Mission Event "${eventId}" on the way home, but it isn't timed from leaving Mars`,
-      );
-    }
-    if (event.failureProbability === "landingSite") {
-      problems.push(
-        `${file}: the round trip can't use the Mission Event "${eventId}" on the way home, because it needs a Landing Site`,
-      );
-    }
-    lastDays = Math.max(lastDays, event.timing.days);
-  }
-  for (const duplicate of new Set(findDuplicates(roundTrip.missionEvents))) {
+  /** The days after leaving Mars of each Mission Event listed that exists, with what's wrong with any. */
+  const daysOf = (eventIds: string[], what: string): number[] =>
+    eventIds.flatMap((eventId) => {
+      const event = missionEvents.find(({ id }) => id === eventId);
+      if (!event) {
+        problems.push(
+          `${file}: ${what} refers to the Mission Event "${eventId}", which isn't in ${catalogueFileNames.missionEvents}`,
+        );
+        return [];
+      }
+      if (event.timing.from !== "leavingMars") {
+        problems.push(
+          `${file}: ${what} brings the Mission Event "${eventId}" on the way home, but it isn't timed from leaving Mars`,
+        );
+      }
+      if (event.failureProbability === "landingSite") {
+        problems.push(
+          `${file}: ${what} can't use the Mission Event "${eventId}" on the way home, because it needs a Landing Site`,
+        );
+      }
+      return [event.timing.days];
+    });
+  const homeDays = daysOf(roundTrip.missionEvents, "the round trip");
+  const ascentDays = daysOf(roundTrip.ascent.missionEvents, "Mars ascent");
+  for (const duplicate of new Set(
+    findDuplicates([
+      ...roundTrip.missionEvents,
+      ...roundTrip.ascent.missionEvents,
+    ]),
+  )) {
     problems.push(
       `${file}: the round trip lists the Mission Event "${duplicate}" more than once`,
     );
   }
-  const homeOn = roundTrip.leavesMarsOnDay + lastDays;
+  const firstHome = Math.min(...homeDays);
+  const lastAscent = Math.max(...ascentDays);
+  if (lastAscent > firstHome) {
+    problems.push(
+      `${file}: Mars ascent ends ${lastAscent} days after leaving Mars, after the journey home's first Mission Event ${firstHome} days after, which it must come no later than`,
+    );
+  }
+  const homeOn = roundTrip.leavesMarsOnDay + Math.max(0, ...homeDays);
   if (homeOn >= turnDays) {
     problems.push(
       `${file}: the journey home ends on day ${homeOn} of the Turn, which must be before the Turn ends on day ${turnDays}`,

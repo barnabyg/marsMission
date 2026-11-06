@@ -69,7 +69,11 @@
     "costMillions": 600,
     "massTonnes": 1.5,
     "leavesMarsOnDay": 60,
-    "missionEvents": ["trans-earth-injection", "earth-entry"]
+    "missionEvents": ["trans-earth-injection", "earth-entry"],
+    "ascent": {
+      "missionEvents": ["mars-ascent", "mars-orbit-rendezvous"],
+      "propellantKg": 20000
+    }
   },
   "publicSupportPerMemberHome": 100,
   "orbitActivities": ["crew-research", "nothing"],

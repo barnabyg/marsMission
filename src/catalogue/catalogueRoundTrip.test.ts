@@ -16,8 +16,15 @@ function withRoundTrip(
 }
 
 describe("round trips in the real data files", () => {
-  const { crew, launchVehicles, missionEvents, contingencies, milestones } =
-    parseCatalogue(realCatalogueFiles());
+  const {
+    crew,
+    launchVehicles,
+    missionEvents,
+    contingencies,
+    milestones,
+    assets,
+    program,
+  } = parseCatalogue(realCatalogueFiles());
   const colossus =
     launchVehicles.find(({ id }) => id === "meridian-colossus")
       ?.capacityTonnes ?? 0;
@@ -43,6 +50,40 @@ describe("round trips in the real data files", () => {
         contingencies.some(({ missionEvent }) => missionEvent === eventId),
       ).toBe(true);
     }
+  });
+
+  it("lifts Crew who landed off with Mars ascent and a rendezvous in Mars orbit, each with a Contingency, before trans-Earth injection", () => {
+    expect(crew.roundTrip.ascent.missionEvents).toEqual([
+      "mars-ascent",
+      "mars-orbit-rendezvous",
+    ]);
+    const injection = missionEvents.find(
+      ({ id }) => id === "trans-earth-injection",
+    );
+    for (const eventId of crew.roundTrip.ascent.missionEvents) {
+      const event = missionEvents.find(({ id }) => id === eventId);
+      expect(event?.timing.from).toBe("leavingMars");
+      expect(event?.timing.days).toBeLessThanOrEqual(
+        injection?.timing.days ?? -1,
+      );
+      expect(
+        contingencies.some(({ missionEvent }) => missionEvent === eventId),
+      ).toBe(true);
+    }
+  });
+
+  it("needs more ascent propellant than any Launch Vehicle could carry from Earth, and less than a fuel plant makes in a Turn", () => {
+    const { propellantKg } = crew.roundTrip.ascent;
+    const heaviest = Math.max(
+      ...launchVehicles.map(({ capacityTonnes }) => capacityTonnes),
+    );
+    expect(propellantKg).toBeGreaterThan(heaviest * 1000);
+    const perDay = assets.find(({ makes }) => makes)?.makes
+      ?.ascentPropellantKgPerDay;
+    expect(perDay).toBeDefined();
+    expect((perDay ?? 0) * program.launchWindowIntervalDays).toBeGreaterThan(
+      propellantKg,
+    );
   });
 
   it("makes the first Crew home a Milestone worth more Public Support than one Crew member's safe return", () => {
@@ -80,6 +121,58 @@ describe("validating the round trip", () => {
     expect(errorFrom(withRoundTrip({ leavesMarsOnDay: 600 }))).toContain(
       "crew.json: the journey home ends on day 800 of the Turn, which must be before the Turn ends on day 780",
     );
+  });
+
+  it("rejects a Mars ascent Mission Event that isn't in the data files or isn't timed from leaving Mars", () => {
+    const ascent = (missionEvents: string[]) =>
+      withRoundTrip({ ascent: { missionEvents, propellantKg: 5000 } });
+    expect(errorFrom(ascent(["test-nowhere"]))).toContain(
+      `crew.json: Mars ascent refers to the Mission Event "test-nowhere", which isn't in mission-events.json`,
+    );
+    expect(errorFrom(ascent(["test-arrival"]))).toContain(
+      `crew.json: Mars ascent brings the Mission Event "test-arrival" on the way home, but it isn't timed from leaving Mars`,
+    );
+  });
+
+  it("rejects a Mars ascent that ends after the journey home has left Mars", () => {
+    expect(
+      errorFrom(
+        withRoundTrip({
+          ascent: {
+            missionEvents: ["test-ascent", "test-splashdown"],
+            propellantKg: 5000,
+          },
+          missionEvents: ["test-departure-home"],
+        }),
+      ),
+    ).toContain(
+      "crew.json: Mars ascent ends 200 days after leaving Mars, after the journey home's first Mission Event 0 days after, which it must come no later than",
+    );
+  });
+
+  it("rejects a Mission Event in both Mars ascent and the journey home", () => {
+    expect(
+      errorFrom(
+        withRoundTrip({
+          ascent: {
+            missionEvents: ["test-ascent", "test-departure-home"],
+            propellantKg: 5000,
+          },
+        }),
+      ),
+    ).toContain(
+      'crew.json: the round trip lists the Mission Event "test-departure-home" more than once',
+    );
+  });
+
+  it("rejects a Mars ascent that needs no ascent propellant", () => {
+    expect(
+      errorFrom(
+        withRoundTrip({
+          ascent: { missionEvents: ["test-ascent"], propellantKg: 0 },
+        }),
+      ),
+    ).toContain("crew.json");
   });
 
   it("rejects a round trip with no mass", () => {

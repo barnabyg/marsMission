@@ -71,6 +71,12 @@ export function testCrew(): CatalogueFiles["crew"] {
       massTonnes: 1,
       leavesMarsOnDay: 100,
       missionEvents: ["test-departure-home", "test-splashdown"],
+      // Crew who landed lift off and meet the stage on the day the journey leaves Mars, using 5,000 kg of ascent
+      // propellant at their site, less than the Test Fuel Plant makes in a whole Turn.
+      ascent: {
+        missionEvents: ["test-ascent", "test-docking"],
+        propellantKg: 5000,
+      },
     },
     publicSupportPerMemberHome: 40,
     orbitActivities: ["test-research", "test-nothing"],

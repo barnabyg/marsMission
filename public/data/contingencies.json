@@ -52,6 +52,32 @@
     "rescueDescription": "The backup engine fired and sent the Crew on their way home, though the strain of it told on them."
   },
   {
+    "id": "ascent-engine-restart",
+    "name": "Ascent engine restart",
+    "description": "A restart system for the ascent engine, for another try at climbing into Mars orbit.",
+    "missionEvent": "mars-ascent",
+    "costMillions": 100,
+    "massTonnes": 0.3,
+    "rescueFailureProbability": 0.35,
+    "serviceLifeLossPercent": 0,
+    "extraPublicSupportLoss": 10,
+    "troubleDescription": "The ascent engine has shut down early, leaving the Crew short of Mars orbit. It could be restarted for another try.",
+    "rescueDescription": "The ascent engine relit and lifted the Crew into Mars orbit, though the rough climb told on them."
+  },
+  {
+    "id": "manual-docking",
+    "name": "Manual docking",
+    "description": "Training and controls for the Crew to dock with their Earth return stage by hand.",
+    "missionEvent": "mars-orbit-rendezvous",
+    "costMillions": 40,
+    "massTonnes": 0.1,
+    "rescueFailureProbability": 0.3,
+    "serviceLifeLossPercent": 0,
+    "extraPublicSupportLoss": 10,
+    "troubleDescription": "The automatic docking with the Earth return stage has failed. The Crew could take the controls for another try.",
+    "rescueDescription": "The Crew docked by hand at the second attempt, worn out by the long approach."
+  },
+  {
     "id": "backup-parachutes",
     "name": "Backup parachutes",
     "description": "A second set of parachutes for the capsule, for a last chance at a safe splashdown.",

@@ -93,6 +93,13 @@ export const crewSchema = z.strictObject({
     leavesMarsOnDay: z.number().int().nonnegative(),
     // The Mission Events of the journey home, each timed from leaving Mars. The Crew are home when the last succeeds.
     missionEvents: z.array(id).min(1),
+    // What Crew who landed fly first, from their Landing Site to their Earth return stage in Mars orbit: Mars ascent and
+    // the rendezvous, each timed from leaving Mars, and the ascent propellant, in whole kilograms, the ascent uses up
+    // at their site. A fuel plant makes it there, as carrying it from Earth would weigh too much.
+    ascent: z.strictObject({
+      missionEvents: z.array(id).min(1),
+      propellantKg: z.number().int().positive(),
+    }),
   }),
   // The Public Support earned for each Crew member who comes home safe, however they come home.
   publicSupportPerMemberHome: z.number().int().nonnegative(),
