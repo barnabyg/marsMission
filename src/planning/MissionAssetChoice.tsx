@@ -122,6 +122,19 @@ export function MissionAssetChoice({
             propellant
           </span>
         )}
+        {asset.benefit && asset.habitat && (
+          // It shows how many more days it would give a Crew member at Mars, and its tooltip says what it does for the
+          // Crew there and what those days assume, after what a Benefit is.
+          <span
+            className="term benefit-tag"
+            data-term="Benefit"
+            data-detail={`${asset.name}: ${asset.benefit} A Crew member landing beside it with full Health and no Protection would last about ${asset.habitat.extraDays.toLocaleString("en")} more days at Mars before their Health runs out.`}
+            data-testid="benefit-tag"
+            tabIndex={0}
+          >
+            Benefit +{asset.habitat.extraDays.toLocaleString("en")} days
+          </span>
+        )}
         {operatingCount > 0 && (
           // Its tooltip says the one at Mars keeps working, after what an Asset is.
           <span

@@ -36,7 +36,8 @@ interface OperatingPanelProps {
  * The Assets already at Mars, each with what is left of its Service Life, its Upkeep, the choice of its Activity and
  * the choice to end its mission, and the Crew there, with their Health, the choice of the Activity they share in each
  * place and, for round-trip Crew, the choice to bring them home this Turn. Below them is the ascent propellant at each
- * Landing Site that has any, which stays there whether or not anything is still operating.
+ * Landing Site that has any, which stays there whether or not anything is still operating, and the Supplies held in
+ * Habitats at each Landing Site.
  */
 export function OperatingPanel({
   assets,
@@ -55,8 +56,14 @@ export function OperatingPanel({
   const stocked = landingSites.filter(
     ({ ascentPropellantKg }) => ascentPropellantKg > 0,
   );
+  const held = landingSites.filter(
+    ({ habitatSuppliesKg }) => habitatSuppliesKg > 0,
+  );
   const empty =
-    assets.length === 0 && crew.length === 0 && stocked.length === 0;
+    assets.length === 0 &&
+    crew.length === 0 &&
+    stocked.length === 0 &&
+    held.length === 0;
   return (
     <section
       className={empty ? "panel empty" : "panel"}
@@ -203,6 +210,18 @@ export function OperatingPanel({
               .map(
                 ({ name, ascentPropellantKg }) =>
                   `${formatPropellant(ascentPropellantKg)} at ${name}`,
+              )
+              .join(", ")}`}
+          </GameText>
+        </p>
+      )}
+      {held.length > 0 && (
+        <p data-testid="habitat-supplies">
+          <GameText>
+            {`Supplies in Habitats: ${held
+              .map(
+                ({ name, habitatSuppliesKg }) =>
+                  `${Math.floor(habitatSuppliesKg).toLocaleString("en")} kg at ${name}`,
               )
               .join(", ")}`}
           </GameText>

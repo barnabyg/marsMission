@@ -60,11 +60,11 @@ How many Crew fly on a Crewed Mission, chosen in Planning Mode. A larger Crew ea
 _Avoid_: Crew count, team size
 
 **Health**:
-A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, solar particle events, carrying on through a dust storm and having no Supplies lower it, Protection slows the decline, and at zero the Crew member dies.
+A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, solar particle events, carrying on through a dust storm and having no Supplies lower it, Protection and a Habitat slow the decline, and at zero the Crew member dies.
 _Avoid_: Condition, hit points
 
 **Supplies**:
-The food, water and everything else Crew use up to stay alive, from launch. They are chosen for each Crewed Mission, and last a larger Crew fewer days. Crew in one place share theirs, and Crew who join them bring more. When they run out, Health falls quickly.
+The food, water and everything else Crew use up to stay alive, from launch. They are chosen for each Crewed Mission, and last a larger Crew fewer days. Crew in one place share theirs, and Crew who join them bring more, as a Habitat holds more for the Crew at its Landing Site. When they run out, Health falls quickly.
 _Avoid_: Consumables, life support (as the general term)
 
 **Round trip**:
@@ -102,7 +102,7 @@ What an Asset operating at Mars costs for each Turn it is kept going after the o
 _Avoid_: Maintenance, running cost
 
 **Benefit**:
-What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface, or a fuel plant making ascent propellant at its Landing Site. A second Asset raising the same thing adds nothing, but each fuel plant makes its own.
+What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface, a fuel plant making ascent propellant at its Landing Site, or a Habitat slowing the Health the Crew there lose to time at Mars. A second Asset raising or slowing the same thing adds nothing, but each fuel plant makes its own.
 _Avoid_: Bonus, buff, synergy
 
 **Fuel plant**:
@@ -112,6 +112,10 @@ _Avoid_: Refinery, propellant plant
 **Ascent propellant**:
 The propellant Crew need to leave the surface of Mars, made by a fuel plant at its Landing Site. It builds up at that site from Turn to Turn and stays there if the plant stops, and each Landing Site keeps its own.
 _Avoid_: Return fuel, ascent fuel
+
+**Habitat**:
+An Asset that lands at a Landing Site and houses the Crew there, on each day it operates, whatever its Activity: it slows the Health they lose to time at Mars, and holds Supplies for them, which they draw on once their own run out and which Crew landing there top up. Its Benefit tag in Planning Mode says how many more days it would give a Crew member at Mars.
+_Avoid_: Base, outpost, hab module
 
 **Activity**:
 What an Asset, or all the Crew in one place at Mars, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset or Crew keep their Activity into later Turns until the player changes it.
@@ -145,6 +149,9 @@ An Activity for Crew at a Landing Site: Ongoing Research on the surface, explori
 
 **Propellant production**:
 An Activity for a fuel plant: running it, which earns no Science. A fuel plant makes ascent propellant whatever its Activity.
+
+**Habitation**:
+An Activity for a Habitat: keeping its air, water, power and Supplies ready for Crew, which earns no Science. A Habitat houses the Crew at its Landing Site whatever its Activity.
 
 ## Modes
 

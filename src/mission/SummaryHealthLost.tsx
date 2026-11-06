@@ -5,13 +5,23 @@ type HealthLost = TurnSummary["healthLost"][number];
 
 /**
  * Such as "Ann Able lost 31 Health: 16 to radiation at Mars, 15 to time at Mars", or "Ann Able lost 52 Health to
- * radiation in flight", followed by what Protection saved, if it saved anything: ". Protection saved 12 more".
+ * radiation in flight", followed by what Protection saved, if it saved anything: ". Protection saved 12 more", and
+ * then what a habitat saved: ". Living in a Habitat saved 15 more".
  */
-function describe({ name, lost, savedByProtection }: HealthLost): string {
-  const saved =
-    savedByProtection === undefined
-      ? ""
-      : `. Protection saved ${savedByProtection} more`;
+function describe({
+  name,
+  lost,
+  savedByProtection,
+  savedByHabitat,
+}: HealthLost): string {
+  const saved = [
+    ...(savedByProtection === undefined
+      ? []
+      : [`. Protection saved ${savedByProtection} more`]),
+    ...(savedByHabitat === undefined
+      ? []
+      : [`. Living in a Habitat saved ${savedByHabitat} more`]),
+  ].join("");
   return `${describeLost(name, lost)}${saved}`;
 }
 

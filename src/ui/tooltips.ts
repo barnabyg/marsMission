@@ -30,9 +30,9 @@ export const tooltips = {
   "Crew size":
     "How many Crew fly on a Crewed Mission, chosen in Planning Mode. A larger Crew earns more Ongoing Research, but weighs and costs more.",
   Health:
-    "A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, solar particle events, carrying on through a dust storm and having no Supplies lower it, Protection slows the decline, and at zero the Crew member dies.",
+    "A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, solar particle events, carrying on through a dust storm and having no Supplies lower it, Protection and a Habitat slow the decline, and at zero the Crew member dies.",
   Supplies:
-    "The food, water and everything else Crew use up to stay alive, from launch. They are chosen for each Crewed Mission, and last a larger Crew fewer days. Crew in one place share theirs, and Crew who join them bring more. When they run out, Health falls quickly.",
+    "The food, water and everything else Crew use up to stay alive, from launch. They are chosen for each Crewed Mission, and last a larger Crew fewer days. Crew in one place share theirs, and Crew who join them bring more, as a Habitat holds more for the Crew at its Landing Site. When they run out, Health falls quickly.",
   "Round trip":
     "A Crewed Mission to Mars orbit that carries an Earth return stage, so that its Crew can come home on a later Turn. It weighs and costs more than a one-way trip, which leaves its Crew at Mars.",
   "Earth return stage":
@@ -50,7 +50,7 @@ export const tooltips = {
   Upkeep:
     "What an Asset operating at Mars costs for each Turn it is kept going after the one it arrives in. The player can end an Asset's mission in Planning Mode, which takes it out of service as the Turn starts and stops its Upkeep.",
   Benefit:
-    "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface, or a fuel plant making ascent propellant at its Landing Site. A second Asset raising the same thing adds nothing, but each fuel plant makes its own.",
+    "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface, a fuel plant making ascent propellant at its Landing Site, or a Habitat slowing the Health the Crew there lose to time at Mars. A second Asset raising or slowing the same thing adds nothing, but each fuel plant makes its own.",
   "Fuel plant":
     "An Asset that lands at a Landing Site and makes ascent propellant there from the carbon dioxide in the Martian air, on each day it operates, whatever its Activity. Its Benefit tag in Planning Mode says how much it makes over a whole Turn.",
   "Ascent propellant":
@@ -73,6 +73,10 @@ export const tooltips = {
     "An Activity for Crew in Mars orbit: Ongoing Research from orbit, such as studying Mars, driving robots on the surface from above and running experiments aboard. Each Crew member earns it, and it pays a Research Grant.",
   "Field research":
     "An Activity for Crew at a Landing Site: Ongoing Research on the surface, exploring around the site, collecting samples and studying them in their lander. Each Crew member earns it, a Benefit that raises research on the surface raises it too, and it pays a Research Grant.",
+  Habitat:
+    "An Asset that lands at a Landing Site and houses the Crew there, on each day it operates, whatever its Activity: it slows the Health they lose to time at Mars, and holds Supplies for them, which they draw on once their own run out and which Crew landing there top up. Its Benefit tag in Planning Mode says how many more days it would give a Crew member at Mars.",
+  Habitation:
+    "An Activity for a Habitat: keeping its air, water, power and Supplies ready for Crew, which earns no Science. A Habitat houses the Crew at its Landing Site whatever its Activity.",
   "Propellant production":
     "An Activity for a fuel plant: running it, which earns no Science. A fuel plant makes ascent propellant whatever its Activity.",
   "Planning Mode":
