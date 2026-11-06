@@ -50,7 +50,7 @@ export const tooltips = {
   Upkeep:
     "What an Asset operating at Mars costs for each Turn it is kept going after the one it arrives in. The player can end an Asset's mission in Planning Mode, which takes it out of service as the Turn starts and stops its Upkeep.",
   Benefit:
-    "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface, a fuel plant making ascent propellant at its Landing Site, or a Habitat slowing the Health the Crew there lose to time at Mars. A second Asset raising or slowing the same thing adds nothing, but each fuel plant makes its own.",
+    "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface, a fuel plant making ascent propellant at its Landing Site, a Habitat slowing the Health the Crew there lose to time at Mars, or a Mars lab raising the Research Grants of the rovers and Crew at its Landing Site. A second Asset raising or slowing the same thing adds nothing, but each fuel plant makes its own.",
   "Fuel plant":
     "An Asset that lands at a Landing Site and makes ascent propellant there from the carbon dioxide in the Martian air, on each day it operates, whatever its Activity. Its Benefit tag in Planning Mode says how much it makes over a whole Turn.",
   "Ascent propellant":
@@ -75,6 +75,10 @@ export const tooltips = {
     "An Activity for Crew at a Landing Site: Ongoing Research on the surface, exploring around the site, collecting samples and studying them in their lander. Each Crew member earns it, a Benefit that raises research on the surface raises it too, and it pays a Research Grant.",
   Habitat:
     "An Asset that lands at a Landing Site and houses the Crew there, on each day it operates, whatever its Activity: it slows the Health they lose to time at Mars, and holds Supplies for them, which they draw on once their own run out and which Crew landing there top up. Its Benefit tag in Planning Mode says how many more days it would give a Crew member at Mars.",
+  "Mars lab":
+    "An Asset that lands at a Landing Site and studies the samples that rovers and Crew there bring in, on each day it operates, whatever its Activity, raising the Research Grants their Ongoing Research pays. Their Science and Public Support stay as they are. Its Benefit tag in Planning Mode says how much money it would add over a whole Turn.",
+  "Sample analysis":
+    "An Activity for a Mars lab: studying the samples that rovers and Crew at its Landing Site bring in, which earns no Science of its own. A Mars lab raises their Research Grants whatever its Activity.",
   Habitation:
     "An Activity for a Habitat: keeping its air, water, power and Supplies ready for Crew, which earns no Science. A Habitat houses the Crew at its Landing Site whatever its Activity.",
   "Propellant production":
@@ -116,7 +120,7 @@ export const tooltips = {
   "Base funding":
     "What the Program's backers pay as each Turn ends: a fixed amount for each point of Public Support the Program had as the Turn started, up to a most for a Turn. It keeps a Program that has lost a Mission able to try again in time, but never pays as much as Research Grants.",
   "Research Grant":
-    "Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none.",
+    "Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none. A Mars lab raises the rate for rovers and Crew at its Landing Site.",
   "Public Support":
     "Points of public and political backing. Milestones and Ongoing Research add them, setbacks remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.",
   "Funding Threshold":

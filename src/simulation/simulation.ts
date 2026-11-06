@@ -40,6 +40,7 @@ export type {
   DecisionAnswer,
   DecisionAnswers,
   DecisionPoint,
+  GrantImpact,
   Program,
   ProgramView,
   TurnPlan,

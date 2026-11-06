@@ -182,12 +182,20 @@ export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
             </GameText>
           </h2>
           <ul>
-            {summary.researchGrants.map(({ name, millions }, index) => (
-              // Two copies of an Asset can each be paid the same amount, so the position tells them apart.
-              <li key={`${name}-${index}`}>
-                <GameText>{`${name}: ${formatMoney(millions)}`}</GameText>
-              </li>
-            ))}
+            {summary.researchGrants.map(
+              ({ name, millions, benefit }, index) => (
+                // Two copies of an Asset can each be paid the same amount, so the position tells them apart.
+                <li key={`${name}-${index}`}>
+                  <GameText>
+                    {`${name}: ${formatMoney(millions)}${
+                      benefit
+                        ? `, raised on ${benefit.days} ${benefit.days === 1 ? "day" : "days"} by the Benefit from ${benefit.givenBy.join(" and ")}, which added ${formatMoney(benefit.millions)}`
+                        : ""
+                    }`}
+                  </GameText>
+                </li>
+              ),
+            )}
           </ul>
         </section>
       )}

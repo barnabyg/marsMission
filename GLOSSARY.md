@@ -102,7 +102,7 @@ What an Asset operating at Mars costs for each Turn it is kept going after the o
 _Avoid_: Maintenance, running cost
 
 **Benefit**:
-What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface, a fuel plant making ascent propellant at its Landing Site, or a Habitat slowing the Health the Crew there lose to time at Mars. A second Asset raising or slowing the same thing adds nothing, but each fuel plant makes its own.
+What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface, a fuel plant making ascent propellant at its Landing Site, a Habitat slowing the Health the Crew there lose to time at Mars, or a Mars lab raising the Research Grants of the rovers and Crew at its Landing Site. A second Asset raising or slowing the same thing adds nothing, but each fuel plant makes its own.
 _Avoid_: Bonus, buff, synergy
 
 **Fuel plant**:
@@ -116,6 +116,10 @@ _Avoid_: Return fuel, ascent fuel
 **Habitat**:
 An Asset that lands at a Landing Site and houses the Crew there, on each day it operates, whatever its Activity: it slows the Health they lose to time at Mars, and holds Supplies for them, which they draw on once their own run out and which Crew landing there top up. Its Benefit tag in Planning Mode says how many more days it would give a Crew member at Mars.
 _Avoid_: Base, outpost, hab module
+
+**Mars lab**:
+An Asset that lands at a Landing Site and studies the samples that rovers and Crew there bring in, on each day it operates, whatever its Activity, raising the Research Grants their Ongoing Research pays. Their Science and Public Support stay as they are. Its Benefit tag in Planning Mode says how much money it would add over a whole Turn.
+_Avoid_: Laboratory, research base
 
 **Activity**:
 What an Asset, or all the Crew in one place at Mars, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset or Crew keep their Activity into later Turns until the player changes it.
@@ -152,6 +156,9 @@ An Activity for a fuel plant: running it, which earns no Science. A fuel plant m
 
 **Habitation**:
 An Activity for a Habitat: keeping its air, water, power and Supplies ready for Crew, which earns no Science. A Habitat houses the Crew at its Landing Site whatever its Activity.
+
+**Sample analysis**:
+An Activity for a Mars lab: studying the samples that rovers and Crew at its Landing Site bring in, which earns no Science of its own. A Mars lab raises their Research Grants whatever its Activity.
 
 ## Modes
 
@@ -232,7 +239,7 @@ What the Program's backers pay as each Turn ends: a fixed amount for each point 
 _Avoid_: Budget, allowance, salary
 
 **Research Grant**:
-Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none. It is the main income late in a Program.
+Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none. A Mars lab raises the rate for rovers and Crew at its Landing Site. It is the main income late in a Program.
 _Avoid_: Science income, science payment
 
 **Public Support**:

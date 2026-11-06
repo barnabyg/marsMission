@@ -11,7 +11,10 @@ import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
 import { ActivitySelect } from "./ActivitySelect";
 import { assetImageUrl } from "./assetImages";
-import { describeBenefitImpact } from "./benefitImpactText";
+import {
+  describeBenefitImpact,
+  describeGrantImpact,
+} from "./benefitImpactText";
 import { fitReason, type Fit } from "./missionFit";
 import { ReadinessTag } from "./ReadinessTag";
 import { UnavailableReason } from "./UnavailableReason";
@@ -106,6 +109,19 @@ export function MissionAssetChoice({
             tabIndex={0}
           >
             Benefit +{asset.benefitImpact.extraScience} Science
+          </span>
+        )}
+        {asset.benefit && asset.grantImpact && (
+          // It shows the money its Benefit would add this Turn where it would add most, and its tooltip says what the
+          // Benefit does and where it would add that much, after what a Benefit is.
+          <span
+            className="term benefit-tag"
+            data-term="Benefit"
+            data-detail={`${asset.name}: ${asset.benefit} ${describeGrantImpact(asset.grantImpact)}`}
+            data-testid="benefit-tag"
+            tabIndex={0}
+          >
+            Benefit +{formatMoney(asset.grantImpact.extraGrantMillions)}
           </span>
         )}
         {asset.benefit && asset.makes && (
