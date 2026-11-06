@@ -71,7 +71,7 @@ describe("sample return in the real data files", () => {
       milestones
         .filter(({ trigger }) => "samplesComeHome" in trigger)
         .map(({ name }) => name),
-    ).toEqual(["First samples returned"]);
+    ).toEqual(["First sample returned"]);
   });
 });
 
@@ -157,7 +157,7 @@ describe("invalid sample return", () => {
     ).toMatch(/activities\.json: \d+\.effect\.samplesPerTurn:/);
   });
 
-  it("rejects a First samples returned Milestone that nothing could earn", () => {
+  it("rejects a First sample returned Milestone that nothing could earn", () => {
     const files = testCatalogueFiles();
     expect(
       errorFrom({

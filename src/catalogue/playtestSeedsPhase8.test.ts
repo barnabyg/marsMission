@@ -176,7 +176,7 @@ describe("the known seeds in the Phase 8 playtest guide", () => {
       ],
     });
     expect(third.summary.milestones.map(({ name }) => name)).toEqual([
-      "First samples returned",
+      "First sample returned",
       "700 Science earned",
       "1200 Science earned",
       "1800 Science earned",

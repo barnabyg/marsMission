@@ -12,7 +12,7 @@ import type { PlaceAtMars, Program } from "./types";
 
 /*
  * Samples reaching Earth: each earns the Catalogue's Science for a returned sample on the day it gets home, and the
- * first earn the First samples returned Milestone. They come home aboard an Earth return orbiter (`sampleReturn.ts`), or
+ * first earn the First sample returned Milestone. They come home aboard an Earth return orbiter (`sampleReturn.ts`), or
  * with Crew coming home from a Landing Site, who bring the samples cached there as the Turn starts and samples of their
  * own for each of them who gets home.
  */
@@ -93,7 +93,7 @@ function robotSamplesHome(journey: SampleJourney | null): SamplesHomecoming[] {
     : [];
 }
 
-/** What the Turn's samples home earn: Science on the day they arrive, and the First samples returned Milestone. */
+/** What the Turn's samples home earn: Science on the day they arrive, and the First sample returned Milestone. */
 function welcomeSamplesHome(
   catalogue: Catalogue,
   program: Program,

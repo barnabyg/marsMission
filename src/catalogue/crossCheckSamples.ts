@@ -2,7 +2,7 @@ import { catalogueFileNames, type Catalogue } from "./schemas";
 
 /**
  * Sample return: Sample caching is done at a Landing Site, an ascent vehicle lands there and an Earth return orbiter
- * waits in Mars orbit, and each has the other to meet. The First samples returned Milestone can be earned.
+ * waits in Mars orbit, and each has the other to meet. The First sample returned Milestone can be earned.
  */
 export function sampleProblems({
   activities,

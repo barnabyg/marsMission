@@ -61,7 +61,7 @@
   },
   {
     "id": "first-samples-home",
-    "name": "First samples returned",
+    "name": "First sample returned",
     "description": "The Program has brought rock and soil from Mars back to Earth, and laboratories everywhere are queuing to study them.",
     "trigger": {
       "samplesComeHome": true

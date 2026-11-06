@@ -104,7 +104,7 @@ test("caches samples with a rover, sends them home with an ascent vehicle and an
   await expect(summary.getByTestId("summary-samples-home")).toContainText(
     /\d+ samples from Jezero Crater, brought home by the Albatross Orbiter: \d+ Science/,
   );
-  await expect(summary).toContainText("First samples returned");
+  await expect(summary).toContainText("First sample returned");
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await summary.getByRole("button", { name: "Continue" }).click();
   // The samples have gone from the site, and what flew them has left Mars.
