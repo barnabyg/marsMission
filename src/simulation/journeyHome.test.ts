@@ -54,7 +54,7 @@ describe("bringing round-trip Crew home", () => {
         .filter(({ kind }) => kind === "missionEvent" || kind === "crewHome")
         .map(({ day, title }) => [day, title]),
     ).toEqual([
-      [100, "Test departure home"],
+      [102, "Test departure home"],
       [300, "Test splashdown"],
       [300, "Crew home"],
     ]);
@@ -241,10 +241,10 @@ describe("Mission Events on the way home", () => {
     expect(progress.decisionPoint).toMatchObject({
       id: "contingency:test-departure-home",
       kind: "contingency",
-      day: 100,
+      day: 102,
       assets: ["Ann Able", "Ben Baker"],
     });
-    expect(progress.timeline.decisionDay).toBe(100);
+    expect(progress.timeline.decisionDay).toBe(102);
     const rescued = simulation.runTurn(program, bringThemHome, {
       "contingency:test-departure-home": "use",
     });

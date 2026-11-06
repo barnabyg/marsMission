@@ -90,7 +90,7 @@
     "failureDescription": "The Crew couldn't dock with their Earth return stage and were stranded in Mars orbit.",
     "timing": {
       "from": "leavingMars",
-      "days": 0
+      "days": 1
     },
     "failureProbability": 0.03,
     "publicSupportLoss": 20
@@ -102,7 +102,7 @@
     "failureDescription": "The Earth return stage's engine failed, leaving the Crew with no way out of Mars orbit.",
     "timing": {
       "from": "leavingMars",
-      "days": 0
+      "days": 2
     },
     "failureProbability": 0.05,
     "publicSupportLoss": 20

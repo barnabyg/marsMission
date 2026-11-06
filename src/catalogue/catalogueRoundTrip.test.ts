@@ -63,9 +63,7 @@ describe("round trips in the real data files", () => {
     for (const eventId of crew.roundTrip.ascent.missionEvents) {
       const event = missionEvents.find(({ id }) => id === eventId);
       expect(event?.timing.from).toBe("leavingMars");
-      expect(event?.timing.days).toBeLessThanOrEqual(
-        injection?.timing.days ?? -1,
-      );
+      expect(event?.timing.days).toBeLessThan(injection?.timing.days ?? -1);
       expect(
         contingencies.some(({ missionEvent }) => missionEvent === eventId),
       ).toBe(true);
@@ -146,7 +144,23 @@ describe("validating the round trip", () => {
         }),
       ),
     ).toContain(
-      "crew.json: Mars ascent ends 200 days after leaving Mars, after the journey home's first Mission Event 0 days after, which it must come no later than",
+      "crew.json: Mars ascent ends 200 days after leaving Mars, no earlier than the journey home's first Mission Event 2 days after, which it must come before",
+    );
+  });
+
+  it("rejects two Mission Events of the way home on the same day", () => {
+    const files = testCatalogueFiles();
+    expect(
+      errorFrom({
+        ...files,
+        missionEvents: files.missionEvents.map((event) =>
+          event.id === "test-docking"
+            ? { ...event, timing: { from: "leavingMars", days: 0 } }
+            : event,
+        ),
+      }),
+    ).toContain(
+      "crew.json: two Mission Events of the way home happen 0 days after leaving Mars. Each needs a day of its own",
     );
   });
 

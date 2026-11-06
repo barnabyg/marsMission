@@ -146,8 +146,8 @@ function protectionProblems(
 
 /**
  * A round trip's journey home: Mission Events that exist, each timed from leaving Mars, none needing a Landing Site, and
- * home before the Turn it leaves in ends. Mars ascent's come no later than the journey home's first, so that Crew who
- * landed reach their Earth return stage before it leaves, and no Mission Event is listed twice across the two.
+ * home before the Turn it leaves in ends. Mars ascent's come before the journey home's first, so that Crew who landed
+ * reach their Earth return stage before it leaves, each on a day of its own, and none is listed twice across the two.
  */
 function roundTripProblems(
   roundTrip: Catalogue["crew"]["roundTrip"],
@@ -192,9 +192,17 @@ function roundTripProblems(
   }
   const firstHome = Math.min(...homeDays);
   const lastAscent = Math.max(...ascentDays);
-  if (lastAscent > firstHome) {
+  if (lastAscent >= firstHome) {
     problems.push(
-      `${file}: Mars ascent ends ${lastAscent} days after leaving Mars, after the journey home's first Mission Event ${firstHome} days after, which it must come no later than`,
+      `${file}: Mars ascent ends ${lastAscent} days after leaving Mars, no earlier than the journey home's first Mission Event ${firstHome} days after, which it must come before`,
+    );
+  }
+  // Like a Launch Vehicle's near Earth, each happens on a day of its own, so that their order is clear.
+  for (const day of new Set(
+    findDuplicates([...homeDays, ...ascentDays].map(String)),
+  )) {
+    problems.push(
+      `${file}: two Mission Events of the way home happen ${day} days after leaving Mars. Each needs a day of its own`,
     );
   }
   const homeOn = roundTrip.leavesMarsOnDay + Math.max(0, ...homeDays);

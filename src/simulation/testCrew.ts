@@ -62,8 +62,8 @@ export function testCrew(): CatalogueFiles["crew"] {
       ],
     },
     publicSupportLossPerMember: 20,
-    // The journey home leaves Mars on day 100 of the Turn and splashes down on day 300, 200 days in flight: 20 Health
-    // to radiation with no Protection, and 100 kilograms of Supplies for a Crew of two.
+    // The journey home leaves Mars on day 100 of the Turn, fires for home on day 102 and splashes down on day 300, 200
+    // days in flight: 20 Health to radiation with no Protection, and 100 kilograms of Supplies for a Crew of two.
     roundTrip: {
       name: "Test return stage",
       description: "Brings the Crew home.",
@@ -71,8 +71,8 @@ export function testCrew(): CatalogueFiles["crew"] {
       massTonnes: 1,
       leavesMarsOnDay: 100,
       missionEvents: ["test-departure-home", "test-splashdown"],
-      // Crew who landed lift off and meet the stage on the day the journey leaves Mars, using 5,000 kg of ascent
-      // propellant at their site, less than the Test Fuel Plant makes in a whole Turn.
+      // Crew who landed lift off on the day the journey leaves Mars and dock with the stage the next day, using 5,000
+      // kg of ascent propellant at their site, less than the Test Fuel Plant makes in a whole Turn.
       ascent: {
         missionEvents: ["test-ascent", "test-docking"],
         propellantKg: 5000,

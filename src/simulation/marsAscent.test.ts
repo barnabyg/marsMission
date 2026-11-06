@@ -5,7 +5,7 @@ import { setup, steadyHealth, withFailures } from "./testHelpers";
 
 /*
  * Mars ascent: round-trip Crew who landed lift off from their Landing Site and dock with their Earth return stage in
- * Mars orbit on the day the journey home leaves Mars, day 100, using 5,000 kg of ascent propellant there. The Test Fuel
+ * Mars orbit from the day the journey home leaves Mars, day 100, using 5,000 kg of ascent propellant there. The Test Fuel
  * Plant makes 10 kg a day, so one landing beside them on about day 205 has made 5,750 kg by the next Turn.
  */
 
@@ -92,7 +92,7 @@ describe("planning a round trip to a Landing Site", () => {
 });
 
 describe("bringing Crew home from a Landing Site", () => {
-  it("flies Mars ascent and the rendezvous on the day the journey leaves Mars, then the journey home", () => {
+  it("flies Mars ascent on the day the journey leaves Mars, the rendezvous the next day, then the journey home", () => {
     const { simulation, program } = landed();
     const { timeline, summary } = simulation.runTurn(program, bringThemHome);
     expect(
@@ -101,8 +101,8 @@ describe("bringing Crew home from a Landing Site", () => {
         .map(({ day, title }) => [day, title]),
     ).toEqual([
       [100, "Test ascent"],
-      [100, "Test docking"],
-      [100, "Test departure home"],
+      [101, "Test docking"],
+      [102, "Test departure home"],
       [300, "Test splashdown"],
       [300, "Crew home"],
     ]);
