@@ -55,6 +55,18 @@ describe("matching sounds to timeline entries", () => {
     ).toBe("crewLost");
   });
 
+  it("plays a sound of its own when Crew come home safe, and the launch sound as Mars ascent lifts off", () => {
+    expect(
+      soundFor({
+        kind: "crewHome",
+        day: 270,
+        title: "Crew home",
+        description: "",
+      }),
+    ).toBe("crewHome");
+    expect(soundFor(missionEvent("mars-ascent", "success"))).toBe("launch");
+  });
+
   it("leaves any other entry silent", () => {
     expect(soundFor(missionEvent("mars-transfer-burn", "success"))).toBeNull();
   });
@@ -64,7 +76,7 @@ describe("matching sounds to timeline entries", () => {
     const sounds = missionEvents.map(({ id }) =>
       soundFor(missionEvent(id, "success")),
     );
-    expect(sounds.filter((sound) => sound === "launch")).toHaveLength(2);
+    expect(sounds.filter((sound) => sound === "launch")).toHaveLength(3);
     expect(sounds).toContain("rendezvous");
   });
 

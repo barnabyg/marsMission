@@ -7,14 +7,16 @@ export const soundFileNames = {
   fundingThreshold: "funding-threshold.wav",
   rendezvous: "rendezvous.wav",
   crewLost: "crew-lost.wav",
+  crewHome: "crew-home.wav",
 } as const;
 
 export type SoundName = keyof typeof soundFileNames;
 
-/** The Mission Events with a sound of their own when they succeed. A tanker lifts off as the Mission did. */
+/** The Mission Events with a sound of their own when they succeed. A tanker, and Mars ascent, lift off as the Mission did. */
 const successSounds: Partial<Record<string, SoundName>> = {
   launch: "launch",
   "tanker-launch": "launch",
+  "mars-ascent": "launch",
   rendezvous: "rendezvous",
 };
 
@@ -29,6 +31,7 @@ export function soundFor(entry: TimelineEntry): SoundName | null {
       : (successSounds[entry.eventId] ?? null);
   }
   if (entry.kind === "crewLost") return "crewLost";
+  if (entry.kind === "crewHome") return "crewHome";
   if (entry.kind === "assetFailed" || entry.kind === "decisionPoint") {
     return "failure";
   }

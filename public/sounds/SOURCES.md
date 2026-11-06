@@ -37,3 +37,9 @@ Every sound file in this folder, with its source and licence, as [ADR 0005](../.
 - What: A slow, low toll of two falling notes.
 - Source: scripts/generate-sounds.mjs in this repository
 - Licence: CC0-1.0 (public domain dedication)
+
+## crew-home.wav
+
+- What: A rising call of soft horns, landing on a held major chord with a chime.
+- Source: scripts/generate-sounds.mjs in this repository
+- Licence: CC0-1.0 (public domain dedication)
