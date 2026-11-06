@@ -15,6 +15,10 @@ export function crewProblems({
       problems.push(
         `${file}: the Crewed Mission refers to the Mission Event "${eventId}", which isn't in ${catalogueFileNames.missionEvents}`,
       );
+    } else if (event.timing.from === "leavingMars") {
+      problems.push(
+        `${file}: the Crewed Mission brings the Mission Event "${eventId}", which is timed from leaving Mars, on the way to Mars`,
+      );
     }
     return event;
   };

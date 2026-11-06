@@ -66,3 +66,67 @@ function withRendezvousOn(day: number) {
     ),
   };
 }
+
+describe("Mission Events timed from leaving Mars", () => {
+  const journeyHome = {
+    id: "test-earth-entry",
+    name: "Test Earth entry",
+    description: "Splashes down.",
+    failureDescription: "The heat shield failed.",
+    timing: { from: "leavingMars" as const, days: 180 },
+    failureProbability: 0,
+    publicSupportLoss: 30,
+  };
+
+  it("accepts one that nothing flying to Mars brings, for a journey home", () => {
+    const files = testCatalogueFiles();
+    expect(() =>
+      parseCatalogue({
+        ...files,
+        missionEvents: [...files.missionEvents, journeyHome],
+      }),
+    ).not.toThrow();
+  });
+
+  it("rejects a Launch Vehicle, Asset or Crewed Mission that brings one on the way to Mars", () => {
+    const files = testCatalogueFiles();
+    const message = errorFrom({
+      ...files,
+      missionEvents: [...files.missionEvents, journeyHome],
+      launchVehicles: files.launchVehicles.map((vehicle, index) =>
+        index === 0
+          ? {
+              ...vehicle,
+              missionEvents: [...vehicle.missionEvents, journeyHome.id],
+            }
+          : vehicle,
+      ),
+      assets: files.assets.map((asset, index) =>
+        index === 0
+          ? {
+              ...asset,
+              missionEvents: [...asset.missionEvents, journeyHome.id],
+            }
+          : asset,
+      ),
+      crew: {
+        ...files.crew,
+        landingMissionEvents: [
+          ...files.crew.landingMissionEvents,
+          journeyHome.id,
+        ],
+      },
+    });
+    const [vehicle] = files.launchVehicles;
+    const [asset] = files.assets;
+    expect(message).toContain(
+      `launch-vehicles.json: "${vehicle?.id ?? ""}" brings the Mission Event "test-earth-entry", which is timed from leaving Mars, on the way to Mars`,
+    );
+    expect(message).toContain(
+      `assets.json: "${asset?.id ?? ""}" brings the Mission Event "test-earth-entry", which is timed from leaving Mars, on the way to Mars`,
+    );
+    expect(message).toContain(
+      `crew.json: the Crewed Mission brings the Mission Event "test-earth-entry", which is timed from leaving Mars, on the way to Mars`,
+    );
+  });
+});

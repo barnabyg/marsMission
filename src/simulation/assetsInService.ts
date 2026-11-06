@@ -1,7 +1,8 @@
-import { deliveryDayOf } from "./flight";
+import { deliveryDayOf, type MissionOutcome } from "./flight";
 import type { Catalogue } from "../catalogue/catalogue";
 import {
   addDays,
+  daysBetween,
   daysUntilServiceEnds,
   operatingKey,
   roll,
@@ -12,6 +13,7 @@ import {
 import { isFlightProven } from "./technologyReadiness";
 import type { Program, TurnPlan } from "./types";
 import type {
+  AssetAtMars,
   AssetEndedEntry,
   AssetFailedEntry,
   SurveyEntry,
@@ -224,4 +226,32 @@ export function carryOutSurvey(
       siteNameRevealed: revealed?.name ?? null,
     },
   };
+}
+
+/** The Assets at Mars this Turn as Mission Mode shows them, with the Service Life that something on the way cut short for those arriving. */
+export function assetsAtMarsOnTimeline(
+  rules: Rules,
+  program: Program,
+  inService: AssetInService[],
+  flown: Pick<MissionOutcome, "cutServiceLife">,
+): AssetAtMars[] {
+  const cutServiceLife = new Map(
+    [...flown.cutServiceLife].map(([asset, days]) => [asset.id, days]),
+  );
+  return inService.map(({ asset, fromDay, untilDay }): AssetAtMars => {
+    const cutServiceLifeDays =
+      fromDay > 0 ? cutServiceLife.get(asset.assetId) : undefined;
+    return {
+      key: operatingKey(asset),
+      name: asset.name,
+      kind: asset.kind,
+      landingSiteName: rules.landingSiteById(asset.landingSiteId)?.name ?? null,
+      activityName: rules.activityNameOf(asset),
+      surfaceMotion: rules.surfaceMotionOf(asset),
+      arrivedOnDay: daysBetween(program.date, asset.arrivedOn),
+      fromDay,
+      untilDay,
+      ...(cutServiceLifeDays === undefined ? {} : { cutServiceLifeDays }),
+    };
+  });
 }

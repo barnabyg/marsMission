@@ -1,5 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import { crewShipOnMission } from "./crewAtMars";
+import { crewShipOnMission } from "./crewAtMarsReport";
 import { deliveryDayOf, type MissionOutcome } from "./flight";
 import type { Rules } from "./rules";
 import type { TurnPlan } from "./types";

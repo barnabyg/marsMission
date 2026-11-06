@@ -132,10 +132,14 @@ export function createRules(catalogue: Catalogue) {
     return day;
   }
 
-  /** The day of the Turn a Mission Event happens to this Mission. */
+  /**
+   * The day of the Turn a Mission Event happens to this Mission. One timed from leaving Mars counts from `leavesMarsOn`,
+   * the day of the Turn a journey home sets off, and has no day in a Turn without one.
+   */
   function dayOf(
-    { timing }: MissionEvent,
+    { id, timing }: MissionEvent,
     mission: PlannedMission | null,
+    leavesMarsOn: number | null = null,
   ): number {
     switch (timing.from) {
       case "launch":
@@ -144,6 +148,13 @@ export function createRules(catalogue: Catalogue) {
         return departureDay(mission) + timing.days;
       case "arrival":
         return trajectoryFor(mission).transferDays + timing.days;
+      case "leavingMars":
+        if (leavesMarsOn === null) {
+          throw new Error(
+            `The Mission Event "${id}" is timed from leaving Mars, but nothing leaves Mars this Turn`,
+          );
+        }
+        return leavesMarsOn + timing.days;
     }
   }
 

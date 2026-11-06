@@ -1,6 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { Raise } from "./benefits";
-import { crewAtMarsView } from "./crew";
+import { crewAtMarsView } from "./crewView";
 import { earningsPerTurn } from "./ongoingResearch";
 import { daysUntilServiceEnds, type Rules } from "./rules";
 import type { BenefitImpact, Program } from "./types";

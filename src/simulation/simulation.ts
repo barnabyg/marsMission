@@ -1,39 +1,19 @@
-import { baseFundingFor } from "./baseFunding";
 import type { Catalogue } from "../catalogue/catalogue";
-import {
-  createRules,
-  daysUntilServiceEnds,
-  operatingKey,
-  type Activity,
-} from "./rules";
-import { benefitImpact } from "./benefitImpact";
-import { describeBenefit, largestRaise, type Raise } from "./benefits";
-import {
-  crewAtMarsView,
-  crewedMissionView,
-  previewCrew,
-  type PlannedCrew,
-} from "./crew";
-import { needingDevelopment, plannedDevelopment } from "./development";
-import { flyMission } from "./flyMission";
-import { missionOnTimeline, timelineUpToDecision } from "./missionReport";
-import { earningsPerTurn } from "./ongoingResearch";
+import { createRules } from "./rules";
+import type { PlannedCrew } from "./crewView";
+import { createMissionPreviews } from "./missionPreviews";
 import { createPlanCheck } from "./planCheck";
+import { newProgram, programView } from "./programView";
 import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
-import { costOf, isFlightProven, readinessOf } from "./technologyReadiness";
-import { resolveTurn } from "./turnSteps";
-import { upkeepOf, withMissionsEnded } from "./upkeep";
+import { workOutTurn } from "./workOutTurn";
 import type {
   PlanCheck,
-  PlannedActivity,
   PlannedAsset,
   PlannedMissionEvent,
   PlannedTrajectory,
 } from "./previews";
 import type {
-  DecisionAnswer,
   DecisionAnswers,
-  DecisionPoint,
   PlannedMission,
   Program,
   ProgramView,
@@ -50,7 +30,7 @@ export {
   technologiesOn,
   type TechnologyReadiness,
 } from "./technologyReadiness";
-export type { PlannedCrew } from "./crew";
+export type { PlannedCrew } from "./crewView";
 export { healthLossCauses } from "./health";
 export type {
   AssetChoices,
@@ -113,366 +93,33 @@ export interface Simulation {
   retireProgram(program: Program): Program;
 }
 
-/** The answer that plays a Turn on with nothing rolled for it, for what comes before a Decision Point. */
-function cautiousAnswer({ kind }: DecisionPoint): DecisionAnswer {
-  const cautious: Record<DecisionPoint["kind"], DecisionAnswer> = {
-    contingency: "decline",
-    dustStorm: "shelter",
-    solarParticleEvent: "safeMode",
-    goNoGo: "holdOff",
-  };
-  return cautious[kind];
-}
-
 export function createSimulation(catalogue: Catalogue): Simulation {
   const rules = createRules(catalogue);
-  const {
-    activitiesOf,
-    activityFor,
-    activityNameOf,
-    failureProbability,
-    assetReliabilityFor,
-    inServiceFailureChance,
-    knownLandingSites,
-    serviceLifeFor,
-    landingRisk,
-    landingSiteById,
-    missionEventsFor,
-    reliabilityLevelFor,
-    riskBandFor,
-  } = rules;
-
-  /** An Activity as Planning Mode offers it, raised for an Asset that a Benefit raises. */
-  const plannedActivity =
-    (raise: Raise | null) =>
-    (activity: Activity): PlannedActivity => {
-      const earnsPerTurn = earningsPerTurn(catalogue, activity, raise?.percent);
-      return {
-        id: activity.id,
-        name: activity.name,
-        description: activity.description,
-        surveys: activity.effect.kind === "survey",
-        earnsPerTurn,
-        ...(raise && earnsPerTurn ? { raisedBy: raise } : {}),
-      };
-    };
-
-  /** What raises surface research with these Assets at Mars, if it is raised, going by the ones operating as the Turn starts. */
-  const surfaceRaise = (
-    program: Program,
-    arriving: { assetId: string; name: string }[] = [],
-  ) =>
-    largestRaise(
-      catalogue,
-      [
-        ...program.operatingAssets.filter(
-          (asset) => daysUntilServiceEnds(program.date, asset) > 0,
-        ),
-        ...arriving,
-      ],
-      "surfaceResearch",
-    );
-
   const checkPlan = createPlanCheck(catalogue, rules);
-
-  function contingencyOffered(
-    eventId: string,
-    mission: PlannedMission,
-  ): PlannedMissionEvent["contingency"] {
-    const offered = catalogue.contingencies.find(
-      ({ missionEvent }) => missionEvent === eventId,
-    );
-    return offered
-      ? {
-          id: offered.id,
-          name: offered.name,
-          description: offered.description,
-          costMillions: offered.costMillions,
-          massTonnes: offered.massTonnes,
-          riskBand: riskBandFor(offered.rescueFailureProbability),
-          bought: mission.contingencyIds?.includes(offered.id) === true,
-        }
-      : null;
-  }
-
-  function workOutTurn(
-    planned: Program,
+  const turnFrom = (
+    program: Program,
     plan: TurnPlan,
     answers: DecisionAnswers = {},
-  ): TurnProgress {
-    const { costMillions, upkeepMillions, problems } = checkPlan(planned, plan);
-    if (problems.length > 0) throw new Error(problems.join(" "));
-    // The Assets whose missions the player ended leave service as the Turn starts, before anything else happens.
-    const program = withMissionsEnded(planned, plan);
-
-    const fly = (given: DecisionAnswers) =>
-      flyMission(catalogue, rules, program, plan, given);
-    const flown = fly(answers);
-    const missionDecision = flown.decisionPoint;
-    // The Mission never depends on the rest of the Turn, but what's at stake on a day depends on the Mission so far.
-    const asIfCautious = missionDecision
-      ? fly({
-          ...answers,
-          [missionDecision.id]: cautiousAnswer(missionDecision),
-        })
-      : flown;
-    const { result, otherEntries, stormDecision } = resolveTurn(
-      catalogue,
-      rules,
-      program,
-      plan,
-      { missionMillions: costMillions, upkeepMillions },
-      asIfCautious,
-      answers,
-    );
-    const stormComesFirst =
-      stormDecision !== null &&
-      (missionDecision === null ||
-        stormDecision.decisionPoint.day < missionDecision.day);
-    const decisionPoint = stormComesFirst
-      ? stormDecision.decisionPoint
-      : missionDecision;
-    if (!decisionPoint) {
-      return { decisionPoint, timeline: result.timeline, result };
-    }
-    return {
-      decisionPoint,
-      timeline: timelineUpToDecision(
-        result.timeline,
-        otherEntries,
-        flown.entries,
-        missionOnTimeline(catalogue, rules, plan, flown),
-        {
-          day: decisionPoint.day,
-          entry: stormComesFirst ? stormDecision.entry : null,
-        },
-      ),
-    };
-  }
+  ): TurnProgress =>
+    workOutTurn(catalogue, rules, checkPlan, program, plan, answers);
 
   return {
-    startProgram(seed) {
-      const {
-        firstLaunchWindow,
-        startingMoneyMillions,
-        startingPublicSupport,
-      } = catalogue.program;
-      return {
-        seed,
-        turnNumber: 1,
-        date: firstLaunchWindow,
-        moneyMillions: startingMoneyMillions,
-        publicSupport: startingPublicSupport,
-        science: 0,
-        milestoneIds: [],
-        landedSiteIds: [],
-        knownLandingSiteIds: catalogue.landingSites
-          .filter((site) => site.knownFromStart)
-          .map((site) => site.id),
-        surveyedLandingSiteIds: [],
-        fundingThresholdsPaid: [],
-        provenTechnologyIds: [],
-        developments: [],
-        operatingAssets: [],
-        crew: [],
-        crewActivities: {},
-        crewSupplies: {},
-        status: { kind: "active" },
-      };
-    },
+    startProgram: (seed) => newProgram(catalogue, seed),
 
     saveProgram,
 
     restoreProgram: (saved) => restoreProgram(saved, catalogue),
 
-    readProgram(program) {
-      const raised = surfaceRaise(program);
-      const nextThreshold = catalogue.fundingThresholds.find(
-        ({ publicSupport }) =>
-          !program.fundingThresholdsPaid.includes(publicSupport),
-      );
-      return {
-        status: program.status,
-        nextFundingThreshold: nextThreshold
-          ? {
-              ...nextThreshold,
-              // A save can already be above a level that pays when its next Turn runs.
-              pointsAway: Math.max(
-                0,
-                nextThreshold.publicSupport - program.publicSupport,
-              ),
-            }
-          : null,
-        cancellationLevel: catalogue.program.cancellationLevel,
-        baseFundingMillions: baseFundingFor(catalogue, program.publicSupport),
-        turnNumber: program.turnNumber,
-        date: program.date,
-        moneyMillions: program.moneyMillions,
-        publicSupport: program.publicSupport,
-        science: program.science,
-        milestones: catalogue.milestones
-          .filter(({ id }) => program.milestoneIds.includes(id))
-          .map(({ id, name }) => ({ id, name })),
-        operatingAssets: program.operatingAssets.map((asset) => ({
-          ...asset,
-          key: operatingKey(asset),
-          activityName: activityNameOf(asset),
-          activities: catalogue.assets
-            .filter(({ id }) => id === asset.assetId)
-            .flatMap(activitiesOf)
-            .map(plannedActivity(asset.landingSiteId === null ? null : raised)),
-          daysLeft: Math.max(0, daysUntilServiceEnds(program.date, asset)),
-          upkeepMillions: upkeepOf(catalogue, program, asset),
-          landingSiteName: landingSiteById(asset.landingSiteId)?.name ?? null,
-        })),
-        crewedMission: crewedMissionView(catalogue, program),
-        crew: crewAtMarsView(catalogue, rules, program, raised),
-        developments: needingDevelopment(catalogue).map((technology) =>
-          plannedDevelopment(program, technology),
-        ),
-        somethingLeftToSurvey: catalogue.landingSites.some(
-          ({ id }) => !program.surveyedLandingSiteIds.includes(id),
-        ),
-        landingSites: knownLandingSites(program).map((site) => ({
-          id: site.id,
-          name: site.name,
-          description: site.description,
-          science: site.science,
-          surveyed: program.surveyedLandingSiteIds.includes(site.id),
-          riskBand: riskBandFor(landingRisk(program, site)),
-          landed: program.landedSiteIds.includes(site.id),
-        })),
-        launchVehicles: catalogue.launchVehicles.map((vehicle) => ({
-          id: vehicle.id,
-          name: vehicle.name,
-          costMillions: costOf(program, vehicle),
-          capacityTonnes: vehicle.capacityTonnes,
-          technologyReadiness: readinessOf(program, vehicle),
-        })),
-        assets: catalogue.assets.map((asset) => ({
-          id: asset.id,
-          name: asset.name,
-          kind: asset.kind,
-          costMillions: costOf(program, asset),
-          massTonnes: asset.massTonnes,
-          landsAtSite: asset.landsAtSite === true,
-          technologyReadiness: readinessOf(program, asset),
-          benefit: asset.benefit ? describeBenefit(asset.benefit) : null,
-          benefitImpact: asset.benefit
-            ? benefitImpact(
-                catalogue,
-                rules,
-                program,
-                asset.benefit,
-                surfaceRaise(program),
-                surfaceRaise(program, [
-                  { assetId: asset.id, name: asset.name },
-                ]),
-              )
-            : null,
-        })),
-      };
-    },
+    readProgram: (program) => programView(catalogue, rules, program),
 
     validatePlan: checkPlan,
 
-    previewMission(program, mission) {
-      return missionEventsFor(mission).map((event) => {
-        const chosen = reliabilityLevelFor(mission, event.id);
-        return {
-          eventId: event.id,
-          name: event.name,
-          riskBand: riskBandFor(
-            failureProbability(event, chosen, program, mission),
-          ),
-          reliabilityLevelId: chosen.id,
-          reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
-            id: level.id,
-            name: level.name,
-            costMillions: level.costMillions,
-            riskBand: riskBandFor(
-              failureProbability(event, level, program, mission),
-            ),
-          })),
-          contingency: contingencyOffered(event.id, mission),
-        };
-      });
-    },
+    ...createMissionPreviews(catalogue, rules),
 
-    previewAssets(program, mission) {
-      const carried = catalogue.assets.filter((asset) =>
-        mission.assetIds.includes(asset.id),
-      );
-      const raised = surfaceRaise(
-        program,
-        carried.map(({ id, name }) => ({ assetId: id, name })),
-      );
-      return carried.map((asset) => {
-        const unproven = !isFlightProven(program, asset);
-        return {
-          assetId: asset.id,
-          name: asset.name,
-          serviceLifeDays: serviceLifeFor(mission, asset).days,
-          serviceLifeOptions: asset.serviceLifeOptions,
-          reliabilityLevelId: assetReliabilityFor(mission, asset).id,
-          activityId: activityFor(mission, asset).id,
-          activities: activitiesOf(asset).map(
-            plannedActivity(asset.landsAtSite === true ? raised : null),
-          ),
-          riskBand: riskBandFor(
-            inServiceFailureChance(
-              asset,
-              assetReliabilityFor(mission, asset),
-              unproven,
-            ),
-          ),
-          reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
-            id: level.id,
-            name: level.name,
-            costMillions: level.costMillions,
-            riskBand: riskBandFor(
-              inServiceFailureChance(asset, level, unproven),
-            ),
-          })),
-        };
-      });
-    },
-
-    previewTrajectories(mission) {
-      const chosen = rules.trajectoryFor(mission);
-      const offered = catalogue.trajectories.filter((trajectory) =>
-        rules.trajectoryOffered(trajectory, mission),
-      );
-      return offered.map((trajectory) => ({
-        id: trajectory.id,
-        name: trajectory.name,
-        description: trajectory.description,
-        transferDays: trajectory.transferDays,
-        costMillions: trajectory.costMillions,
-        capacityLossTonnes: trajectory.capacityLossTonnes,
-        chosen: trajectory === chosen,
-      }));
-    },
-
-    previewCrew: (program, mission) =>
-      previewCrew(
-        catalogue,
-        rules,
-        program,
-        mission,
-        // An Asset on the same Mission that raises research on the surface raises the Crew's too.
-        surfaceRaise(
-          program,
-          catalogue.assets
-            .filter(({ id }) => mission.assetIds.includes(id))
-            .map(({ id, name }) => ({ assetId: id, name })),
-        ),
-      ),
-
-    workOutTurn,
+    workOutTurn: turnFrom,
 
     runTurn(program, plan, answers) {
-      const progress = workOutTurn(program, plan, answers);
+      const progress = turnFrom(program, plan, answers);
       if (progress.decisionPoint) {
         throw new Error(
           `This Turn stops at a Decision Point with no answer: ${progress.decisionPoint.id}.`,

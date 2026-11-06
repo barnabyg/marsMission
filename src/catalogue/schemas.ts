@@ -1,18 +1,19 @@
 import { z } from "zod";
+import {
+  activitiesSchema,
+  assetsSchema,
+  launchVehiclesSchema,
+  researchKindsSchema,
+} from "./assetSchemas";
+import { crewSchema } from "./crewSchema";
+import { id, isoDate, money } from "./schemaFields";
 
-/* What each data file must look like, one file at a time. The crossCheck files check them against each other. */
+export { isoDate } from "./schemaFields";
 
-const id = z.string().min(1);
-const money = z.number().int().nonnegative();
-
-export const isoDate = z.string().refine((value) => {
-  const date = new Date(`${value}T00:00:00Z`);
-  return (
-    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
-    !Number.isNaN(date.getTime()) &&
-    date.toISOString().startsWith(value)
-  );
-}, "must be a real date written as YYYY-MM-DD");
+/*
+ * What each data file must look like, one file at a time, with Launch Vehicles, Assets and their Activities in
+ * assetSchemas.ts and the Crewed Mission in crewSchema.ts. The crossCheck files check them against each other.
+ */
 
 const programSchema = z.strictObject({
   firstLaunchWindow: isoDate,
@@ -59,200 +60,6 @@ const trajectoriesSchema = z
   )
   .min(1);
 
-/** How mature an Asset or Launch Vehicle is when a Program starts, and what it costs and risks until it is Flight-proven. */
-const technologyFields = {
-  // "built" hasn't flown yet, so it is Flight-proven only after its first successful use. "not-built" can't fly until
-  // it has been through Development, and is then built.
-  technologyReadiness: z.enum(["flight-proven", "built", "not-built"]),
-  // Only for one that doesn't start Flight-proven: its cost in place of costMillions, and what the failure probabilities
-  // of the Mission Events it brings and of its failing in service are multiplied by, until it is Flight-proven.
-  unproven: z
-    .strictObject({
-      costMillions: money,
-      failureMultiplier: z.number().min(1),
-    })
-    .optional(),
-  // Only for one that isn't built yet: what its Development costs, paid when it starts, and how many Turns it takes.
-  development: z
-    .strictObject({
-      costMillions: money,
-      turns: z.number().int().positive(),
-    })
-    .optional(),
-};
-
-const launchVehiclesSchema = z.array(
-  z.strictObject({
-    id,
-    name: z.string().min(1),
-    costMillions: money,
-    capacityTonnes: z.number().positive(),
-    missionEvents: z.array(id),
-    ...technologyFields,
-  }),
-);
-
-const activitiesSchema = z
-  .array(
-    z.strictObject({
-      id,
-      name: z.string().min(1),
-      description: z.string().min(1),
-      // What an Asset doing this Activity brings about.
-      effect: z.discriminatedUnion("kind", [
-        z.strictObject({ kind: z.literal("nothing") }),
-        z.strictObject({ kind: z.literal("survey") }),
-        // For a whole Turn in service. An Asset in service for part of a Turn earns its share.
-        z.strictObject({
-          kind: z.literal("research"),
-          sciencePerTurn: z.number().int().positive(),
-          publicSupportPerTurn: z.number().int().nonnegative(),
-          researchKind: id,
-          // How it looks in the surface view. Standing still is the "nothing" effect.
-          surfaceMotion: z.enum(["traverse", "nearby"]),
-        }),
-      ]),
-    }),
-  )
-  .min(1);
-
-const researchKindsSchema = z.array(
-  z.strictObject({
-    id,
-    name: z.string().min(1),
-    // The Research Grant for each point of Science its Ongoing Research earns. Each Asset's grant for a Turn rounds to whole millions.
-    grantMillionsPerScience: z.number().nonnegative(),
-  }),
-);
-
-const assetsSchema = z.array(
-  z.strictObject({
-    id,
-    name: z.string().min(1),
-    kind: id,
-    costMillions: money,
-    // What it costs for each Turn it is kept operating at Mars after the one it arrives in, until its Service Life
-    // ends or the player ends its mission. Left out, it costs nothing.
-    upkeepMillionsPerTurn: money.optional(),
-    massTonnes: z.number().positive(),
-    // The chance of failing in each Turn after the one it arrives in, before Reliability.
-    failureChancePerTurn: z.number().min(0).max(1),
-    // In order, shortest first. Service Life starts when the Asset arrives, and the first option is what's chosen unless the player picks another.
-    serviceLifeOptions: z
-      .array(
-        z.strictObject({
-          days: z.number().int().positive(),
-          costMillions: money,
-        }),
-      )
-      .min(1),
-    missionEvents: z.array(id),
-    // The Activities it can do. The first is what it does unless the player picks another.
-    activities: z.array(id).min(1),
-    // Whether this Asset lands on Mars, so that a Mission carrying it must name a Landing Site.
-    landsAtSite: z.boolean().optional(),
-    // What the landing risk is multiplied by when this Asset lands. A landing is as risky as the riskiest Asset in it.
-    landingRiskMultiplier: z.number().positive().optional(),
-    // What it raises for other Assets, and by what percentage, on each day it operates at Mars, whatever its Activity.
-    // "surfaceResearch" is the Ongoing Research of every Asset and Crew on the surface. Benefits that raise the same
-    // thing don't add up: on each day the largest applies.
-    benefit: z
-      .strictObject({
-        raises: z.enum(["surfaceResearch"]),
-        percent: z.number().int().positive(),
-      })
-      .optional(),
-    ...technologyFields,
-  }),
-);
-
-const crewSchema = z.strictObject({
-  // The spacecraft that carries the Crew to Mars, and stays with them, in Mars orbit or at their Landing Site.
-  vehicleName: z.string().min(1),
-  // The Mission Events it brings to Mars orbit, as an Asset's do. The Crew arrive when the last of them succeeds.
-  missionEvents: z.array(id).min(1),
-  // The Mission Events it brings when the Crew land at a Landing Site instead. They land when the last succeeds.
-  landingMissionEvents: z.array(id).min(1),
-  // The Crew sizes on offer, smallest first: how many fly, and what the Crewed Mission costs and weighs with them.
-  sizes: z
-    .array(
-      z.strictObject({
-        crew: z.number().int().positive(),
-        costMillions: money,
-        massTonnes: z.number().positive(),
-      }),
-    )
-    .min(1),
-  // Each Crew member's Health as they launch, which is the most they can have.
-  maxHealth: z.number().int().positive(),
-  // How Crew lose Health. Radiation is a cause of its own, on the way to Mars and at Mars, which Protection slows.
-  health: z.strictObject({
-    // Health lost to radiation for each day on the way to Mars (or back), and for each day at Mars.
-    radiationPerDay: z.strictObject({
-      inFlight: z.number().nonnegative(),
-      atMars: z.number().nonnegative(),
-    }),
-    // Health lost for each day at Mars to everything else that living there does to the body.
-    timeAtMarsPerDay: z.number().nonnegative(),
-    // Health each Crew member on board loses when a Contingency saves their Mission.
-    contingencyRescueLoss: z.number().int().nonnegative(),
-    // Carrying on through a dust storm at their Landing Site: each Crew member's chance of being hurt, and the Health
-    // it costs them if they are.
-    dustStorm: z.strictObject({
-      chance: z.number().min(0).max(1),
-      loss: z.number().int().nonnegative(),
-    }),
-    // Health lost for each day a Crew member has no Supplies left, on top of everything else.
-    noSuppliesPerDay: z.number().nonnegative(),
-    // Health each Crew member on board loses to a solar particle event on the way: in safe mode, and if they carry on
-    // and the radiation hits. Protection slows both, as it does all radiation.
-    solarParticleEvent: z.strictObject({
-      safeModeLoss: z.number().int().nonnegative(),
-      hitLoss: z.number().int().nonnegative(),
-    }),
-  }),
-  // The Protection a Crewed Mission can carry, such as radiation shielding, least first, with what each costs and
-  // weighs and by what share it slows the Health Crew lose to radiation, in flight and at Mars. The first, which must
-  // give none, is what it carries unless the player picks another.
-  protection: z
-    .array(
-      z.strictObject({
-        id,
-        name: z.string().min(1),
-        massTonnes: z.number().nonnegative(),
-        costMillions: money,
-        radiationCutPercent: z.number().int().min(0).max(100),
-      }),
-    )
-    .min(1),
-  // What Crew use up each day to stay alive, from launch, wherever they are.
-  supplies: z.strictObject({
-    // The kilograms each Crew member uses a day, so a larger Crew uses them faster.
-    usePerMemberPerDayKg: z.number().positive(),
-    // The Supplies a Crewed Mission can carry, least first, with what each costs and weighs. The first is what it
-    // carries unless the player picks another.
-    options: z
-      .array(
-        z.strictObject({
-          id,
-          name: z.string().min(1),
-          massTonnes: z.number().positive(),
-          costMillions: money,
-        }),
-      )
-      .min(1),
-  }),
-  // The Public Support lost for each Crew member lost, whatever the cause, on top of anything else that day costs.
-  publicSupportLossPerMember: z.number().int().nonnegative(),
-  // What Crew in Mars orbit can do, which all of them there share. The first is what they do unless the player picks
-  // another. A research Activity earns its rate for each Crew member doing it.
-  orbitActivities: z.array(id).min(1),
-  // What Crew at a Landing Site can do, which all of them at that site share, in the same way.
-  surfaceActivities: z.array(id).min(1),
-  // The names Crew are given, in order. A name is never given twice in a Program.
-  names: z.array(z.string().min(1)).min(1),
-});
-
 const landingSitesSchema = z.array(
   z.strictObject({
     id,
@@ -277,9 +84,10 @@ const missionEventsSchema = z.array(
     description: z.string().min(1),
     failureDescription: z.string().min(1),
     // Departure is when the Mission leaves Earth orbit for Mars: the day after the last of its Mission Events timed from
-    // launch, so a Mission with more to do in Earth orbit, such as orbital refuelling, leaves later.
+    // launch, so a Mission with more to do in Earth orbit, such as orbital refuelling, leaves later. Leaving Mars is when
+    // a journey home sets off, on a Turn after the one its Crew arrived in, so only a journey home has those.
     timing: z.strictObject({
-      from: z.enum(["launch", "departure", "arrival"]),
+      from: z.enum(["launch", "departure", "arrival", "leavingMars"]),
       days: z.number().int().nonnegative(),
     }),
     // "landingSite" means the risk of the Mission's Landing Site.

@@ -1,8 +1,9 @@
 import type { ProgramView } from "../simulation/simulation";
 import type { CrewStyle } from "./crewPlay";
-import { surveyorInService, surveyThenLand, type PlayStyle } from "./playStyle";
+import { surveyorInService, surveyThenLand } from "./playStyle";
+import type { PlayStyle } from "./playStyleOptions";
 
-/** The play styles and tests of a Program that the strategies in strategies.ts are built from. */
+/** The play styles and tests of a Program that the strategies are built from. */
 
 export const surveyingLanders: PlayStyle = {
   order: surveyThenLand(["lander"]),

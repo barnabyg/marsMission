@@ -127,9 +127,14 @@ export interface Flight {
   landingSite: LandingSite | undefined;
   freeReturn: Trajectory["freeReturn"];
   outcome: MissionOutcome;
-  /** How long a landing has waited for a dust storm to pass, which moves it and everything after it. */
+  /** How long a landing has waited for a dust storm to pass, which moves it and everything after it on the way to Mars. */
   daysHeld: number;
-  /** The day a Mission Event happens, after any wait for a dust storm. */
+  /**
+   * The day of the Turn a journey home leaves Mars, on a Turn after the one its Crew arrived in, which Mission Events
+   * timed from leaving Mars count from. Null in a Turn with no journey home.
+   */
+  leavesMarsOn: number | null;
+  /** The day a Mission Event happens: on the way to Mars after any wait for a dust storm, or on the way home. */
   dayOf: (event: MissionEvent) => number;
   /** The Assets not yet delivered when this Mission Event is due. */
   stillOnBoard: (event: MissionEvent) => Asset[];
@@ -209,13 +214,17 @@ function whatLands(
   return named.charAt(0).toUpperCase() + named.slice(1);
 }
 
-/** The Turn's Mission on the launch pad, with nothing yet happened to it. */
+/**
+ * The Turn's Mission on the launch pad, with nothing yet happened to it, and the day a journey home leaves Mars if the
+ * Turn has one.
+ */
 export function startFlight(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
   plan: TurnPlan,
   answers: DecisionAnswers,
+  leavesMarsOn: number | null = null,
 ): Flight {
   const { mission } = plan;
   const vehicle = catalogue.launchVehicles.find(
@@ -310,7 +319,11 @@ export function startFlight(
     freeReturn: rules.trajectoryFor(mission).freeReturn,
     outcome,
     daysHeld: 0,
-    dayOf: (event) => rules.dayOf(event, mission) + flight.daysHeld,
+    leavesMarsOn,
+    dayOf: (event) =>
+      event.timing.from === "leavingMars"
+        ? rules.dayOf(event, mission, flight.leavesMarsOn)
+        : rules.dayOf(event, mission) + flight.daysHeld,
     stillOnBoard: (event) =>
       assets.filter(
         (asset) =>

@@ -1,6 +1,7 @@
 import { baseFundingFor } from "./baseFunding";
 import type { Catalogue } from "../catalogue/catalogue";
 import {
+  assetsAtMarsOnTimeline,
   carryOutSurvey,
   operateAssets,
   stoppedEntries,
@@ -10,14 +11,13 @@ import {
   creditFirstLanding,
   milestoneEntry,
 } from "./arrivals";
+import { crewAtMars, crewAtTurnEnd } from "./crewAtMars";
 import {
   crewArrivedEntry,
-  crewAtMars,
-  crewAtTurnEnd,
   crewShipsAtMars,
   crewSummary,
   healthLostSummary,
-} from "./crewAtMars";
+} from "./crewAtMarsReport";
 import { carryOutDevelopment } from "./development";
 import { bringCrewHome, loseCrew, withCrew } from "./lostCrew";
 import { protectionIdOf } from "./protection";
@@ -31,79 +31,11 @@ import {
   missionOnTimeline,
 } from "./missionReport";
 import { carryOutOngoingResearch } from "./ongoingResearch";
-import {
-  awardScienceMilestones,
-  dayReached,
-  type TurnCurve,
-} from "./scienceMilestones";
-import {
-  addDays,
-  daysBetween,
-  formatMoney,
-  operatingKey,
-  sum,
-  type Rules,
-} from "./rules";
+import { fadePublicSupport, payFundingThresholds } from "./fundingThresholds";
+import { awardScienceMilestones } from "./scienceMilestones";
+import { addDays, sum, type Rules } from "./rules";
 import type { DecisionAnswers, Program, TurnPlan, TurnResult } from "./types";
-import type {
-  AssetAtMars,
-  FundingThresholdEntry,
-  TimelineEntry,
-} from "./timeline";
-
-type FundingThreshold = Catalogue["fundingThresholds"][number];
-
-interface FundingOutcome {
-  payouts: FundingThreshold[];
-  entries: FundingThresholdEntry[];
-}
-
-/**
- * Pays each Funding Threshold that Public Support is at or above once the Turn's gains and losses are all in, for the
- * first time. It pays on the day Public Support reached that level for the last time in the Turn, so never before the
- * award that took it there, and a level lost again to a failed Mission doesn't count until it's regained.
- */
-function payFundingThresholds(
-  catalogue: Catalogue,
-  program: Program,
-  publicSupport: TurnCurve,
-): FundingOutcome {
-  const reached = catalogue.fundingThresholds.flatMap((threshold) => {
-    const day = program.fundingThresholdsPaid.includes(threshold.publicSupport)
-      ? null
-      : dayReached(
-          publicSupport,
-          threshold.publicSupport,
-          catalogue.program.launchWindowIntervalDays,
-        );
-    return day === null ? [] : [{ threshold, day }];
-  });
-  return {
-    payouts: reached.map(({ threshold }) => threshold),
-    entries: reached.map(({ threshold, day }): FundingThresholdEntry => ({
-      kind: "fundingThreshold",
-      day,
-      title: `Funding Threshold reached: ${threshold.publicSupport} Public Support`,
-      description: `The Program's backers pay out ${formatMoney(threshold.payoutMillions)}.`,
-    })),
-  };
-}
-
-/** Public Support at the end of the Turn, and why that cancels the Program if it does. */
-function fadePublicSupport(catalogue: Catalogue, publicSupport: number) {
-  const { publicSupportDrainPercent, cancellationLevel } = catalogue.program;
-  // Public Support is whole points. Rounding down means it always falls, where rounding to the nearest point could stick at a low value.
-  const end = Math.floor(
-    (publicSupport * (100 - publicSupportDrainPercent)) / 100,
-  );
-  return {
-    end,
-    cancellationReason:
-      end < cancellationLevel
-        ? `Public Support fell to ${end}, below the Cancellation Level of ${cancellationLevel}.`
-        : null,
-  };
-}
+import type { TimelineEntry } from "./timeline";
 
 /**
  * Works out a whole Turn from a plan that has already passed validation, how its Mission flew and the answers so far.
@@ -231,28 +163,7 @@ export function resolveTurn(
     research.researchGrantMillions +
     baseFundingMillions +
     (flown.returned?.refundMillions ?? 0);
-  const cutServiceLife = new Map(
-    [...flown.cutServiceLife].map(([asset, days]) => [asset.id, days]),
-  );
-  const assetsAtMars = inService.map(
-    ({ asset, fromDay, untilDay }): AssetAtMars => {
-      const cutServiceLifeDays =
-        fromDay > 0 ? cutServiceLife.get(asset.assetId) : undefined;
-      return {
-        key: operatingKey(asset),
-        name: asset.name,
-        kind: asset.kind,
-        landingSiteName:
-          rules.landingSiteById(asset.landingSiteId)?.name ?? null,
-        activityName: rules.activityNameOf(asset),
-        surfaceMotion: rules.surfaceMotionOf(asset),
-        arrivedOnDay: daysBetween(program.date, asset.arrivedOn),
-        fromDay,
-        untilDay,
-        ...(cutServiceLifeDays === undefined ? {} : { cutServiceLifeDays }),
-      };
-    },
-  );
+  const assetsAtMars = assetsAtMarsOnTimeline(rules, program, inService, flown);
 
   const otherEntries = [
     ...crewArrivedEntry(

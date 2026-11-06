@@ -1,6 +1,6 @@
 import type { TechnologyReadiness } from "./technologyReadiness";
 import type { Timeline } from "./timeline";
-import type { CrewAtMars } from "./crew";
+import type { CrewAtMars } from "./crewView";
 import type { PlannedActivity, PlannedDevelopment } from "./previews";
 import type { TurnSummary } from "./turnSummary";
 

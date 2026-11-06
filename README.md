@@ -35,7 +35,7 @@ A feature with new content touches these folders, in order:
 1. `public/data`: the new content
 2. `src/catalogue`: validating it, and `src/simulation/testCatalogue.ts` for a new Catalogue field
 3. `src/simulation`: the rules, and a new format in `saveFormat.ts` for a new saved field
-4. `src/balance`, for a new rule or choice: the strategies in `strategies.ts` that must cope with it, because every plan they make has to pass validation, and a check in `invalidStates.ts` for anything it makes impossible
+4. `src/balance`, for a new rule or choice: the strategies that must cope with it, listed in `strategies.ts`, because every plan they make has to pass validation, and a check in `invalidStates.ts` for anything it makes impossible
 5. `src/planning` or `src/mission`: displaying it, with styles and wiring in `src/app`, plus `src/ui/tooltips.ts` and `GLOSSARY.md` for a new game term
 6. `e2e`: a browser test of the journey. A test that needs a known outcome, such as a landing that crashes or a dust storm on the second Turn, takes its seed from `e2e/seeds.ts`, which searches the real data files for one rather than pinning a number, so add a search there for a new outcome
 
@@ -63,38 +63,41 @@ The Asset cards' pictures in `public/art/assets`, one for each kind of Asset and
 
 ### The Catalogue's files
 
-`parseCatalogue` in `catalogue.ts` checks each data file against its schema in `schemas.ts`, then runs the cross-checks, which check the files against each other, one subject per file. A new field goes in `schemas.ts`. A check that needs another file goes in the cross-check for its subject, or, for a new subject such as Technology, in a new file beside them, added to the `crossChecks` list in `catalogue.ts`.
+`parseCatalogue` in `catalogue.ts` checks each data file against its schema in `schemas.ts`, then runs the cross-checks, which check the files against each other, one subject per file. `schemas.ts` lists every schema, and holds those for the Program, Trajectories, Landing Sites, Mission Events, Contingencies, Hazards, Milestones, Funding Thresholds, Reliability and Risk Bands. The schemas for Launch Vehicles, Assets, Activities and kinds of research are in `assetSchemas.ts`, the Crewed Mission's in `crewSchema.ts`, and the fields more than one of them shares, such as an id, money and Technology Readiness, in `schemaFields.ts`. A new field goes in the schema file for its data file. A check that needs another file goes in the cross-check for its subject, or, for a new subject such as Technology, in a new file beside them, added to the `crossChecks` list in `catalogue.ts`.
 
-| File                         | What it cross-checks                                                                                                                             |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `crossCheckIds.ts`           | That each id is used once in its file                                                                                                            |
-| `crossCheckMissionEvents.ts` | The Mission Events that Launch Vehicles, Assets and Contingencies refer to, one Contingency per event, and each Launch Vehicle's days near Earth |
-| `crossCheckHazards.ts`       | Dust storms and solar particle events against the Turn and the Trajectories                                                                      |
-| `crossCheckAssets.ts`        | Assets: Mission Events that need a Landing Site, Landing Sites, Activities and Service Life                                                      |
-| `crossCheckMilestones.ts`    | Milestones that can be earned, and Funding Thresholds in ascending order                                                                         |
-| `crossCheckReliability.ts`   | Reliability levels in order, and Risk Bands that cover every failure probability                                                                 |
-| `crossCheckTrajectories.ts`  | Trajectories and Free-returns that finish within a Turn                                                                                          |
-| `crossCheckTechnology.ts`    | Technology Readiness: unproven costs and risks, Development, and ids unique across Assets and Launch Vehicles                                    |
-| `crossCheckBenefits.ts`      | Benefits between Assets: that each has something to raise                                                                                        |
-| `crossCheckCrew.ts`          | The Crewed Mission: its Mission Events to Mars orbit and to a Landing Site, Crew sizes in order, Activities, Health and enough names             |
+| File                         | What it cross-checks                                                                                                                                                                            |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `crossCheckIds.ts`           | That each id is used once in its file                                                                                                                                                           |
+| `crossCheckMissionEvents.ts` | The Mission Events that Launch Vehicles, Assets and Contingencies refer to, one Contingency per event, none timed from leaving Mars on the way there, and each Launch Vehicle's days near Earth |
+| `crossCheckHazards.ts`       | Dust storms and solar particle events against the Turn and the Trajectories                                                                                                                     |
+| `crossCheckAssets.ts`        | Assets: Mission Events that need a Landing Site, Landing Sites, Activities and Service Life                                                                                                     |
+| `crossCheckMilestones.ts`    | Milestones that can be earned, and Funding Thresholds in ascending order                                                                                                                        |
+| `crossCheckReliability.ts`   | Reliability levels in order, and Risk Bands that cover every failure probability                                                                                                                |
+| `crossCheckTrajectories.ts`  | Trajectories and Free-returns that finish within a Turn                                                                                                                                         |
+| `crossCheckTechnology.ts`    | Technology Readiness: unproven costs and risks, Development, and ids unique across Assets and Launch Vehicles                                                                                   |
+| `crossCheckBenefits.ts`      | Benefits between Assets: that each has something to raise                                                                                                                                       |
+| `crossCheckCrew.ts`          | The Crewed Mission: its Mission Events to Mars orbit and to a Landing Site, Crew sizes in order, Activities, Health and enough names                                                            |
 
 ### The Simulation's files
 
 Everything outside `src/simulation` reaches the rules through `createSimulation` in `simulation.ts`. A Turn runs in this order:
 
-1. `simulation.ts`, in `workOutTurn`, checks the plan with `planCheck.ts` and flies the Mission with `flyMission.ts`, which works out each subject of the flight in its own module: solar particle events, go/no-go checks, Contingencies, Mission Events that fail and the Crew's Health on the way.
-2. `turnSteps.ts` carries out the rest of the Turn's steps, in `resolveTurn`: Milestones for arriving and for a first landing (`arrivals.ts`), technologies that became Flight-proven (`flightProven.ts`), Development started and finished (`development.ts`), Assets and Crew at work (`assetsInService.ts`, `crewAtMars.ts`), dust storms (`dustStorms.ts`), Surveys, Ongoing Research (`ongoingResearch.ts`), Science Milestones (`scienceMilestones.ts`), Funding Thresholds and the fading of Public Support. It builds the next Program, the Timeline and the Turn summary.
-3. `simulation.ts` stops at the earliest Decision Point that has no answer, from the Mission or a dust storm, and gives the Timeline up to it.
+1. `workOutTurn.ts` checks the plan with `planCheck.ts` and flies the Mission with `flyMission.ts`, which works out each subject of the flight in its own module: solar particle events, go/no-go checks, Contingencies, Mission Events that fail and the Crew's Health on the way.
+2. `turnSteps.ts` carries out the rest of the Turn's steps, in `resolveTurn`: Milestones for arriving and for a first landing (`arrivals.ts`), technologies that became Flight-proven (`flightProven.ts`), Development started and finished (`development.ts`), Assets and Crew at work (`assetsInService.ts`, `crewAtMars.ts`), dust storms (`dustStorms.ts`), Surveys, Ongoing Research (`ongoingResearch.ts`), Science Milestones (`scienceMilestones.ts`), Funding Thresholds and the fading of Public Support (`fundingThresholds.ts`). It builds the next Program, the Timeline and the Turn summary.
+3. `workOutTurn.ts` stops at the earliest Decision Point that has no answer, from the Mission or a dust storm, and gives the Timeline up to it.
 
-- `simulation.ts`: The Simulation's interface: starting, saving and restoring a Program, what the player sees of it, previews, and working out or running a Turn
+- `simulation.ts`: The Simulation's interface, `createSimulation`, which hands each part to the modules below: starting, saving and restoring a Program, what the player sees of it, previews, and working out or running a Turn
+- `programView.ts`: A new Program, and what the player sees of a Program between Turns
+- `missionPreviews.ts`: What Planning Mode shows of a Mission before it launches: its Mission Events, Assets, Trajectories and Crew, with research raised by any Benefit
+- `workOutTurn.ts`: Working out a Turn: checking the plan, flying the Mission, the rest of the Turn, and stopping at the earliest Decision Point with no answer
 - `types.ts`: The shapes the Simulation takes and gives: plans, the Program and what the player sees of it, and Decision Points
-- `previews.ts`: What Planning Mode shows of a Mission before it launches: its Assets, Mission Events, Trajectories, Activities and Developments, and what a plan costs and weighs
+- `previews.ts`: The shapes of what Planning Mode shows of a Mission before it launches: its Assets, Mission Events, Trajectories, Activities and Developments, and what a plan costs and weighs
 - `turnSummary.ts`: The Turn summary: what changed over a Turn
 - `timeline.ts`: The Timeline: what happened in a Turn, as Mission Mode plays it
-- `rules.ts`: `createRules`: looking things up in the Catalogue, such as the Trajectory or Mission Events a Mission has, and failure chances; plus `roll`
+- `rules.ts`: `createRules`: looking things up in the Catalogue, such as the Trajectory or Mission Events a Mission has, the day of a Mission Event, timed from launch, departure, arrival or leaving Mars, and failure chances; plus `roll`
 - `planCheck.ts`: What a plan costs and weighs, and what's wrong with it, if anything
 - `flyMission.ts`: The Turn's Mission: rolls its Mission Events in order, calling the modules below for each subject of the flight
-- `flight.ts`: The Mission in flight, which those modules share: what it carries, where it's going, and its outcome so far
+- `flight.ts`: The Mission in flight, which those modules share: what it carries, where it's going, the day of each of its Mission Events, and its outcome so far. Its `leavesMarsOn` is the day a journey home leaves Mars, which Mission Events timed from leaving Mars count from, and is null until journeys home are built
 - `goNoGo.ts`: The go/no-go check before a landing in a dust storm: going ahead, or holding off
 - `contingency.ts`: The Contingency for a Mission Event that fails: its Decision Point, and the rescue
 - `missionEventFailure.ts`: A Mission Event that fails for good: what it loses and costs, or a Free-return bringing the Mission home
@@ -104,14 +107,18 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 - `development.ts`: Development: the technologies that need it, starting it in a plan, and what finishes when
 - `turnSteps.ts`: The steps of a Turn after the Mission, in order (above), and the next Program, Timeline and Turn summary
 - `arrivals.ts`: What the Turn's Mission earns by arriving: Milestones for the first of each kind of Asset, a first landing and the first Crew at Mars and on the surface, and first-landing Science
-- `assetsInService.ts`: Which Assets operate for which days of the Turn, their failures and end of Service Life, and Surveys
+- `assetsInService.ts`: Which Assets operate for which days of the Turn, their failures and end of Service Life, Surveys, and how the Assets at Mars show in Mission Mode
 - `upkeep.ts`: Upkeep: what each Asset at Mars costs for a Turn, and the Assets whose missions a plan ends
 - `baseFunding.ts`: Base funding: what the Program's backers pay as a Turn ends, for its Public Support
+- `fundingThresholds.ts`: Funding Thresholds paid as a Turn ends, and the fading of Public Support
 - `ongoingResearch.ts`: What each Activity earns in Science, Public Support and Research Grants
 - `benefits.ts`: Benefits between Assets: the days on which they raise something, and by how much
 - `benefitImpact.ts`: What a Benefit would add this Turn, for Planning Mode's Benefit tag, which `src/planning/benefitImpactText.ts` puts into words
-- `crew.ts`: Crew in planning: Crew sizes, the names Crew are given, where Crew are and their shared Activity, what Planning Mode shows of them and what's wrong with a plan's Crew
-- `crewAtMars.ts`: Crew during a Turn: arriving in Mars orbit or at a Landing Site, the Crew at work in each place, the Health and shared Supplies they use there, dying when Health runs out, and how they show to the player
+- `crew.ts`: Crew in planning: Crew sizes, the names Crew are given, their shared Activity in each place, and what's wrong with a plan's Crew
+- `crewPlaces.ts`: Where Crew are: Mars orbit or a Landing Site, each a place of its own, and which of the Program's Crew are at Mars
+- `crewView.ts`: What Planning Mode shows of Crew: those at Mars, what a Crewed Mission offers, and a Mission's Crew before it launches
+- `crewAtMars.ts`: Crew during a Turn: arriving in Mars orbit or at a Landing Site, the Crew at work in each place, the Health and shared Supplies they use there, and dying when Health runs out
+- `crewAtMarsReport.ts`: How the Crew at Mars show to the player: in the events column, in Mission Mode's views and in the Turn summary
 - `supplies.ts`: Supplies: what a Crewed Mission carries, how a store of them is used each day and runs out, and when they ran out this Turn
 - `health.ts`: Crew Health: what lowers it, by cause, over days and all at once, and the day it runs out
 - `protection.ts`: Protection: the level a Crewed Mission carries, which each Crew member keeps, and how much it slows radiation
@@ -123,7 +130,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 - `saveFormat.ts`: Each released save format and how to upgrade it to the next
 - `testCatalogue.ts`, `testActivities.ts`, `testMissionEvents.ts`, `testTechnology.ts`, `testCrew.ts`, `testHelpers.ts`, `scienceTestHelpers.ts`: Fixtures and helpers for the rule tests, with the test catalogue's Activities, its Mission Events and Contingencies, its unproven, not-built and refuelled technologies, and its Crewed Mission in files of their own
 
-A new rule usually goes in the file for its step of the Turn, or a new file beside them for a new Hazard, called from `turnSteps.ts` if it happens at Mars and from `flyMission.ts` if it happens to the Mission, taking the `Flight` from `flight.ts`. Its tests go in a test file named after the rule. A new Hazard usually also needs a Decision Point kind and its answers in `types.ts`, its part of the Turn summary in `turnSummary.ts`, an entry for it in `timeline.ts`, a cautious answer in `simulation.ts`, and switching off in `calmCatalogueFiles` in `src/testing/realCatalogue.ts`, so that tests of the rest of the balance aren't disturbed by it.
+A new rule usually goes in the file for its step of the Turn, or a new file beside them for a new Hazard, called from `turnSteps.ts` if it happens at Mars and from `flyMission.ts` if it happens to the Mission, taking the `Flight` from `flight.ts`. Its tests go in a test file named after the rule. A new Hazard usually also needs a Decision Point kind and its answers in `types.ts`, its part of the Turn summary in `turnSummary.ts`, an entry for it in `timeline.ts`, a cautious answer in `workOutTurn.ts`, and switching off in `calmCatalogueFiles` in `src/testing/realCatalogue.ts`, so that tests of the rest of the balance aren't disturbed by it.
 
 ### Balance runs
 
@@ -133,7 +140,7 @@ To check the balance without playing, run this from the repository root:
 npm.cmd run balance
 ```
 
-It plays every strategy in `src/balance/strategies.ts` against the real data files, with no browser, for up to 20 Turns each on seeds 1 to 1000, and prints the report. That takes about half a minute. For a quick pass, use `npm.cmd run balance -- --programs 200`. The same command always gives the same report, so two runs can be compared line by line, for example before and after changing `public/data`. The results inform tuning and don't fail anything: the only part that can fail a build is the invalid-state test in `src/balance/balanceRuns.test.ts`, which plays a few Programs on each strategy. The command also stops with an error if a plan fails validation or a Turn leaves an invalid state.
+It plays every strategy listed in `src/balance/strategies.ts` against the real data files, with no browser, for up to 20 Turns each on seeds 1 to 1000, and prints the report. That takes about half a minute. For a quick pass, use `npm.cmd run balance -- --programs 200`. The same command always gives the same report, so two runs can be compared line by line, for example before and after changing `public/data`. The results inform tuning and don't fail anything: the only part that can fail a build is the invalid-state test in `src/balance/balanceRuns.test.ts`, which plays a few Programs on each strategy. The command also stops with an error if a plan fails validation or a Turn leaves an invalid state.
 
 The report explains its own tables: a legend at the top covers the summary and Turn table columns, each section opens with what it counts, and each strategy's section starts with what that strategy does.
 
@@ -145,7 +152,7 @@ Strategies are simple on purpose, so a difference between two of them is only a 
 
 The strategies named `cautious` and `bold` are the yardsticks for how the game rewards risk: `src/catalogue/balanceBaseFunding.test.ts` holds that Cautious is rarely cancelled and recovers from a failed first Mission, and that Bold is cancelled often but is far ahead when it isn't. The play styles they and the others are built from are in `src/balance/styleParts.ts`.
 
-To add a strategy, add an object to the `strategies` list, with no other change. Its `plan(view, tools)` sees what a player sees: the `ProgramView`, the previews and `tools.problemsWith(plan)`. It returns a `TurnPlan`, which must pass validation, so it has to cope with shortages of money and with what's on offer changing. It can also have an `answer(decisionPoint, view)` for what it does at a Decision Point, and takes the first choice offered if it hasn't. The `playStyle` helper in `src/balance/playStyle.ts` covers the common case, and pays Upkeep as `src/balance/upkeepPlay.ts` says: it keeps every Asset it can pay for, ending the missions of those with the least Service Life left when it can't, or when that frees the money for a launch while it is under its limit of Assets.
+To add a strategy, add an object to the `strategies` list in `strategies.ts`, or to `steadyStrategies.ts` or `bigProgramStrategies.ts` for one named `steady:` or `big Program:`, with no other change. Its `plan(view, tools)` sees what a player sees: the `ProgramView`, the previews and `tools.problemsWith(plan)`. It returns a `TurnPlan`, which must pass validation, so it has to cope with shortages of money and with what's on offer changing. It can also have an `answer(decisionPoint, view)` for what it does at a Decision Point, and takes the first choice offered if it hasn't. The `playStyle` helper in `src/balance/playStyle.ts` covers the common case, with the choices it can make in `playStyleOptions.ts` and the Missions it builds for its Assets in `assetMissions.ts`, and pays Upkeep as `src/balance/upkeepPlay.ts` says: it keeps every Asset it can pay for, ending the missions of those with the least Service Life left when it can't, or when that frees the money for a launch while it is under its limit of Assets.
 
 ### Verification
 
