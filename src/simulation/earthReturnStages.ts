@@ -1,8 +1,8 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { formatPropellant } from "./ascentPropellant";
 import { crewAtMarsOf, crewKeyOf, locationNameOf } from "./crewPlaces";
+import { isSamplesKey, journeyHomeDays } from "./homeward";
 import { addDays, type MissionEvent, type Rules } from "./rules";
-import { isSamplesKey } from "./sampleReturn";
 import { samplesWithCrew } from "./samplesHome";
 import type {
   EarthReturnStage,
@@ -24,16 +24,6 @@ import type {
 /** How a plan names an Earth return stage to bring its Crew home. One Mission arrives each Turn, so no two share a day. */
 const stageKeyOf = ({ arrivedOn }: { arrivedOn: string }): string =>
   `earth-return-stage:${arrivedOn}`;
-
-/** The day of the Turn a journey home leaves Mars, and the day it is home if nothing goes wrong. */
-export function journeyHomeDays(
-  catalogue: Catalogue,
-  rules: Rules,
-): { leavesOn: number; homeOn: number } {
-  const leavesOn = catalogue.crew.roundTrip.leavesMarsOnDay;
-  const last = rules.journeyHomeEvents().at(-1);
-  return { leavesOn, homeOn: leavesOn + (last?.timing.days ?? 0) };
-}
 
 /**
  * The Earth return stage a plan brings home this Turn, with its Crew at Mars as the Turn starts and where they are, if it

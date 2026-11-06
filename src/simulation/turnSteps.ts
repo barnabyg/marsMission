@@ -23,11 +23,11 @@ import {
 } from "./crewAtMars";
 import { welcomeCrewHome } from "./crewHome";
 import {
-  journeyHomeDays,
   stageArriving,
   stageComingHome,
   stagesAfterTurn,
 } from "./earthReturnStages";
+import { journeyHomeDays } from "./homeward";
 import { returnVehicleArriving, returnVehicleReport } from "./returnVehicles";
 import { afterSamplesLeft, sendSamplesHome } from "./sampleReturn";
 import { sampleJourneySummary, settleSamples } from "./samplesHome";

@@ -1,13 +1,16 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import { tryContingency } from "./contingency";
 import type { CrewMemberAtMars } from "./crewPlaces";
-import { journeyHomeDays } from "./earthReturnStages";
 import { outcomeBefore, type Flight, type MissionOutcome } from "./flight";
 import { drainsInFlight, drainsWithoutSupplies, healthCourse } from "./health";
+import { journeyHomeDays } from "./homeward";
+import {
+  flyHomewardEvents,
+  homewardFlightBase,
+  homewardText,
+} from "./homewardFlight";
 import { healthRanOut } from "./lostCrew";
-import { missionEventFailed } from "./missionEventFailure";
 import { radiationCutOf } from "./protection";
-import { roll, type Rules } from "./rules";
+import type { Rules } from "./rules";
 import {
   settleSupplies,
   suppliesCourse,
@@ -33,26 +36,6 @@ import type {
  * Crew member's own Protection slowing the radiation. Crew leaving a Landing Site first fly Mars ascent, which uses up
  * the ascent propellant it needs there whether or not it succeeds, and the rendezvous with their stage in Mars orbit.
  */
-
-const capitalised = (text: string) =>
-  text.charAt(0).toUpperCase() + text.slice(1);
-
-/**
- * The text of a Mission Event or Contingency of the way home, with what it carries and what carries it filled in, as
- * the data files share them between Crew and samples: `{aboard}` such as "the Crew", and `{stage}` such as "their
- * Earth return stage", each with a capital to start a sentence.
- */
-export function homewardText(
-  text: string,
-  aboard: string,
-  stage: string,
-): string {
-  return text
-    .replaceAll("{aboard}", aboard)
-    .replaceAll("{Aboard}", capitalised(aboard))
-    .replaceAll("{stage}", stage)
-    .replaceAll("{Stage}", capitalised(stage));
-}
 
 /** What became of a journey home, as far as the answers so far take it. */
 export interface JourneyHome {
@@ -90,44 +73,21 @@ export function flyJourneyHome(
   );
   const from = leaving.crew[0]?.member.location;
   const site = from?.kind === "landingSite" ? from.landingSiteId : null;
-  const [ascent] = site === null ? [] : rules.journeyHomeEvents(true);
+  const ascentEvents = new Set(catalogue.crew.roundTrip.ascent.missionEvents);
   let propellantUsed: JourneyHome["propellantUsed"] = null;
-  for (const event of rules.journeyHomeEvents(site !== null)) {
+  flyHomewardEvents(flight, rules.journeyHomeEvents(site !== null), (event) => {
     // Crew whose Health ran out before this Mission Event leave no one to fly it.
-    if (flight.crewOnBoard(event).length === 0) break;
-    if (site !== null && event === ascent) {
-      propellantUsed = {
+    if (flight.crewOnBoard(event).length === 0) return false;
+    // Mars ascent uses up its propellant whether or not it succeeds.
+    if (site !== null && ascentEvents.has(event.id)) {
+      propellantUsed ??= {
         landingSiteId: site,
         kg: catalogue.crew.roundTrip.ascent.propellantKg,
       };
     }
-    const risk = rules.failureProbability(
-      event,
-      rules.reliabilityLevelFor(flight.mission, event.id),
-      program,
-      flight.mission,
-    );
-    if (roll(program.seed, program.turnNumber, event.id) >= risk) {
-      flight.outcome.entries.push({
-        ...flight.happened(event),
-        title: event.name,
-        description: flight.filledIn(event.description),
-        outcome: "success",
-      });
-      continue;
-    }
-    const contingency = tryContingency(flight, event, []);
-    if (contingency.kind === "rescued") continue;
-    if (contingency.kind === "failed") {
-      missionEventFailed(flight, event, [], contingency.used);
-    }
-    break;
-  }
+    return true;
+  });
   endJourney(flight, homeOn);
-  // Marked, so that the events column and the checks of the Timeline can tell them from the Mission's.
-  flight.outcome.entries = flight.outcome.entries.map((entry) =>
-    entry.kind === "missionEvent" ? { ...entry, homeward: true } : entry,
-  );
   return { crew: flight.crew, homeOn, outcome: flight.outcome, propellantUsed };
 }
 
@@ -235,21 +195,8 @@ function homewardFlight(
     return settledSoFar.supplies;
   };
   const flight: Flight = {
-    catalogue,
-    rules,
-    program,
-    mission,
-    answers,
-    assets: [],
+    ...homewardFlightBase(catalogue, rules, program, answers, mission, outcome),
     crew,
-    radiationCutPercent: 0,
-    landingSite: undefined,
-    freeReturn: undefined,
-    outcome,
-    daysHeld: 0,
-    leavesMarsOn: leavesOn,
-    dayOf: (event) => rules.dayOf(event, mission, leavesOn),
-    stillOnBoard: () => [],
     // The Crew are aboard from leaving Mars until they are home.
     crewOnBoard: (when) => {
       const day = typeof when === "number" ? when : flight.dayOf(when);
@@ -271,14 +218,6 @@ function homewardFlight(
     },
     filledIn: (text) =>
       homewardText(text, "the Crew", "their Earth return stage"),
-    // Nothing aboard has a Service Life.
-    shorten: () => undefined,
-    cut: () => undefined,
-    happened: (event) => ({
-      kind: "missionEvent" as const,
-      day: flight.dayOf(event),
-      eventId: event.id,
-    }),
   };
   return flight;
 }

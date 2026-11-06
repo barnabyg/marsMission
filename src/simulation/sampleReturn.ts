@@ -1,15 +1,16 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { AssetInService } from "./assetsInService";
-import { tryContingency } from "./contingency";
-import { journeyHomeDays } from "./earthReturnStages";
 import { outcomeBefore, type Flight, type MissionOutcome } from "./flight";
-import { homewardText } from "./journeyHome";
-import { missionEventFailed } from "./missionEventFailure";
+import { journeyHomeDays, samplesKeyOf, siteOfSamplesKey } from "./homeward";
+import {
+  flyHomewardEvents,
+  homewardFlightBase,
+  homewardText,
+} from "./homewardFlight";
 import {
   addDays,
   daysUntilServiceEnds,
   operatingKey,
-  roll,
   type Rules,
 } from "./rules";
 import type { SamplesEntry } from "./timeline";
@@ -32,20 +33,9 @@ import type {
 
 type OperatingAsset = Program["operatingAssets"][number];
 
-const keyPrefix = "samples:";
-
-/** How a plan names a Landing Site's samples to send them home. */
-const samplesKeyOf = (siteId: string) => `${keyPrefix}${siteId}`;
-
-/** Whether a plan's journey home is a Landing Site's samples, rather than Crew. */
-export const isSamplesKey = (key: string | undefined): boolean =>
-  key?.startsWith(keyPrefix) === true;
-
 /** The Landing Site whose samples a plan sends home, by id, or null if it sends none. */
 const siteSentHome = (plan: TurnPlan): string | null =>
-  plan.bringHome !== undefined && isSamplesKey(plan.bringHome)
-    ? plan.bringHome.slice(keyPrefix.length)
-    : null;
+  siteOfSamplesKey(plan.bringHome);
 
 const roleOf = (catalogue: Catalogue, asset: OperatingAsset) =>
   catalogue.assets.find(({ id }) => id === asset.assetId)?.sampleReturn;
@@ -256,7 +246,7 @@ function flySamplesHome(
   const orbiter = catalogue.assets.filter(
     ({ id }) => id === coming.orbiter.assetId,
   );
-  for (const event of rules.journeyHomeEvents(true)) {
+  flyHomewardEvents(flight, rules.journeyHomeEvents(true), (event) => {
     const day = flight.dayOf(event);
     // Until the rendezvous is done, the orbiter is safe in Mars orbit, which a failure says.
     flight.outcome.deliveredAssets = ascentEvents.has(event.id) ? orbiter : [];
@@ -267,34 +257,10 @@ function flySamplesHome(
     } else if (!journey.leftMars.has(orbiterKey)) {
       journey.leftMars.set(orbiterKey, day);
     }
-    const risk = rules.failureProbability(
-      event,
-      rules.reliabilityLevelFor(flight.mission, event.id),
-      program,
-      flight.mission,
-    );
-    if (roll(program.seed, program.turnNumber, event.id) >= risk) {
-      flight.outcome.entries.push({
-        ...flight.happened(event),
-        title: event.name,
-        description: flight.filledIn(event.description),
-        outcome: "success",
-        homeward: true,
-      });
-      continue;
-    }
-    const contingency = tryContingency(flight, event, []);
-    if (contingency.kind === "rescued") continue;
-    if (contingency.kind === "failed") {
-      missionEventFailed(flight, event, [], contingency.used);
-    }
-    break;
-  }
+    return true;
+  });
   const { outcome } = flight;
   journey.home = outcome.failedEvent === undefined && !outcome.decisionPoint;
-  outcome.entries = outcome.entries.map((entry) =>
-    entry.kind === "missionEvent" ? { ...entry, homeward: true } : entry,
-  );
   return journey;
 }
 
@@ -307,7 +273,6 @@ function samplesFlight(
   answers: DecisionAnswers,
   { ascent, cargo }: { ascent: (eventId: string) => boolean; cargo: string },
 ): Flight {
-  const { leavesOn } = journeyHomeDays(catalogue, rules);
   const bought = [coming.ascent.homeward, coming.orbiter.homeward];
   // What the two Missions bought for the journey home, as a Mission with nothing aboard.
   const mission: PlannedMission = {
@@ -320,21 +285,8 @@ function samplesFlight(
   };
   const outcome = outcomeBefore(coming.orbiter.name, [], [], undefined);
   const flight: Flight = {
-    catalogue,
-    rules,
-    program,
-    mission,
-    answers,
-    assets: [],
+    ...homewardFlightBase(catalogue, rules, program, answers, mission, outcome),
     crew: [],
-    radiationCutPercent: 0,
-    landingSite: undefined,
-    freeReturn: undefined,
-    outcome,
-    daysHeld: 0,
-    leavesMarsOn: leavesOn,
-    dayOf: (event) => rules.dayOf(event, mission, leavesOn),
-    stillOnBoard: () => [],
     crewOnBoard: () => [],
     // The ascent vehicle carries the samples up to the rendezvous, and the orbiter from then on.
     cargoOnBoard: (event) => [
@@ -354,14 +306,6 @@ function samplesFlight(
     stopWith: () => undefined,
     filledIn: (text) =>
       homewardText(text, "the samples", `the ${coming.orbiter.name}`),
-    // Nothing aboard keeps a Service Life.
-    shorten: () => undefined,
-    cut: () => undefined,
-    happened: (event) => ({
-      kind: "missionEvent" as const,
-      day: flight.dayOf(event),
-      eventId: event.id,
-    }),
   };
   return flight;
 }
