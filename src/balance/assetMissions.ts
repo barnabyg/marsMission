@@ -45,8 +45,18 @@ export function researchActivity(
     })[0];
 }
 
-/** The site to land at: a new one before one already landed at, a surveyed one before a riskier one, then the most Science. */
-function landingSiteFor(view: ProgramView, playStyle: PlayStyle) {
+/**
+ * The site to land at: a new one before one already landed at, a surveyed one before a riskier one, then the most
+ * Science. A Mars lab goes where its Benefit tag says it would add most, if it would add anything.
+ */
+function landingSiteFor(
+  view: ProgramView,
+  playStyle: PlayStyle,
+  asset?: ProgramView["assets"][number],
+) {
+  const besideRovers = asset?.grantImpact?.landingSiteName;
+  const labSite = view.landingSites.find(({ name }) => name === besideRovers);
+  if (labSite) return labSite;
   return view.landingSites
     .filter(({ surveyed }) => surveyed || !playStyle.onlySurveyedSites)
     .toSorted(
@@ -93,7 +103,9 @@ function missionsForAsset(
     )
     .toSorted((first, second) => first.costMillions - second.costMillions)[0];
   if (!vehicle) return [];
-  const site = asset.landsAtSite ? landingSiteFor(view, playStyle) : undefined;
+  const site = asset.landsAtSite
+    ? landingSiteFor(view, playStyle, asset)
+    : undefined;
   if (asset.landsAtSite && !site) return [];
 
   const mission: PlannedMission = {

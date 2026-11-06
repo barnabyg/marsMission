@@ -1,5 +1,9 @@
 import { parseCatalogue, type CatalogueFiles } from "../catalogue/catalogue";
-import { createSimulation, formatPropellant } from "../simulation/simulation";
+import {
+  createSimulation,
+  formatMoney,
+  formatPropellant,
+} from "../simulation/simulation";
 import { playProgram, type TurnRecord } from "./playProgram";
 import type { Strategy } from "./strategy";
 import { strategies as allStrategies } from "./strategies";
@@ -361,6 +365,23 @@ function healthSavedByHabitats(plays: Play[]): string[] {
     : [];
 }
 
+/** What Mars labs added to Research Grants per Program, or nothing for a strategy that never lands one beside them. */
+function grantsAddedByLabs(plays: Play[]): string[] {
+  const added = plays
+    .flat()
+    .reduce(
+      (total, { grantsAddedByLabsMillions }) =>
+        total + grantsAddedByLabsMillions,
+      0,
+    );
+  // Left out with none, so that strategies that never land a Mars lab report as they did before Mars labs.
+  return added > 0
+    ? [
+        `Research Grants per Program that Mars labs added: ${formatMoney(Math.round(added / plays.length))}`,
+      ]
+    : [];
+}
+
 function howToRead(programs: number): string[] {
   return [
     `Programs per strategy: ${programs} (seeds 1 to ${programs}). Each plays up to ${turnHorizon} Turns.`,
@@ -439,6 +460,7 @@ export function balanceReport(
       researchScience(plays),
       ...ascentPropellant(plays),
       ...healthSavedByHabitats(plays),
+      ...grantsAddedByLabs(plays),
     );
   }
   return `${lines.join("\n")}\n`;

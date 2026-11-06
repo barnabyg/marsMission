@@ -1,4 +1,4 @@
-import type { ProgramView } from "../simulation/simulation";
+import { canFly, type ProgramView } from "../simulation/simulation";
 import type { CrewStyle } from "./crewPlay";
 import { surveyorInService, surveyThenLand } from "./playStyle";
 import type { PlayStyle } from "./playStyleOptions";
@@ -87,6 +87,30 @@ export const relayBesideRovers: PlayStyle = {
 
 /** As relayBesideRovers, keeping more Assets, so that one Mission a Turn can hold it back once it is rich. */
 export const bigProgram: PlayStyle = { ...relayBesideRovers, assetLimit: 6 };
+
+/**
+ * Whether it is rich and a Mars lab that can fly would add money this Turn, as its Benefit tag says, so that one is
+ * worth landing.
+ */
+const labWanted = (view: ProgramView) =>
+  view.moneyMillions >= 5000 &&
+  view.assets.some(
+    (asset) =>
+      canFly(asset) && (asset.grantImpact?.extraGrantMillions ?? 0) > 0,
+  );
+
+/**
+ * As bigProgram, landing a Mars lab with its longest Service Life before anything else once rich, whenever one would
+ * add money, where it would add most.
+ */
+export const labBesideRovers: PlayStyle = {
+  ...bigProgram,
+  longestServiceLife: ["rover", "lab"],
+  order: (view) =>
+    labWanted(view)
+      ? ["lab", ...bigProgram.order(view)]
+      : bigProgram.order(view),
+};
 
 /** As bigProgram, developing the Meridian Colossus once rich and filling it once it is built. */
 export const colossusWhenRich: PlayStyle = {

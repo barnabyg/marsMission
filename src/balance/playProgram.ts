@@ -14,6 +14,7 @@ import {
 import { crewProblems } from "./invalidCrew";
 import { habitatProblems } from "./invalidHabitats";
 import { homecomingProblems } from "./invalidHomecomings";
+import { labProblems } from "./invalidLabs";
 import { propellantProblems } from "./invalidPropellant";
 import { invalidStates, timelineMissionEventProblems } from "./invalidStates";
 import type { PlanningTools, Strategy } from "./strategy";
@@ -62,6 +63,8 @@ export interface TurnRecord {
   ascentPropellantKg: number;
   /** The Health habitats saved this Turn, for every Crew member together. */
   healthSavedByHabitats: number;
+  /** What Mars labs added to Research Grants this Turn, in millions, for everything they raised together. */
+  grantsAddedByLabsMillions: number;
 }
 
 /** What a strategy may ask about the Program it is planning for, which it never sees itself. */
@@ -139,6 +142,10 @@ function recordOf(
     ),
     healthSavedByHabitats: summary.healthLost.reduce(
       (total, { savedByHabitat = 0 }) => total + savedByHabitat,
+      0,
+    ),
+    grantsAddedByLabsMillions: summary.researchGrants.reduce(
+      (total, { benefit }) => total + (benefit?.millions ?? 0),
       0,
     ),
   };
@@ -247,6 +254,7 @@ export function playProgram(
       ...homecomingProblems(view, result.summary, after),
       ...propellantProblems(view, result.summary, after),
       ...habitatProblems(view, result.summary, after),
+      ...labProblems(view, result.summary, after),
       ...timelineMissionEventProblems(result.timeline, result.summary),
     ];
     if (invalid.length > 0) throw fail(invalid);

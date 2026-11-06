@@ -8,6 +8,7 @@ import {
   crewBesideHabitat,
   crewRoundTrip,
   fuelPlantWhenRich,
+  labBesideRovers,
 } from "./styleParts";
 
 /**
@@ -19,6 +20,11 @@ export const bigProgramStrategies: Strategy[] = [
     "big Program: one Asset per Mission",
     "As steady: relay beside rovers, keeping up to six Assets, and keeping to what is Flight-proven: one Asset per Mission.",
     bigProgram,
+  ),
+  playStyle(
+    "big Program: land a Mars lab beside rovers",
+    "As big Program: one Asset per Mission, also landing Curie Station, with its longest Service Life, before anything else whenever it has the money for several rovers and its Benefit tag says it would add money this Turn, at the Landing Site where it would add most, so that it raises the Research Grants of the rovers there.",
+    labBesideRovers,
   ),
   playStyle(
     "big Program: fill the Meridian Heavy when rich",
