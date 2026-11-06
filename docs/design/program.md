@@ -6,7 +6,7 @@ Part of the [game design](../game-design.md), whose Status says which of these r
 
 - A Program is open-ended. In practice it winds down when the player runs out of worthwhile things to build or do.
 - A Program ends when the player restarts, which starts a new Program straight away, or when Public Support falls below the Cancellation Level and it is cancelled, after which a Program summary shows total Science and the Milestones achieved.
-- A late-game goal is to build up enough that the Program carries on indefinitely, producing enough money and Public Support with little input from the player.
+- A late-game goal is to build up enough that the Program carries on indefinitely, producing enough money and Public Support with little input from the player. The balance runs count a Program as keeping itself going from the first Turn from which its Research Grants and base funding pay for everything it spends, Missions, Development and Upkeep, to every later Turn, so that it never again needs money it had saved or a Funding Threshold, over at least three Turns in which it launches at least one Mission and isn't cancelled.
 - At most one Mission is launched per Turn, as a single journey. This keeps Mission Mode buildable.
 - A Mission ends when it has delivered its Assets and Crew, or has failed. After that they operate at Mars on their own, so Mission Mode shows the Turn's Mission plus everything already operating.
 - If assembling or refuelling in Earth orbit needs several launches, those launches and Rendezvous are Mission Events within the one Mission.
