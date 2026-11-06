@@ -4,6 +4,7 @@ import { describeMakes, makesPerTurn } from "./ascentPropellant";
 import { describeHabitat, habitatBenefit } from "./habitats";
 import { benefitImpact } from "./benefitImpact";
 import { describeBenefit } from "./benefits";
+import { grantImpact } from "./marsLabs";
 import { crewAtMarsView, crewedMissionView } from "./crewView";
 import { needingDevelopment, plannedDevelopment } from "./development";
 import { plannedActivity, surfaceRaise } from "./missionPreviews";
@@ -138,18 +139,20 @@ export function programView(
           : asset.habitat
             ? describeHabitat(asset.habitat)
             : null,
-      benefitImpact: asset.benefit
-        ? benefitImpact(
-            catalogue,
-            rules,
-            program,
-            asset.benefit,
-            surfaceRaise(catalogue, program),
-            surfaceRaise(catalogue, program, [
-              { assetId: asset.id, name: asset.name },
-            ]),
-          )
-        : null,
+      benefitImpact:
+        asset.benefit?.raises === "surfaceResearch"
+          ? benefitImpact(
+              catalogue,
+              rules,
+              program,
+              asset.benefit,
+              surfaceRaise(catalogue, program),
+              surfaceRaise(catalogue, program, [
+                { assetId: asset.id, name: asset.name },
+              ]),
+            )
+          : null,
+      grantImpact: grantImpact(catalogue, rules, program, asset),
       makes: makesPerTurn(catalogue, asset),
       habitat: habitatBenefit(catalogue, asset),
     })),

@@ -103,6 +103,50 @@ export function largestRaise(
   return { percent, givenBy: [...new Set(givenBy)] };
 }
 
+/** Who earns research whose Research Grant a Mars lab can raise: an Asset of a kind, or the Crew. */
+export type GrantEarner = { assetKind: string } | "crew";
+
+type LabBenefit = Extract<Benefit, { raises: "siteResearchGrants" }>;
+
+/** The Benefit an Asset gives if it is a Mars lab, raising Research Grants at its Landing Site. */
+export function labBenefitOf(
+  catalogue: Catalogue,
+  assetId: string,
+): LabBenefit | undefined {
+  const benefit = benefitOf(catalogue, assetId);
+  return benefit?.raises === "siteResearchGrants" ? benefit : undefined;
+}
+
+/** Whether a Mars lab's Benefit raises the Research Grants of this earner. */
+export const raisesGrantsFor = (
+  benefit: LabBenefit | undefined,
+  earner: GrantEarner,
+): boolean =>
+  benefit !== undefined &&
+  (earner === "crew"
+    ? benefit.crew
+    : benefit.assetKinds.includes(earner.assetKind));
+
+/**
+ * The stretches of the Turn on which Mars labs operating at this Landing Site raise the Research Grants of this
+ * earner there, each with the largest percentage given on its days, as Benefits that raise the same thing don't add
+ * up. There are none away from a Landing Site.
+ */
+export function grantRaisedStretches(
+  catalogue: Catalogue,
+  inService: AssetInService[],
+  landingSiteId: string | null,
+  earner: GrantEarner,
+): Stretch[] {
+  if (landingSiteId === null) return [];
+  const labs = inService.filter(
+    ({ asset }) =>
+      asset.landingSiteId === landingSiteId &&
+      raisesGrantsFor(labBenefitOf(catalogue, asset.assetId), earner),
+  );
+  return raisedStretches(catalogue, labs, "siteResearchGrants");
+}
+
 /** "rovers and Crew": the kinds of Asset, and the Crew if any, whose Research Grants a Benefit raises. */
 function grantsRaisedFor(assetKinds: string[], crew: boolean): string {
   const raised = [

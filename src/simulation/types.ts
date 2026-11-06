@@ -94,6 +94,20 @@ export interface BenefitImpact {
   alreadyGivenBy: string[];
 }
 
+/**
+ * What a Mars lab would add this Turn, at the Landing Site where it would add the most: how many Assets and Crew there
+ * earn a Research Grant it raises, as the Turn starts, and the extra money over a whole Turn. If labs already there
+ * raise as much, they are named in alreadyGivenBy and it adds nothing. The site is null if nothing at any Landing Site
+ * earns a grant it raises.
+ */
+export interface GrantImpact {
+  landingSiteName: string | null;
+  assets: number;
+  crew: number;
+  extraGrantMillions: number;
+  alreadyGivenBy: string[];
+}
+
 /** A place at Mars where Crew operate: Mars orbit, or a Landing Site. */
 export type PlaceAtMars =
   { kind: "marsOrbit" } | { kind: "landingSite"; landingSiteId: string };
@@ -235,6 +249,8 @@ export interface ProgramView {
     benefit: string | null;
     /** What its Benefit would add to what is on the surface as the Turn starts, or null if it gives no Benefit. */
     benefitImpact: BenefitImpact | null;
+    /** What its Benefit would add to the Research Grants at a Landing Site this Turn, or null if it isn't a Mars lab. */
+    grantImpact: GrantImpact | null;
     /** What it makes at its Landing Site over a whole Turn of operating there, or null if it makes nothing. */
     makes: { ascentPropellantKgPerTurn: number } | null;
     /**

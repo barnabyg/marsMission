@@ -79,10 +79,11 @@ function whatSheltering(
   crewAtStake: { crew: CrewAtWork; stays: CrewStay[] }[],
   { fromDay, toDay }: DustStorm,
   raised: Stretch[],
+  labs: AssetInService[],
 ): string {
   const crewGiven = crewAtStake.map(({ crew, stays }) => {
     const earned = (group: CrewAtWork) =>
-      crewResearch(catalogue, rules, group, raised)[0];
+      crewResearch(catalogue, rules, group, raised, labs)[0];
     const full = earned(crew);
     const less = earned(sheltering(crew, stays, { fromDay, toDay }));
     return {
@@ -94,12 +95,13 @@ function whatSheltering(
     };
   });
   const assetsGiven = atStake.map((stay) => {
-    const full = earningsOfStay(catalogue, rules, stay, raised).earned;
+    const full = earningsOfStay(catalogue, rules, stay, raised, labs).earned;
     const less = earningsOfStay(
       catalogue,
       rules,
       { ...stay, shelter: { fromDay, toDay } },
       raised,
+      labs,
     ).earned;
     return {
       science: full.science - less.science,
@@ -241,7 +243,7 @@ export function resolveDustStorms(
               answer: "shelter",
               label: "Shelter",
               riskBand: null,
-              description: `Sheltering keeps ${names.join(", ")} safe, but nothing there earns Ongoing Research for the storm's ${days} days. That gives up ${whatSheltering(catalogue, rules, atStake, crewAtStake, storm, raised)}.`,
+              description: `Sheltering keeps ${names.join(", ")} safe, but nothing there earns Ongoing Research for the storm's ${days} days. That gives up ${whatSheltering(catalogue, rules, atStake, crewAtStake, storm, raised, inService)}.`,
             },
             {
               answer: "carryOn",

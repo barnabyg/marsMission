@@ -30,6 +30,20 @@ export interface OngoingResearchEarned {
   };
 }
 
+/** The Research Grant one Asset's, or one place's Crew's, Ongoing Research paid during a Turn. */
+export interface ResearchGrantPaid {
+  name: string;
+  millions: number;
+  /** What a Mars lab's Benefit added to it, which millions includes. Left out if no lab raised any of its days. */
+  benefit?: {
+    /** The Assets that gave the Benefit. */
+    givenBy: string[];
+    /** How many of its days were raised. */
+    days: number;
+    millions: number;
+  };
+}
+
 /** What changed over a Turn. */
 export interface TurnSummary {
   missionCostMillions: number;
@@ -119,7 +133,7 @@ export interface TurnSummary {
   ascentPropellant: AscentPropellantMade[];
   fundingPayouts: { publicSupport: number; payoutMillions: number }[];
   /** What each Asset's Ongoing Research paid in Research Grants, leaving out any that came to nothing. moneyEndMillions includes it. */
-  researchGrants: { name: string; millions: number }[];
+  researchGrants: ResearchGrantPaid[];
   researchGrantMillions: number;
   /** What the Program's backers paid as the Turn ended, for its Public Support as the Turn started. */
   baseFundingMillions: number;
