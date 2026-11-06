@@ -27,7 +27,7 @@ Part of the [game design](../game-design.md), whose Status says which of these r
 - Planning Mode shows the ascent propellant at each Landing Site that has any, beside what is operating at Mars, also once nothing there is operating, and on the Landing Site step for the site chosen. The fuel plant's card has a Benefit tag with the propellant it would make over a whole Turn at Mars, and its tooltip says what it makes and where. The figures are shown in tonnes to one decimal place.
 - The Turn summary reports, for each Landing Site where propellant was made or used, which fuel plants made it and how much, how much Mars ascent used, and how much the site has now.
 - The Program saves the ascent propellant at each Landing Site. A save from before fuel plants upgrades with none anywhere.
-- Mission Mode shows a fuel plant as a lander in each view, travelling in an aeroshell and standing still on the surface, until it has a model of its own, and its card's picture is drawn from that lander model.
+- Mission Mode shows a fuel plant with a model of its own, travelling in an aeroshell and standing still on the surface: a processing unit on a platform with two propellant tanks, a radiator and a solar panel. Its card's picture is drawn from that model.
 - A spacecraft that can make the round trip costs more than a one-way one.
 
 ## Habitat
@@ -40,7 +40,7 @@ Part of the [game design](../game-design.md), whose Status says which of these r
 - The habitat's card has a Benefit tag with how many more days a Crew member landing beside it, with full Health and no Protection, would last at Mars before their Health runs out, and its tooltip says what it does for the Crew there and how many Supplies it holds. Operating at Mars lists the Supplies held in habitats at each Landing Site that has any.
 - The Turn summary says how much Health living in a habitat saved each Crew member: how much more time at Mars would have taken over the same days with no habitat, after what Protection saved.
 - The Program saves the Supplies held in habitats at each Landing Site. A save from before habitats upgrades with none anywhere.
-- Mission Mode shows a habitat as a lander in each view, travelling in an aeroshell and standing still on the surface, until it has a model of its own, and its card's picture is drawn from that lander model. Its name leaves out the word Habitat, a game term, which Asset names don't explain with a tooltip.
+- Mission Mode shows a habitat with a model of its own, travelling in an aeroshell and standing still on the surface: a long ribbed module on a frame with an airlock and solar panels. Its card's picture is drawn from that model. Its name leaves out the word Habitat, a game term, which Asset names don't explain with a tooltip.
 
 ## Mars lab
 
@@ -51,7 +51,7 @@ Part of the [game design](../game-design.md), whose Status says which of these r
 - The Mars lab's card has a Benefit tag with the money it would add over a whole Turn at the Landing Site where it would add the most, going by the rovers and Crew there as the Turn starts, after what any lab already there raises. Its tooltip names that site and how many Assets and Crew it would raise there, or why it would add nothing: nothing it raises at a Landing Site earns a Research Grant, or a lab there already gives as much. The figure is for a whole Turn, so it doesn't allow for the lab landing partway through, or for what arrives on the same Mission.
 - The Turn summary says, for each Research Grant a Mars lab raised, on how many days it did, which labs gave the Benefit and how much they added. The balance report says how much Mars labs added to Research Grants per Program.
 - Nothing about Mars labs is saved, as for other Benefits that raise something.
-- Mission Mode shows a Mars lab as a lander in each view, travelling in an aeroshell and standing still on the surface, until it has a model of its own, and its card's picture is drawn from that lander model. Its name leaves out the words Mars lab, a game term, which Asset names don't explain with a tooltip.
+- Mission Mode shows a Mars lab with a model of its own, travelling in an aeroshell and standing still on the surface: a low building with a glovebox window, a sample arm and a roof of solar panels. Its card's picture is drawn from that model. Its name leaves out the words Mars lab, a game term, which Asset names don't explain with a tooltip.
 
 ## Sample caching and sample return
 
@@ -64,7 +64,7 @@ Part of the [game design](../game-design.md), whose Status says which of these r
 - The ascent vehicle flies Mars ascent and the rendezvous, and the orbiter then flies trans-Earth injection and Earth entry, each Mission Event rolled with the Reliability bought for it and its Contingency's Decision Point offered as for any Mission Event. One that fails for good loses the samples, with its Public Support, and what was flying them then: the ascent vehicle up to the rendezvous, leaving the orbiter waiting in Mars orbit for a later Turn, and the orbiter from trans-Earth injection on. Whatever comes of it, each leaves Mars for good on the day it flies its first Mission Event, so neither operates at Mars after the journey.
 - Samples that reach Earth earn the Science the data files give for each, and the first are the First samples returned Milestone ([Science](science-and-money.md)). Crew coming home from a Landing Site bring that site's samples too ([Crew](crew.md)).
 - At most one journey home flies each Turn, of Crew or of samples: the plan names one in the same choice, so choosing one in Planning Mode replaces any other. The two share Mission Events, and a Turn's rolls and Decision Points are named by Mission Event, so two in one Turn would roll alike.
-- Mission Mode shows sample return in its existing views: the ascent vehicle and the orbiter leave on the day they fly, the events column lists the journey's Mission Events, any Decision Point and the samples reaching Earth, and the ascent vehicle travels as a lander and the orbiter as an orbiter, with cards drawn from those models. Its own visuals are a separate ticket.
+- Mission Mode shows sample return in its views as it does Crew's journey home ([Mission Mode](mission-mode.md)): the ascent vehicle's rocket lifts off its platform, which stays standing, docks with the orbiter in the spacecraft view, and the orbiter brings the samples home through the solar system to Earth entry and a splashdown. The events column lists the journey's Mission Events, any Decision Point and the samples reaching Earth, each with a picture of its own. The ascent vehicle, a rocket on a platform, and the orbiter, with the samples' capsule on its front, have models of their own, from which their cards' pictures are drawn.
 - The Program saves the samples at each Landing Site and what each ascent vehicle's and orbiter's Mission bought for the journey home. A save from before samples upgrades with none anywhere and nothing bought.
 
 ## Landing Sites
