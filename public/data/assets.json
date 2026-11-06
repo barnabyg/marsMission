@@ -184,7 +184,7 @@
   },
   {
     "id": "haven-habitat",
-    "name": "Haven Habitat",
+    "name": "Haven Module",
     "kind": "habitat",
     "costMillions": 1000,
     "upkeepMillionsPerTurn": 20,
