@@ -7,6 +7,7 @@ import {
   crewLanding,
   crewBesideHabitat,
   crewRoundTrip,
+  crewFetched,
   fuelPlantWhenRich,
   crewHomeFromFuelPlant,
   labBesideRovers,
@@ -50,6 +51,11 @@ export const bigProgramStrategies: Strategy[] = [
     "big Program: fly Crew on a round trip and bring them home",
     "As big Program: develop the Meridian Colossus and fly Crew when rich, but its Crew go on a round trip, with an Earth return stage, the most Protection that fits before the largest Crew, and the best Reliability it can afford on the way home too, and come home on the first Turn they can.",
     { ...colossusWhenRich, fliesCrew: crewRoundTrip },
+  ),
+  playStyle(
+    "big Program: fly Crew one way, fetch them with a return vehicle and bring them home",
+    "As big Program: develop the Meridian Colossus and fly Crew when rich, with the most Protection that fits before the largest Crew, but once Crew at Mars have no way home, it sends a Homeward return vehicle for them, aboard its next Crewed Mission if one fits, swapping its Crew for them, and otherwise on its own, before any Crewed Mission without one, with the best Reliability it can afford on the way home too. The Crew it fetched come home on the first Turn they can.",
+    { ...colossusWhenRich, fliesCrew: crewFetched },
   ),
   playStyle(
     "big Program: develop the Meridian Colossus and land Crew when rich",

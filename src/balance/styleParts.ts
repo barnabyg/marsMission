@@ -141,6 +141,8 @@ export const fuelPlantWhenRich: PlayStyle = {
 export const crewInOrbit: CrewStyle = { reliability: true };
 /** The same Crew on a round trip to Mars orbit, brought home on the first Turn it can. */
 export const crewRoundTrip: CrewStyle = { ...crewInOrbit, roundTrip: true };
+/** The same Crew sent one way, and fetched with a return vehicle once they are at Mars, then brought home. */
+export const crewFetched: CrewStyle = { ...crewInOrbit, fetches: true };
 /** The same Crew landing at a surveyed Landing Site once there is one. */
 export const crewLanding: CrewStyle = { ...crewInOrbit, lands: true };
 /** The same Crew on a round trip landing beside a fuel plant, once one operates, and brought home through Mars ascent. */

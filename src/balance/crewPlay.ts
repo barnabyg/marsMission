@@ -32,6 +32,13 @@ export interface CrewStyle {
    */
   besideFuelPlant?: boolean;
   /**
+   * Fetches Crew at Mars who have no way home with a return vehicle, in Mars orbit before a Landing Site: aboard a
+   * Crewed Mission whenever one fits, swapping its Crew for them, and otherwise on its own, before any Crewed Mission
+   * without one. It brings them home on the first Turn it can, and flies the most Protection that fits before the
+   * largest Crew, so that they live to be fetched.
+   */
+  fetches?: boolean;
+  /**
    * Lands them beside a habitat: at a surveyed Landing Site where one operates, if there is one, and otherwise with a
    * habitat aboard their Mission whenever it fits and can be afforded.
    */
@@ -51,14 +58,43 @@ const habitatAt = (view: ProgramView, siteId: string) =>
  */
 export function wayHome(
   view: ProgramView,
-  { roundTrip = false }: CrewStyle,
+  { roundTrip = false, fetches = false }: CrewStyle,
 ): string | undefined {
-  return roundTrip
+  return roundTrip || fetches
     ? view.crew
         .flatMap(({ waysHome }) => waysHome)
         .find(({ reason }) => reason === null)?.key
     : undefined;
 }
+
+/**
+ * The place at Mars, by its key, whose Crew with no way home a return vehicle would fetch: Mars orbit first, then each
+ * Landing Site, leaving out any with more of them than it has room for. None if there are none.
+ */
+function placeToFetch(view: ProgramView): string | undefined {
+  const { crewRoom } = view.crewedMission.returnVehicle;
+  return view.crew
+    .filter(
+      ({ withoutWayHome }) =>
+        withoutWayHome.length > 0 && withoutWayHome.length <= crewRoom,
+    )
+    .toSorted(
+      (first, second) =>
+        Number(first.landingSiteId !== null) -
+        Number(second.landingSiteId !== null),
+    )[0]?.key;
+}
+
+/** The cheapest Flight-proven Launch Vehicle that can carry this much, if any can. */
+const cheapestCarrying = (view: ProgramView, massTonnes: number) =>
+  view.launchVehicles
+    .filter(
+      (candidate) =>
+        // Crew wait for a Launch Vehicle that has flown, as a careful player's would.
+        candidate.technologyReadiness === "flight-proven" &&
+        candidate.capacityTonnes >= massTonnes,
+    )
+    .toSorted((first, second) => first.costMillions - second.costMillions)[0];
 
 /** A known Landing Site where a fuel plant operates with Service Life left, surveyed first, if there is one. */
 function fuelPlantSite(view: ProgramView): string | undefined {
@@ -117,8 +153,10 @@ export function crewedMissions(
     roundTrip = false,
     habitat = false,
     besideFuelPlant = false,
+    fetches = false,
   }: CrewStyle,
 ): PlannedMission[] {
+  const fetchFrom = fetches ? placeToFetch(view) : undefined;
   if (besideFuelPlant && fuelPlantSite(view) === undefined) return [];
   const landingSiteId = besideFuelPlant
     ? fuelPlantSite(view)
@@ -144,31 +182,31 @@ export function crewedMissions(
     .flatMap((choice) =>
       protection.map((shielding) => ({ ...choice, shielding })),
     );
-  // Crew coming home face radiation on the way back too, so a round trip puts Protection before Crew size.
-  const ordered = roundTrip
-    ? choices.toSorted(
-        (first, second) =>
-          protection.indexOf(first.shielding) -
-          protection.indexOf(second.shielding),
-      )
-    : choices;
-  const missionsWith = (aboard: ProgramView["assets"][number] | undefined) =>
-    ordered.flatMap(({ size: { crew, massTonnes }, carried, shielding }) => {
-      const vehicle = view.launchVehicles
-        .filter(
-          (candidate) =>
-            // Crew wait for a Launch Vehicle that has flown, as a careful player's would.
-            candidate.technologyReadiness === "flight-proven" &&
-            candidate.capacityTonnes >=
-              massTonnes +
-                carried.massTonnes +
-                shielding.massTonnes +
-                returnStage +
-                (aboard?.massTonnes ?? 0),
+  // Crew coming home face radiation on the way back too, and fetched Crew a long wait first, so a strategy that brings
+  // them home puts Protection before Crew size.
+  const ordered =
+    roundTrip || fetches
+      ? choices.toSorted(
+          (first, second) =>
+            protection.indexOf(first.shielding) -
+            protection.indexOf(second.shielding),
         )
-        .toSorted(
-          (first, second) => first.costMillions - second.costMillions,
-        )[0];
+      : choices;
+  const returnVehicle = view.crewedMission.returnVehicle.massTonnes;
+  const missionsWith = (
+    aboard: ProgramView["assets"][number] | undefined,
+    forCrewAt?: string,
+  ) =>
+    ordered.flatMap(({ size: { crew, massTonnes }, carried, shielding }) => {
+      const vehicle = cheapestCarrying(
+        view,
+        massTonnes +
+          carried.massTonnes +
+          shielding.massTonnes +
+          returnStage +
+          (forCrewAt === undefined ? 0 : returnVehicle) +
+          (aboard?.massTonnes ?? 0),
+      );
       if (!vehicle) return [];
       const mission = {
         launchVehicleId: vehicle.id,
@@ -181,6 +219,7 @@ export function crewedMissions(
           ...(roundTrip ? { roundTrip } : {}),
         },
         ...(landingSiteId === undefined ? {} : { landingSiteId }),
+        ...(forCrewAt === undefined ? {} : { returnVehicle: { forCrewAt } }),
       };
       const planned = tools.previewCrew(mission);
       if (!planned) return [];
@@ -196,9 +235,38 @@ export function crewedMissions(
       return reliability ? [mostReliable(chosen, tools), chosen] : [chosen];
     });
   return [
+    ...(fetchFrom === undefined
+      ? []
+      : [
+          ...missionsWith(undefined, fetchFrom),
+          ...returnVehicleAlone(view, tools, fetchFrom, reliability),
+        ]),
     ...(habitatAboard ? missionsWith(habitatAboard) : []),
     ...missionsWith(undefined),
   ];
+}
+
+/**
+ * A return vehicle on its own, for the Crew with no way home in this place, on the cheapest Flight-proven Launch
+ * Vehicle that can carry it, with the best Reliability first if the CrewStyle buys it.
+ */
+function returnVehicleAlone(
+  view: ProgramView,
+  tools: PlanningTools,
+  forCrewAt: string,
+  reliability: boolean,
+): PlannedMission[] {
+  const vehicle = cheapestCarrying(
+    view,
+    view.crewedMission.returnVehicle.massTonnes,
+  );
+  if (!vehicle) return [];
+  const mission = {
+    launchVehicleId: vehicle.id,
+    assetIds: [],
+    returnVehicle: { forCrewAt },
+  };
+  return reliability ? [mostReliable(mission, tools), mission] : [mission];
 }
 
 /** The Mission with the dearest Reliability on each of its Mission Events. */

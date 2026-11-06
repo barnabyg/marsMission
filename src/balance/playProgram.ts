@@ -12,6 +12,7 @@ import {
   type TurnSummary,
 } from "../simulation/simulation";
 import { crewProblems } from "./invalidCrew";
+import { fetchingProblems } from "./invalidFetching";
 import { habitatProblems } from "./invalidHabitats";
 import { homecomingProblems } from "./invalidHomecomings";
 import { labProblems } from "./invalidLabs";
@@ -258,6 +259,7 @@ export function playProgram(
       ...invalidStates(view, result.summary, after),
       ...crewProblems(view, result.summary, after),
       ...homecomingProblems(view, result.summary, after),
+      ...fetchingProblems(view, result.summary, after),
       ...propellantProblems(view, result.summary, after),
       ...habitatProblems(view, result.summary, after),
       ...labProblems(view, result.summary, after),
