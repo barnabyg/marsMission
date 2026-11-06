@@ -1,5 +1,5 @@
 import { parseCatalogue, type CatalogueFiles } from "../catalogue/catalogue";
-import { createSimulation } from "../simulation/simulation";
+import { createSimulation, formatPropellant } from "../simulation/simulation";
 import { playProgram, type TurnRecord } from "./playProgram";
 import type { Strategy } from "./strategy";
 import { strategies as allStrategies } from "./strategies";
@@ -335,6 +335,19 @@ function researchScience(plays: Play[]): string {
   return `Science per Program from Ongoing Research: ${parts.join(", ") || "none"}${benefits}`;
 }
 
+/** The ascent propellant made per Program, or nothing for a strategy that never lands a fuel plant. */
+function ascentPropellant(plays: Play[]): string[] {
+  const madeKg = plays
+    .flat()
+    .reduce((total, { ascentPropellantKg }) => total + ascentPropellantKg, 0);
+  // Left out with none, so that strategies that never land a fuel plant report as they did before fuel plants.
+  return madeKg > 0
+    ? [
+        `Ascent propellant per Program made by fuel plants: ${formatPropellant(madeKg / plays.length)}`,
+      ]
+    : [];
+}
+
 function howToRead(programs: number): string[] {
   return [
     `Programs per strategy: ${programs} (seeds 1 to ${programs}). Each plays up to ${turnHorizon} Turns.`,
@@ -411,6 +424,7 @@ export function balanceReport(
       ...decisionPoints(plays),
       "",
       researchScience(plays),
+      ...ascentPropellant(plays),
     );
   }
   return `${lines.join("\n")}\n`;

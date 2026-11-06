@@ -13,6 +13,7 @@ import {
 } from "../simulation/simulation";
 import { crewProblems } from "./invalidCrew";
 import { homecomingProblems } from "./invalidHomecomings";
+import { propellantProblems } from "./invalidPropellant";
 import { invalidStates, timelineMissionEventProblems } from "./invalidStates";
 import type { PlanningTools, Strategy } from "./strategy";
 
@@ -56,6 +57,8 @@ export interface TurnRecord {
   crewHome: number;
   /** How many Crew are at Mars as the Turn ends. */
   crewAtMars: number;
+  /** The ascent propellant fuel plants made this Turn, in kilograms, at every Landing Site together. */
+  ascentPropellantKg: number;
 }
 
 /** What a strategy may ask about the Program it is planning for, which it never sees itself. */
@@ -127,6 +130,10 @@ function recordOf(
     crewLost: crewLostIn(summary),
     crewHome: summary.crewHome.length,
     crewAtMars: summary.crew.length,
+    ascentPropellantKg: summary.ascentPropellant.reduce(
+      (total, { madeKg }) => total + madeKg,
+      0,
+    ),
   };
 }
 
@@ -231,6 +238,7 @@ export function playProgram(
       ...invalidStates(view, result.summary, after),
       ...crewProblems(view, result.summary, after),
       ...homecomingProblems(view, result.summary, after),
+      ...propellantProblems(view, result.summary, after),
       ...timelineMissionEventProblems(result.timeline, result.summary),
     ];
     if (invalid.length > 0) throw fail(invalid);

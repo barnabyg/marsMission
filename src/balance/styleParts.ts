@@ -97,6 +97,22 @@ export const colossusWhenRich: PlayStyle = {
   fillsWhile: (view) => view.moneyMillions >= 5000,
 };
 
+/** Whether it is rich and has no fuel plant operating with Service Life left, so that one would be worth landing. */
+const fuelPlantWanted = (view: ProgramView) =>
+  view.moneyMillions >= 5000 &&
+  !view.operatingAssets.some(
+    ({ kind, daysLeft }) => kind === "fuel-plant" && daysLeft > 0,
+  );
+
+/** As colossusWhenRich, landing a fuel plant before anything else once rich, while none is operating. */
+export const fuelPlantWhenRich: PlayStyle = {
+  ...colossusWhenRich,
+  order: (view) => [
+    ...(fuelPlantWanted(view) ? ["fuel-plant"] : []),
+    ...colossusWhenRich.order(view),
+  ],
+};
+
 /** Crew sent to Mars orbit with the best Reliability it can afford, as they are worth more than any Asset. */
 export const crewInOrbit: CrewStyle = { reliability: true };
 /** The same Crew on a round trip to Mars orbit, brought home on the first Turn it can. */
