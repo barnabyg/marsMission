@@ -29,6 +29,8 @@ import {
   stagesAfterTurn,
 } from "./earthReturnStages";
 import { returnVehicleArriving, returnVehicleReport } from "./returnVehicles";
+import { afterSamplesLeft, sendSamplesHome } from "./sampleReturn";
+import { sampleJourneySummary, settleSamples } from "./samplesHome";
 import { storeHabitatSupplies } from "./habitats";
 import { flyJourneyHome, type JourneyHome } from "./journeyHome";
 import {
@@ -76,8 +78,8 @@ export function resolveTurn(
   result: TurnResult;
   otherEntries: TimelineEntry[];
   stormDecision: ReturnType<typeof resolveDustStorms>["decision"];
-  /** The Turn's journey home, if one flew, which can stop at a Decision Point of its own. */
-  journeyHome: JourneyHome | null;
+  /** The Turn's journey home, of Crew or of samples, if one flew, which can stop at a Decision Point of its own. */
+  journeyHome: Pick<JourneyHome, "outcome"> | null;
 } {
   const { launchWindowIntervalDays } = catalogue.program;
 
@@ -114,7 +116,16 @@ export function resolveTurn(
     crewThere.atWork,
     answers,
   );
-  const { inService } = dustStorms;
+  const sampleJourney = sendSamplesHome(
+    catalogue,
+    rules,
+    program,
+    plan,
+    dustStorms.inService,
+    answers,
+  );
+  // An ascent vehicle and an Earth return orbiter that flew samples home leave Mars on the day each did.
+  const inService = afterSamplesLeft(dustStorms.inService, sampleJourney);
   // A habitat lost in a dust storm houses its Crew no longer.
   const crewAtWork = rehoused(catalogue, dustStorms.crewAtWork, inService);
   const survey = carryOutSurvey(catalogue, rules, program, inService);
@@ -129,7 +140,12 @@ export function resolveTurn(
       crewLeavingMars(crewAtWork),
       answers,
     );
-  const homeward = journey?.outcome ?? null;
+  const homeward = journey?.outcome ?? sampleJourney?.outcome ?? null;
+  const samples = settleSamples(catalogue, rules, program, inService, {
+    crew: comingHome && journey && { from: comingHome.from, journey },
+    robotic: sampleJourney,
+  });
+  const samplesHome = samples.welcome;
   const propellant = spendAscentPropellant(
     rules,
     made,
@@ -191,10 +207,10 @@ export function resolveTurn(
     {
       start: program.science,
       lumps: [
-        ...[...arrivalAwards, ...welcome.awards].map(({ milestone, day }) => ({
-          day,
-          amount: milestone.science,
-        })),
+        ...[...arrivalAwards, ...welcome.awards, ...samplesHome.awards].map(
+          ({ milestone, day }) => ({ day, amount: milestone.science }),
+        ),
+        ...samplesHome.lumps,
         ...(firstLanding
           ? [{ day: firstLanding.entry.day, amount: firstLanding.site.science }]
           : []),
@@ -206,9 +222,15 @@ export function resolveTurn(
       })),
     },
   );
-  const awards = [...arrivalAwards, ...welcome.awards, ...scienceAwards];
+  const awards = [
+    ...arrivalAwards,
+    ...welcome.awards,
+    ...samplesHome.awards,
+    ...scienceAwards,
+  ];
   const scienceGained =
     sum(awards.map(({ milestone }) => milestone.science)) +
+    samplesHome.science +
     (firstLanding ? firstLanding.site.science : 0) +
     research.science;
   const publicSupportGained =
@@ -270,9 +292,12 @@ export function resolveTurn(
     ),
     ...lostCrew.entries,
     ...welcome.entries,
+    ...samplesHome.entries,
+    ...(sampleJourney?.entries ?? []),
     ...suppliesOut.entries,
     ...arrivalAwards.map(milestoneEntry),
     ...welcome.awards.map(milestoneEntry),
+    ...samplesHome.awards.map(milestoneEntry),
     ...(firstLanding ? [firstLanding.entry] : []),
     ...proven.entries,
     ...scienceAwards.map(milestoneEntry),
@@ -340,6 +365,7 @@ export function resolveTurn(
       earthReturnStages: stages,
       ascentPropellantKg: propellant.ascentPropellantKg,
       habitatSuppliesKg: habitatSupplies.habitatSuppliesKg,
+      samplesAtSites: samples.samplesAtSites,
       status:
         faded.cancellationReason === null
           ? program.status
@@ -401,6 +427,7 @@ export function resolveTurn(
       returnVehicle: fetched.summary,
       journeyHome: journey && {
         crew: journey.crew,
+        samples: samples.withCrew,
         failure: journey.outcome.failedEvent
           ? {
               missionEventName: journey.outcome.failedEvent.name,
@@ -408,9 +435,15 @@ export function resolveTurn(
             }
           : null,
       },
+      samplesCached: samples.cached,
+      samplesHome: samplesHome.summary,
+      sampleJourney: sampleJourneySummary(sampleJourney, homewardLost),
       suppliesRanOut: suppliesOut.summary,
       assetsEnded: inService
-        .filter(({ untilDay, failed }) => untilDay !== null && !failed)
+        .filter(
+          ({ untilDay, failed, leftForHome }) =>
+            untilDay !== null && !failed && leftForHome !== true,
+        )
         .map(({ asset }) => asset.name),
       assetsFailed: inService
         .filter(({ failed }) => failed)
@@ -437,6 +470,6 @@ export function resolveTurn(
     result,
     otherEntries,
     stormDecision: dustStorms.decision,
-    journeyHome: journey,
+    journeyHome: journey ?? sampleJourney,
   };
 }

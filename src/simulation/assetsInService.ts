@@ -10,6 +10,7 @@ import {
   type LandingSite,
   type Rules,
 } from "./rules";
+import { homewardPurchase } from "./earthReturnStages";
 import { isFlightProven } from "./technologyReadiness";
 import type { Program, TurnPlan } from "./types";
 import type {
@@ -30,6 +31,8 @@ export interface AssetInService {
   failed: boolean;
   /** The Landing Site of the dust storm it failed in, if that's how it stopped. */
   failedInStormAt?: string;
+  /** Whether it stopped by leaving Mars, flying samples home, rather than its Service Life ending. */
+  leftForHome?: true;
   /** When it sheltered from a dust storm and so earned nothing, if it did. */
   shelter?: { fromDay: number; toDay: number };
 }
@@ -92,6 +95,16 @@ export function operateAssets(
       reliabilityLevelId: rules.assetReliabilityFor(plan.mission, asset).id,
       activityId: rules.activityFor(plan.mission, asset).id,
       flewUnproven: !isFlightProven(program, asset),
+      // An ascent vehicle or an Earth return orbiter keeps what its Mission bought for sending samples home.
+      ...(asset.sampleReturn
+        ? {
+            homeward: homewardPurchase(
+              rules,
+              plan.mission,
+              rules.sampleReturnEventsOf(asset),
+            ),
+          }
+        : {}),
     },
     fromDay: deliveryDayOf(rules, plan, flown, asset),
   }));
@@ -138,8 +151,10 @@ export function stoppedEntries(
       untilDay,
       failed,
       failedInStormAt,
+      leftForHome,
     }): (AssetEndedEntry | AssetFailedEntry)[] => {
-      if (untilDay === null) return [];
+      // The journey home says when it left.
+      if (untilDay === null || leftForHome) return [];
       const site = rules.landingSiteById(asset.landingSiteId)?.name;
       const place = site ? `at ${site}` : "at Mars";
       if (failed) {

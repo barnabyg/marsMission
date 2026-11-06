@@ -217,7 +217,27 @@ const format11 = format10.extend({
   habitatSuppliesKg: z.record(z.string(), z.number().nonnegative()),
 });
 
-const newestFormat = format11;
+const homewardPurchase = z.strictObject({
+  reliability: z.record(z.string(), z.string()),
+  contingencyIds: z.array(z.string()),
+});
+
+/**
+ * Adds samples: those cached at each Landing Site, by the site's id, and what the Missions of ascent vehicles and Earth
+ * return orbiters bought for the samples' journey home, on each of them. A save from before samples has none anywhere,
+ * and none of its Assets has bought anything for a journey home.
+ */
+const format12 = format11.extend({
+  samplesAtSites: z.record(z.string(), count),
+  operatingAssets: z.array(
+    z.strictObject({
+      ...format7.shape.operatingAssets.element.shape,
+      homeward: homewardPurchase.optional(),
+    }),
+  ),
+});
+
+const newestFormat = format12;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -328,6 +348,13 @@ const formats: readonly SaveFormat[] = [
     upgrade: (old: z.output<typeof format10>): z.output<typeof format11> => ({
       ...old,
       habitatSuppliesKg: {},
+    }),
+  },
+  {
+    schema: format11,
+    upgrade: (old: z.output<typeof format11>): z.output<typeof format12> => ({
+      ...old,
+      samplesAtSites: {},
     }),
   },
   { schema: newestFormat },

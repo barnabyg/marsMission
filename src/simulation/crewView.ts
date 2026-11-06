@@ -54,6 +54,8 @@ export interface CrewAtMars {
     names: string[];
     leavesMarsOn: string;
     homeOn: string;
+    /** The samples they would bring home: those at their Landing Site as the Turn starts, and their own. */
+    samples: number;
     reason: string | null;
   }[];
   /** The Crew here with no way home, such as those who went one way, whom a return vehicle can fetch. */
@@ -119,6 +121,8 @@ function forCrew(
       publicSupport: each.publicSupport * members,
       researchGrantMillions: each.researchGrantMillions * members,
     },
+    // Crew bring samples home of their own, rather than caching them.
+    cachesPerTurn: null,
     ...(raise && each ? { raisedBy: raise } : {}),
   };
 }

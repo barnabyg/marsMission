@@ -7,6 +7,7 @@ import type { PlanCheck } from "./previews";
 import type { PlannedMission, Program, TurnPlan } from "./types";
 import { endedAssetProblems, upkeepFor } from "./upkeep";
 import { journeyHomeProblems } from "./earthReturnStages";
+import { sampleReturnProblems } from "./sampleReturn";
 import { checkReturnVehicle } from "./returnVehicles";
 
 const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
@@ -90,6 +91,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
       ...endedAssetProblems(program, plan),
       ...operatingCrewProblems(catalogue, rules, program, plan),
       ...journeyHomeProblems(catalogue, rules, program, plan),
+      ...sampleReturnProblems(catalogue, rules, program, plan),
       ...mission.problems,
       ...developments.problems,
     ];

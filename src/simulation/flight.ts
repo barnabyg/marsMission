@@ -145,8 +145,11 @@ export interface Flight {
   stillOnBoard: (event: MissionEvent) => Asset[];
   /** The names of the Crew not yet delivered when this Mission Event is due, or on this day if it's a day, and still alive then. */
   crewOnBoard: (when: MissionEvent | number) => string[];
-  /** The name of the return vehicle, if the Mission carries one that hasn't reached Mars orbit when this Mission Event is due. */
-  returnVehicleOnBoard: (event: MissionEvent) => string[];
+  /**
+   * What is on board besides Assets and Crew when this Mission Event is due, by name: a return vehicle that hasn't
+   * reached Mars orbit yet, or, on a journey home of samples, what flies them and the samples themselves.
+   */
+  cargoOnBoard: (event: MissionEvent) => string[];
   /** What the flight has done to a Crew member's Health from launch to this day. */
   healthInFlight: (name: string, toDay: number) => HealthCourse;
   /** The days the Crew have had no Supplies left on board, if they keep flying to the end of the Turn. */
@@ -371,7 +374,7 @@ export function startFlight(
         ? flight.aliveOn(crew, day)
         : [];
     },
-    returnVehicleOnBoard: (event) =>
+    cargoOnBoard: (event) =>
       returnVehicle &&
       returnVehicleDay !== null &&
       returnVehicleDay >= rules.dayOf(event, mission)

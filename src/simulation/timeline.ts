@@ -90,6 +90,14 @@ export interface CrewHomeEntry {
   description: string;
 }
 
+/** Samples have reached Earth, earning Science, or couldn't leave their Landing Site for home. */
+export interface SamplesEntry {
+  kind: "samples";
+  day: number;
+  title: string;
+  description: string;
+}
+
 /** Crew have run out of Supplies, on the way or in one place at Mars, which the events column shows as a failure. */
 export interface SuppliesOutEntry {
   kind: "suppliesOut";
@@ -147,6 +155,7 @@ export type TimelineEntry =
   | ReturnVehicleArrivedEntry
   | CrewLostEntry
   | CrewHomeEntry
+  | SamplesEntry
   | SuppliesOutEntry
   | MissionEventEntry
   | MilestoneEntry

@@ -390,17 +390,48 @@ export function createRules(catalogue: Catalogue) {
   }
 
   /**
-   * The Mission Events of the journey home on a later Turn that a Mission buys Reliability and Contingency for: its own
-   * Crew's on a round trip, or those of the Crew its return vehicle fetches, through Mars ascent if they are at a
-   * Landing Site. A Mission with neither has none.
+   * The Mission Events an ascent vehicle or an Earth return orbiter flies when it sends samples home: Mars ascent and
+   * the rendezvous for an ascent vehicle, and the journey home's for an orbiter, as Crew fly them. Any other Asset flies
+   * none.
    */
-  function homewardEventsFor(mission: PlannedMission | null): MissionEvent[] {
+  function sampleReturnEventsOf(asset: Asset): MissionEvent[] {
+    const { roundTrip } = catalogue.crew;
+    const eventIds =
+      asset.sampleReturn === "ascent"
+        ? roundTrip.ascent.missionEvents
+        : asset.sampleReturn === "earthReturn"
+          ? roundTrip.missionEvents
+          : [];
+    return journeyHomeEvents(true).filter(({ id }) => eventIds.includes(id));
+  }
+
+  /** The Mission Events of the journey home that a Mission's own Crew, or the Crew its return vehicle fetches, fly. */
+  function crewHomewardEventsFor(
+    mission: PlannedMission | null,
+  ): MissionEvent[] {
     if (mission?.crew?.roundTrip) {
       return journeyHomeEvents(mission.crew.landsAtSite === true);
     }
     return mission?.returnVehicle
       ? journeyHomeEvents(isLandingSiteKey(mission.returnVehicle.forCrewAt))
       : [];
+  }
+
+  /**
+   * The Mission Events of a journey home on a later Turn that a Mission buys Reliability and Contingency for: its own
+   * Crew's on a round trip, or those of the Crew its return vehicle fetches, through Mars ascent if they are at a
+   * Landing Site, and those its ascent vehicle and Earth return orbiter fly to send samples home, in the order they
+   * happen. A Mission Event that more than one of them flies is bought once, for them all. A Mission with none of them
+   * has none.
+   */
+  function homewardEventsFor(mission: PlannedMission | null): MissionEvent[] {
+    const flown = new Set([
+      ...crewHomewardEventsFor(mission),
+      ...catalogue.assets
+        .filter(({ id }) => mission?.assetIds.includes(id))
+        .flatMap(sampleReturnEventsOf),
+    ]);
+    return journeyHomeEvents(true).filter((event) => flown.has(event));
   }
 
   return {
@@ -427,6 +458,8 @@ export function createRules(catalogue: Catalogue) {
     missionEventsFor,
     journeyHomeEvents,
     homewardEventsFor,
+    crewHomewardEventsFor,
+    sampleReturnEventsOf,
   };
 }
 

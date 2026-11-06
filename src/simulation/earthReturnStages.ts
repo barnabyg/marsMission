@@ -1,9 +1,12 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { formatPropellant } from "./ascentPropellant";
 import { crewAtMarsOf, crewKeyOf, locationNameOf } from "./crewPlaces";
-import { addDays, type Rules } from "./rules";
+import { addDays, type MissionEvent, type Rules } from "./rules";
+import { isSamplesKey } from "./sampleReturn";
+import { samplesWithCrew } from "./samplesHome";
 import type {
   EarthReturnStage,
+  HomewardPurchase,
   PlaceAtMars,
   PlannedMission,
   Program,
@@ -78,7 +81,8 @@ export function journeyHomeProblems(
   program: Program,
   plan: TurnPlan,
 ): string[] {
-  if (plan.bringHome === undefined) return [];
+  // Samples sent home are checked with the rest of sample return.
+  if (plan.bringHome === undefined || isSamplesKey(plan.bringHome)) return [];
   const coming = stageComingHome(program, plan);
   if (!coming) {
     return [
@@ -103,6 +107,8 @@ export function waysHomeFrom(
   names: string[];
   leavesMarsOn: string;
   homeOn: string;
+  /** The samples they would bring home: those at their Landing Site, and their own, or none from Mars orbit. */
+  samples: number;
   reason: string | null;
 }[] {
   const there = crewAtMarsOf(program).filter(
@@ -122,6 +128,7 @@ export function waysHomeFrom(
             names,
             leavesMarsOn: addDays(program.date, leavesOn),
             homeOn: addDays(program.date, homeOn),
+            samples: samplesWithCrew(catalogue, program, from, names.length),
             reason,
           },
         ]
@@ -139,11 +146,21 @@ export function newStage(
   arrivedOn: string,
   crew: string[],
 ): EarthReturnStage {
-  const homeward = rules.homewardEventsFor(mission);
-  const homewardIds = new Set(homeward.map(({ id }) => id));
   return {
     arrivedOn,
     crew,
+    ...homewardPurchase(rules, mission, rules.crewHomewardEventsFor(mission)),
+  };
+}
+
+/** What a Mission bought for these Mission Events of a journey home on a later Turn: their Reliability and Contingencies. */
+export function homewardPurchase(
+  rules: Rules,
+  mission: PlannedMission | null,
+  homeward: MissionEvent[],
+): HomewardPurchase {
+  const homewardIds = new Set(homeward.map(({ id }) => id));
+  return {
     reliability: Object.fromEntries(
       Object.entries(mission?.reliability ?? {}).filter(([eventId]) =>
         homewardIds.has(eventId),

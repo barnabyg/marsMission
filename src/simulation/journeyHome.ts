@@ -215,7 +215,7 @@ function homewardFlight(
       return day <= homeOn ? flight.aliveOn(crew, day) : [];
     },
     // Its stage is already in Mars orbit.
-    returnVehicleOnBoard: () => [],
+    cargoOnBoard: () => [],
     healthInFlight: (name, toDay) => healthWith(name, toDay, settled().outages),
     suppliesOutages: () => settled().outages,
     suppliesLeftOn: (day) =>

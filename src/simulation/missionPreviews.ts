@@ -2,6 +2,7 @@ import type { Catalogue } from "../catalogue/catalogue";
 import { largestRaise, type Raise } from "./benefits";
 import { previewCrew, type PlannedCrew } from "./crewView";
 import { earningsPerTurn } from "./ongoingResearch";
+import { cachesPerTurn } from "./sampleCaching";
 import { daysUntilServiceEnds, type Activity, type Rules } from "./rules";
 import { isFlightProven } from "./technologyReadiness";
 import type {
@@ -23,6 +24,7 @@ export const plannedActivity =
       description: activity.description,
       surveys: activity.effect.kind === "survey",
       earnsPerTurn,
+      cachesPerTurn: cachesPerTurn(catalogue, activity),
       ...(raise && earnsPerTurn ? { raisedBy: raise } : {}),
     };
   };

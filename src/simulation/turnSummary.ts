@@ -3,6 +3,7 @@ import type {
   AscentPropellantUsed,
 } from "./ascentPropellant";
 import type { HealthLost } from "./health";
+import type { SamplesCached } from "./sampleCaching";
 import type { CrewLossCause, DecisionAnswer } from "./types";
 
 interface AwardedMilestone {
@@ -121,7 +122,30 @@ export interface TurnSummary {
    */
   journeyHome: {
     crew: string[];
+    /** The samples aboard with them, from their Landing Site and their own, which a failure loses. */
+    samples: number;
     failure: { missionEventName: string; publicSupportLost: number } | null;
+  } | null;
+  /** The samples cached at each Landing Site this Turn, leaving out sites where none were. */
+  samplesCached: SamplesCached[];
+  /** The samples that reached Earth this Turn, and the Science each lot earned, which scienceGained includes. */
+  samplesHome: {
+    from: string;
+    samples: number;
+    science: number;
+    /** What brought them: an Earth return orbiter, by name, or "Crew". */
+    broughtBy: string;
+  }[];
+  /**
+   * The samples sent home this Turn by an ascent vehicle and an Earth return orbiter, if any were: from where, how many,
+   * the Mission Event that failed on the way, losing them, if one did, and whether they stayed at their site because
+   * what was to fly them stopped operating first.
+   */
+  sampleJourney: {
+    siteName: string;
+    samples: number;
+    failure: { missionEventName: string; publicSupportLost: number } | null;
+    stayed: boolean;
   } | null;
   /**
    * When Supplies ran out this Turn, in order: aboard the Crewed Mission on its way, or for the Crew in a place at Mars,

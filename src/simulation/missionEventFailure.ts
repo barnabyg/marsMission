@@ -54,7 +54,7 @@ export function missionEventFailed(
 ): void {
   const { outcome, freeReturn } = flight;
   const crewOnBoard = flight.crewOnBoard(event);
-  const vehicleOnBoard = flight.returnVehicleOnBoard(event);
+  const vehicleOnBoard = flight.cargoOnBoard(event);
   const lostNames = [
     ...onBoard.map((asset) => asset.name),
     ...vehicleOnBoard,

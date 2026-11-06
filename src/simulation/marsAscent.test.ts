@@ -57,6 +57,7 @@ describe("planning a round trip to a Landing Site", () => {
         names: ["Ann Able", "Ben Baker"],
         leavesMarsOn: "2031-04-30",
         homeOn: "2031-11-16",
+        samples: 6,
         reason: null,
       },
     ]);
@@ -155,6 +156,7 @@ describe("bringing Crew home from a Landing Site", () => {
     expect(summary.crewHome).toEqual([]);
     expect(summary.journeyHome).toEqual({
       crew: ["Ann Able", "Ben Baker"],
+      samples: 6,
       failure: { missionEventName: "Test ascent", publicSupportLost: 15 },
     });
     expect(summary.crewLost.flatMap(({ names }) => names)).toEqual([

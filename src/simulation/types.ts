@@ -67,7 +67,11 @@ export interface TurnPlan {
   crewActivities?: Record<string, string>;
   /** Assets already operating whose missions end as this Turn starts, by their `key`, so that they cost no more upkeep. */
   endedAssetKeys?: string[];
-  /** The Earth return stage, by its `key`, whose Crew come home this Turn. At most one journey home flies each Turn. */
+  /**
+   * The journey home that flies this Turn, by its `key`: an Earth return stage whose Crew come home, or a Landing Site's
+   * samples, sent home by an ascent vehicle there and an Earth return orbiter in Mars orbit. At most one journey home
+   * flies each Turn, of Crew or of samples.
+   */
   bringHome?: string;
 }
 
@@ -86,6 +90,19 @@ interface OperatingAsset {
   activityId: string;
   /** Whether it flew before its technology was Flight-proven, which raises its chance of failing in service for good. */
   flewUnproven: boolean;
+  /**
+   * For an ascent vehicle or an Earth return orbiter, the Reliability and Contingencies its Mission bought for its part
+   * of the samples' journey home. Left out for any other Asset.
+   */
+  homeward?: HomewardPurchase | undefined;
+}
+
+/** What a Mission bought for a journey home on a later Turn: the Reliability for each Mission Event, and Contingencies. */
+export interface HomewardPurchase {
+  /** The Reliability bought for each Mission Event of the journey home, by id. */
+  reliability: Record<string, string>;
+  /** The Contingencies bought for the journey home, by id. */
+  contingencyIds: string[];
 }
 
 /**
@@ -191,6 +208,11 @@ export interface Program {
    * operates. Crew there draw on them once their own run out, and Supplies left at the end of a Turn fill them first.
    */
   habitatSuppliesKg: Record<string, number>;
+  /**
+   * The samples cached at each Landing Site, by the site's id, for each site that has had any. They stay there until a
+   * journey home takes them, of Crew or of samples.
+   */
+  samplesAtSites: Record<string, number>;
   status: ProgramStatus;
 }
 
@@ -198,15 +220,11 @@ export interface Program {
  * An Earth return stage in Mars orbit, waiting to bring its Crew home: one a round trip brought with its Crew, or a
  * return vehicle sent for Crew already there.
  */
-export interface EarthReturnStage {
+export interface EarthReturnStage extends HomewardPurchase {
   /** The day it arrived with its Crew, which names it. */
   arrivedOn: string;
   /** The Crew it is for who are still at Mars. */
   crew: string[];
-  /** The Reliability bought for each Mission Event of the journey home, by id. */
-  reliability: Record<string, string>;
-  /** The Contingencies bought for the journey home, by id. */
-  contingencyIds: string[];
 }
 
 export interface ProgramView {
@@ -340,7 +358,29 @@ export interface ProgramView {
     ascentPropellantKg: number;
     /** The Supplies held in habitats here, in kilograms. */
     habitatSuppliesKg: number;
+    /** The samples cached here, waiting for a journey home. */
+    samples: number;
   }[];
+  /** The samples Planning Mode offers to send home, one choice for each Landing Site that has any. */
+  sampleReturns: SampleWayHome[];
+}
+
+/**
+ * A choice to send a Landing Site's samples home this Turn: how many, the Science they would earn, the ascent vehicle
+ * and Earth return orbiter that would fly them, when they would leave and get home, and why they can't go this Turn,
+ * if they can't.
+ */
+export interface SampleWayHome {
+  /** How a plan names it, in `bringHome`. */
+  key: string;
+  siteName: string;
+  samples: number;
+  science: number;
+  ascentVehicle: string | null;
+  orbiter: string | null;
+  leavesMarsOn: string;
+  homeOn: string;
+  reason: string | null;
 }
 
 export interface TurnResult {

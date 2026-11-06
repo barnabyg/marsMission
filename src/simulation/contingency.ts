@@ -40,11 +40,11 @@ export function tryContingency(
 ): ContingencyResult {
   const { rules, program, mission, answers, outcome } = flight;
   const crewOnBoard = flight.crewOnBoard(event);
-  const vehicleOnBoard = flight.returnVehicleOnBoard(event);
+  const cargoOnBoard = flight.cargoOnBoard(event);
   const assetNames = onBoard.map((asset) => asset.name).join(", ");
   const lostNames = [
     ...onBoard.map((asset) => asset.name),
-    ...vehicleOnBoard,
+    ...cargoOnBoard,
     ...crewOnBoard,
   ].join(", ");
   const { contingencyRescueLoss } = flight.catalogue.crew.health;
@@ -89,7 +89,7 @@ export function tryContingency(
         description: flight.filledIn(contingency.troubleDescription),
         assets: [
           ...onBoard.map((asset) => asset.name),
-          ...vehicleOnBoard,
+          ...cargoOnBoard,
           ...crewOnBoard,
         ],
         choices: [

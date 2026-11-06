@@ -95,6 +95,7 @@ describe("the checks for invalid homecomings", () => {
         changedSummary({
           journeyHome: {
             crew: [first, second],
+            samples: 0,
             failure: { missionEventName: "Earth entry", publicSupportLost: 20 },
           },
         }),

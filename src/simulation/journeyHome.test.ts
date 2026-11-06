@@ -61,6 +61,7 @@ describe("bringing round-trip Crew home", () => {
     expect(summary.crewHome).toEqual(["Ann Able", "Ben Baker"]);
     expect(summary.journeyHome).toEqual({
       crew: ["Ann Able", "Ben Baker"],
+      samples: 0,
       failure: null,
     });
     const view = simulation.readProgram(next);
@@ -200,6 +201,7 @@ describe("Mission Events on the way home", () => {
     expect(summary.crewHome).toEqual([]);
     expect(summary.journeyHome).toEqual({
       crew: ["Ann Able", "Ben Baker"],
+      samples: 0,
       failure: { missionEventName: "Test splashdown", publicSupportLost: 35 },
     });
     expect(summary.crewLost).toEqual([

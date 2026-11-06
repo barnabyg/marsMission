@@ -100,6 +100,7 @@ describe("round-trip Crew at Mars", () => {
             names: ["Ann Able", "Ben Baker"],
             leavesMarsOn: "2031-04-30",
             homeOn: "2031-11-16",
+            samples: 0,
             reason: null,
           },
         ],

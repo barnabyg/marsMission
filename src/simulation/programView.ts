@@ -9,6 +9,7 @@ import { crewAtMarsView, crewedMissionView } from "./crewView";
 import { needingDevelopment, plannedDevelopment } from "./development";
 import { plannedActivity, surfaceRaise } from "./missionPreviews";
 import { daysUntilServiceEnds, operatingKey, type Rules } from "./rules";
+import { sampleReturnsOf } from "./sampleReturn";
 import { costOf, readinessOf } from "./technologyReadiness";
 import type { Program, ProgramView } from "./types";
 import { upkeepOf } from "./upkeep";
@@ -40,6 +41,7 @@ export function newProgram(catalogue: Catalogue, seed: number): Program {
     earthReturnStages: [],
     ascentPropellantKg: {},
     habitatSuppliesKg: {},
+    samplesAtSites: {},
     status: { kind: "active" },
   };
 }
@@ -114,7 +116,9 @@ export function programView(
       landed: program.landedSiteIds.includes(site.id),
       ascentPropellantKg: program.ascentPropellantKg[site.id] ?? 0,
       habitatSuppliesKg: program.habitatSuppliesKg[site.id] ?? 0,
+      samples: program.samplesAtSites[site.id] ?? 0,
     })),
+    sampleReturns: sampleReturnsOf(catalogue, rules, program),
     launchVehicles: catalogue.launchVehicles.map((vehicle) => ({
       id: vehicle.id,
       name: vehicle.name,
