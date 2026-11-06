@@ -20,11 +20,17 @@ export interface CrewStyle {
   /** What it does at a solar particle event with Crew aboard, which is as at any other unless it says otherwise. */
   solarParticleEvents?: "safeMode" | "carryOn";
   /**
-   * Sends them to Mars orbit on a round trip, with the Earth return stage and the most Protection that fits before the
-   * largest Crew, and brings them home on the first Turn it can, rather than leaving them there. A round trip doesn't
-   * land.
+   * Sends them on a round trip, with the Earth return stage and the most Protection that fits before the largest Crew,
+   * and brings them home on the first Turn it can, rather than leaving them there. A round trip goes to Mars orbit
+   * unless it lands beside a fuel plant.
    */
   roundTrip?: boolean;
+  /**
+   * Lands a round trip's Crew at a known Landing Site where a fuel plant operates with Service Life left, surveyed
+   * first, so that ascent propellant builds up there for Mars ascent, and flies no Crew while there is none, leaving
+   * the money for a fuel plant.
+   */
+  besideFuelPlant?: boolean;
   /**
    * Lands them beside a habitat: at a surveyed Landing Site where one operates, if there is one, and otherwise with a
    * habitat aboard their Mission whenever it fits and can be afforded.
@@ -39,14 +45,35 @@ const habitatAt = (view: ProgramView, siteId: string) =>
       kind === "habitat" && landingSiteId === siteId && daysLeft > 0,
   );
 
-/** The way home to choose this Turn, by its key, for a CrewStyle that brings Crew home: the first on offer, if any. */
+/**
+ * The way home to choose this Turn, by its key, for a CrewStyle that brings Crew home: the first on offer that isn't
+ * barred, such as by too little ascent propellant, if any.
+ */
 export function wayHome(
   view: ProgramView,
   { roundTrip = false }: CrewStyle,
 ): string | undefined {
   return roundTrip
-    ? view.crew.flatMap(({ waysHome }) => waysHome)[0]?.key
+    ? view.crew
+        .flatMap(({ waysHome }) => waysHome)
+        .find(({ reason }) => reason === null)?.key
     : undefined;
+}
+
+/** A known Landing Site where a fuel plant operates with Service Life left, surveyed first, if there is one. */
+function fuelPlantSite(view: ProgramView): string | undefined {
+  const plantSites = new Set(
+    view.operatingAssets.flatMap(({ kind, landingSiteId, daysLeft }) =>
+      kind === "fuel-plant" && daysLeft > 0 && landingSiteId !== null
+        ? [landingSiteId]
+        : [],
+    ),
+  );
+  return view.landingSites
+    .filter(({ id }) => plantSites.has(id))
+    .toSorted(
+      (first, second) => Number(second.surveyed) - Number(first.surveyed),
+    )[0]?.id;
 }
 
 /**
@@ -75,8 +102,9 @@ function crewLandingSite(
  * Crewed Missions with no Asset aboard, largest Crew first, then the most Supplies, then the most Protection, unless
  * the CrewStyle says the least, each on the cheapest Flight-proven Launch Vehicle that can carry it, with an Earth
  * return stage if it makes round trips, and with the Activity that earns the most Science. They go to Mars orbit, or
- * land at a surveyed Landing Site if the CrewStyle lands and there is one, each with a habitat aboard first if the
- * CrewStyle wants one and none operates there. None if no Launch Vehicle can carry Crew.
+ * land at a surveyed Landing Site if the CrewStyle lands and there is one, or beside a fuel plant if it wants one, each
+ * with a habitat aboard first if the CrewStyle wants one and none operates there. None if no Launch Vehicle can carry
+ * Crew.
  */
 export function crewedMissions(
   view: ProgramView,
@@ -88,10 +116,15 @@ export function crewedMissions(
     reliability = false,
     roundTrip = false,
     habitat = false,
+    besideFuelPlant = false,
   }: CrewStyle,
 ): PlannedMission[] {
-  const landingSiteId =
-    lands && !roundTrip ? crewLandingSite(view, habitat) : undefined;
+  if (besideFuelPlant && fuelPlantSite(view) === undefined) return [];
+  const landingSiteId = besideFuelPlant
+    ? fuelPlantSite(view)
+    : lands && !roundTrip
+      ? crewLandingSite(view, habitat)
+      : undefined;
   const habitatAboard =
     habitat && landingSiteId !== undefined && !habitatAt(view, landingSiteId)
       ? view.assets.find((asset) => asset.kind === "habitat" && canFly(asset))

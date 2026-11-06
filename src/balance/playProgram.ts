@@ -61,6 +61,8 @@ export interface TurnRecord {
   crewAtMars: number;
   /** The ascent propellant fuel plants made this Turn, in kilograms, at every Landing Site together. */
   ascentPropellantKg: number;
+  /** The ascent propellant Mars ascent used this Turn, in kilograms, as Crew left a Landing Site. */
+  ascentPropellantUsedKg: number;
   /** The Health habitats saved this Turn, for every Crew member together. */
   healthSavedByHabitats: number;
   /** What Mars labs added to Research Grants this Turn, in millions, for everything they raised together. */
@@ -138,6 +140,10 @@ function recordOf(
     crewAtMars: summary.crew.length,
     ascentPropellantKg: summary.ascentPropellant.reduce(
       (total, { madeKg }) => total + madeKg,
+      0,
+    ),
+    ascentPropellantUsedKg: summary.ascentPropellantUsed.reduce(
+      (total, { usedKg }) => total + usedKg,
       0,
     ),
     healthSavedByHabitats: summary.healthLost.reduce(

@@ -339,15 +339,26 @@ function researchScience(plays: Play[]): string {
   return `Science per Program from Ongoing Research: ${parts.join(", ") || "none"}${benefits}`;
 }
 
-/** The ascent propellant made per Program, or nothing for a strategy that never lands a fuel plant. */
+/** The ascent propellant made and used per Program, or nothing for a strategy that never lands a fuel plant. */
 function ascentPropellant(plays: Play[]): string[] {
   const madeKg = plays
     .flat()
     .reduce((total, { ascentPropellantKg }) => total + ascentPropellantKg, 0);
-  // Left out with none, so that strategies that never land a fuel plant report as they did before fuel plants.
+  const usedKg = plays
+    .flat()
+    .reduce(
+      (total, { ascentPropellantUsedKg }) => total + ascentPropellantUsedKg,
+      0,
+    );
+  // Left out with none, so that strategies that never land a fuel plant report as they did before fuel plants, and
+  // those whose Crew never leave the surface as they did before Mars ascent.
   return madeKg > 0
     ? [
-        `Ascent propellant per Program made by fuel plants: ${formatPropellant(madeKg / plays.length)}`,
+        `Ascent propellant per Program made by fuel plants: ${formatPropellant(madeKg / plays.length)}${
+          usedKg > 0
+            ? `, of which Mars ascent used ${formatPropellant(usedKg / plays.length)}`
+            : ""
+        }`,
       ]
     : [];
 }

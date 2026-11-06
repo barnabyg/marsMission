@@ -2,8 +2,9 @@ import type { ProgramView, TurnSummary } from "../simulation/simulation";
 
 /**
  * Anything impossible about Crew coming home over one Turn, read from the Program before it, its summary and the
- * Program after it: a journey home only for Crew with a way home, who either get home or are lost, and the ways home
- * offered only to Crew there to take them.
+ * Program after it: a journey home only for Crew with a way home that isn't barred, who either get home or are lost,
+ * the ways home offered only to Crew there to take them, and barred just when their Landing Site lacks the ascent
+ * propellant Mars ascent needs.
  */
 export function homecomingProblems(
   before: ProgramView,
@@ -60,6 +61,30 @@ export function homecomingProblems(
         ),
       ),
       "A way home is offered to Crew who aren't there.",
+    ],
+    [
+      before.crew.some(({ landingSiteId, waysHome }) => {
+        const kg =
+          before.landingSites.find(({ id }) => id === landingSiteId)
+            ?.ascentPropellantKg ?? 0;
+        const enough =
+          landingSiteId === null ||
+          kg >= before.crewedMission.roundTrip.ascentPropellantKg;
+        return waysHome.some(({ reason }) => (reason === null) !== enough);
+      }),
+      "A way home is barred though there is enough ascent propellant for Mars ascent, or offered though there isn't.",
+    ],
+    [
+      before.crew.some(
+        ({ waysHome }) =>
+          journey !== null &&
+          waysHome.some(
+            ({ names, reason }) =>
+              reason !== null &&
+              names.some((name) => journeyCrew.includes(name)),
+          ),
+      ),
+      "A journey home flew for Crew whose way home was barred.",
     ],
   ];
   return checks.flatMap(([impossible, problem]) =>
