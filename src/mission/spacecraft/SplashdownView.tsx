@@ -17,6 +17,7 @@ import {
 import { ParticleLayers } from "../surface/SequenceParticles";
 import {
   capsuleAt,
+  breakUpFlash,
   piecesAt,
   splashAt,
   splashdownCentre,
@@ -260,6 +261,7 @@ export function SplashdownScene({ now }: { now: EarthEntryNow | null }) {
   const capsule = capsuleAt(now);
   const scale = now.crewed ? 1 : 0.6;
   const sinceSplashMs = now.sinceMs - splashMs;
+  const flash = breakUpFlash(now);
   return (
     <group position={splashdownCentre}>
       <Sky />
@@ -279,6 +281,18 @@ export function SplashdownScene({ now }: { now: EarthEntryNow | null }) {
           </group>
           {capsule.glow > 0 && <EntryGlow glow={capsule.glow} scale={scale} />}
         </group>
+      )}
+      {flash && (
+        <mesh position={flash.place}>
+          <sphereGeometry args={[(0.4 + flash.share * 1.6) * scale, 20, 14]} />
+          <meshBasicMaterial
+            color="#fff1c4"
+            transparent
+            opacity={0.95 * (1 - flash.share)}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </mesh>
       )}
       {piecesAt(now).map(({ place, heat }, index) => (
         <group key={index} position={place}>
@@ -342,11 +356,10 @@ export function splashdownLabels(now: EarthEntryNow | null): SceneLabel[] {
         splashdownCentre[2] + at[2],
       ],
       testId: lost ? "spacecraft-lost" : "spacecraft-asset",
-      className: lost
-        ? "crashed-label"
-        : now.crewed
-          ? "crew-label"
-          : "spacecraft-label",
+      // The sky behind is bright, so it needs the backing the surface's labels have.
+      className: `on-surface ${
+        lost ? "crashed-label" : now.crewed ? "crew-label" : "spacecraft-label"
+      }`,
     },
   ];
 }

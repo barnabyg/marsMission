@@ -9,6 +9,7 @@ import {
   marsRendezvousStatus,
 } from "./marsRendezvous";
 import {
+  breakUpFlash,
   breakUpMs,
   capsuleAt,
   chutesOpenMs,
@@ -113,6 +114,10 @@ describe("Earth entry and the splashdown, close up", () => {
     expect(broken?.stage).toBe("brokenUp");
     expect(capsuleAt(must(broken)).shown).toBe(false);
     expect(piecesAt(must(broken))).toHaveLength(4);
+    expect(
+      breakUpFlash(must(entry(breakUpMs + 100, true)))?.share,
+    ).toBeLessThan(0.2);
+    expect(breakUpFlash(must(entry(breakUpMs + 1000, true)))).toBeNull();
     expect(entry(homewardPlayMs.entry - 1, true)?.stage).toBe("brokenUp");
   });
 

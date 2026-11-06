@@ -150,6 +150,23 @@ export function piecesAt(now: EarthEntryNow): { place: Point; heat: number }[] {
   }));
 }
 
+/** How long the flash lasts where the capsule broke up. */
+const flashMs = 700;
+
+/** The flash where the capsule broke up, and how far it has faded from 0 to 1, or null if there's none to show. */
+export function breakUpFlash(
+  now: EarthEntryNow,
+): { place: Point; share: number } | null {
+  const since = now.sinceMs - breakUpMs;
+  if (now.stage !== "brokenUp" || since >= flashMs) return null;
+  const { place } = capsuleAt({
+    ...now,
+    stage: "entering",
+    sinceMs: breakUpMs,
+  });
+  return { place, share: since / flashMs };
+}
+
 const statuses: Record<EarthEntryStage, string> = {
   entering:
     "Earth entry: the capsule is glowing as it comes into Earth's atmosphere",
