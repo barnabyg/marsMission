@@ -11,10 +11,11 @@ import type {
 } from "./types";
 
 /**
- * Earth return stages: what a round trip leaves in Mars orbit with its Crew, waiting to bring them home on a later Turn
- * when the player chooses. Each keeps the Reliability and Contingencies bought for the journey home with its Mission,
- * and is gone once its journey home has flown or none of its Crew are left at Mars. Crew who landed reach it through
- * Mars ascent, which needs the ascent propellant at their Landing Site. The journey itself is flown by `journeyHome.ts`.
+ * Earth return stages: what a round trip leaves in Mars orbit with its Crew, or a return vehicle for Crew already there
+ * (`returnVehicles.ts`), waiting to bring them home on a later Turn when the player chooses. Each keeps the Reliability
+ * and Contingencies bought for the journey home with its Mission, and is gone once its journey home has flown or none
+ * of its Crew are left at Mars. Crew who landed reach it through Mars ascent, which needs the ascent propellant at their
+ * Landing Site. The journey itself is flown by `journeyHome.ts`.
  */
 
 /** How a plan names an Earth return stage to bring its Crew home. One Mission arrives each Turn, so no two share a day. */
@@ -128,6 +129,34 @@ export function waysHomeFrom(
   });
 }
 
+/**
+ * An Earth return stage arriving in Mars orbit on this day for these Crew, keeping what its Mission bought for their
+ * journey home.
+ */
+export function newStage(
+  rules: Rules,
+  mission: PlannedMission | null,
+  arrivedOn: string,
+  crew: string[],
+): EarthReturnStage {
+  const homeward = rules.homewardEventsFor(mission);
+  const homewardIds = new Set(homeward.map(({ id }) => id));
+  return {
+    arrivedOn,
+    crew,
+    reliability: Object.fromEntries(
+      Object.entries(mission?.reliability ?? {}).filter(([eventId]) =>
+        homewardIds.has(eventId),
+      ),
+    ),
+    contingencyIds: (mission?.contingencyIds ?? []).filter((id) =>
+      homeward.some(
+        (event) => rules.contingencyFor(mission, event.id)?.id === id,
+      ),
+    ),
+  };
+}
+
 /** The Earth return stage a round-trip Mission's Crew arrive with, if they arrive, keeping what it bought for the way home. */
 export function stageArriving(
   rules: Rules,
@@ -135,24 +164,14 @@ export function stageArriving(
   arrived: { name: string; arrivedOn: string }[],
 ): EarthReturnStage[] {
   const [first] = arrived;
-  const homeward = rules.homewardEventsFor(mission);
-  if (!first || homeward.length === 0) return [];
-  const homewardIds = new Set(homeward.map(({ id }) => id));
+  if (!first || !mission?.crew?.roundTrip) return [];
   return [
-    {
-      arrivedOn: first.arrivedOn,
-      crew: arrived.map(({ name }) => name),
-      reliability: Object.fromEntries(
-        Object.entries(mission?.reliability ?? {}).filter(([eventId]) =>
-          homewardIds.has(eventId),
-        ),
-      ),
-      contingencyIds: (mission?.contingencyIds ?? []).filter((id) =>
-        homeward.some(
-          (event) => rules.contingencyFor(mission, event.id)?.id === id,
-        ),
-      ),
-    },
+    newStage(
+      rules,
+      mission,
+      first.arrivedOn,
+      arrived.map(({ name }) => name),
+    ),
   ];
 }
 

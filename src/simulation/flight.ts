@@ -64,6 +64,11 @@ export interface MissionOutcome {
   deliveredAssets: Asset[];
   /** The names of the Crew it delivered to Mars, which is none if it carried none or lost them on the way. */
   deliveredCrew: string[];
+  /**
+   * The return vehicle it carries, if it carries one: its name, the day it reaches Mars orbit if nothing goes wrong,
+   * and whether it did, which it hasn't if the Mission failed or stopped at a Decision Point before then.
+   */
+  returnVehicle: { name: string; day: number; delivered: boolean } | null;
   /** The Crew it lost on the way, if it did, which costs Public Support as well as publicSupportLost. */
   crewLost: CrewLoss[];
   /** What hit the Crew's Health all at once on the way, such as a Contingency rescue, and who it hit. */
@@ -140,6 +145,8 @@ export interface Flight {
   stillOnBoard: (event: MissionEvent) => Asset[];
   /** The names of the Crew not yet delivered when this Mission Event is due, or on this day if it's a day, and still alive then. */
   crewOnBoard: (when: MissionEvent | number) => string[];
+  /** The name of the return vehicle, if the Mission carries one that hasn't reached Mars orbit when this Mission Event is due. */
+  returnVehicleOnBoard: (event: MissionEvent) => string[];
   /** What the flight has done to a Crew member's Health from launch to this day. */
   healthInFlight: (name: string, toDay: number) => HealthCourse;
   /** The days the Crew have had no Supplies left on board, if they keep flying to the end of the Turn. */
@@ -229,6 +236,7 @@ export function outcomeBefore(
     failedOnDay: null,
     deliveredAssets: assets,
     deliveredCrew: crew,
+    returnVehicle: null,
     crewLost: [],
     crewBlows: [],
     crewHealth: [],
@@ -276,6 +284,18 @@ export function startFlight(
     crew,
     landingSite,
   );
+  const returnVehicle = mission?.returnVehicle
+    ? catalogue.crew.returnVehicle
+    : null;
+  const returnVehicleDay =
+    returnVehicle && rules.deliveryDay(returnVehicle, mission);
+  if (returnVehicle && returnVehicleDay !== null) {
+    outcome.returnVehicle = {
+      name: returnVehicle.name,
+      day: returnVehicleDay,
+      delivered: true,
+    };
+  }
   const shorten = (onBoard: Asset[], to: (days: number) => number) => {
     for (const asset of onBoard) {
       const days =
@@ -351,6 +371,12 @@ export function startFlight(
         ? flight.aliveOn(crew, day)
         : [];
     },
+    returnVehicleOnBoard: (event) =>
+      returnVehicle &&
+      returnVehicleDay !== null &&
+      returnVehicleDay >= rules.dayOf(event, mission)
+        ? [returnVehicle.name]
+        : [],
     healthInFlight: (name, toDay) => healthWith(name, toDay, settled().outages),
     suppliesOutages: () => settled().outages,
     suppliesLeftOn: (day) =>

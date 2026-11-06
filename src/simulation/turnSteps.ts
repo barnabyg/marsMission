@@ -28,6 +28,7 @@ import {
   stageComingHome,
   stagesAfterTurn,
 } from "./earthReturnStages";
+import { returnVehicleArriving, returnVehicleReport } from "./returnVehicles";
 import { storeHabitatSupplies } from "./habitats";
 import { flyJourneyHome, type JourneyHome } from "./journeyHome";
 import {
@@ -135,6 +136,14 @@ export function resolveTurn(
     journey?.propellantUsed ?? null,
   );
   const crew = crewAtTurnEnd(crewAtWork, crewThere.crewActivities);
+  const fetching = returnVehicleArriving(rules, program, plan, flown);
+  const stages = stagesAfterTurn(
+    program,
+    plan,
+    [...stageArriving(rules, plan.mission, crewThere.arrived), ...fetching],
+    crew.stillThere,
+  );
+  const fetched = returnVehicleReport(flown, fetching, stages);
   const habitatSupplies = storeHabitatSupplies(
     catalogue,
     program,
@@ -250,6 +259,7 @@ export function resolveTurn(
   const assetsAtMars = assetsAtMarsOnTimeline(rules, program, inService, flown);
 
   const otherEntries = [
+    ...fetched.entries,
     ...crewArrivedEntry(
       catalogue,
       rules,
@@ -327,12 +337,7 @@ export function resolveTurn(
       ]),
       crewActivities: crew.crewActivities,
       crewSupplies: habitatSupplies.crewSupplies,
-      earthReturnStages: stagesAfterTurn(
-        program,
-        plan,
-        stageArriving(rules, plan.mission, crewThere.arrived),
-        crew.stillThere,
-      ),
+      earthReturnStages: stages,
       ascentPropellantKg: propellant.ascentPropellantKg,
       habitatSuppliesKg: habitatSupplies.habitatSuppliesKg,
       status:
@@ -393,6 +398,7 @@ export function resolveTurn(
       healthLost: healthLostSummary(crewAtWork, flown, homeward),
       crewHome,
       publicSupportForCrewHome: welcome.publicSupport,
+      returnVehicle: fetched.summary,
       journeyHome: journey && {
         crew: journey.crew,
         failure: journey.outcome.failedEvent

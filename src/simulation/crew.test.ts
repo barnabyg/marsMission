@@ -67,6 +67,13 @@ describe("planning a Crewed Mission", () => {
         massTonnes: 1,
         ascentPropellantKg: 5000,
       },
+      returnVehicle: {
+        name: "Test return vehicle",
+        description: "Fetches Crew.",
+        costMillions: 400,
+        massTonnes: 2,
+        crewRoom: 2,
+      },
     });
   });
 

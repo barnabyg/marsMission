@@ -1,5 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { PlannedMission, Program } from "./types";
+import { isLandingSiteKey } from "./crewPlaces";
 import { technologiesOn, unprovenMultiplier } from "./technologyReadiness";
 import type { SurfaceMotion } from "./timeline";
 
@@ -106,6 +107,9 @@ export function createRules(catalogue: Catalogue) {
         ({ missionEvents }) => missionEvents,
       ),
       ...crewOf(mission).missionEvents,
+      ...(mission?.returnVehicle
+        ? catalogue.crew.returnVehicle.missionEvents
+        : []),
     ]);
     return [...eventIds].flatMap((eventId) =>
       catalogue.missionEvents.filter((event) => event.id === eventId),
@@ -383,10 +387,17 @@ export function createRules(catalogue: Catalogue) {
       .sort((first, second) => first.timing.days - second.timing.days);
   }
 
-  /** The Mission Events a Mission's Crew go through on the way home on a later Turn, which only a round trip has. */
+  /**
+   * The Mission Events of the journey home on a later Turn that a Mission buys Reliability and Contingency for: its own
+   * Crew's on a round trip, or those of the Crew its return vehicle fetches, through Mars ascent if they are at a
+   * Landing Site. A Mission with neither has none.
+   */
   function homewardEventsFor(mission: PlannedMission | null): MissionEvent[] {
-    return mission?.crew?.roundTrip
-      ? journeyHomeEvents(mission.crew.landsAtSite === true)
+    if (mission?.crew?.roundTrip) {
+      return journeyHomeEvents(mission.crew.landsAtSite === true);
+    }
+    return mission?.returnVehicle
+      ? journeyHomeEvents(isLandingSiteKey(mission.returnVehicle.forCrewAt))
       : [];
   }
 

@@ -13,6 +13,11 @@ export function crewKeyOf(location: PlaceAtMars): string {
     : `landing-site:${location.landingSiteId}`;
 }
 
+/** Whether a place's key, as a plan names it, is a Landing Site's rather than Mars orbit's. */
+export function isLandingSiteKey(key: string): boolean {
+  return key.startsWith("landing-site:");
+}
+
 /** Where Crew are, as the player reads it: Mars orbit, or their Landing Site's name. */
 export function locationNameOf(rules: Rules, location: PlaceAtMars): string {
   return location.kind === "marsOrbit"

@@ -66,6 +66,14 @@ export interface CrewArrivedEntry {
   description: string;
 }
 
+/** A return vehicle has reached Mars orbit, where it waits for the Crew it was sent for. */
+export interface ReturnVehicleArrivedEntry {
+  kind: "returnVehicleArrived";
+  day: number;
+  title: string;
+  description: string;
+}
+
 /** Crew have been lost, which the events column shows as a failure. */
 export interface CrewLostEntry {
   kind: "crewLost";
@@ -136,6 +144,7 @@ export type TimelineEntry =
   | SurveyEntry
   | FlightProvenEntry
   | CrewArrivedEntry
+  | ReturnVehicleArrivedEntry
   | CrewLostEntry
   | CrewHomeEntry
   | SuppliesOutEntry
@@ -147,7 +156,7 @@ export type TimelineEntry =
 /** One Asset on this Turn's Mission, or the ship carrying its Crew, and how its journey ended. */
 export interface MissionAsset {
   name: string;
-  /** The Asset's kind, or "crew" for the ship carrying the Crew. */
+  /** The Asset's kind, "crew" for the ship carrying the Crew, or "return vehicle" for a return vehicle. */
   kind: string;
   /** The Landing Site it is heading for, if it lands. */
   landingSiteName: string | null;

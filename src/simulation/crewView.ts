@@ -14,6 +14,7 @@ import {
   placeFor,
 } from "./crewPlaces";
 import { waysHomeFrom } from "./earthReturnStages";
+import { crewWithoutWayHome } from "./returnVehicles";
 import { drainsInFlight, healthCourse } from "./health";
 import { earningsPerTurn } from "./ongoingResearch";
 import type { Activity, Rules } from "./rules";
@@ -55,6 +56,8 @@ export interface CrewAtMars {
     homeOn: string;
     reason: string | null;
   }[];
+  /** The Crew here with no way home, such as those who went one way, whom a return vehicle can fetch. */
+  withoutWayHome: string[];
 }
 
 /** A Crewed Mission's Crew as Planning Mode shows them before it launches. */
@@ -164,6 +167,13 @@ export function crewedMissionView(
       massTonnes: catalogue.crew.roundTrip.massTonnes,
       ascentPropellantKg: catalogue.crew.roundTrip.ascent.propellantKg,
     },
+    returnVehicle: {
+      name: catalogue.crew.returnVehicle.name,
+      description: catalogue.crew.returnVehicle.description,
+      costMillions: catalogue.crew.returnVehicle.costMillions,
+      massTonnes: catalogue.crew.returnVehicle.massTonnes,
+      crewRoom: catalogue.crew.returnVehicle.crewRoom,
+    },
   };
 }
 
@@ -175,6 +185,7 @@ export function crewAtMarsView(
   raise: Raise | null,
 ): CrewAtMars[] {
   const atMars = crewAtMarsOf(program);
+  const stranded = new Set(crewWithoutWayHome(program).map(({ name }) => name));
   const keys = [...new Set(atMars.map(({ location }) => crewKeyOf(location)))];
   return keys.flatMap((key) => {
     const members = atMars.filter(
@@ -210,6 +221,9 @@ export function crewAtMarsView(
           members.length,
         ),
         waysHome: waysHomeFrom(catalogue, rules, program, key),
+        withoutWayHome: members
+          .filter(({ name }) => stranded.has(name))
+          .map(({ name }) => name),
       },
     ];
   });

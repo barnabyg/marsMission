@@ -54,8 +54,10 @@ export function missionEventFailed(
 ): void {
   const { outcome, freeReturn } = flight;
   const crewOnBoard = flight.crewOnBoard(event);
+  const vehicleOnBoard = flight.returnVehicleOnBoard(event);
   const lostNames = [
     ...onBoard.map((asset) => asset.name),
+    ...vehicleOnBoard,
     ...crewOnBoard,
   ].join(", ");
   // An Asset or Crew are delivered when their last Mission Event succeeds, so anything delivered before a failure is safe.
@@ -63,8 +65,13 @@ export function missionEventFailed(
   outcome.failedOnDay = flight.dayOf(event);
   flight.stopWith(onBoard, crewOnBoard);
   outcome.publicSupportLost = lossFor(flight, event, used);
+  const vehicleDelivered =
+    outcome.returnVehicle && vehicleOnBoard.length === 0
+      ? [outcome.returnVehicle.name]
+      : [];
   const stillSafe = [
     ...outcome.deliveredAssets.map((asset) => asset.name),
+    ...vehicleDelivered,
     ...outcome.deliveredCrew,
   ];
   const safe =

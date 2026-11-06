@@ -111,6 +111,11 @@ export interface TurnSummary {
   /** The Public Support the Crew who came home earned, which publicSupportGained includes. */
   publicSupportForCrewHome: number;
   /**
+   * The return vehicle the Turn's Mission brought to Mars orbit, if it got there, with those of the Crew it was sent
+   * for who are still at Mars as the Turn ends, who can come home in it on a later Turn.
+   */
+  returnVehicle: { name: string; crew: string[] } | null;
+  /**
    * The journey home flown this Turn, if one was: the round-trip Crew who left Mars, and the Mission Event that failed
    * on the way, losing them, if one did, with the Public Support it cost on top of losing them.
    */

@@ -19,6 +19,12 @@ export interface PlannedMission {
   trajectoryId?: string;
   /** The Crew it carries, which makes it a Crewed Mission. Left out, it's a Robotic Mission. */
   crew?: CrewChoices;
+  /**
+   * A return vehicle it carries to Mars orbit, with or without Crew of its own, to fetch Crew already at Mars: those in
+   * one place, by the place's key, who have no way home as the Turn starts. Their journey home's Reliability and
+   * Contingencies are bought with the Mission's own.
+   */
+  returnVehicle?: { forCrewAt: string };
 }
 
 /** The choices made for a Crewed Mission's Crew. */
@@ -173,7 +179,7 @@ export interface Program {
    * them, and Crew who join them add theirs.
    */
   crewSupplies: Record<string, number>;
-  /** The Earth return stages in Mars orbit, each waiting to bring home the round-trip Crew it came with. */
+  /** The Earth return stages in Mars orbit, each waiting to bring home the round-trip Crew it came with, or was sent for. */
   earthReturnStages: EarthReturnStage[];
   /**
    * The ascent propellant at each Landing Site, in kilograms, by the site's id, for each site where a fuel plant has
@@ -188,7 +194,10 @@ export interface Program {
   status: ProgramStatus;
 }
 
-/** An Earth return stage in Mars orbit, which a round trip brought, waiting to bring its Crew home. */
+/**
+ * An Earth return stage in Mars orbit, waiting to bring its Crew home: one a round trip brought with its Crew, or a
+ * return vehicle sent for Crew already there.
+ */
 export interface EarthReturnStage {
   /** The day it arrived with its Crew, which names it. */
   arrivedOn: string;
@@ -296,6 +305,17 @@ export interface ProgramView {
       costMillions: number;
       massTonnes: number;
       ascentPropellantKg: number;
+    };
+    /**
+     * What a return vehicle adds to a Mission, with or without Crew: it waits in Mars orbit to bring home Crew already at
+     * Mars, as many as it has room for.
+     */
+    returnVehicle: {
+      name: string;
+      description: string;
+      costMillions: number;
+      massTonnes: number;
+      crewRoom: number;
     };
   };
   /** The Crew operating at Mars, by where they are. Crew who are lost or home aren't listed. */

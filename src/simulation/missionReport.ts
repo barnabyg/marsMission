@@ -25,6 +25,7 @@ export function missionOnTimeline(
     launchVehicleName: flown.vehicleName,
     assetNames: [
       ...flown.assets.map((asset) => asset.name),
+      ...(flown.returnVehicle ? [flown.returnVehicle.name] : []),
       ...(plan.mission?.crew ? [catalogue.crew.vehicleName] : []),
     ],
     assets: [
@@ -47,6 +48,7 @@ export function missionOnTimeline(
             asset.missionEvents.includes(flown.failedEvent.id),
         };
       }),
+      ...returnVehicleOnMission(flown),
       ...crewShipOnMission(catalogue, rules, plan, flown),
     ],
     failedOnDay: flown.failedOnDay,
@@ -62,6 +64,24 @@ export function missionOnTimeline(
         }
       : {}),
   };
+}
+
+/** The return vehicle as Mission Mode shows it on its way to Mars orbit, if the Mission carried one. */
+function returnVehicleOnMission(
+  flown: Pick<MissionOutcome, "returnVehicle" | "failedOnDay">,
+): MissionAsset[] {
+  const vehicle = flown.returnVehicle;
+  if (!vehicle) return [];
+  return [
+    {
+      name: vehicle.name,
+      kind: "return vehicle",
+      landingSiteName: null,
+      deliveredOnDay: vehicle.delivered ? vehicle.day : null,
+      lostOnDay: vehicle.delivered ? null : flown.failedOnDay,
+      crashed: false,
+    },
+  ];
 }
 
 /**
@@ -89,9 +109,14 @@ export function missionFailure(flown: MissionOutcome): TurnSummary["failure"] {
     ? {
         missionEventName: name,
         ...(flown.lostTo === null ? {} : { hazard: true as const }),
-        assetsLost: flown.assets
-          .filter((asset) => !flown.deliveredAssets.includes(asset))
-          .map((asset) => asset.name),
+        assetsLost: [
+          ...flown.assets
+            .filter((asset) => !flown.deliveredAssets.includes(asset))
+            .map((asset) => asset.name),
+          ...(flown.returnVehicle && !flown.returnVehicle.delivered
+            ? [flown.returnVehicle.name]
+            : []),
+        ],
         publicSupportLost: flown.publicSupportLost,
         returnedToEarth: flown.returned !== null,
         refundMillions: flown.returned?.refundMillions ?? 0,

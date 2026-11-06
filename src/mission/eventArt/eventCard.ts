@@ -96,6 +96,8 @@ export function eventCardFor(entry: TimelineEntry): EventCard {
       return card("flightProven", "Flight-proven", "award");
     case "crewArrived":
       return card("crewArrived", "Crew", "users");
+    case "returnVehicleArrived":
+      return card("orbitInsertion", "Return vehicle", "rocket");
     case "crewHome":
       return card("missionReturned", "Crew", "users");
     case "crewLost":
