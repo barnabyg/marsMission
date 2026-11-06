@@ -37,7 +37,7 @@ A feature with new content touches these folders, in order:
 3. `src/simulation`: the rules, and a new format in `saveFormat.ts` for a new saved field
 4. `src/balance`, for a new rule or choice: the strategies that must cope with it, listed in `strategies.ts`, because every plan they make has to pass validation, and a check in `invalidStates.ts` for anything it makes impossible
 5. `src/planning` or `src/mission`: displaying it, with styles and wiring in `src/app`, plus `src/ui/tooltips.ts` and `GLOSSARY.md` for a new game term
-6. `e2e`: a browser test of the journey. A test that needs a known outcome, such as a landing that crashes or a dust storm on the second Turn, takes its seed from `e2e/seeds.ts`, which searches the real data files for one rather than pinning a number, so add a search there for a new outcome
+6. `e2e`: a browser test of the journey. A test that needs a known outcome, such as a landing that crashes or a dust storm on the second Turn, takes its seed from `e2e/seeds.ts`, or `e2e/colossusSeeds.ts` for one that needs the Meridian Colossus, such as a Crewed Mission, which search the real data files for one rather than pinning a number, so add a search there for a new outcome
 
 A ticket that only changes a screen or dialog starts from its component in `src/planning`, `src/mission` or `src/save`, and usually also touches `src/ui`, the style file beside its component, such as `src/planning/planning.css`, and the `e2e` file for that subject.
 

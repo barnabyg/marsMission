@@ -11,7 +11,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
-import { colossusMoney, colossusSeed } from "./seeds";
+import { colossusMoney, colossusSeed } from "./colossusSeeds";
 
 test.use({ viewport: missionViewport });
 

@@ -22,7 +22,7 @@ import {
   crewLandingSeed,
   crewLossSeed,
   crewSeed,
-} from "./seeds";
+} from "./colossusSeeds";
 
 test.use({ viewport: missionViewport });
 
