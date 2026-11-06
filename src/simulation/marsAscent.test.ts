@@ -107,6 +107,14 @@ describe("bringing Crew home from a Landing Site", () => {
       [300, "Test splashdown"],
       [300, "Crew home"],
     ]);
+    // Mission Mode shows it lifting off from their site, and their stage bringing them home.
+    expect(timeline.journeyHome).toEqual({
+      aboard: "crew",
+      siteName: "Alpha Plain",
+      vehicleName: "Test return stage",
+      leavesOnDay: 100,
+      homeOnDay: 300,
+    });
     expect(summary.crewHome).toEqual(["Ann Able", "Ben Baker"]);
     expect(summary.publicSupportForCrewHome).toBe(2 * 40);
     expect(summary.milestones.map(({ name }) => name)).toContain(

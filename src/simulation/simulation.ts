@@ -57,6 +57,7 @@ export type { TurnSummary } from "./turnSummary";
 export type {
   AssetAtMars,
   CrewMemberAtMarsOnTimeline,
+  JourneyHomeOnTimeline,
   Timeline,
   TimelineEntry,
 } from "./timeline";

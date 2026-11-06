@@ -242,5 +242,20 @@ export interface Timeline {
   assetsAtMars: AssetAtMars[];
   /** The dust storms over the Landing Sites known so far. Each is over by toDay. */
   dustStorms: { siteName: string; fromDay: number; toDay: number }[];
+  /** The Turn's journey home from Mars, of Crew or of samples, if one leaves. Its Mission Events are marked `homeward`. */
+  journeyHome?: JourneyHomeOnTimeline | undefined;
   entries: TimelineEntry[];
+}
+
+/** A journey home from Mars as Mission Mode shows it. */
+export interface JourneyHomeOnTimeline {
+  aboard: "crew" | "samples";
+  /** The Landing Site it lifts off from through Mars ascent, or null if it leaves from Mars orbit. */
+  siteName: string | null;
+  /** What brings it home from Mars orbit: the Crew's Earth return stage, or the Earth return orbiter by name. */
+  vehicleName: string;
+  /** The day of the Turn it leaves Mars. */
+  leavesOnDay: number;
+  /** The day of the Turn it gets home if nothing goes wrong. */
+  homeOnDay: number;
 }

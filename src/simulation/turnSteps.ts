@@ -32,7 +32,11 @@ import { returnVehicleArriving, returnVehicleReport } from "./returnVehicles";
 import { afterSamplesLeft, sendSamplesHome } from "./sampleReturn";
 import { sampleJourneySummary, settleSamples } from "./samplesHome";
 import { storeHabitatSupplies } from "./habitats";
-import { flyJourneyHome, type JourneyHome } from "./journeyHome";
+import {
+  flyJourneyHome,
+  journeyHomeOnTimeline,
+  type JourneyHome,
+} from "./journeyHome";
 import {
   crewArrivedEntry,
   crewShipsAtMars,
@@ -384,6 +388,12 @@ export function resolveTurn(
         ...crewShipsAtMars(catalogue, rules, program, crewAtWork),
       ],
       dustStorms: dustStorms.storms,
+      journeyHome: journeyHomeOnTimeline(
+        catalogue,
+        rules,
+        comingHome && journey && { from: comingHome.from, journey },
+        sampleJourney,
+      ),
       // The sort is stable, so an award stays after the arrival or the Science that earned it.
       entries: [
         ...flown.entries,

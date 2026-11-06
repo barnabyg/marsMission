@@ -108,6 +108,13 @@ describe("sending samples home", () => {
       [300, "Test splashdown"],
       [300, "Samples home"],
     ]);
+    expect(timeline.journeyHome).toEqual({
+      aboard: "samples",
+      siteName: "Alpha Plain",
+      vehicleName: "Test Return Orbiter",
+      leavesOnDay: 100,
+      homeOnDay: 300,
+    });
     expect(summary.samplesHome).toEqual([
       {
         from: "Alpha Plain",
@@ -262,6 +269,7 @@ describe("samples whose ascent vehicle stops first", () => {
     expect(timeline.entries.some(({ kind }) => kind === "missionEvent")).toBe(
       false,
     );
+    expect(timeline.journeyHome).toBeUndefined();
     expect(samplesAtAlpha(simulation, next)).toBe(35);
     expect(kindsOperating(simulation, next)).toEqual([
       "rover",

@@ -15,9 +15,11 @@ import {
   type SettledSupplies,
   type SuppliesUser,
 } from "./supplies";
+import type { JourneyHomeOnTimeline } from "./timeline";
 import type {
   DecisionAnswers,
   EarthReturnStage,
+  PlaceAtMars,
   PlannedMission,
   Program,
 } from "./types";
@@ -127,6 +129,45 @@ export function flyJourneyHome(
     entry.kind === "missionEvent" ? { ...entry, homeward: true } : entry,
   );
   return { crew: flight.crew, homeOn, outcome: flight.outcome, propellantUsed };
+}
+
+/**
+ * The Turn's journey home as Mission Mode shows it, of the Crew leaving `from` or of samples, if one leaves Mars. Samples
+ * that stayed at their site never left.
+ */
+export function journeyHomeOnTimeline(
+  catalogue: Catalogue,
+  rules: Rules,
+  crew: { from: PlaceAtMars; journey: JourneyHome } | null,
+  samples: {
+    siteName: string;
+    homeOn: number;
+    stayed: boolean;
+    outcome: Pick<MissionOutcome, "vehicleName">;
+  } | null,
+): JourneyHomeOnTimeline | undefined {
+  const { leavesOn } = journeyHomeDays(catalogue, rules);
+  if (crew) {
+    const { from, journey } = crew;
+    return {
+      aboard: "crew",
+      siteName:
+        from.kind === "landingSite"
+          ? (rules.landingSiteById(from.landingSiteId)?.name ?? null)
+          : null,
+      vehicleName: catalogue.crew.roundTrip.name,
+      leavesOnDay: leavesOn,
+      homeOnDay: journey.homeOn,
+    };
+  }
+  if (!samples || samples.stayed) return undefined;
+  return {
+    aboard: "samples",
+    siteName: samples.siteName,
+    vehicleName: samples.outcome.vehicleName ?? "",
+    leavesOnDay: leavesOn,
+    homeOnDay: samples.homeOn,
+  };
 }
 
 /** The journey home as a `Flight`, on the day it leaves Mars, with nothing yet happened to it. */

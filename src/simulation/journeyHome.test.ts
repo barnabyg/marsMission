@@ -58,6 +58,11 @@ describe("bringing round-trip Crew home", () => {
       [300, "Test splashdown"],
       [300, "Crew home"],
     ]);
+    // Mission Mode shows them leaving from Mars orbit, with no Mars ascent.
+    expect(timeline.journeyHome).toMatchObject({
+      aboard: "crew",
+      siteName: null,
+    });
     expect(summary.crewHome).toEqual(["Ann Able", "Ben Baker"]);
     expect(summary.journeyHome).toEqual({
       crew: ["Ann Able", "Ben Baker"],
