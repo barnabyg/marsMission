@@ -238,9 +238,15 @@ describe("a productive Program in the real data files", () => {
 describe("the balance of Phase 4", () => {
   const real = createSimulation(parseCatalogue(files));
   const steady = played("steady: Soil analysis");
-  // Played here, as a test that plays several would take longer than a test may now that base funding keeps more
-  // Programs going for longer.
+  // Every strategy these tests play is played here, as a test that plays even two would take longer than a test may on
+  // a slower machine, now that base funding keeps more Programs going for longer and Phase 8 gave each Turn more to do.
   for (const name of [
+    "launch nothing",
+    "stop after Turn 4",
+    "steady: Long traverse",
+    "steady: Soil, traverse when rich",
+    "steady: longest on everything",
+    "steady: rover straight away",
     "steady: Tested rovers",
     "steady: Tested everything",
     "steady: shortest Service Life",
