@@ -41,7 +41,10 @@ export const missionEventPictures: Readonly<Record<string, EventPicture>> = {
   "mars-transfer-burn": "transferBurn",
   "mars-orbit-insertion": "orbitInsertion",
   "entry-descent-landing": "entryDescentLanding",
-  // The journey home borrows the pictures nearest it until it has its own: a burn leaving orbit, and a return to Earth.
+  // The journey home borrows the pictures nearest it until it has its own: a launch, a rendezvous, a burn leaving orbit
+  // and a return to Earth.
+  "mars-ascent": "launch",
+  "mars-orbit-rendezvous": "rendezvous",
   "trans-earth-injection": "transferBurn",
   "earth-entry": "missionReturned",
 };

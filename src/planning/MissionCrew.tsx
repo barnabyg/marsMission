@@ -1,6 +1,7 @@
 import { useId } from "react";
 import {
   formatMoney,
+  formatPropellant,
   type PlannedCrew,
   type ProgramView,
 } from "../simulation/simulation";
@@ -217,22 +218,27 @@ export function MissionCrew({
               ),
             )}
           </select>
-          {/* Crew can't leave the surface yet, so only Crew staying in Mars orbit can go on a round trip. */}
-          {!lands && (
-            <label className="round-trip-choice">
-              <input
-                type="checkbox"
-                checked={roundTrip}
-                aria-label="Round trip"
-                onChange={(event) => {
-                  onRoundTripChange(event.target.checked);
-                }}
-              />
-              <span>
-                <GameText>{`Round trip (+${formatMoney(crewedMission.roundTrip.costMillions)}, +${crewedMission.roundTrip.massTonnes} t)`}</GameText>
-              </span>
-            </label>
-          )}
+          {/* Crew who land also need ascent propellant at their Landing Site to come home, which the tooltip says. */}
+          <label
+            className="round-trip-choice"
+            title={
+              lands
+                ? `To come home, Mars ascent will need ${formatPropellant(crewedMission.roundTrip.ascentPropellantKg)} of ascent propellant at their Landing Site, which a fuel plant there makes.`
+                : undefined
+            }
+          >
+            <input
+              type="checkbox"
+              checked={roundTrip}
+              aria-label="Round trip"
+              onChange={(event) => {
+                onRoundTripChange(event.target.checked);
+              }}
+            />
+            <span>
+              <GameText>{`Round trip (+${formatMoney(crewedMission.roundTrip.costMillions)}, +${crewedMission.roundTrip.massTonnes} t)`}</GameText>
+            </span>
+          </label>
         </div>
       )}
     </div>

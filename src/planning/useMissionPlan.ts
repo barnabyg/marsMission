@@ -96,9 +96,7 @@ export function useMissionPlan(
   const [crewProtectionId, setCrewProtectionId] = useState<
     string | undefined
   >();
-  const [chosenRoundTrip, setCrewRoundTrip] = useState(false);
-  // Crew can't leave the surface yet, so only Crew staying in Mars orbit go on a round trip.
-  const crewRoundTrip = chosenRoundTrip && !crewLands;
+  const [crewRoundTrip, setCrewRoundTrip] = useState(false);
 
   const landsOnMars =
     (crewSize !== null && crewLands) ||

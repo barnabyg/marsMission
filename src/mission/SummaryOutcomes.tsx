@@ -103,21 +103,18 @@ export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
           </ul>
         </section>
       )}
-      {summary.ascentPropellant.length > 0 && (
+      {(summary.ascentPropellant.length > 0 ||
+        summary.ascentPropellantUsed.length > 0) && (
         <section data-testid="summary-ascent-propellant">
           <h2>
             <GameText heading>Ascent propellant</GameText>
           </h2>
           <ul>
-            {summary.ascentPropellant.map(
-              ({ siteName, madeBy, madeKg, totalKg }) => (
-                <li key={siteName}>
-                  <GameText>
-                    {`${siteName}: ${madeBy.join(" and ")} made ${formatPropellant(madeKg)}, so it has ${formatPropellant(totalKg)}`}
-                  </GameText>
-                </li>
-              ),
-            )}
+            {propellantBySite(summary).map((line) => (
+              <li key={line}>
+                <GameText>{line}</GameText>
+              </li>
+            ))}
           </ul>
         </section>
       )}
@@ -201,4 +198,35 @@ export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
       )}
     </>
   );
+}
+
+/**
+ * What each Landing Site's ascent propellant did this Turn, one line a site: what its fuel plants made, what Mars ascent
+ * used, and what it has now.
+ */
+function propellantBySite({
+  ascentPropellant,
+  ascentPropellantUsed,
+}: TurnSummary): string[] {
+  const sites = [
+    ...new Set(
+      [...ascentPropellant, ...ascentPropellantUsed].map(
+        ({ siteName }) => siteName,
+      ),
+    ),
+  ];
+  return sites.map((siteName) => {
+    const made = ascentPropellant.find((each) => each.siteName === siteName);
+    const used = ascentPropellantUsed.find(
+      (each) => each.siteName === siteName,
+    );
+    const parts = [
+      ...(made
+        ? [`${made.madeBy.join(" and ")} made ${formatPropellant(made.madeKg)}`]
+        : []),
+      ...(used ? [`Mars ascent used ${formatPropellant(used.usedKg)}`] : []),
+    ];
+    const totalKg = used?.totalKg ?? made?.totalKg ?? 0;
+    return `${siteName}: ${parts.join(" and ")}, so it has ${formatPropellant(totalKg)}`;
+  });
 }

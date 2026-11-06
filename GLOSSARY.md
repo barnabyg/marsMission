@@ -68,16 +68,24 @@ The food, water and everything else Crew use up to stay alive, from launch. They
 _Avoid_: Consumables, life support (as the general term)
 
 **Round trip**:
-A Crewed Mission to Mars orbit that carries an Earth return stage, so that its Crew can come home on a later Turn. It weighs and costs more than a one-way trip, which leaves its Crew at Mars.
+A Crewed Mission that carries an Earth return stage, so that its Crew can come home on a later Turn, from Mars orbit or, through Mars ascent, from their Landing Site. It weighs and costs more than a one-way trip, which leaves its Crew at Mars.
 _Avoid_: Return mission
 
 **Earth return stage**:
-The stage a round trip carries, which waits with its Crew in Mars orbit and brings them home on the Turn the player chooses. The Reliability and Contingencies for their journey home are bought with it.
+The stage a round trip carries, which waits in Mars orbit, whether its Crew stay there or land, and brings them home on the Turn the player chooses. The Reliability and Contingencies for their journey home are bought with it.
 _Avoid_: Return ship
 
 **Journey home**:
-Crew leaving Mars for Earth aboard their Earth return stage, on a Turn the player chooses. Its Mission Events, Trans-Earth injection and Earth entry, have Reliability and Contingency, and a failure loses the Crew. Each Crew member home safe earns Public Support, and the first Crew home are a Milestone.
+Crew leaving Mars for Earth aboard their Earth return stage, on a Turn the player chooses. Its Mission Events, Trans-Earth injection and Earth entry, after Mars ascent and Mars orbit rendezvous for Crew at a Landing Site, have Reliability and Contingency, and a failure loses the Crew. Each Crew member home safe earns Public Support, and the first Crew home are a Milestone.
 _Avoid_: Return leg, return flight
+
+**Mars ascent**:
+The Mission Event in which Crew at a Landing Site lift off for Mars orbit at the start of their journey home. It uses up ascent propellant made at their site by a fuel plant, so the journey can only be chosen once the site has enough.
+_Avoid_: Liftoff, MAV (in the game's text)
+
+**Mars orbit rendezvous**:
+The Mission Event, the day after Mars ascent, in which Crew who lifted off from the surface meet and dock with their Earth return stage in Mars orbit.
+_Avoid_: Docking (as the name of the Mission Event)
 
 **Trans-Earth injection**:
 The Mission Event in which an Earth return stage fires its engine and sends its Crew out of Mars orbit on their way home.
@@ -110,7 +118,7 @@ An Asset that lands at a Landing Site and makes ascent propellant there from the
 _Avoid_: Refinery, propellant plant
 
 **Ascent propellant**:
-The propellant Crew need to leave the surface of Mars, made by a fuel plant at its Landing Site. It builds up at that site from Turn to Turn and stays there if the plant stops, and each Landing Site keeps its own.
+The propellant Crew need to leave the surface of Mars, made by a fuel plant at its Landing Site and used up by Mars ascent. It builds up at that site from Turn to Turn and stays there if the plant stops, and each Landing Site keeps its own.
 _Avoid_: Return fuel, ascent fuel
 
 **Habitat**:

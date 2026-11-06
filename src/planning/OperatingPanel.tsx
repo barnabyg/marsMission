@@ -3,9 +3,9 @@ import {
   formatPropellant,
   type ProgramView,
 } from "../simulation/simulation";
-import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
+import { WayHomeChoice } from "./WayHomeChoice";
 import {
   isSurveying,
   NothingLeftToSurvey,
@@ -35,7 +35,7 @@ interface OperatingPanelProps {
 /**
  * The Assets already at Mars, each with what is left of its Service Life, its Upkeep, the choice of its Activity and
  * the choice to end its mission, and the Crew there, with their Health, the choice of the Activity they share in each
- * place and, for round-trip Crew, the choice to bring them home this Turn. Below them is the ascent propellant at each
+ * place and, for round-trip Crew, the choice to bring them home this Turn, greyed out with the reason when they can't. Below them is the ascent propellant at each
  * Landing Site that has any, which stays there whether or not anything is still operating, and the Supplies held in
  * Habitats at each Landing Site.
  */
@@ -94,21 +94,14 @@ export function OperatingPanel({
                 }}
               />
               {group.waysHome.map((way) => (
-                <label
+                <WayHomeChoice
                   key={way.key}
-                  className="end-mission"
-                  title={`${way.names.join(" and ")} leave Mars on ${formatDate(way.leavesMarsOn)} and are home on ${formatDate(way.homeOn)}, if the journey home goes well.`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={bringHome === way.key}
-                    aria-label={`Bring ${way.names.join(" and ")} home`}
-                    onChange={(event) => {
-                      onBringHomeChange(way.key, event.target.checked);
-                    }}
-                  />
-                  <GameText>Bring home</GameText>
-                </label>
+                  way={way}
+                  chosen={bringHome === way.key}
+                  onChange={(home) => {
+                    onBringHomeChange(way.key, home);
+                  }}
+                />
               ))}
             </li>
           ))}
