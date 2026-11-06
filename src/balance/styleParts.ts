@@ -288,7 +288,7 @@ const bestSurveyedSite = (view: ProgramView) =>
  * kinds of Asset there too, built well, before anything else whenever it is rich, none operates and two or more rovers
  * do.
  */
-export const researchBase = (kinds: string[]): PlayStyle => ({
+export const roversAtOneSite = (kinds: string[]): PlayStyle => ({
   ...bigProgram,
   longestServiceLife: ["rover", ...kinds],
   assetReliability: "best",

@@ -18,7 +18,9 @@ describe("the balance of a base at Mars, since Phase 8", () => {
   const robotic = played("big Program: one Asset per Mission");
   const labBesideRovers = played("big Program: land a Mars lab beside rovers");
   const oneSite = played("big Program: keep rovers at one Landing Site");
-  const researchBase = played("big Program: build a research base");
+  const labBesideOneSite = played(
+    "big Program: keep rovers at one Landing Site with a Mars lab",
+  );
 
   it("makes the habitat worth building in some strategies, without being an obvious yes", () => {
     // One-way Crew who land beside one last longer at their research.
@@ -29,7 +31,7 @@ describe("the balance of a base at Mars, since Phase 8", () => {
 
   it("makes the Mars lab worth building in some strategies, without being an obvious yes", () => {
     // Beside the rovers kept at one Landing Site, or the Crew at a base, its Research Grants pay for it many times.
-    expect(researchBase.money).toBeGreaterThan(1.3 * oneSite.money);
+    expect(labBesideOneSite.money).toBeGreaterThan(1.3 * oneSite.money);
     expect(baseHome.science).toBeGreaterThan(1.2 * noLab.science);
     expect(baseHome.money).toBeGreaterThan(noLab.money);
     // Landed wherever its Benefit tag says it would add money, it takes the place of rovers that would earn Science.

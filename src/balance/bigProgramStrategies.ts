@@ -13,7 +13,7 @@ import {
   labBesideRovers,
   samplesHomeFromRovers,
   baseOf,
-  researchBase,
+  roversAtOneSite,
   wholeBase,
 } from "./styleParts";
 
@@ -35,12 +35,12 @@ export const bigProgramStrategies: Strategy[] = [
   playStyle(
     "big Program: keep rovers at one Landing Site",
     "As big Program: one Asset per Mission, but every Asset it lands goes to the surveyed Landing Site with the most Science, once there is one, rather than to a new site.",
-    researchBase([]),
+    roversAtOneSite([]),
   ),
   playStyle(
-    "big Program: build a research base",
+    "big Program: keep rovers at one Landing Site with a Mars lab",
     "As big Program: keep rovers at one Landing Site, also landing Curie Station there, with its longest Service Life and best Reliability, before anything else whenever it is rich, none operates and two or more rovers do, so that it raises their Research Grants.",
-    researchBase(["lab"]),
+    roversAtOneSite(["lab"]),
   ),
   playStyle(
     "big Program: cache samples and send them home",
