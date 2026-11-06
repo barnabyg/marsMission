@@ -26,6 +26,8 @@ const modelsByKind: Partial<Record<string, ReactNode>> = {
   crew: <models.crewLander />,
   // Until it has a model of its own, a fuel plant stands on the surface as a lander does.
   "fuel-plant": <models.lander />,
+  // A habitat too, until its own model comes.
+  habitat: <models.lander />,
 };
 
 /** The camera looks from in front, a little to the right and above, where a lander's hatch and a rover's front show. */

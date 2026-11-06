@@ -94,5 +94,13 @@
     "effect": {
       "kind": "nothing"
     }
+  },
+  {
+    "id": "life-support",
+    "name": "Life support",
+    "description": "Keeps the habitat's air, water, power and Supplies ready for Crew at its Landing Site. It earns no Science.",
+    "effect": {
+      "kind": "nothing"
+    }
   }
 ]

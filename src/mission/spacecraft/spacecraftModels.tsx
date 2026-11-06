@@ -229,6 +229,8 @@ function AssetModel({ kind, lost }: { kind: string; lost: boolean }) {
   if (kind === "rover") return <Aeroshell lost={lost} color="#eef0f4" />;
   // A fuel plant lands too, so it travels in an aeroshell until it has a model of its own.
   if (kind === "fuel-plant") return <Aeroshell lost={lost} color="#e4ddd0" />;
+  // So does a habitat.
+  if (kind === "habitat") return <Aeroshell lost={lost} color="#dfe3d6" />;
   return <Orbiter lost={lost} />;
 }
 

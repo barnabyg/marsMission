@@ -181,5 +181,36 @@
     "makes": {
       "ascentPropellantKgPerDay": 40
     }
+  },
+  {
+    "id": "haven-habitat",
+    "name": "Haven Habitat",
+    "kind": "habitat",
+    "costMillions": 1000,
+    "upkeepMillionsPerTurn": 20,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "activities": ["life-support"],
+    "massTonnes": 4,
+    "serviceLifeOptions": [
+      {
+        "days": 1300,
+        "costMillions": 0
+      },
+      {
+        "days": 2100,
+        "costMillions": 150
+      }
+    ],
+    "failureChancePerTurn": 0.1,
+    "technologyReadiness": "built",
+    "unproven": {
+      "costMillions": 1200,
+      "failureMultiplier": 1.5
+    },
+    "habitat": {
+      "timeAtMarsCutPercent": 50,
+      "suppliesKg": 1500
+    }
   }
 ]

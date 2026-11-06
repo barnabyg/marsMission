@@ -92,6 +92,16 @@ export const assetsSchema = z.array(
         ascentPropellantKgPerDay: z.number().int().positive(),
       })
       .optional(),
+    // What it gives the Crew at its Landing Site while it operates there, whatever its Activity: a home that slows the
+    // Health they lose to time at Mars by this share, and a store of Supplies that it lands with and holds for them.
+    // Habitats at one site don't add up their shares, as on each day the largest applies, but each holds its own Supplies.
+    habitat: z
+      .strictObject({
+        timeAtMarsCutPercent: z.number().int().positive().max(100),
+        // In whole kilograms, as it lands full and can be topped up to this.
+        suppliesKg: z.number().int().positive(),
+      })
+      .optional(),
     ...technologyFields,
   }),
 );

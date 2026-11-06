@@ -32,6 +32,7 @@ describe("starting a Program", () => {
       "test-lander",
       "test-rover",
       "test-fuel-plant",
+      "test-habitat",
       "test-new-lander",
       "test-future-orbiter",
     ]);

@@ -158,6 +158,22 @@ export function testCatalogueFiles(): CatalogueFiles {
         // 7,800 kg over a whole 780-day Turn.
         makes: { ascentPropellantKgPerDay: 10 },
       },
+      {
+        id: "test-habitat",
+        name: "Test Habitat",
+        kind: "habitat",
+        costMillions: 200,
+        upkeepMillionsPerTurn: 10,
+        massTonnes: 2,
+        failureChancePerTurn: 0,
+        serviceLifeOptions: longLife,
+        missionEvents: ["test-landing"],
+        technologyReadiness: "flight-proven",
+        activities: ["test-nothing"],
+        landsAtSite: true,
+        // Halves time at Mars, and holds 400 kg of Supplies, which last a Crew of two 800 days.
+        habitat: { timeAtMarsCutPercent: 50, suppliesKg: 400 },
+      },
       ...technologies.assets,
     ],
     crew: testCrew(),

@@ -25,8 +25,12 @@ describe("Technology Readiness in the real data files", () => {
     const unproven = assets.filter(
       ({ technologyReadiness }) => technologyReadiness === "built",
     );
-    // The fuel plant, new in Phase 8, starts built but unproven too.
-    expect(unproven.map(({ kind }) => kind)).toEqual(["lander", "fuel-plant"]);
+    // The fuel plant and the habitat, new in Phase 8, start built but unproven too.
+    expect(unproven.map(({ kind }) => kind)).toEqual([
+      "lander",
+      "fuel-plant",
+      "habitat",
+    ]);
     expect(unproven[0]?.landingRiskMultiplier).toBeLessThan(1);
   });
 
