@@ -378,6 +378,10 @@ export function createRules(catalogue: Catalogue) {
    * the rendezvous first for Crew leaving a Landing Site. The sort is stable, so those on the same day keep their order.
    */
   function journeyHomeEvents(fromSurface = false): MissionEvent[] {
+    return fromSurface ? fromSurfaceHome : fromOrbitHome;
+  }
+
+  function eventsHome(fromSurface: boolean): MissionEvent[] {
     const { roundTrip } = catalogue.crew;
     return [
       ...(fromSurface ? roundTrip.ascent.missionEvents : []),
@@ -388,6 +392,10 @@ export function createRules(catalogue: Catalogue) {
       )
       .sort((first, second) => first.timing.days - second.timing.days);
   }
+
+  // Worked out once, as balance runs ask for them for every plan they check. Callers never change them.
+  const fromOrbitHome = eventsHome(false);
+  const fromSurfaceHome = eventsHome(true);
 
   /**
    * The Mission Events an ascent vehicle or an Earth return orbiter flies when it sends samples home: Mars ascent and
@@ -425,11 +433,14 @@ export function createRules(catalogue: Catalogue) {
    * has none.
    */
   function homewardEventsFor(mission: PlannedMission | null): MissionEvent[] {
+    const sampleReturn = catalogue.assets.filter(
+      ({ id, sampleReturn: part }) =>
+        part !== undefined && mission?.assetIds.includes(id),
+    );
+    if (sampleReturn.length === 0) return crewHomewardEventsFor(mission);
     const flown = new Set([
       ...crewHomewardEventsFor(mission),
-      ...catalogue.assets
-        .filter(({ id }) => mission?.assetIds.includes(id))
-        .flatMap(sampleReturnEventsOf),
+      ...sampleReturn.flatMap(sampleReturnEventsOf),
     ]);
     return journeyHomeEvents(true).filter((event) => flown.has(event));
   }
