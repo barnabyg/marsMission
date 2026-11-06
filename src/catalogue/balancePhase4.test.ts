@@ -207,10 +207,15 @@ describe("a productive Program in the real data files", () => {
     },
   );
 
-  // This Program flies no Crew, which came in Phase 7.
+  // This Program flies no Crew, which came in Phase 7, and brings none home, which came in Phase 8.
   it.each(
     files.milestones.filter(
-      ({ trigger }) => !("crewArrives" in trigger || "crewLands" in trigger),
+      ({ trigger }) =>
+        !(
+          "crewArrives" in trigger ||
+          "crewLands" in trigger ||
+          "crewComesHome" in trigger
+        ),
     ),
   )("earns the Milestone $name", ({ id }) => {
     expect(played.view.milestones.map((milestone) => milestone.id)).toContain(

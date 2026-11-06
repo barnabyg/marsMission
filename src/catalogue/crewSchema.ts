@@ -81,6 +81,21 @@ export const crewSchema = z.strictObject({
   }),
   // The Public Support lost for each Crew member lost, whatever the cause, on top of anything else that day costs.
   publicSupportLossPerMember: z.number().int().nonnegative(),
+  // What a round trip adds to a Crewed Mission to Mars orbit: an Earth return stage, which waits with the Crew there
+  // and brings them home on a later Turn, when the player chooses.
+  roundTrip: z.strictObject({
+    name: z.string().min(1),
+    description: z.string().min(1),
+    // What it adds to the Crewed Mission's cost and mass, whatever the Crew size.
+    costMillions: money,
+    massTonnes: z.number().positive(),
+    // The day of the Turn the journey home leaves Mars, which its Mission Events count from.
+    leavesMarsOnDay: z.number().int().nonnegative(),
+    // The Mission Events of the journey home, each timed from leaving Mars. The Crew are home when the last succeeds.
+    missionEvents: z.array(id).min(1),
+  }),
+  // The Public Support earned for each Crew member who comes home safe, however they come home.
+  publicSupportPerMemberHome: z.number().int().nonnegative(),
   // What Crew in Mars orbit can do, which all of them there share. The first is what they do unless the player picks
   // another. A research Activity earns its rate for each Crew member doing it.
   orbitActivities: z.array(id).min(1),

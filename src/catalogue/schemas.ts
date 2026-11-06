@@ -159,18 +159,19 @@ const milestonesSchema = z.array(
     name: z.string().min(1),
     description: z.string().min(1),
     // Earned by the first Asset of a kind to be delivered, the first Asset to land, the first Crew to arrive, the
-    // first Crew to land, or reaching a total of Science.
+    // first Crew to land, the first Crew to come home safe, or reaching a total of Science.
     trigger: z.union(
       [
         z.strictObject({ assetKindArrives: id }),
         z.strictObject({ assetLands: z.literal(true) }),
         z.strictObject({ crewArrives: z.literal(true) }),
         z.strictObject({ crewLands: z.literal(true) }),
+        z.strictObject({ crewComesHome: z.literal(true) }),
         z.strictObject({ totalScience: z.number().int().positive() }),
       ],
       {
         error:
-          "must be one of assetKindArrives with a kind of Asset, assetLands with true, crewArrives with true, crewLands with true, or totalScience with a positive whole number",
+          "must be one of assetKindArrives with a kind of Asset, assetLands with true, crewArrives with true, crewLands with true, crewComesHome with true, or totalScience with a positive whole number",
       },
     ),
     science: z.number().int().nonnegative(),

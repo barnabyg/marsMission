@@ -50,6 +50,16 @@
     "publicSupport": 500
   },
   {
+    "id": "first-crew-home",
+    "name": "First Crew home",
+    "description": "The Program has brought its Crew home from Mars alive, and the whole world is cheering their return.",
+    "trigger": {
+      "crewComesHome": true
+    },
+    "science": 100,
+    "publicSupport": 500
+  },
+  {
     "id": "science-700",
     "name": "700 Science earned",
     "description": "The Program has earned 700 Science, and its first results are in the news as well as the journals.",

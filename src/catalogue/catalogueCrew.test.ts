@@ -241,6 +241,6 @@ describe("invalid Crew", () => {
           },
         ],
       }),
-    ).toContain("milestones.json: 6.trigger:");
+    ).toContain(`milestones.json: ${files.milestones.length}.trigger:`);
   });
 });

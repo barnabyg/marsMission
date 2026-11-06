@@ -63,6 +63,15 @@
     ]
   },
   "publicSupportLossPerMember": 75,
+  "roundTrip": {
+    "name": "Earth return stage",
+    "description": "A stage that waits with the Crew in Mars orbit and brings them home on a later Turn.",
+    "costMillions": 600,
+    "massTonnes": 2,
+    "leavesMarsOnDay": 60,
+    "missionEvents": ["trans-earth-injection", "earth-entry"]
+  },
+  "publicSupportPerMemberHome": 100,
   "orbitActivities": ["crew-research", "nothing"],
   "surfaceActivities": ["crew-field-research", "nothing"],
   "names": [

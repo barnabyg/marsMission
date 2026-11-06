@@ -62,6 +62,17 @@ export function testCrew(): CatalogueFiles["crew"] {
       ],
     },
     publicSupportLossPerMember: 20,
+    // The journey home leaves Mars on day 100 of the Turn and splashes down on day 300, 200 days in flight: 20 Health
+    // to radiation with no Protection, and 100 kilograms of Supplies for a Crew of two.
+    roundTrip: {
+      name: "Test return stage",
+      description: "Brings the Crew home.",
+      costMillions: 500,
+      massTonnes: 1,
+      leavesMarsOnDay: 100,
+      missionEvents: ["test-departure-home", "test-splashdown"],
+    },
+    publicSupportPerMemberHome: 40,
     orbitActivities: ["test-research", "test-nothing"],
     // Twice the rate of research in orbit, as a test of earning at the surface's own rates.
     surfaceActivities: ["test-traverse", "test-nothing"],

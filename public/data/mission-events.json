@@ -70,5 +70,29 @@
     },
     "failureProbability": "landingSite",
     "publicSupportLoss": 20
+  },
+  {
+    "id": "trans-earth-injection",
+    "name": "Trans-Earth injection",
+    "description": "The Earth return stage fires its engine and sends the Crew out of Mars orbit on their way home.",
+    "failureDescription": "The Earth return stage's engine failed, leaving the Crew with no way out of Mars orbit.",
+    "timing": {
+      "from": "leavingMars",
+      "days": 0
+    },
+    "failureProbability": 0.05,
+    "publicSupportLoss": 20
+  },
+  {
+    "id": "earth-entry",
+    "name": "Earth entry",
+    "description": "The Crew's capsule came through Earth's atmosphere and splashed down under its parachutes.",
+    "failureDescription": "The capsule's heat shield failed as it came into Earth's atmosphere.",
+    "timing": {
+      "from": "leavingMars",
+      "days": 210
+    },
+    "failureProbability": 0.03,
+    "publicSupportLoss": 20
   }
 ]

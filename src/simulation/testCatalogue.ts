@@ -267,6 +267,14 @@ export function testCatalogueFiles(): CatalogueFiles {
         science: 50,
         publicSupport: 100,
       },
+      {
+        id: "first-crew-home",
+        name: "First Crew home",
+        description: "Crew came home from Mars.",
+        trigger: { crewComesHome: true },
+        science: 60,
+        publicSupport: 300,
+      },
     ],
     reliabilityLevels: [
       { id: "none", name: "None", costMillions: 0, failureMultiplier: 1 },

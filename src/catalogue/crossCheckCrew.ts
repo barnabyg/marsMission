@@ -1,11 +1,15 @@
 import { findDuplicates } from "./crossCheckIds";
 import { catalogueFileNames, type Catalogue } from "./schemas";
 
-/** The Crewed Mission: its Mission Events to Mars orbit and to a Landing Site, Crew sizes, Health, Supplies, Protection, Activities and names. */
+/**
+ * The Crewed Mission: its Mission Events to Mars orbit, to a Landing Site and home from a round trip, Crew sizes,
+ * Health, Supplies, Protection, Activities and names.
+ */
 export function crewProblems({
   crew,
   activities,
   missionEvents,
+  program,
 }: Catalogue): string[] {
   const problems: string[] = [];
   const file = catalogueFileNames.crew;
@@ -94,6 +98,13 @@ export function crewProblems({
     );
   }
   problems.push(...protectionProblems(crew.protection));
+  problems.push(
+    ...roundTripProblems(
+      crew.roundTrip,
+      missionEvents,
+      program.launchWindowIntervalDays,
+    ),
+  );
   const largest = Math.max(...crew.sizes.map((size) => size.crew));
   if (crew.names.length < largest) {
     problems.push(
@@ -128,6 +139,52 @@ function protectionProblems(
   )) {
     problems.push(
       `${file}: the Protection level "${duplicate}" is listed more than once`,
+    );
+  }
+  return problems;
+}
+
+/**
+ * A round trip's journey home: Mission Events that exist, each timed from leaving Mars, none needing a Landing Site, and
+ * home before the Turn it leaves in ends.
+ */
+function roundTripProblems(
+  roundTrip: Catalogue["crew"]["roundTrip"],
+  missionEvents: Catalogue["missionEvents"],
+  turnDays: number,
+): string[] {
+  const file = catalogueFileNames.crew;
+  const problems: string[] = [];
+  let lastDays = 0;
+  for (const eventId of roundTrip.missionEvents) {
+    const event = missionEvents.find(({ id }) => id === eventId);
+    if (!event) {
+      problems.push(
+        `${file}: the round trip refers to the Mission Event "${eventId}", which isn't in ${catalogueFileNames.missionEvents}`,
+      );
+      continue;
+    }
+    if (event.timing.from !== "leavingMars") {
+      problems.push(
+        `${file}: the round trip brings the Mission Event "${eventId}" on the way home, but it isn't timed from leaving Mars`,
+      );
+    }
+    if (event.failureProbability === "landingSite") {
+      problems.push(
+        `${file}: the round trip can't use the Mission Event "${eventId}" on the way home, because it needs a Landing Site`,
+      );
+    }
+    lastDays = Math.max(lastDays, event.timing.days);
+  }
+  for (const duplicate of new Set(findDuplicates(roundTrip.missionEvents))) {
+    problems.push(
+      `${file}: the round trip lists the Mission Event "${duplicate}" more than once`,
+    );
+  }
+  const homeOn = roundTrip.leavesMarsOnDay + lastDays;
+  if (homeOn >= turnDays) {
+    problems.push(
+      `${file}: the journey home ends on day ${homeOn} of the Turn, which must be before the Turn ends on day ${turnDays}`,
     );
   }
   return problems;

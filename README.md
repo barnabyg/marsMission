@@ -76,7 +76,7 @@ The Asset cards' pictures in `public/art/assets`, one for each kind of Asset and
 | `crossCheckTrajectories.ts`  | Trajectories and Free-returns that finish within a Turn                                                                                                                                         |
 | `crossCheckTechnology.ts`    | Technology Readiness: unproven costs and risks, Development, and ids unique across Assets and Launch Vehicles                                                                                   |
 | `crossCheckBenefits.ts`      | Benefits between Assets: that each has something to raise                                                                                                                                       |
-| `crossCheckCrew.ts`          | The Crewed Mission: its Mission Events to Mars orbit and to a Landing Site, Crew sizes in order, Activities, Health and enough names                                                            |
+| `crossCheckCrew.ts`          | The Crewed Mission: its Mission Events to Mars orbit, to a Landing Site and home from a round trip, within a Turn, Crew sizes in order, Activities, Health and enough names                     |
 
 ### The Simulation's files
 
