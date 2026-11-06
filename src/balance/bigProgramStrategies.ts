@@ -5,6 +5,7 @@ import {
   colossusWhenRich,
   crewInOrbit,
   crewLanding,
+  crewRoundTrip,
 } from "./styleParts";
 
 /**
@@ -35,6 +36,11 @@ export const bigProgramStrategies: Strategy[] = [
     "big Program: develop the Meridian Colossus and fly Crew when rich",
     "As big Program: develop the Meridian Colossus when rich, also sending a Crewed Mission to Mars orbit once the Meridian Colossus is Flight-proven, before any Asset whenever it can afford one and keep its reserve: the largest Crew it can afford, with the most Supplies and then the most Protection that fit, and the best Reliability on every Mission Event that it can afford.",
     { ...colossusWhenRich, fliesCrew: crewInOrbit },
+  ),
+  playStyle(
+    "big Program: fly Crew on a round trip and bring them home",
+    "As big Program: develop the Meridian Colossus and fly Crew when rich, but its Crew go on a round trip, with an Earth return stage, the most Protection that fits before the largest Crew, and the best Reliability it can afford on the way home too, and come home on the first Turn they can.",
+    { ...colossusWhenRich, fliesCrew: crewRoundTrip },
   ),
   playStyle(
     "big Program: develop the Meridian Colossus and land Crew when rich",

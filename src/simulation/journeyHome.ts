@@ -89,6 +89,10 @@ export function flyJourneyHome(
     break;
   }
   endJourney(flight, homeOn);
+  // Marked, so that the events column and the checks of the Timeline can tell them from the Mission's.
+  flight.outcome.entries = flight.outcome.entries.map((entry) =>
+    entry.kind === "missionEvent" ? { ...entry, homeward: true } : entry,
+  );
   return { crew: flight.crew, homeOn, outcome: flight.outcome };
 }
 

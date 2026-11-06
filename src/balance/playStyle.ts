@@ -7,7 +7,7 @@ import {
   surveyActivity,
   wantsSurvey,
 } from "./assetMissions";
-import { crewedMissions } from "./crewPlay";
+import { crewedMissions, wayHome } from "./crewPlay";
 import type { PlayStyle } from "./playStyleOptions";
 import type { PlanningTools, Strategy } from "./strategy";
 import { ending, payUpkeep, toolsEnding } from "./upkeepPlay";
@@ -162,7 +162,12 @@ export function playStyle(
         goNoGo: chosen.goNoGo ?? "holdOff",
       })[kind],
     plan(given, givenTools) {
-      const kept = planPayingUpkeep(given, givenTools, chosen, 0);
+      // A journey home costs nothing more this Turn, so it goes with whatever else the Turn does.
+      const bringHome = chosen.fliesCrew && wayHome(given, chosen.fliesCrew);
+      const kept = {
+        ...planPayingUpkeep(given, givenTools, chosen, 0),
+        ...(bringHome ? { bringHome } : {}),
+      };
       // Only short of money, not holding back at its limit of Assets, which ending one would only churn.
       if (kept.mission || inService(given) >= (chosen.assetLimit ?? Infinity)) {
         return kept;
@@ -175,7 +180,8 @@ export function playStyle(
         alsoEnd++
       ) {
         const freed = planPayingUpkeep(given, givenTools, chosen, alsoEnd);
-        if (freed.mission) return freed;
+        if (freed.mission)
+          return { ...freed, ...(bringHome ? { bringHome } : {}) };
       }
       return kept;
     },

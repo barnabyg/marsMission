@@ -99,5 +99,7 @@ export const colossusWhenRich: PlayStyle = {
 
 /** Crew sent to Mars orbit with the best Reliability it can afford, as they are worth more than any Asset. */
 export const crewInOrbit: CrewStyle = { reliability: true };
+/** The same Crew on a round trip to Mars orbit, brought home on the first Turn it can. */
+export const crewRoundTrip: CrewStyle = { ...crewInOrbit, roundTrip: true };
 /** The same Crew landing at a surveyed Landing Site once there is one. */
 export const crewLanding: CrewStyle = { ...crewInOrbit, lands: true };

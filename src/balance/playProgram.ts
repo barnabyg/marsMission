@@ -12,6 +12,7 @@ import {
   type TurnSummary,
 } from "../simulation/simulation";
 import { crewProblems } from "./invalidCrew";
+import { homecomingProblems } from "./invalidHomecomings";
 import { invalidStates, timelineMissionEventProblems } from "./invalidStates";
 import type { PlanningTools, Strategy } from "./strategy";
 
@@ -229,6 +230,7 @@ export function playProgram(
     const invalid = [
       ...invalidStates(view, result.summary, after),
       ...crewProblems(view, result.summary, after),
+      ...homecomingProblems(view, result.summary, after),
       ...timelineMissionEventProblems(result.timeline, result.summary),
     ];
     if (invalid.length > 0) throw fail(invalid);

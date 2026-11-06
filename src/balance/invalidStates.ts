@@ -90,6 +90,7 @@ export function invalidStates(
       summary.publicSupportStart +
         summary.publicSupportGained -
         (summary.failure?.publicSupportLost ?? 0) -
+        (summary.journeyHome?.failure?.publicSupportLost ?? 0) -
         sum(
           summary.crewLost.map(({ publicSupportLost }) => publicSupportLost),
         ) -
@@ -315,28 +316,41 @@ export function timelineMissionEventProblems(
   timeline: Timeline,
   summary: TurnSummary,
 ): string[] {
-  const events = timeline.entries.flatMap((entry) =>
+  const all = timeline.entries.flatMap((entry) =>
     entry.kind === "missionEvent" ? [entry] : [],
   );
-  const days = events.map(({ day }) => day);
-  const failedAt = events.findIndex(({ outcome }) => outcome === "failure");
-  const failedName =
-    summary.failure && !summary.failure.hazard
-      ? summary.failure.missionEventName
-      : null;
+  const events = all.filter(({ homeward }) => homeward !== true);
+  const homewardEvents = all.filter(({ homeward }) => homeward === true);
+  const failedTitle = (failed: { missionEventName: string } | null) =>
+    failed === null ? null : `${failed.missionEventName} failed`;
+  const failedAt = (flown: typeof all) =>
+    flown.findIndex(({ outcome }) => outcome === "failure");
+  const afterFailure = (flown: typeof all) =>
+    failedAt(flown) >= 0 && failedAt(flown) < flown.length - 1;
+  const unlike = (
+    flown: typeof all,
+    failed: { missionEventName: string } | null,
+  ) => (flown[failedAt(flown)]?.title ?? null) !== failedTitle(failed);
+  const days = (flown: typeof all) => flown.map(({ day }) => day);
   const failedOnDay = timeline.mission?.failedOnDay ?? null;
+  // The Mission and a journey home fly apart, so each is checked on its own.
   const checks: [impossible: boolean, problem: string][] = [
     [
-      new Set(days).size < days.length,
+      new Set(days(events)).size < events.length ||
+        new Set(days(homewardEvents)).size < homewardEvents.length,
       "Two Mission Events happened on the same day.",
     ],
     [
-      failedAt >= 0 && failedAt < events.length - 1,
+      afterFailure(events) || afterFailure(homewardEvents),
       "A Mission Event happened after one failed.",
     ],
     [
-      (events[failedAt]?.title ?? null) !==
-        (failedName === null ? null : `${failedName} failed`),
+      unlike(
+        events,
+        summary.failure && !summary.failure.hazard ? summary.failure : null,
+      ) ||
+        unlike(homewardEvents, summary.journeyHome?.failure ?? null) ||
+        (homewardEvents.length > 0 && summary.journeyHome === null),
       "The Mission Event that failed doesn't match the Turn summary.",
     ],
     [

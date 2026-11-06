@@ -9,6 +9,8 @@ export interface MissionEventEntry {
   outcome: "success" | "failure";
   /** Whether this failure sends the Mission back to Earth rather than ending it where it is. */
   returningToEarth?: true;
+  /** Whether it is on a journey home from Mars, rather than on the Turn's Mission. */
+  homeward?: true;
 }
 
 /** A Mission on a Free-return Trajectory has got back to Earth. */

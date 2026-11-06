@@ -67,7 +67,7 @@
     "name": "Earth return stage",
     "description": "A stage that waits with the Crew in Mars orbit and brings them home on a later Turn.",
     "costMillions": 600,
-    "massTonnes": 2,
+    "massTonnes": 1.5,
     "leavesMarsOnDay": 60,
     "missionEvents": ["trans-earth-injection", "earth-entry"]
   },

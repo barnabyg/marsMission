@@ -41,7 +41,7 @@ describe("strategies that fly Crew", () => {
   });
 
   it.each(flying.map((strategy) => [strategy.name, strategy] as const))(
-    "%s gets Crew to Mars once it can carry them, and keeps them at research until their Health or Supplies run out",
+    "%s gets Crew to Mars once it can carry them, and keeps them at research until their Health or Supplies run out, or it brings them home",
     (_, strategy) => {
       const certainly = simulationOf(certain);
       const { program, turns: played } = playProgram(
@@ -59,18 +59,24 @@ describe("strategies that fly Crew", () => {
           ),
         ),
       ).toBe(true);
-      // With nothing able to fail, only Health, or Supplies running out, take Crew away from Mars.
+      // With nothing able to fail, only Health, or Supplies running out, take Crew away from Mars, unless the strategy
+      // brings them home.
       const { crew } = certainly.saveProgram(program).program;
       expect(crew.length).toBeGreaterThan(0);
+      const bringsHome = strategy.name.includes("bring them home");
       expect(
         crew.every(
           ({ location }) =>
             location.kind === "marsOrbit" ||
             location.kind === "landingSite" ||
+            (location.kind === "home" && bringsHome) ||
             (location.kind === "lost" &&
               ["health", "supplies"].includes(location.cause)),
         ),
       ).toBe(true);
+      expect(crew.some(({ location }) => location.kind === "home")).toBe(
+        bringsHome,
+      );
       // Each Crew carries the most Protection that it can afford and that fits, unless the strategy buys none.
       expect(
         crew.some(({ protectionId }) => protectionId !== "protection-none"),
