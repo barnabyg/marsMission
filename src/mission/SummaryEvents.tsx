@@ -84,6 +84,13 @@ export function SummaryEvents({ summary }: { summary: TurnSummary }) {
                 {`Crew aboard: ${summary.journeyHome.crew.join(", ")}`}
               </GameText>
             </li>
+            {summary.journeyHome.samples > 0 && (
+              <li>
+                <GameText>
+                  {`Samples lost with them: ${String(summary.journeyHome.samples)}`}
+                </GameText>
+              </li>
+            )}
             <li>
               <GameText>
                 {`Public Support lost: ${summary.journeyHome.failure.publicSupportLost}`}

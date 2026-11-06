@@ -80,7 +80,7 @@ An Earth return stage that a later Mission flies to Mars orbit on its own, with 
 _Avoid_: Rescue ship, fetch mission
 
 **Journey home**:
-Crew leaving Mars for Earth aboard their Earth return stage, on a Turn the player chooses. Its Mission Events, Trans-Earth injection and Earth entry, after Mars ascent and Mars orbit rendezvous for Crew at a Landing Site, have Reliability and Contingency, and a failure loses the Crew. Each Crew member home safe earns Public Support, and the first Crew home are a Milestone.
+Crew leaving Mars for Earth aboard their Earth return stage, or samples aboard an Earth return orbiter, on a Turn the player chooses. Its Mission Events, Trans-Earth injection and Earth entry, after Mars ascent and Mars orbit rendezvous for Crew at a Landing Site and for samples, have Reliability and Contingency, and a failure loses the Crew or samples aboard. Each Crew member home safe earns Public Support, samples earn Science, and the first of each home are a Milestone. At most one flies each Turn.
 _Avoid_: Return leg, return flight
 
 **Mars ascent**:
@@ -168,6 +168,18 @@ An Activity for a fuel plant: running it, which earns no Science. A fuel plant m
 
 **Habitation**:
 An Activity for a Habitat: keeping its air, water, power and Supplies ready for Crew, which earns no Science. A Habitat houses the Crew at its Landing Site whatever its Activity.
+
+**Sample caching**:
+An Activity for a rover: collecting samples of rock and soil at its Landing Site, which stay there from Turn to Turn until an ascent vehicle or Crew coming home take them. It earns no Science until they reach Earth, where each earns Science and the first are a Milestone.
+_Avoid_: Sample collection, coring
+
+**Ascent vehicle**:
+An Asset that lands at a Landing Site and waits there to lift the samples cached at its site into Mars orbit, through Mars ascent and Mars orbit rendezvous with an Earth return orbiter, on a Turn the player chooses. Unlike Crew, it needs no ascent propellant.
+_Avoid_: Sample rocket, MAV (in the game's text)
+
+**Earth return orbiter**:
+An Asset that waits in Mars orbit for the samples an ascent vehicle brings up, and flies them home through Trans-Earth injection and Earth entry. A failure on the way loses the samples, and it leaves Mars for good once it has flown them.
+_Avoid_: Sample return orbiter
 
 **Sample analysis**:
 An Activity for a Mars lab: studying the samples that rovers and Crew at its Landing Site bring in, which earns no Science of its own. A Mars lab raises their Research Grants whatever its Activity.

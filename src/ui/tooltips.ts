@@ -40,7 +40,7 @@ export const tooltips = {
   "Return vehicle":
     "An Earth return stage that a later Mission flies to Mars orbit on its own, with or without Crew of its own, for Crew already at Mars who have no way home, such as those who went one way. It has room for only so many Crew, waits in Mars orbit for those it was sent for, and brings them home on a Turn the player chooses, as a round trip's stage does. A Crewed Mission that carries one swaps Crew: its own stay at Mars.",
   "Journey home":
-    "Crew leaving Mars for Earth aboard their Earth return stage, on a Turn the player chooses. Its Mission Events, Trans-Earth injection and Earth entry, after Mars ascent and Mars orbit rendezvous for Crew at a Landing Site, have Reliability and Contingency, and a failure loses the Crew. Each Crew member home safe earns Public Support, and the first Crew home are a Milestone.",
+    "Crew leaving Mars for Earth aboard their Earth return stage, or samples aboard an Earth return orbiter, on a Turn the player chooses. Its Mission Events, Trans-Earth injection and Earth entry, after Mars ascent and Mars orbit rendezvous for Crew at a Landing Site and for samples, have Reliability and Contingency, and a failure loses the Crew or samples aboard. Each Crew member home safe earns Public Support, samples earn Science, and the first of each home are a Milestone. At most one flies each Turn.",
   "Mars ascent":
     "The Mission Event in which Crew at a Landing Site lift off for Mars orbit at the start of their journey home. It uses up ascent propellant made at their site by a fuel plant, so the journey can only be chosen once the site has enough.",
   "Mars orbit rendezvous":
@@ -83,6 +83,12 @@ export const tooltips = {
     "An Asset that lands at a Landing Site and houses the Crew there, on each day it operates, whatever its Activity: it slows the Health they lose to time at Mars, and holds Supplies for them, which they draw on once their own run out and which Crew landing there top up. Its Benefit tag in Planning Mode says how many more days it would give a Crew member at Mars.",
   "Mars lab":
     "An Asset that lands at a Landing Site and studies the samples that rovers and Crew there bring in, on each day it operates, whatever its Activity, raising the Research Grants their Ongoing Research pays. Their Science and Public Support stay as they are. Its Benefit tag in Planning Mode says how much money it would add over a whole Turn.",
+  "Sample caching":
+    "An Activity for a rover: collecting samples of rock and soil at its Landing Site, which stay there from Turn to Turn until an ascent vehicle or Crew coming home take them. It earns no Science until they reach Earth, where each earns Science and the first are a Milestone.",
+  "Ascent vehicle":
+    "An Asset that lands at a Landing Site and waits there to lift the samples cached at its site into Mars orbit, through Mars ascent and Mars orbit rendezvous with an Earth return orbiter, on a Turn the player chooses. Unlike Crew, it needs no ascent propellant.",
+  "Earth return orbiter":
+    "An Asset that waits in Mars orbit for the samples an ascent vehicle brings up, and flies them home through Trans-Earth injection and Earth entry. A failure on the way loses the samples, and it leaves Mars for good once it has flown them.",
   "Sample analysis":
     "An Activity for a Mars lab: studying the samples that rovers and Crew at its Landing Site bring in, which earns no Science of its own. A Mars lab raises their Research Grants whatever its Activity.",
   Habitation:

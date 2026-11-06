@@ -29,7 +29,7 @@ export function WayHomeChoice({
         .join(" ")}
       title={
         reason ??
-        `${way.names.join(" and ")} leave Mars on ${formatDate(way.leavesMarsOn)} and are home on ${formatDate(way.homeOn)}, if the journey home goes well.`
+        `${way.names.join(" and ")} leave Mars on ${formatDate(way.leavesMarsOn)} and are home on ${formatDate(way.homeOn)}, if the journey home goes well${way.samples > 0 ? `, bringing ${String(way.samples)} samples` : ""}. It is this Turn's one journey home.`
       }
       data-testid="way-home"
     >

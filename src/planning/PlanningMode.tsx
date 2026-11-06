@@ -52,7 +52,7 @@ export function PlanningMode({
   const [crewActivities, setCrewActivities] = useState<Record<string, string>>(
     {},
   );
-  // At most one journey home flies each Turn.
+  // At most one journey home flies each Turn, of Crew or of samples, so choosing one replaces any other.
   const [bringHome, setBringHome] = useState<string | null>(null);
   const choices = useMissionPlan(
     simulation,
@@ -138,6 +138,7 @@ export function PlanningMode({
             assets={view.operatingAssets}
             crew={view.crew}
             landingSites={view.landingSites}
+            sampleReturns={view.sampleReturns}
             chosenCrewActivities={crewActivities}
             onCrewActivityChange={(key, activityId) => {
               setCrewActivities({ ...crewActivities, [key]: activityId });

@@ -5,6 +5,7 @@ import {
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
+import { SamplesWaiting } from "./SamplesHomeChoice";
 import { WayHomeChoice } from "./WayHomeChoice";
 import {
   isSurveying,
@@ -17,10 +18,12 @@ interface OperatingPanelProps {
   crew: ProgramView["crew"];
   /** The known Landing Sites, for the ascent propellant at each. */
   landingSites: ProgramView["landingSites"];
+  /** The samples waiting at each Landing Site that has any, and whether they can go home this Turn. */
+  sampleReturns: ProgramView["sampleReturns"];
   /** The new Activities chosen this Turn for the Crew in each place, by its key. */
   chosenCrewActivities: Record<string, string>;
   onCrewActivityChange: (key: string, activityId: string) => void;
-  /** The Earth return stage, by key, whose Crew the player has chosen to bring home this Turn, if any. */
+  /** The journey home the player has chosen this Turn, by key, if any: an Earth return stage's Crew, or samples. */
   bringHome: string | null;
   onBringHomeChange: (key: string, home: boolean) => void;
   somethingLeftToSurvey: boolean;
@@ -35,7 +38,8 @@ interface OperatingPanelProps {
 /**
  * The Assets already at Mars, each with what is left of its Service Life, its Upkeep, the choice of its Activity and
  * the choice to end its mission, and the Crew there, with their Health, the choice of the Activity they share in each
- * place and, for round-trip Crew, the choice to bring them home this Turn, greyed out with the reason when they can't. Below them is the ascent propellant at each
+ * place and, for round-trip Crew, the choice to bring them home this Turn, greyed out with the reason when they can't. Below them are the samples
+ * waiting at each Landing Site, with the choice to send them home, then the ascent propellant at each
  * Landing Site that has any, which stays there whether or not anything is still operating, and the Supplies held in
  * Habitats at each Landing Site.
  */
@@ -43,6 +47,7 @@ export function OperatingPanel({
   assets,
   crew,
   landingSites,
+  sampleReturns,
   chosenCrewActivities,
   onCrewActivityChange,
   bringHome,
@@ -63,7 +68,8 @@ export function OperatingPanel({
     assets.length === 0 &&
     crew.length === 0 &&
     stocked.length === 0 &&
-    held.length === 0;
+    held.length === 0 &&
+    sampleReturns.length === 0;
   return (
     <section
       className={empty ? "panel empty" : "panel"}
@@ -196,6 +202,11 @@ export function OperatingPanel({
           </ul>
         </>
       )}
+      <SamplesWaiting
+        samples={sampleReturns}
+        bringHome={bringHome}
+        onBringHomeChange={onBringHomeChange}
+      />
       {stocked.length > 0 && (
         <p data-testid="ascent-propellant">
           <GameText>
