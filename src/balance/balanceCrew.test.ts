@@ -453,19 +453,26 @@ describe("solar particle events with Crew aboard", () => {
   };
   const flyingCrew = strategies.filter(({ name }) => name.includes("Crew"));
 
-  it("are a kind of Decision Point of their own, with rows of their own in the report", () => {
-    const report = balanceReport(stormy, 5, flyingCrew);
-    expect(report).toMatch(
-      /Decision Points: .*solar particle event with Crew \d+\.\d/,
-    );
-    const rows = report
-      .split("\n")
-      .filter((line) => line.startsWith("solar particle event with Crew"))
-      .map((line) => line.trim().split(/\s{2,}/));
-    expect(rows.map(([kind, answer]) => [kind, answer])).toContainEqual([
-      "solar particle event with Crew",
-      "safeMode",
-    ]);
-    for (const row of rows) expect(row).toHaveLength(7);
-  });
+  // It plays every strategy that flies Crew, which takes longer than a test usually may now that bases fly Crew too.
+  it(
+    "are a kind of Decision Point of their own, with rows of their own in the report",
+    {
+      timeout: 30_000,
+    },
+    () => {
+      const report = balanceReport(stormy, 5, flyingCrew);
+      expect(report).toMatch(
+        /Decision Points: .*solar particle event with Crew \d+\.\d/,
+      );
+      const rows = report
+        .split("\n")
+        .filter((line) => line.startsWith("solar particle event with Crew"))
+        .map((line) => line.trim().split(/\s{2,}/));
+      expect(rows.map(([kind, answer]) => [kind, answer])).toContainEqual([
+        "solar particle event with Crew",
+        "safeMode",
+      ]);
+      for (const row of rows) expect(row).toHaveLength(7);
+    },
+  );
 });
