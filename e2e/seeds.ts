@@ -334,3 +334,12 @@ export const successSeed = seedWhere(null);
 /** A seed whose first Mission fails at the named Mission Event. */
 export const seedFailingAt = (missionEventName: string) =>
   seedWhere(missionEventName);
+
+/** A seed whose first Mission lands the fuel plant, which starts unproven, at the first known Landing Site, with nothing to answer. */
+export const fuelPlantSeed = seedWhere(null, {
+  mission: {
+    launchVehicleId: "meridian-heavy",
+    assetIds: ["wellspring-fuel-plant"],
+    landingSiteId: "jezero-crater",
+  },
+});
