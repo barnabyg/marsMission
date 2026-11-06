@@ -156,8 +156,9 @@ test("a switch away holds until the next Mission Event with a view of its own", 
   await expect(current).toHaveText("Mars orbit");
   await viewButton(page, "Solar system").click();
   await expect(current).toHaveText("Solar system");
+  // At 1x, so that the check below lands well inside the 200 days: at 5x they pass in under a second.
   await pauseAtEvent(page, "Entry/descent/landing failed", async () => {
-    await page.getByRole("button", { name: "5x" }).click();
+    await page.getByRole("button", { name: "1x" }).click();
     await expect(page.getByTestId("mission-date")).not.toHaveText(
       "29 June 2029",
     );
