@@ -12,7 +12,7 @@ const allLandingSiteIds = realFiles.landingSites.map(({ id }) => id);
 /**
  * Opens Planning Mode with every Milestone earned and several operating Assets listed, and if asked,
  * with nothing left to Survey, which adds a note to each panel with an Asset set to Survey, or with Crew at Mars, one-way
- * Crew among them if asked.
+ * Crew among them if asked, and samples waiting at Jezero Crater if asked.
  */
 export async function openBusyProgram(
   page: Page,
@@ -21,6 +21,7 @@ export async function openBusyProgram(
     colossusBuilt = false,
     crewAtMars = false,
     oneWayCrew = false,
+    samplesWaiting = false,
   } = {},
 ): Promise<void> {
   const saved = busyProgram(allSurveyed);
@@ -43,9 +44,17 @@ export async function openBusyProgram(
         crewAtMars
           ? {
               // Format 9 holds Crew and their Earth return stages, here with the largest Crew in Mars orbit on a round
-              // trip, so that Planning Mode offers to bring them home.
-              formatVersion: 9,
+              // trip, so that Planning Mode offers to bring them home. Format 12 adds samples waiting at a Landing
+              // Site, which Planning Mode offers to send home too.
+              formatVersion: samplesWaiting ? 12 : 9,
               program: {
+                ...(samplesWaiting
+                  ? {
+                      ascentPropellantKg: {},
+                      habitatSuppliesKg: {},
+                      samplesAtSites: { "jezero-crater": 18 },
+                    }
+                  : {}),
                 ...developed,
                 // Enough for a large Crewed Mission and a lander, so that nothing shows a problem.
                 moneyMillions: 9000,

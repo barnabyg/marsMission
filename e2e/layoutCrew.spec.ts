@@ -91,10 +91,13 @@ for (const size of screenSizes) {
       }
     });
 
-    test("Planning Mode fits on one screen with round-trip Crew to bring home, and a round trip with every Contingency", async ({
+    test("Planning Mode fits on one screen with round-trip Crew to bring home, samples waiting, and a round trip with every Contingency", async ({
       page,
     }) => {
-      await openBusyProgram(page, { crewAtMars: true });
+      await openBusyProgram(page, { crewAtMars: true, samplesWaiting: true });
+      await expect(page.getByTestId("samples-waiting")).toContainText(
+        "Samples at Jezero Crater: 18",
+      );
       await page.getByRole("checkbox", { name: /^Bring .* home$/ }).check();
       await page
         .getByRole("combobox", { name: "Launch Vehicle" })

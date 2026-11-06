@@ -11,16 +11,18 @@ import { successSeed } from "./seeds";
 
 const realFiles = realCatalogueFiles();
 /**
- * Every Asset a new Program can choose, leaving out any that need Development first, and the fuel plant, the habitat
- * and the Mars lab, which the Meridian Colossus can't carry beside all the others.
+ * Every Asset a new Program can choose, leaving out any that need Development first, and the fuel plant, the habitat,
+ * the Mars lab, the ascent vehicle and the Earth return orbiter, which the Meridian Colossus can't carry beside all the
+ * others.
  */
 const allAssets = realFiles.assets
   .filter(
-    ({ technologyReadiness, makes, habitat, benefit }) =>
+    ({ technologyReadiness, makes, habitat, benefit, sampleReturn }) =>
       technologyReadiness !== "not-built" &&
       makes === undefined &&
       habitat === undefined &&
-      benefit?.raises !== "siteResearchGrants",
+      benefit?.raises !== "siteResearchGrants" &&
+      sampleReturn === undefined,
   )
   .map(({ name }) => name);
 
