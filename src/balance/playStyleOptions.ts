@@ -63,6 +63,13 @@ export interface PlayStyle {
    * sends a Landing Site's samples home on the first Turn it can, when it brings no Crew home.
    */
   cachesSamples?: boolean;
+  /** A Landing Site, by id, where it lands every Asset that lands while this names one, so that they build a base there. */
+  baseSite?: (view: ProgramView) => string | undefined;
+  /**
+   * Kinds of Asset it builds well: also when they fill a Launch Vehicle beside another Asset, it buys them the longest
+   * Service Life and the best Reliability it can afford, as for the Asset it sends.
+   */
+  buildsWell?: string[];
   /** What it does at a go/no-go check before a landing, which is to hold off unless it says otherwise. */
   goNoGo?: "go" | "holdOff";
 }

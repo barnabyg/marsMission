@@ -12,6 +12,9 @@ import {
   crewHomeFromFuelPlant,
   labBesideRovers,
   samplesHomeFromRovers,
+  baseOf,
+  researchBase,
+  wholeBase,
 } from "./styleParts";
 
 /**
@@ -28,6 +31,16 @@ export const bigProgramStrategies: Strategy[] = [
     "big Program: land a Mars lab beside rovers",
     "As big Program: one Asset per Mission, also landing Curie Station, with its longest Service Life, before anything else whenever it has the money for several rovers and its Benefit tag says it would add money this Turn, at the Landing Site where it would add most, so that it raises the Research Grants of the rovers there.",
     labBesideRovers,
+  ),
+  playStyle(
+    "big Program: keep rovers at one Landing Site",
+    "As big Program: one Asset per Mission, but every Asset it lands goes to the surveyed Landing Site with the most Science, once there is one, rather than to a new site.",
+    researchBase([]),
+  ),
+  playStyle(
+    "big Program: build a research base",
+    "As big Program: keep rovers at one Landing Site, also landing Curie Station there, with its longest Service Life and best Reliability, before anything else whenever it is rich, none operates and two or more rovers do, so that it raises their Research Grants.",
+    researchBase(["lab"]),
   ),
   playStyle(
     "big Program: cache samples and send them home",
@@ -75,13 +88,33 @@ export const bigProgramStrategies: Strategy[] = [
   ),
   playStyle(
     "big Program: land round-trip Crew beside a fuel plant and bring them home",
-    "As big Program: land Crew and a fuel plant, but its Crew go on a round trip, as in big Program: fly Crew on a round trip and bring them home, landing at a Landing Site where a Wellspring Fuel Plant operates, surveyed first, and flying no Crew while none does. They come home through Mars ascent on the first Turn the site has the ascent propellant it needs.",
+    "As big Program: land Crew and a fuel plant, but its Crew go on a round trip, as in big Program: fly Crew on a round trip and bring them home, landing at a Landing Site where a Wellspring Fuel Plant operates, surveyed first, and flying no Crew while none does. They come home through Mars ascent once one of them has less than 45 Health, or their Supplies wouldn't last another Turn, if the site has the ascent propellant it needs.",
     { ...fuelPlantWhenRich, fliesCrew: crewHomeFromFuelPlant },
   ),
   playStyle(
     "big Program: land Crew beside a habitat",
     "As big Program: develop the Meridian Colossus and land Crew when rich, but its Crew land at a surveyed Landing Site where a Haven Module operates, if there is one, and otherwise take one with them whenever it fits and can be afforded, so that they lose less Health to time at Mars and have its Supplies.",
     { ...colossusWhenRich, fliesCrew: crewBesideHabitat },
+  ),
+  playStyle(
+    "big Program: build a base, land Crew there and bring them home",
+    "As big Program: develop the Meridian Colossus when rich, but once rich it builds a base at the surveyed Landing Site with the most Science: a Wellspring Fuel Plant and Curie Station, and a Haven Module once Crew could fly there, each with its longest Service Life and best Reliability, before anything else whenever one is missing there, filling the Meridian Colossus once it is built, and every Asset it lands goes there. Its Crew go on round trips to the base, as in big Program: land round-trip Crew beside a fuel plant and bring them home.",
+    { ...baseOf(wholeBase), fliesCrew: crewHomeFromFuelPlant },
+  ),
+  playStyle(
+    "big Program: build a base and land Crew there one way",
+    "As big Program: build a base, land Crew there and bring them home, but with no fuel plant, as its Crew go one way and land at the base beside its Haven Module, as in big Program: land Crew beside a habitat.",
+    { ...baseOf(["habitat", "lab"]), fliesCrew: crewBesideHabitat },
+  ),
+  playStyle(
+    "big Program: build a base with no habitat, land Crew there and bring them home",
+    "As big Program: build a base, land Crew there and bring them home, with no Haven Module.",
+    { ...baseOf(["fuel-plant", "lab"]), fliesCrew: crewHomeFromFuelPlant },
+  ),
+  playStyle(
+    "big Program: build a base with no Mars lab, land Crew there and bring them home",
+    "As big Program: build a base, land Crew there and bring them home, with no Curie Station.",
+    { ...baseOf(["fuel-plant", "habitat"]), fliesCrew: crewHomeFromFuelPlant },
   ),
   playStyle(
     "big Program: land Crew, least Supplies",

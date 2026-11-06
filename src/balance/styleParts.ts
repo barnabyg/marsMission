@@ -146,10 +146,14 @@ export const crewRoundTrip: CrewStyle = { ...crewInOrbit, roundTrip: true };
 export const crewFetched: CrewStyle = { ...crewInOrbit, fetches: true };
 /** The same Crew landing at a surveyed Landing Site once there is one. */
 export const crewLanding: CrewStyle = { ...crewInOrbit, lands: true };
-/** The same Crew on a round trip landing beside a fuel plant, once one operates, and brought home through Mars ascent. */
+/**
+ * The same Crew on a round trip landing beside a fuel plant, once one operates, and brought home through Mars ascent
+ * once one of them has less than 45 Health or their Supplies wouldn't last another Turn.
+ */
 export const crewHomeFromFuelPlant: CrewStyle = {
   ...crewRoundTrip,
   besideFuelPlant: true,
+  homeBelowHealth: 45,
 };
 /** The same landing Crew beside a habitat, which goes with them if none operates at a surveyed Landing Site. */
 export const crewBesideHabitat: CrewStyle = { ...crewLanding, habitat: true };
@@ -182,3 +186,122 @@ export const samplesHomeFromRovers: PlayStyle = {
   fillsVehicle: "meridian-heavy",
   fillsWhile: (view) => sampleReturnWanted(view).length > 1,
 };
+
+/**
+ * The Landing Site of a base of these kinds of Asset: where one of them operates with Service Life left, or once rich,
+ * the surveyed site with the most Science. None until then.
+ */
+const baseSiteOf = (kinds: string[]) => (view: ProgramView) =>
+  view.operatingAssets.find(
+    ({ kind, daysLeft, landingSiteId }) =>
+      kinds.includes(kind) && daysLeft > 0 && landingSiteId !== null,
+  )?.landingSiteId ??
+  (view.moneyMillions >= richMillions
+    ? view.landingSites
+        .filter(({ surveyed }) => surveyed)
+        .toSorted((first, second) => second.science - first.science)[0]?.id
+    : undefined);
+
+/** Whether a Launch Vehicle that can carry Crew is Flight-proven, so that a Crewed Mission could fly this Turn. */
+const crewCanFly = (view: ProgramView) =>
+  view.launchVehicles.some(
+    ({ id, technologyReadiness }) =>
+      id === "meridian-colossus" && technologyReadiness === "flight-proven",
+  );
+
+/**
+ * The kinds of Asset a base lacks, in the order it lands them: those of these with none operating at its site, leaving
+ * a habitat until Crew could fly there.
+ */
+const missingAtBase = (kinds: string[], view: ProgramView): string[] => {
+  const site = baseSiteOf(kinds)(view);
+  if (site === undefined || view.moneyMillions < richMillions) return [];
+  return kinds.filter(
+    (wanted) =>
+      (wanted !== "habitat" || crewCanFly(view)) &&
+      !view.operatingAssets.some(
+        ({ kind, daysLeft, landingSiteId }) =>
+          kind === wanted && daysLeft > 0 && landingSiteId === site,
+      ),
+  );
+};
+
+/**
+ * As colossusWhenRich, building a base of these kinds of Asset once rich, before anything else, at one surveyed Landing
+ * Site where every Asset it lands then goes, filling the Meridian Colossus once it is built. It builds it well, buying
+ * the longest Service Life and the best Reliability it can afford for each of them.
+ */
+/** How many Assets of this kind operate with Service Life left at this Landing Site. */
+const operatingAt = (view: ProgramView, wanted: string, site: string) =>
+  view.operatingAssets.filter(
+    ({ kind, daysLeft, landingSiteId }) =>
+      kind === wanted && daysLeft > 0 && landingSiteId === site,
+  ).length;
+
+/**
+ * Whether a base of these kinds is complete, Crew could fly and none are there, so that it saves for them, launching
+ * nothing but a rover while fewer than two operate there.
+ */
+const savesForCrew = (kinds: string[], view: ProgramView) => {
+  const site = baseSiteOf(kinds)(view);
+  return (
+    site !== undefined &&
+    crewCanFly(view) &&
+    kinds.every((wanted) => operatingAt(view, wanted, site) > 0) &&
+    !view.crew.some(({ landingSiteId }) => landingSiteId === site)
+  );
+};
+
+export const baseOf = (kinds: string[]): PlayStyle => ({
+  ...colossusWhenRich,
+  longestServiceLife: ["rover", ...kinds],
+  assetReliability: "best",
+  assetReliabilityFor: kinds,
+  buildsWell: kinds,
+  baseSite: baseSiteOf(kinds),
+  order: (view) => {
+    const site = baseSiteOf(kinds)(view);
+    if (site !== undefined && savesForCrew(kinds, view)) {
+      return operatingAt(view, "rover", site) < 2 ? ["rover"] : [];
+    }
+    return [...missingAtBase(kinds, view), ...colossusWhenRich.order(view)];
+  },
+});
+
+/** The kinds of Asset in a whole base: a fuel plant, a habitat and a Mars lab. */
+export const wholeBase = ["fuel-plant", "habitat", "lab"];
+
+/** Whether an Asset of this kind operates with Service Life left, anywhere. */
+const operating = (view: ProgramView, wanted: string) =>
+  view.operatingAssets.filter(
+    ({ kind, daysLeft }) => kind === wanted && daysLeft > 0,
+  ).length;
+
+/** The surveyed Landing Site with the most Science, if there is one. */
+const bestSurveyedSite = (view: ProgramView) =>
+  view.landingSites
+    .filter(({ surveyed }) => surveyed)
+    .toSorted((first, second) => second.science - first.science)[0]?.id;
+
+/**
+ * As bigProgram, landing everything at the surveyed Landing Site with the most Science, once there is one, and these
+ * kinds of Asset there too, built well, before anything else whenever it is rich, none operates and two or more rovers
+ * do.
+ */
+export const researchBase = (kinds: string[]): PlayStyle => ({
+  ...bigProgram,
+  longestServiceLife: ["rover", ...kinds],
+  assetReliability: "best",
+  assetReliabilityFor: kinds,
+  baseSite: (view) =>
+    view.operatingAssets.find(
+      ({ kind, daysLeft, landingSiteId }) =>
+        kinds.includes(kind) && daysLeft > 0 && landingSiteId !== null,
+    )?.landingSiteId ?? bestSurveyedSite(view),
+  order: (view) => [
+    ...(view.moneyMillions >= richMillions && operating(view, "rover") >= 2
+      ? kinds.filter((kind) => operating(view, kind) === 0)
+      : []),
+    ...bigProgram.order(view),
+  ],
+});

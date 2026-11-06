@@ -43,7 +43,15 @@ export interface CrewStyle {
    * habitat aboard their Mission whenever it fits and can be afforded.
    */
   habitat?: boolean;
+  /**
+   * Brings round-trip or fetched Crew home only once one of them has less Health than this, or their Supplies wouldn't
+   * last another Turn, rather than on the first Turn it can, so that they earn more at Mars first.
+   */
+  homeBelowHealth?: number;
 }
+
+/** About a Turn, in days, for how long Supplies must last to stay another. */
+const turnDays = 780;
 
 /** Whether a habitat with Service Life left operates at this Landing Site. */
 const habitatAt = (view: ProgramView, siteId: string) =>
@@ -54,14 +62,20 @@ const habitatAt = (view: ProgramView, siteId: string) =>
 
 /**
  * The way home to choose this Turn, by its key, for a CrewStyle that brings Crew home: the first on offer that isn't
- * barred, such as by too little ascent propellant, if any.
+ * barred, such as by too little ascent propellant, if any, from a place whose Crew it would bring home now.
  */
 export function wayHome(
   view: ProgramView,
-  { roundTrip = false, fetches = false }: CrewStyle,
+  { roundTrip = false, fetches = false, homeBelowHealth }: CrewStyle,
 ): string | undefined {
   return roundTrip || fetches
     ? view.crew
+        .filter(
+          ({ members, suppliesDaysLeft }) =>
+            homeBelowHealth === undefined ||
+            suppliesDaysLeft < turnDays ||
+            members.some(({ health }) => health < homeBelowHealth),
+        )
         .flatMap(({ waysHome }) => waysHome)
         .find(({ reason }) => reason === null)?.key
     : undefined;

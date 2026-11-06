@@ -2,6 +2,7 @@ import type { PlanningTools } from "./strategy";
 import type { Aim, PlayStyle } from "./playStyleOptions";
 import {
   canFly,
+  type AssetChoices,
   type PlannedActivity,
   type ProgramView,
   type TurnPlan,
@@ -86,15 +87,18 @@ export const richCacher = (view: ProgramView, playStyle: PlayStyle) =>
 export const richMillions = 5000;
 
 /**
- * The site to land at: a new one before one already landed at, a surveyed one before a riskier one, then the most
- * Science. A Mars lab goes where its Benefit tag says it would add most, if it would add anything, and an ascent
- * vehicle where samples wait without one.
+ * The site to land at: the PlayStyle's base, if it has one, and otherwise a new one before one already landed at, a
+ * surveyed one before a riskier one, then the most Science. A Mars lab goes where its Benefit tag says it would add
+ * most, if it would add anything, and an ascent vehicle where samples wait without one.
  */
 function landingSiteFor(
   view: ProgramView,
   playStyle: PlayStyle,
   asset?: ProgramView["assets"][number],
 ) {
+  const baseId = playStyle.baseSite?.(view);
+  const base = view.landingSites.find(({ id }) => id === baseId);
+  if (base) return base;
   const besideRovers = asset?.grantImpact?.landingSiteName;
   const labSite = view.landingSites.find(({ name }) => name === besideRovers);
   if (labSite) return labSite;
@@ -254,6 +258,7 @@ export function fuller(
   mission: PlannedMission,
   view: ProgramView,
   playStyle: PlayStyle,
+  tools: PlanningTools,
 ): PlannedMission[] {
   const vehicle = view.launchVehicles.find(
     ({ id }) => id === playStyle.fillsVehicle,
@@ -279,15 +284,58 @@ export function fuller(
   });
   return extras
     .map((_, index) => extras.slice(0, extras.length - index))
-    .map((added) => {
+    .flatMap((added) => {
       const lands = [...onBoard, ...added].some(
         ({ landsAtSite }) => landsAtSite,
       );
-      return {
+      const filled = {
         ...mission,
         launchVehicleId: vehicle.id,
         assetIds: [...mission.assetIds, ...added.map(({ id }) => id)],
         ...(lands && site !== null ? { landingSiteId: site } : {}),
       };
+      const well = builtWell(filled, added, playStyle, tools);
+      return well === filled ? [filled] : [well, filled];
     });
+}
+
+/**
+ * The filled Mission with the longest Service Life and the best Reliability for each Asset it added of the kinds the
+ * PlayStyle builds well, or the same Mission if it added none.
+ */
+function builtWell(
+  mission: PlannedMission,
+  added: ProgramView["assets"],
+  { buildsWell = [] }: PlayStyle,
+  tools: PlanningTools,
+): PlannedMission {
+  const ids = added
+    .filter(({ kind }) => buildsWell.includes(kind))
+    .map(({ id }) => id);
+  if (ids.length === 0) return mission;
+  const choices = tools
+    .previewAssets(mission)
+    .filter(({ assetId }) => ids.includes(assetId))
+    .map(
+      ({
+        assetId,
+        serviceLifeOptions,
+        reliabilityLevels,
+      }): [string, AssetChoices] => [
+        assetId,
+        {
+          serviceLifeDays: Math.max(
+            ...serviceLifeOptions.map(({ days }) => days),
+          ),
+          reliabilityLevelId:
+            reliabilityLevels.toSorted(
+              (first, second) => second.costMillions - first.costMillions,
+            )[0]?.id ?? "none",
+        },
+      ],
+    );
+  return {
+    ...mission,
+    assetChoices: { ...mission.assetChoices, ...Object.fromEntries(choices) },
+  };
 }

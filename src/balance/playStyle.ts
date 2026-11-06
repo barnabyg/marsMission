@@ -143,7 +143,7 @@ function missionPlan(
         tools,
         playStyle,
         surveying,
-      ).flatMap((each) => [...fuller(each, view, playStyle), each])) {
+      ).flatMap((each) => [...fuller(each, view, playStyle, tools), each])) {
         const plan = affordable(mission);
         if (plan) return plan;
       }
