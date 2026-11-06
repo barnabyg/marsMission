@@ -190,7 +190,7 @@
     "upkeepMillionsPerTurn": 20,
     "missionEvents": ["entry-descent-landing"],
     "landsAtSite": true,
-    "activities": ["life-support"],
+    "activities": ["habitation"],
     "massTonnes": 4,
     "serviceLifeOptions": [
       {
