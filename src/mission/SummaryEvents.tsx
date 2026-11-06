@@ -30,7 +30,10 @@ function describeSolarParticleEvent({
   }
 }
 
-/** What went wrong or was decided during the Turn: failures, lost Crew, Crew home, Decision Points and Hazards. */
+/**
+ * What went wrong or was decided during the Turn: failures, lost Crew, Crew home, a return vehicle waiting for Crew,
+ * Decision Points and Hazards.
+ */
 export function SummaryEvents({ summary }: { summary: TurnSummary }) {
   return (
     <>
@@ -109,6 +112,15 @@ export function SummaryEvents({ summary }: { summary: TurnSummary }) {
         <p data-testid="summary-crew-home">
           <GameText>
             {`Crew home safe, who won't fly again: ${summary.crewHome.join(", ")}. Public Support earned: ${summary.publicSupportForCrewHome}`}
+          </GameText>
+        </p>
+      )}
+      {summary.returnVehicle && (
+        <p data-testid="summary-return-vehicle">
+          <GameText>
+            {summary.returnVehicle.crew.length > 0
+              ? `Return vehicle ${summary.returnVehicle.name} in Mars orbit, waiting to bring home on a later Turn: ${summary.returnVehicle.crew.join(", ")}`
+              : `Return vehicle ${summary.returnVehicle.name} in Mars orbit, but none of the Crew it was sent for are left at Mars`}
           </GameText>
         </p>
       )}

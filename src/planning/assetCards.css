@@ -180,3 +180,8 @@
   color: var(--text);
   white-space: nowrap;
 }
+
+/* One line beside the Crew's card, so its label needs none of the width that lines the Crew's choices up. */
+.panel .return-vehicle-choice label {
+  min-width: 0;
+}

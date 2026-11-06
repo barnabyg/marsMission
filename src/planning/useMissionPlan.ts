@@ -37,6 +37,9 @@ export interface MissionPlan {
   /** Whether the Crew go on a round trip, with an Earth return stage, which only Crew staying in Mars orbit can. */
   crewRoundTrip: boolean;
   chooseCrewRoundTrip: (roundTrip: boolean) => void;
+  /** The place at Mars, by key, whose Crew with no way home the Mission's return vehicle is for, or null if it has none. */
+  returnVehicleFor: string | null;
+  chooseReturnVehicleFor: (forCrewAt: string | null) => void;
   /** Whether the Mission carries an Asset or Crew that land at a Landing Site. */
   landsOnMars: boolean;
   /** The Landing Site chosen, which only a Mission carrying an Asset or Crew that land has. */
@@ -51,7 +54,7 @@ export interface MissionPlan {
   /** The plan that ends the Turn without launching, which keeps the Activities and Developments chosen. */
   withoutLaunching: TurnPlan;
   withoutLaunchingProblems: string[];
-  /** Whether no Asset or Crew is ticked, so the Turn can only end without launching. */
+  /** Whether no Asset, Crew or return vehicle is ticked, so the Turn can only end without launching. */
   nothingTicked: boolean;
   /** What the Turn will spend: the Mission, Developments and Upkeep, or only the Developments and Upkeep with nothing ticked. */
   spendMillions: number;
@@ -97,6 +100,14 @@ export function useMissionPlan(
     string | undefined
   >();
   const [crewRoundTrip, setCrewRoundTrip] = useState(false);
+  const [chosenFetch, setChosenFetch] = useState<string | null>(null);
+  // Only while there are still Crew with no way home there, which a Turn can change.
+  const returnVehicleFor = view.crew.some(
+    ({ key, withoutWayHome }) =>
+      key === chosenFetch && withoutWayHome.length > 0,
+  )
+    ? chosenFetch
+    : null;
 
   const landsOnMars =
     (crewSize !== null && crewLands) ||
@@ -120,6 +131,9 @@ export function useMissionPlan(
         }),
         ...(crewRoundTrip && { roundTrip: true }),
       },
+    }),
+    ...(returnVehicleFor !== null && {
+      returnVehicle: { forCrewAt: returnVehicleFor },
     }),
   };
   const mission = {
@@ -192,7 +206,8 @@ export function useMissionPlan(
   };
 
   const check = simulation.validatePlan(program, plan);
-  const nothingTicked = assetIds.length === 0 && plannedCrew === null;
+  const nothingTicked =
+    assetIds.length === 0 && plannedCrew === null && returnVehicleFor === null;
 
   return {
     launchVehicleId,
@@ -228,6 +243,8 @@ export function useMissionPlan(
     chooseCrewProtection: setCrewProtectionId,
     crewRoundTrip,
     chooseCrewRoundTrip: setCrewRoundTrip,
+    returnVehicleFor,
+    chooseReturnVehicleFor: setChosenFetch,
     landsOnMars,
     landingSite,
     chooseLandingSite: setChosenSiteId,

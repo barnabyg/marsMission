@@ -1,7 +1,8 @@
 import type { Program, Simulation, TurnPlan } from "../simulation/simulation";
 
-/** What the New Mission could add: an Asset, or Crew of this size. */
-export type Addition = { assetId: string } | { crewSize: number };
+/** What the New Mission could add: an Asset, Crew of this size, or a return vehicle for the Crew in this place. */
+export type Addition =
+  { assetId: string } | { crewSize: number } | { returnVehicleFor: string };
 
 /** Whether adding something to a Mission would take it over its Launch Vehicle's capacity, or over the Money. */
 export interface Fit {
@@ -27,7 +28,12 @@ export function fitOfAdding(
           ...plan.mission,
           assetIds: [...plan.mission.assetIds, addition.assetId],
         }
-      : { ...plan.mission, crew: { size: addition.crewSize } };
+      : "crewSize" in addition
+        ? { ...plan.mission, crew: { size: addition.crewSize } }
+        : {
+            ...plan.mission,
+            returnVehicle: { forCrewAt: addition.returnVehicleFor },
+          };
   const check = simulation.validatePlan(program, { ...plan, mission });
   return {
     overCapacity: check.massTonnes > check.capacityTonnes,

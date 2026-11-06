@@ -72,8 +72,12 @@ A Crewed Mission that carries an Earth return stage, so that its Crew can come h
 _Avoid_: Return mission
 
 **Earth return stage**:
-The stage a round trip carries, which waits in Mars orbit, whether its Crew stay there or land, and brings them home on the Turn the player chooses. The Reliability and Contingencies for their journey home are bought with it.
+The stage a round trip carries, or a return vehicle brings for Crew already at Mars, which waits in Mars orbit, whether its Crew stay there or land, and brings them home on the Turn the player chooses. The Reliability and Contingencies for their journey home are bought with it.
 _Avoid_: Return ship
+
+**Return vehicle**:
+An Earth return stage that a later Mission flies to Mars orbit on its own, with or without Crew of its own, for Crew already at Mars who have no way home, such as those who went one way. It has room for only so many Crew, waits in Mars orbit for those it was sent for, and brings them home on a Turn the player chooses, as a round trip's stage does. A Crewed Mission that carries one swaps Crew: its own stay at Mars.
+_Avoid_: Rescue ship, fetch mission
 
 **Journey home**:
 Crew leaving Mars for Earth aboard their Earth return stage, on a Turn the player chooses. Its Mission Events, Trans-Earth injection and Earth entry, after Mars ascent and Mars orbit rendezvous for Crew at a Landing Site, have Reliability and Contingency, and a failure loses the Crew. Each Crew member home safe earns Public Support, and the first Crew home are a Milestone.

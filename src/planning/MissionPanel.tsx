@@ -13,6 +13,7 @@ import { MissionEventChoices } from "./MissionEventChoices";
 import { MissionLaunchChoice } from "./MissionLaunchChoice";
 import { fitOfAdding } from "./missionFit";
 import { MissionStepCard } from "./MissionStepCard";
+import { ReturnVehicleChoice } from "./ReturnVehicleChoice";
 import { missionSteps } from "./missionSteps";
 import type { MissionPlan } from "./useMissionPlan";
 
@@ -48,6 +49,9 @@ export function MissionPanel({
     problems,
   } = choices.check;
   const { nothingTicked } = choices;
+  const fetchable = view.crew.filter(
+    ({ withoutWayHome }) => withoutWayHome.length > 0,
+  );
   const [launchStep, assetsStep, landingStep, eventsStep] = missionSteps({
     nothingTicked,
     landsOnMars: choices.landsOnMars,
@@ -114,6 +118,25 @@ export function MissionPanel({
                 onProtectionChange={choices.chooseCrewProtection}
                 roundTrip={choices.crewRoundTrip}
                 onRoundTripChange={choices.chooseCrewRoundTrip}
+              />
+              <ReturnVehicleChoice
+                returnVehicle={view.crewedMission.returnVehicle}
+                places={fetchable}
+                forCrewAt={choices.returnVehicleFor}
+                fit={
+                  fetchable[0]
+                    ? fitOfAdding(
+                        simulation,
+                        program,
+                        plan,
+                        view.moneyMillions,
+                        {
+                          returnVehicleFor: fetchable[0].key,
+                        },
+                      )
+                    : { overCapacity: false, overMoney: false }
+                }
+                onChange={choices.chooseReturnVehicleFor}
               />
             </MissionAssets>
           </MissionStepCard>
