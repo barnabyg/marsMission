@@ -184,6 +184,9 @@ _Avoid_: Sample return orbiter
 **Sample analysis**:
 An Activity for a Mars lab: studying the samples that rovers and Crew at its Landing Site bring in, which earns no Science of its own. A Mars lab raises their Research Grants whatever its Activity.
 
+**Standing by**:
+An Activity for an ascent vehicle or an Earth return orbiter: waiting, kept ready to fly samples home on the Turn the player chooses, which earns no Science of its own.
+
 ## Modes
 
 **Planning Mode**:

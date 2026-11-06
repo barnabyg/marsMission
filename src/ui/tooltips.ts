@@ -91,6 +91,8 @@ export const tooltips = {
     "An Asset that waits in Mars orbit for the samples an ascent vehicle brings up, and flies them home through Trans-Earth injection and Earth entry. A failure on the way loses the samples, and it leaves Mars for good once it has flown them.",
   "Sample analysis":
     "An Activity for a Mars lab: studying the samples that rovers and Crew at its Landing Site bring in, which earns no Science of its own. A Mars lab raises their Research Grants whatever its Activity.",
+  "Standing by":
+    "An Activity for an ascent vehicle or an Earth return orbiter: waiting, kept ready to fly samples home on the Turn the player chooses, which earns no Science of its own.",
   Habitation:
     "An Activity for a Habitat: keeping its air, water, power and Supplies ready for Crew, which earns no Science. A Habitat houses the Crew at its Landing Site whatever its Activity.",
   "Propellant production":
