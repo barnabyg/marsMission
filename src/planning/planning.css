@@ -46,8 +46,11 @@
   color: var(--muted);
 }
 
-/* A panel with too much to show scrolls by itself, so that Planning Mode stays on one screen. */
+/* A panel with too much to show scrolls by itself, so that Planning Mode stays on one screen. It holds what is placed
+   within it, such as the text a greyed-out choice keeps for a screen reader, so that a row scrolled out of sight below
+   can't make the whole page taller. */
 .planning-columns .panel {
+  position: relative;
   align-content: start;
   overflow: auto;
 }

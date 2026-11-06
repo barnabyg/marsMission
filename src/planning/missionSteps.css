@@ -15,6 +15,9 @@
   gap: 0.75rem;
   min-height: 0;
   overflow: auto;
+  /* Holds what is placed within it, such as the text a greyed-out Asset card keeps for a screen reader, so that a card
+     scrolled out of sight below can't make the whole page taller. */
+  position: relative;
 }
 
 .mission-step {
