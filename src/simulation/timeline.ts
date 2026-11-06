@@ -72,6 +72,14 @@ export interface CrewLostEntry {
   description: string;
 }
 
+/** Crew have come home to Earth safe, from a journey home or a Free-return, never to fly again. */
+export interface CrewHomeEntry {
+  kind: "crewHome";
+  day: number;
+  title: string;
+  description: string;
+}
+
 /** Crew have run out of Supplies, on the way or in one place at Mars, which the events column shows as a failure. */
 export interface SuppliesOutEntry {
   kind: "suppliesOut";
@@ -127,6 +135,7 @@ export type TimelineEntry =
   | FlightProvenEntry
   | CrewArrivedEntry
   | CrewLostEntry
+  | CrewHomeEntry
   | SuppliesOutEntry
   | MissionEventEntry
   | MilestoneEntry

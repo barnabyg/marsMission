@@ -19,12 +19,14 @@ import type { Program, TurnPlan } from "./types";
 const listOfNames = new Intl.ListFormat("en");
 
 /**
- * What each Crew member lost in Health this Turn and why, whatever became of them: first those already at Mars, then
- * those the Mission carried, with what they lost at Mars after what they lost on the way. Anyone who lost none is left out.
+ * What each Crew member lost in Health this Turn and why, whatever became of them: first those already at Mars, with
+ * what they lost on the way home after what they lost at Mars if they left, then those the Mission carried, with what
+ * they lost at Mars after what they lost on the way. Anyone who lost none is left out.
  */
 export function healthLostSummary(
   atWork: CrewAtWork[],
   flown: Pick<MissionOutcome, "crewHealth">,
+  homeward: Pick<MissionOutcome, "crewHealth"> | null,
 ): TurnSummary["healthLost"] {
   const stays = atWork.flatMap(({ stays: here }) => here);
   const atMars = (name: string) =>
@@ -39,9 +41,16 @@ export function healthLostSummary(
   return [
     ...stays
       .filter(({ member }) => !flownNames.has(member.name))
-      .map(({ member, health }) =>
-        withSaved(member.name, health.lost, health.saved),
-      ),
+      .map(({ member, health }) => {
+        const home = homeward?.crewHealth.find(
+          ({ name }) => name === member.name,
+        );
+        return withSaved(
+          member.name,
+          bothLost(health.lost, home?.lost ?? []),
+          health.saved + (home?.saved ?? 0),
+        );
+      }),
     ...flown.crewHealth.map(({ name, lost, saved }) =>
       withSaved(
         name,

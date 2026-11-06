@@ -214,6 +214,39 @@ function whatLands(
   return named.charAt(0).toUpperCase() + named.slice(1);
 }
 
+/** The outcome of a flight before anything has happened to it, with everything it carries to be delivered. */
+export function outcomeBefore(
+  vehicleName: string | null,
+  assets: Asset[],
+  crew: string[],
+  landingSite: LandingSite | undefined,
+): MissionOutcome {
+  return {
+    vehicleName,
+    assets,
+    entries: [],
+    failedEvent: undefined,
+    failedOnDay: null,
+    deliveredAssets: assets,
+    deliveredCrew: crew,
+    crewLost: [],
+    crewBlows: [],
+    crewHealth: [],
+    crewSuppliesKg: 0,
+    crewSuppliesOutOn: null,
+    publicSupportLost: 0,
+    landingSite,
+    returned: null,
+    decisionPoint: null,
+    contingencies: [],
+    cutServiceLife: new Map(),
+    lostTo: null,
+    solarParticleEvent: null,
+    heldLanding: null,
+    goNoGo: null,
+  };
+}
+
 /**
  * The Turn's Mission on the launch pad, with nothing yet happened to it, and the day a journey home leaves Mars if the
  * Turn has one.
@@ -237,30 +270,12 @@ export function startFlight(
   const radiationCutPercent =
     protectionOf(catalogue, mission)?.radiationCutPercent ?? 0;
   const landingSite = rules.landingSiteById(mission?.landingSiteId);
-  const outcome: MissionOutcome = {
-    vehicleName: vehicle?.name ?? null,
+  const outcome = outcomeBefore(
+    vehicle?.name ?? null,
     assets,
-    entries: [],
-    failedEvent: undefined,
-    failedOnDay: null,
-    deliveredAssets: assets,
-    deliveredCrew: crew,
-    crewLost: [],
-    crewBlows: [],
-    crewHealth: [],
-    crewSuppliesKg: 0,
-    crewSuppliesOutOn: null,
-    publicSupportLost: 0,
+    crew,
     landingSite,
-    returned: null,
-    decisionPoint: null,
-    contingencies: [],
-    cutServiceLife: new Map(),
-    lostTo: null,
-    solarParticleEvent: null,
-    heldLanding: null,
-    goNoGo: null,
-  };
+  );
   const shorten = (onBoard: Asset[], to: (days: number) => number) => {
     for (const asset of onBoard) {
       const days =

@@ -145,9 +145,16 @@ describe("the known seeds in the Phase 7 playtest guide", () => {
       4230,
     );
     const home = turnWithNoDecision(ready, crewed("free-return"));
+    // Since Phase 8, Crew home safe earn Public Support and the First Crew home Milestone, whose Science reaches the
+    // next Science Milestone, and the Public Support pays Funding Thresholds.
     expect(home.summary).toMatchObject({
-      moneyEndMillions: 1705,
-      publicSupportEnd: 217,
+      moneyEndMillions: 8205,
+      publicSupportEnd: 897,
+      publicSupportForCrewHome: 200,
+      milestones: [
+        expect.objectContaining({ name: "First Crew home" }),
+        expect.objectContaining({ name: "700 Science earned" }),
+      ],
       failure: {
         missionEventName: "Mars orbit insertion",
         returnedToEarth: true,

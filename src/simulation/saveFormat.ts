@@ -185,7 +185,23 @@ const format8 = format7.extend({
   crewSupplies: z.record(z.string(), z.number().nonnegative()),
 });
 
-const newestFormat = format8;
+/**
+ * Adds round trips: the Earth return stages in Mars orbit, each with the Crew it waits to bring home and the
+ * Reliability and Contingencies bought for their journey. A save from before them has none, so every Crew member at
+ * Mars in it went one way.
+ */
+const format9 = format8.extend({
+  earthReturnStages: z.array(
+    z.strictObject({
+      arrivedOn: isoDate,
+      crew: z.array(z.string()),
+      reliability: z.record(z.string(), z.string()),
+      contingencyIds: z.array(z.string()),
+    }),
+  ),
+});
+
+const newestFormat = format9;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -275,6 +291,13 @@ const formats: readonly SaveFormat[] = [
       crew: [],
       crewActivities: {},
       crewSupplies: {},
+    }),
+  },
+  {
+    schema: format8,
+    upgrade: (old: z.output<typeof format8>): z.output<typeof format9> => ({
+      ...old,
+      earthReturnStages: [],
     }),
   },
   { schema: newestFormat },

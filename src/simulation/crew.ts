@@ -142,16 +142,25 @@ export function checkCrew(
   const supplies = suppliesOptionOf(catalogue, mission);
   const protection = protectionOf(catalogue, mission);
   const left = namesLeft(catalogue, program).length;
+  const returnStage = crew.roundTrip ? catalogue.crew.roundTrip : null;
   return {
     costMillions:
       (size?.costMillions ?? 0) +
       (supplies?.costMillions ?? 0) +
-      (protection?.costMillions ?? 0),
+      (protection?.costMillions ?? 0) +
+      (returnStage?.costMillions ?? 0),
     massTonnes:
       (size?.massTonnes ?? 0) +
       (supplies?.massTonnes ?? 0) +
-      (protection?.massTonnes ?? 0),
+      (protection?.massTonnes ?? 0) +
+      (returnStage?.massTonnes ?? 0),
     problems: [
+      // Phase 8 brings Crew home from Mars orbit first; leaving the surface needs Mars ascent, which comes later.
+      ...(crew.roundTrip && crew.landsAtSite
+        ? [
+            "A round trip can only go to Mars orbit, as Crew can't leave the surface yet.",
+          ]
+        : []),
       ...(size ? [] : [`There is no Crew size of ${crew.size}.`]),
       ...(supplies
         ? []

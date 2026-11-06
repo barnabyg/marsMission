@@ -53,7 +53,7 @@ export function workOutTurn(
         [missionDecision.id]: cautiousAnswer(missionDecision),
       })
     : flown;
-  const { result, otherEntries, stormDecision } = resolveTurn(
+  const { result, otherEntries, stormDecision, journeyHome } = resolveTurn(
     catalogue,
     rules,
     program,
@@ -62,13 +62,19 @@ export function workOutTurn(
     asIfCautious,
     answers,
   );
+  const homeDecision = journeyHome?.outcome.decisionPoint ?? null;
+  // The earliest of the Mission's, a dust storm's and the journey home's, with the Mission's first on the same day.
+  const decisionPoint = [
+    missionDecision,
+    stormDecision?.decisionPoint ?? null,
+    homeDecision,
+  ].reduce<DecisionPoint | null>(
+    (first, next) =>
+      next !== null && (first === null || next.day < first.day) ? next : first,
+    null,
+  );
   const stormComesFirst =
-    stormDecision !== null &&
-    (missionDecision === null ||
-      stormDecision.decisionPoint.day < missionDecision.day);
-  const decisionPoint = stormComesFirst
-    ? stormDecision.decisionPoint
-    : missionDecision;
+    stormDecision !== null && decisionPoint === stormDecision.decisionPoint;
   if (!decisionPoint) {
     return { decisionPoint, timeline: result.timeline, result };
   }
@@ -77,7 +83,7 @@ export function workOutTurn(
     timeline: timelineUpToDecision(
       result.timeline,
       otherEntries,
-      flown.entries,
+      [...flown.entries, ...(journeyHome?.outcome.entries ?? [])],
       missionOnTimeline(catalogue, rules, plan, flown),
       {
         day: decisionPoint.day,

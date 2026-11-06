@@ -11,7 +11,15 @@ import {
   creditFirstLanding,
   milestoneEntry,
 } from "./arrivals";
-import { crewAtMars, crewAtTurnEnd } from "./crewAtMars";
+import { crewAtMars, crewAtTurnEnd, crewLeavingMars } from "./crewAtMars";
+import { welcomeCrewHome } from "./crewHome";
+import {
+  journeyHomeDays,
+  stageArriving,
+  stageComingHome,
+  stagesAfterTurn,
+} from "./earthReturnStages";
+import { flyJourneyHome, type JourneyHome } from "./journeyHome";
 import {
   crewArrivedEntry,
   crewShipsAtMars,
@@ -57,6 +65,8 @@ export function resolveTurn(
   result: TurnResult;
   otherEntries: TimelineEntry[];
   stormDecision: ReturnType<typeof resolveDustStorms>["decision"];
+  /** The Turn's journey home, if one flew, which can stop at a Decision Point of its own. */
+  journeyHome: JourneyHome | null;
 } {
   const { launchWindowIntervalDays } = catalogue.program;
 
@@ -71,7 +81,18 @@ export function resolveTurn(
   const firstLanding = creditFirstLanding(rules, program, plan, flown);
   const proven = proveTechnologies(catalogue, rules, program, plan, flown);
   const development = carryOutDevelopment(catalogue, program, plan);
-  const crewThere = crewAtMars(catalogue, rules, program, plan, flown);
+  const comingHome = stageComingHome(program, plan);
+  const crewThere = crewAtMars(
+    catalogue,
+    rules,
+    program,
+    plan,
+    flown,
+    comingHome && {
+      names: comingHome.names,
+      leavesOn: journeyHomeDays(catalogue, rules).leavesOn,
+    },
+  );
   const dustStorms = resolveDustStorms(
     catalogue,
     rules,
@@ -82,16 +103,46 @@ export function resolveTurn(
   );
   const { inService, crewAtWork } = dustStorms;
   const survey = carryOutSurvey(catalogue, rules, program, inService);
+  const journey =
+    comingHome &&
+    flyJourneyHome(
+      catalogue,
+      rules,
+      program,
+      comingHome.stage,
+      crewLeavingMars(crewAtWork),
+      answers,
+    );
+  const homeward = journey?.outcome ?? null;
   const crew = crewAtTurnEnd(crewAtWork, crewThere.crewActivities);
-  const suppliesOut = suppliesRanOut(catalogue, program, crewAtWork, flown);
+  const suppliesOut = suppliesRanOut(
+    catalogue,
+    program,
+    crewAtWork,
+    flown,
+    homeward,
+  );
+  // What failing on the way home costs comes out of what the Mission's failure left.
+  const homewardLost = Math.min(
+    homeward?.publicSupportLost ?? 0,
+    program.publicSupport - flown.publicSupportLost,
+  );
   const lostCrew = loseCrew(
     catalogue,
     program,
-    [...flown.crewLost, ...crew.deaths],
-    program.publicSupport - flown.publicSupportLost,
+    [...flown.crewLost, ...crew.deaths, ...(homeward?.crewLost ?? [])],
+    program.publicSupport - flown.publicSupportLost - homewardLost,
     protectionIdOf(catalogue, plan.mission),
   );
-  const crewHome = flown.returned?.crew ?? [];
+  const freeReturnHome = flown.returned?.crew ?? [];
+  const journeyHomeCrew = homeward?.deliveredCrew ?? [];
+  const crewHome = [...freeReturnHome, ...journeyHomeCrew];
+  const welcome = welcomeCrewHome(catalogue, program, [
+    ...(flown.returned
+      ? [{ names: freeReturnHome, day: flown.returned.backOnDay }]
+      : []),
+    ...(journey ? [{ names: journeyHomeCrew, day: journey.homeOn }] : []),
+  ]);
   const research = carryOutOngoingResearch(
     catalogue,
     rules,
@@ -104,7 +155,7 @@ export function resolveTurn(
     {
       start: program.science,
       lumps: [
-        ...arrivalAwards.map(({ milestone, day }) => ({
+        ...[...arrivalAwards, ...welcome.awards].map(({ milestone, day }) => ({
           day,
           amount: milestone.science,
         })),
@@ -119,17 +170,19 @@ export function resolveTurn(
       })),
     },
   );
-  const awards = [...arrivalAwards, ...scienceAwards];
+  const awards = [...arrivalAwards, ...welcome.awards, ...scienceAwards];
   const scienceGained =
     sum(awards.map(({ milestone }) => milestone.science)) +
     (firstLanding ? firstLanding.site.science : 0) +
     research.science;
   const publicSupportGained =
     sum(awards.map(({ milestone }) => milestone.publicSupport)) +
-    research.publicSupport;
+    research.publicSupport +
+    welcome.publicSupport;
   const publicSupportBeforeDrain =
     program.publicSupport -
     flown.publicSupportLost -
+    homewardLost -
     lostCrew.publicSupportLost +
     publicSupportGained;
   const funding = payFundingThresholds(catalogue, program, {
@@ -142,7 +195,11 @@ export function resolveTurn(
       ...(failedOnDay === null
         ? []
         : [{ day: failedOnDay, amount: -flown.publicSupportLost }]),
+      ...(homeward?.failedOnDay === undefined || homeward.failedOnDay === null
+        ? []
+        : [{ day: homeward.failedOnDay, amount: -homewardLost }]),
       ...lostCrew.lumps,
+      ...welcome.lumps,
     ],
     stints: research.stints.map(({ fromDay, toDay, publicSupport }) => ({
       fromDay,
@@ -175,8 +232,10 @@ export function resolveTurn(
       crew.crewActivities,
     ),
     ...lostCrew.entries,
+    ...welcome.entries,
     ...suppliesOut.entries,
     ...arrivalAwards.map(milestoneEntry),
+    ...welcome.awards.map(milestoneEntry),
     ...(firstLanding ? [firstLanding.entry] : []),
     ...proven.entries,
     ...scienceAwards.map(milestoneEntry),
@@ -221,14 +280,32 @@ export function resolveTurn(
         ...(flown.returned
           ? bringCrewHome(
               program,
-              flown.crewHealth.filter(({ name }) => crewHome.includes(name)),
+              flown.crewHealth.filter(({ name }) =>
+                freeReturnHome.includes(name),
+              ),
               flown.returned.backOnDay,
+              protectionIdOf(catalogue, plan.mission),
+            )
+          : []),
+        ...(journey
+          ? bringCrewHome(
+              program,
+              journey.outcome.crewHealth.filter(({ name }) =>
+                journeyHomeCrew.includes(name),
+              ),
+              journey.homeOn,
               protectionIdOf(catalogue, plan.mission),
             )
           : []),
       ]),
       crewActivities: crew.crewActivities,
       crewSupplies: crew.crewSupplies,
+      earthReturnStages: stagesAfterTurn(
+        program,
+        plan,
+        stageArriving(rules, plan.mission, crewThere.arrived),
+        crew.stillThere,
+      ),
       status:
         faded.cancellationReason === null
           ? program.status
@@ -248,9 +325,11 @@ export function resolveTurn(
       ],
       dustStorms: dustStorms.storms,
       // The sort is stable, so an award stays after the arrival or the Science that earned it.
-      entries: [...flown.entries, ...otherEntries].sort(
-        (first, second) => first.day - second.day,
-      ),
+      entries: [
+        ...flown.entries,
+        ...(homeward?.entries ?? []),
+        ...otherEntries,
+      ].sort((first, second) => first.day - second.day),
     },
     summary: {
       missionCostMillions: costMillions,
@@ -282,8 +361,18 @@ export function resolveTurn(
       developmentsFinished: development.finished,
       crew: crewSummary(catalogue, crewAtWork),
       crewLost: lostCrew.summary,
-      healthLost: healthLostSummary(crewAtWork, flown),
+      healthLost: healthLostSummary(crewAtWork, flown, homeward),
       crewHome,
+      publicSupportForCrewHome: welcome.publicSupport,
+      journeyHome: journey && {
+        crew: journey.crew,
+        failure: journey.outcome.failedEvent
+          ? {
+              missionEventName: journey.outcome.failedEvent.name,
+              publicSupportLost: homewardLost,
+            }
+          : null,
+      },
       suppliesRanOut: suppliesOut.summary,
       assetsEnded: inService
         .filter(({ untilDay, failed }) => untilDay !== null && !failed)
@@ -300,9 +389,17 @@ export function resolveTurn(
       researchGrantMillions: research.researchGrantMillions,
       baseFundingMillions,
       failure: missionFailure(flown),
-      contingencies: contingenciesAnswered(flown),
+      contingencies: [
+        ...contingenciesAnswered(flown),
+        ...(homeward ? contingenciesAnswered(homeward) : []),
+      ],
       cancellationReason: faded.cancellationReason,
     },
   };
-  return { result, otherEntries, stormDecision: dustStorms.decision };
+  return {
+    result,
+    otherEntries,
+    stormDecision: dustStorms.decision,
+    journeyHome: journey,
+  };
 }

@@ -52,6 +52,7 @@ export function createMissionPreviews(catalogue: Catalogue, rules: Rules) {
     activityFor,
     assetReliabilityFor,
     failureProbability,
+    homewardEventsFor,
     inServiceFailureChance,
     missionEventsFor,
     reliabilityLevelFor,
@@ -84,26 +85,31 @@ export function createMissionPreviews(catalogue: Catalogue, rules: Rules) {
       program: Program,
       mission: PlannedMission,
     ): PlannedMissionEvent[] {
-      return missionEventsFor(mission).map((event) => {
-        const chosen = reliabilityLevelFor(mission, event.id);
-        return {
-          eventId: event.id,
-          name: event.name,
-          riskBand: riskBandFor(
-            failureProbability(event, chosen, program, mission),
-          ),
-          reliabilityLevelId: chosen.id,
-          reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
-            id: level.id,
-            name: level.name,
-            costMillions: level.costMillions,
+      const homeward = new Set(homewardEventsFor(mission));
+      // A round trip's journey home comes after the way there, on a later Turn.
+      return [...missionEventsFor(mission), ...homewardEventsFor(mission)].map(
+        (event) => {
+          const chosen = reliabilityLevelFor(mission, event.id);
+          return {
+            eventId: event.id,
+            name: event.name,
+            homeward: homeward.has(event),
             riskBand: riskBandFor(
-              failureProbability(event, level, program, mission),
+              failureProbability(event, chosen, program, mission),
             ),
-          })),
-          contingency: contingencyOffered(event.id, mission),
-        };
-      });
+            reliabilityLevelId: chosen.id,
+            reliabilityLevels: catalogue.reliabilityLevels.map((level) => ({
+              id: level.id,
+              name: level.name,
+              costMillions: level.costMillions,
+              riskBand: riskBandFor(
+                failureProbability(event, level, program, mission),
+              ),
+            })),
+            contingency: contingencyOffered(event.id, mission),
+          };
+        },
+      );
     },
 
     previewAssets(program: Program, mission: PlannedMission): PlannedAsset[] {

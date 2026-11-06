@@ -367,6 +367,20 @@ export function createRules(catalogue: Catalogue) {
     );
   }
 
+  /** The Mission Events of a round trip's journey home, in the order they happen after leaving Mars. */
+  function journeyHomeEvents(): MissionEvent[] {
+    return catalogue.crew.roundTrip.missionEvents
+      .flatMap((eventId) =>
+        catalogue.missionEvents.filter((event) => event.id === eventId),
+      )
+      .sort((first, second) => first.timing.days - second.timing.days);
+  }
+
+  /** The Mission Events a Mission's Crew go through on the way home on a later Turn, which only a round trip has. */
+  function homewardEventsFor(mission: PlannedMission | null): MissionEvent[] {
+    return mission?.crew?.roundTrip ? journeyHomeEvents() : [];
+  }
+
   return {
     crewOf,
     trajectoryFor,
@@ -389,6 +403,8 @@ export function createRules(catalogue: Catalogue) {
     failureProbability,
     riskBandFor,
     missionEventsFor,
+    journeyHomeEvents,
+    homewardEventsFor,
   };
 }
 

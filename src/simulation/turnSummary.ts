@@ -86,8 +86,18 @@ export interface TurnSummary {
     lost: HealthLost[];
     savedByProtection?: number;
   }[];
-  /** The Crew a Free-return brought back to Earth this Turn, safe, who won't fly again. */
+  /** The Crew who came home to Earth safe this Turn, from a journey home or on a Free-return, who won't fly again. */
   crewHome: string[];
+  /** The Public Support the Crew who came home earned, which publicSupportGained includes. */
+  publicSupportForCrewHome: number;
+  /**
+   * The journey home flown this Turn, if one was: the round-trip Crew who left Mars, and the Mission Event that failed
+   * on the way, losing them, if one did, with the Public Support it cost on top of losing them.
+   */
+  journeyHome: {
+    crew: string[];
+    failure: { missionEventName: string; publicSupportLost: number } | null;
+  } | null;
   /**
    * When Supplies ran out this Turn, in order: aboard the Crewed Mission on its way, or for the Crew in a place at Mars,
    * such as "Crew in Mars orbit", including Crew who start the Turn with none left.

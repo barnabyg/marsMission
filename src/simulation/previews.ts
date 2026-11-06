@@ -78,6 +78,8 @@ export interface PlannedAsset {
 export interface PlannedMissionEvent {
   eventId: string;
   name: string;
+  /** Whether it is on the way home from a round trip, on a later Turn, rather than on the way to Mars. */
+  homeward: boolean;
   riskBand: string;
   reliabilityLevelId: string;
   reliabilityLevels: {

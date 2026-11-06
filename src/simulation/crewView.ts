@@ -13,6 +13,7 @@ import {
   locationNameOf,
   placeFor,
 } from "./crewPlaces";
+import { waysHomeFrom } from "./earthReturnStages";
 import { drainsInFlight, healthCourse } from "./health";
 import { earningsPerTurn } from "./ongoingResearch";
 import type { Activity, Rules } from "./rules";
@@ -42,6 +43,16 @@ export interface CrewAtMars {
   members: { name: string; health: number; arrivedOn: string }[];
   /** How many days the Supplies they share will last them all, which is 0 once they have run out. */
   suppliesDaysLeft: number;
+  /**
+   * The Earth return stages that can bring round-trip Crew here home this Turn, each with who it would bring, the day
+   * they would leave Mars and the day they would be home.
+   */
+  waysHome: {
+    key: string;
+    names: string[];
+    leavesMarsOn: string;
+    homeOn: string;
+  }[];
 }
 
 /** A Crewed Mission's Crew as Planning Mode shows them before it launches. */
@@ -144,6 +155,12 @@ export function crewedMissionView(
     ),
     maxHealth,
     namesLeft: namesLeft(catalogue, program).length,
+    roundTrip: {
+      name: catalogue.crew.roundTrip.name,
+      description: catalogue.crew.roundTrip.description,
+      costMillions: catalogue.crew.roundTrip.costMillions,
+      massTonnes: catalogue.crew.roundTrip.massTonnes,
+    },
   };
 }
 
@@ -185,6 +202,7 @@ export function crewAtMarsView(
           program.crewSupplies[key] ?? 0,
           members.length,
         ),
+        waysHome: waysHomeFrom(catalogue, rules, program, key),
       },
     ];
   });

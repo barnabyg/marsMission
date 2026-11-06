@@ -36,6 +36,11 @@ interface CrewChoices {
   suppliesId?: string;
   /** The Protection it carries, by id, which slows the Health they lose to radiation. Left out, it's the first the Catalogue lists, which gives none. */
   protectionId?: string;
+  /**
+   * Whether they go on a round trip, with an Earth return stage that waits with them in Mars orbit to bring them home on
+   * a later Turn. Its Mission Events' Reliability and Contingencies are bought with the Mission's own.
+   */
+  roundTrip?: boolean;
 }
 
 export interface AssetChoices {
@@ -56,6 +61,8 @@ export interface TurnPlan {
   crewActivities?: Record<string, string>;
   /** Assets already operating whose missions end as this Turn starts, by their `key`, so that they cost no more upkeep. */
   endedAssetKeys?: string[];
+  /** The Earth return stage, by its `key`, whose Crew come home this Turn. At most one journey home flies each Turn. */
+  bringHome?: string;
 }
 
 interface OperatingAsset {
@@ -98,7 +105,7 @@ export type PlaceAtMars =
 export type CrewLossCause =
   "missionEvent" | "solarParticleEvent" | "health" | "supplies";
 
-/** Where a Crew member is: at Mars, lost, or back on Earth after a Free-return, never to fly again. */
+/** Where a Crew member is: at Mars, lost, or back on Earth, never to fly again. */
 type CrewLocation =
   | PlaceAtMars
   | { kind: "lost"; lostOn: string; cause: CrewLossCause }
@@ -152,7 +159,21 @@ export interface Program {
    * them, and Crew who join them add theirs.
    */
   crewSupplies: Record<string, number>;
+  /** The Earth return stages in Mars orbit, each waiting to bring home the round-trip Crew it came with. */
+  earthReturnStages: EarthReturnStage[];
   status: ProgramStatus;
+}
+
+/** An Earth return stage in Mars orbit, which a round trip brought, waiting to bring its Crew home. */
+export interface EarthReturnStage {
+  /** The day it arrived with its Crew, which names it. */
+  arrivedOn: string;
+  /** The Crew it is for who are still at Mars. */
+  crew: string[];
+  /** The Reliability bought for each Mission Event of the journey home, by id. */
+  reliability: Record<string, string>;
+  /** The Contingencies bought for the journey home, by id. */
+  contingencyIds: string[];
 }
 
 export interface ProgramView {
@@ -227,6 +248,13 @@ export interface ProgramView {
     maxHealth: number;
     /** How many names are left to give Crew, which limits the Crew that can still fly. */
     namesLeft: number;
+    /** What a round trip adds to a Crewed Mission to Mars orbit: the Earth return stage that brings the Crew home. */
+    roundTrip: {
+      name: string;
+      description: string;
+      costMillions: number;
+      massTonnes: number;
+    };
   };
   /** The Crew operating at Mars, by where they are. Crew who are lost or home aren't listed. */
   crew: CrewAtMars[];

@@ -184,16 +184,20 @@ const radiation = (perDay: number, cutPercent: number) => ({
   ...(cutPercent > 0 ? { unprotectedPerDay: perDay } : {}),
 });
 
-/** Radiation on the way to Mars, or back, from launch to this day, slowed by Protection that cuts its harm by this share. */
+/**
+ * Radiation on the way to Mars, or back, from launch, or leaving Mars, to this day, slowed by Protection that cuts its
+ * harm by this share.
+ */
 export function drainsInFlight(
   catalogue: Catalogue,
   toDay: number,
   radiationCutPercent: number,
+  fromDay = 0,
 ): HealthDrain[] {
   return [
     {
       cause: "radiationInFlight",
-      fromDay: 0,
+      fromDay,
       toDay,
       ...radiation(
         catalogue.crew.health.radiationPerDay.inFlight,

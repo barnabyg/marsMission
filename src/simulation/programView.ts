@@ -34,6 +34,7 @@ export function newProgram(catalogue: Catalogue, seed: number): Program {
     crew: [],
     crewActivities: {},
     crewSupplies: {},
+    earthReturnStages: [],
     status: { kind: "active" },
   };
 }

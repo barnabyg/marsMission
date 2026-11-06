@@ -83,8 +83,8 @@ The Asset cards' pictures in `public/art/assets`, one for each kind of Asset and
 Everything outside `src/simulation` reaches the rules through `createSimulation` in `simulation.ts`. A Turn runs in this order:
 
 1. `workOutTurn.ts` checks the plan with `planCheck.ts` and flies the Mission with `flyMission.ts`, which works out each subject of the flight in its own module: solar particle events, go/no-go checks, Contingencies, Mission Events that fail and the Crew's Health on the way.
-2. `turnSteps.ts` carries out the rest of the Turn's steps, in `resolveTurn`: Milestones for arriving and for a first landing (`arrivals.ts`), technologies that became Flight-proven (`flightProven.ts`), Development started and finished (`development.ts`), Assets and Crew at work (`assetsInService.ts`, `crewAtMars.ts`), dust storms (`dustStorms.ts`), Surveys, Ongoing Research (`ongoingResearch.ts`), Science Milestones (`scienceMilestones.ts`), Funding Thresholds and the fading of Public Support (`fundingThresholds.ts`). It builds the next Program, the Timeline and the Turn summary.
-3. `workOutTurn.ts` stops at the earliest Decision Point that has no answer, from the Mission or a dust storm, and gives the Timeline up to it.
+2. `turnSteps.ts` carries out the rest of the Turn's steps, in `resolveTurn`: Milestones for arriving and for a first landing (`arrivals.ts`), technologies that became Flight-proven (`flightProven.ts`), Development started and finished (`development.ts`), Assets and Crew at work (`assetsInService.ts`, `crewAtMars.ts`), dust storms (`dustStorms.ts`), the journey home of any Crew coming home (`journeyHome.ts`) and the award for those who get home (`crewHome.ts`), Surveys, Ongoing Research (`ongoingResearch.ts`), Science Milestones (`scienceMilestones.ts`), Funding Thresholds and the fading of Public Support (`fundingThresholds.ts`). It builds the next Program, the Timeline and the Turn summary.
+3. `workOutTurn.ts` stops at the earliest Decision Point that has no answer, from the Mission, a dust storm or the journey home, and gives the Timeline up to it.
 
 - `simulation.ts`: The Simulation's interface, `createSimulation`, which hands each part to the modules below: starting, saving and restoring a Program, what the player sees of it, previews, and working out or running a Turn
 - `programView.ts`: A new Program, and what the player sees of a Program between Turns
@@ -97,7 +97,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 - `rules.ts`: `createRules`: looking things up in the Catalogue, such as the Trajectory or Mission Events a Mission has, the day of a Mission Event, timed from launch, departure, arrival or leaving Mars, and failure chances; plus `roll`
 - `planCheck.ts`: What a plan costs and weighs, and what's wrong with it, if anything
 - `flyMission.ts`: The Turn's Mission: rolls its Mission Events in order, calling the modules below for each subject of the flight
-- `flight.ts`: The Mission in flight, which those modules share: what it carries, where it's going, the day of each of its Mission Events, and its outcome so far. Its `leavesMarsOn` is the day a journey home leaves Mars, which Mission Events timed from leaving Mars count from, and is null until journeys home are built
+- `flight.ts`: The Mission in flight, which those modules share: what it carries, where it's going, the day of each of its Mission Events, and its outcome so far. Its `leavesMarsOn` is the day a journey home leaves Mars, which Mission Events timed from leaving Mars count from, and is null for the Mission to Mars
 - `goNoGo.ts`: The go/no-go check before a landing in a dust storm: going ahead, or holding off
 - `contingency.ts`: The Contingency for a Mission Event that fails: its Decision Point, and the rescue
 - `missionEventFailure.ts`: A Mission Event that fails for good: what it loses and costs, or a Free-return bringing the Mission home
@@ -117,13 +117,16 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 - `crew.ts`: Crew in planning: Crew sizes, the names Crew are given, their shared Activity in each place, and what's wrong with a plan's Crew
 - `crewPlaces.ts`: Where Crew are: Mars orbit or a Landing Site, each a place of its own, and which of the Program's Crew are at Mars
 - `crewView.ts`: What Planning Mode shows of Crew: those at Mars, what a Crewed Mission offers, and a Mission's Crew before it launches
-- `crewAtMars.ts`: Crew during a Turn: arriving in Mars orbit or at a Landing Site, the Crew at work in each place, the Health and shared Supplies they use there, and dying when Health runs out
+- `crewAtMars.ts`: Crew during a Turn: arriving in Mars orbit or at a Landing Site, the Crew at work in each place, the Health and shared Supplies they use there, dying when Health runs out, and leaving for home with their share of the Supplies
+- `earthReturnStages.ts`: Earth return stages: what a round trip leaves in Mars orbit with its Crew, the ways home Planning Mode offers, the journey home a plan chooses, and the stages left as a Turn ends
+- `journeyHome.ts`: The journey home: round-trip Crew leaving Mars as a `Flight` of their own, through the Mission Events of the way home with their Reliability and Contingencies, and what the way home does to their Health and Supplies
+- `crewHome.ts`: Crew home safe, from a journey home or a Free-return: the Public Support each earns and the First Crew home Milestone
 - `crewAtMarsReport.ts`: How the Crew at Mars show to the player: in the events column, in Mission Mode's views and in the Turn summary
 - `supplies.ts`: Supplies: what a Crewed Mission carries, how a store of them is used each day and runs out, and when they ran out this Turn
 - `health.ts`: Crew Health: what lowers it, by cause, over days and all at once, and the day it runs out
 - `protection.ts`: Protection: the level a Crewed Mission carries, which each Crew member keeps, and how much it slows radiation
 - `crewHealthInFlight.ts`: What the flight did to the Crew's Health and Supplies once the Mission has flown, losing those whose Health ran out on the way
-- `lostCrew.ts`: Crew who leave for good: losing Crew, whatever the cause, with the Public Support it costs, and Crew a Free-return brings home
+- `lostCrew.ts`: Crew who leave for good: losing Crew, whatever the cause, with the Public Support it costs, and the records of Crew who get home
 - `scienceMilestones.ts`: The day a total of Science or Public Support is reached, for Science Milestones and Funding Thresholds
 - `dustStorms.ts`: Dust storms over Landing Sites and the Assets and Crew there, and sheltering or carrying on
 - `solarParticleEvents.ts`: Solar particle events on the way to Mars, safe mode or carrying on, and what they do to the Mission and its Crew in flight

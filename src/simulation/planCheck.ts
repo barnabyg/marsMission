@@ -6,6 +6,7 @@ import { developmentsStarting } from "./development";
 import type { PlanCheck } from "./previews";
 import type { PlannedMission, Program, TurnPlan } from "./types";
 import { endedAssetProblems, upkeepFor } from "./upkeep";
+import { journeyHomeProblems } from "./earthReturnStages";
 
 const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
 
@@ -14,6 +15,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
   const {
     activityById,
     assetReliabilityFor,
+    homewardEventsFor,
     knownLandingSites,
     missionEventsFor,
     reliabilityLevelFor,
@@ -86,6 +88,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
       ...operatingActivityProblems(program, plan),
       ...endedAssetProblems(program, plan),
       ...operatingCrewProblems(catalogue, rules, program, plan),
+      ...journeyHomeProblems(program, plan),
       ...mission.problems,
       ...developments.problems,
     ];
@@ -168,7 +171,11 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     costMillions += crew.costMillions;
     massTonnes += crew.massTonnes;
     problems.push(...crew.problems);
-    const plannedEvents = missionEventsFor(planned);
+    // A round trip's journey home is bought with the Mission, though it flies on a later Turn.
+    const plannedEvents = [
+      ...missionEventsFor(planned),
+      ...homewardEventsFor(planned),
+    ];
     if (new Set(contingencyIds).size < contingencyIds.length) {
       problems.push("A Mission can't buy the same Contingency twice.");
     }

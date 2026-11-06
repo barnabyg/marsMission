@@ -60,6 +60,12 @@ describe("planning a Crewed Mission", () => {
       ],
       maxHealth: 100,
       namesLeft: 5,
+      roundTrip: {
+        name: "Test return stage",
+        description: "Brings the Crew home.",
+        costMillions: 500,
+        massTonnes: 1,
+      },
     });
   });
 
