@@ -64,7 +64,10 @@ test("moves the view to the surface for a landing at 3840×2160, with a smooth c
       attributeFilter: ["data-camera-position"],
     });
   });
+  // Held partway through, as on a busy machine the checks below can outlast the landing and the rest of the Turn.
+  const landing = holdSequence(page, 1500);
   await playToLanding(page);
+  await landing;
 
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
   await expect(scene(page)).toHaveAttribute("data-sequence", "landing");
@@ -75,7 +78,9 @@ test("moves the view to the surface for a landing at 3840×2160, with a smooth c
   await expect(surfaceAssets(page)).toHaveText(["Prospector Lander"]);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await holdSequence(page);
+  const over = holdSequence(page);
+  await page.getByRole("button", { name: "1x" }).click();
+  await over;
   await expect(canvas).toHaveAttribute("data-camera-position", surfaceCamera);
   await expect(scene(page)).not.toHaveAttribute("data-sequence");
   await expect(page.getByTestId("surface-status")).not.toContainText(

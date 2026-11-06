@@ -265,11 +265,12 @@ export async function launchHeld(page: Page): Promise<void> {
 /**
  * Holds the Turn from inside the page once a landing or crash has played for this long, or just
  * after it ends if no time is given. It resolves then, so start it before anything that sets the Turn going.
+ * It fails if the Turn has already ended when it starts, as then there is nothing left to hold.
  */
 export function holdSequence(page: Page, atMs?: number): Promise<void> {
   return page.evaluate(
     (wanted) =>
-      new Promise<void>((resolve) => {
+      new Promise<void>((resolve, reject) => {
         let seen = false;
         // The scene loads a moment after Mission Mode opens, and it goes when the Turn ends.
         let loaded = false;
@@ -280,6 +281,13 @@ export function holdSequence(page: Page, atMs?: number): Promise<void> {
           const playedMs = scene?.dataset.sequenceMs;
           seen ||= playedMs !== undefined;
           loaded ||= scene !== null;
+          if (
+            !loaded &&
+            document.querySelector("[data-testid=turn-summary]") !== null
+          ) {
+            reject(new Error("holdSequence: the Turn had already ended"));
+            return;
+          }
           const reached =
             wanted === null
               ? seen && playedMs === undefined
