@@ -1,6 +1,6 @@
 # Mars Mission
 
-A planning and simulation game in which you run a Mars exploration Program on a budget. Vocabulary is in [GLOSSARY.md](GLOSSARY.md), the rules are in [docs/game-design.md](docs/game-design.md) and the decisions behind them are in [docs/adr/](docs/adr/).
+A planning and simulation game in which you run a Mars exploration Program on a budget. Vocabulary is in [GLOSSARY.md](GLOSSARY.md), the rules are in [docs/design/](docs/design/), with what is built so far in [docs/game-design.md](docs/game-design.md), and the decisions behind them are in [docs/adr/](docs/adr/).
 
 ## Play
 

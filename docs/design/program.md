@@ -1,0 +1,31 @@
+# Program, Turns and starting conditions
+
+Part of the [game design](../game-design.md), whose Status says which of these rules are built. Balance figures here are examples; the game's values are in [public/data](../../public/data). Vocabulary follows [GLOSSARY.md](../../GLOSSARY.md).
+
+## Program and Turns
+
+- A Program is open-ended. In practice it winds down when the player runs out of worthwhile things to build or do.
+- A Program ends when the player restarts, which starts a new Program straight away, or when Public Support falls below the Cancellation Level and it is cancelled, after which a Program summary shows total Science and the Milestones achieved.
+- A late-game goal is to build up enough that the Program carries on indefinitely, producing enough money and Public Support with little input from the player.
+- At most one Mission is launched per Turn, as a single journey. This keeps Mission Mode buildable.
+- A Mission ends when it has delivered its Assets and Crew, or has failed. After that they operate at Mars on their own, so Mission Mode shows the Turn's Mission plus everything already operating.
+- If assembling or refuelling in Earth orbit needs several launches, those launches and Rendezvous are Mission Events within the one Mission.
+- A Launch Vehicle that needs Orbital refuelling brings a Tanker launch and a Rendezvous as Mission Events of its own, each on its own day after launch. The Mission leaves Earth orbit with its Mars transfer burn on the day after the last of them, while every other Mission makes that burn the day after launch. Its Duration still counts from launch, so the days in Earth orbit are part of it, and a solar particle event can't hit it until it has left.
+- The Tanker launch and the Rendezvous behave as every other Mission Event does: each has its own failure probability and a Risk Band in Planning Mode, Reliability lowers it, the Launch Vehicle's unproven multiplier raises it, and a failure loses everything on board and costs Public Support. Like launch, they have no Contingency yet. A Launch Vehicle that brings them is Flight-proven only once it gets past them and its Mars transfer burn.
+- The Launch Vehicle is chosen from the catalogue and sets how much mass the Mission can carry.
+- Each Mission picks one of 2–3 fixed Trajectories, such as Slow (least fuel, longest Duration), Fast (more fuel and mass, less radiation for Crew) or Free-return (swings back to Earth if the arrival burn fails, at the cost of flexibility). Until there is Crew, Fast pays through earlier arrival, which gives the Mission's Assets more research days in that Turn. A Turn's length doesn't change. Changing Trajectory doesn't re-roll a Mission Event's outcome.
+- Free-return is offered only on a Mission that has Mars orbit insertion, because a lander alone has no arrival burn. If that burn fails, the Mission swings back to Earth instead of being lost: it costs no Public Support and refunds a share of the cost of the Assets on board, and everything not yet delivered comes back with it. The Assets aren't flown again, and nor are any Crew it brings home, alive. If the Mission has a Contingency for the burn, its Decision Point comes first, and the Free-return outcome replaces the ordinary loss when it's declined or its second roll fails, with its extra Public Support still applying in that second case. Free-return costs something when nothing goes wrong, so that it isn't always the right choice.
+- Missions can go to Mars orbit or to a Landing Site. Phobos and Deimos are left out of the first version.
+- In Planning Mode the player gives each Asset one Activity for the Turn. Crew in one place at Mars, such as Mars orbit or one Landing Site, share one Activity.
+- Each Turn begins at a Launch Window (roughly every 26 months) and consists of Planning Mode followed by Mission Mode.
+- No game time passes in Planning Mode. Mission Mode runs from one Launch Window to the next, showing every Mission in flight and every operating Asset together. Mission Events don't hold game time; Decision Points pause play.
+- The player can end a Turn early from Mission Mode, on any Turn, which skips to the Turn summary. It only skips the viewing: the rest of the Turn still happens, with the same outcome. End Turn stops at the next Decision Point rather than skip it, and can be used again once it's answered.
+- Missions can overlap Turns. For example, a Crewed Mission that stays on the surface for a long time lasts about 2.5 years, so the next Turn's Planning Mode happens while Crew are still at Mars.
+- Doing everything in a single Mission ("one jump") is possible but very expensive and risky. Building up Assets over several Turns is the intended cheaper path.
+- Robotic and Crewed Missions are both available. Crewed Missions cost much more and earn more Public Support.
+
+## Starting conditions
+
+- The Program starts at the late-2028 Launch Window. Its starting money and Public Support, in [public/data/program.json](../../public/data/program.json), are set so that a first orbiter reaches the first Funding Threshold, and so that the player can afford an orbiter or a lander and a retry if it fails, with a little left for Reliability. A first orbiter followed by a first landing, in either order, reaches the second Funding Threshold. So does a first rover by itself, with its own Milestone, but it costs too much to leave a retry, which makes one on the first Turn a gamble. Later Funding Thresholds come from the Science Milestones in [public/data/milestones.json](../../public/data/milestones.json).
+- Two well-known Landing Sites (for example Jezero and Gale) are available from the start, at high landing risk because they haven't been surveyed. The first Turn is a choice between surveying first and landing straight away.
+- No difficulty levels in the first version.

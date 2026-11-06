@@ -1,0 +1,27 @@
+# Science, Public Support and money
+
+Part of the [game design](../game-design.md), whose Status says which of these rules are built. Balance figures here are examples; the game's values are in [public/data](../../public/data). Vocabulary follows [GLOSSARY.md](../../GLOSSARY.md).
+
+## Science
+
+- Science is the score. It is weighted heavily towards activity at Mars itself, for example 100 for an orbiter surveying landing sites and 1000 for returning samples to Earth.
+- Science comes from two sources:
+  - Milestones: one-off achievements, such as returning a sample, or reaching a total of Science.
+  - Ongoing Research: a steady rate earned only while an Asset or Crew is actively doing the work, such as analysing fresh soil samples in a lab on Mars. The rate doesn't decline over time.
+- An Asset earns its share of a whole Turn's Ongoing Research for the days it does the Activity, from the day it arrives until it fails or its Service Life ends. Its Science and Public Support are each rounded up for that Asset and Turn, so a short stint still earns something. An orbiter chooses between this and a Survey.
+- Science already earned is never taken away.
+- Some Science pays a Research Grant at the start of the next Turn. Only Ongoing Research qualifies, at a rate set for each kind of research, and early-game research pays little or nothing. Science from Milestones and first landings pays none. No game time passes between the end of a Turn and the next Planning Mode, so the money is added when the Turn resolves, including for a Turn that ends in cancellation. Each Asset's grant for a Turn rounds to whole millions, so one under $0.5M pays nothing. Late in a Program, Research Grants are the main income and Public Support matters less. Like a rover mission, public excitement peaks early and fades while the Science carries on.
+
+## Public Support and money
+
+- Milestones award Public Support points.
+- Science Milestones reward a productive Program for its results. Each is awarded once, on the first day the Program's total Science reaches its level, and if a Program is already past it, on the first day of the Turn. Science comes in on the day of an arrival, a first landing or an award, and builds up evenly over each Asset's days of Ongoing Research, reaching exactly what that Asset earns for the Turn. Anything reached only as the Turn ends counts on its last day. The Science from one of these awards counts towards the next from the day it's awarded. A Turn that ends in cancellation still awards them, and their Public Support can prevent it, as with any Milestone.
+- When Public Support reaches a Funding Threshold, it pays a fixed sum. For example, 100 points plus 200 for putting an orbiter at Mars would cross a 250-point threshold, which might pay $1 billion.
+- Each Funding Threshold pays only the first time it is reached. Falling below and climbing back pays nothing.
+- A Funding Threshold is reached if Public Support is at or above it once the Turn's gains and losses are all in, before the drain. Its entry in the events column is on the day Public Support got there for the last time in the Turn, so never before the award that took it there. A Program saved already above one pays it on the first day of its next Turn, unless a failed Mission takes it back below for good.
+- Base funding is paid as each Turn ends while the Program is active: a fixed amount for each point of Public Support the Program had as the Turn started, up to a most for a Turn, both set in the data files. It is enough on its own for a modest Mission every two or three Turns, never enough to grow on, so a failed Mission is a setback rather than the end, while failures still cost the Public Support it is sized by. Planning Mode shows this Turn's under the Money, and the Turn summary lists it as received. It replaces the earlier decision to have no regular income.
+- Running out of money through poor management is still a way for the player to fail, and the game should reward different appetites for risk: cautious play gives slow but steady progress and is rarely cancelled, and bold play gives fast progress when it works but can lose everything. The `cautious` and `bold` strategies in the balance runs measure this.
+- There is no separate bankruptcy rule. A player with no money lets Turns pass without launching, and Public Support drains until the Program is cancelled, unless what they've built keeps it going. Cancellation is the only way to lose.
+- Funding Thresholds are a fixed, limited list, mainly an early and mid-game boost.
+- Public Support falls by a percentage each Turn (for example 15%), so spikes fade fast and then level off. The Program is cancelled if it drops below the Cancellation Level (for example 50). Ongoing Research adds a small, steady amount, enough for a productive Program to stay above the Cancellation Level but not enough to keep reaching new Funding Thresholds. _To be checked in playtesting._
+- Costs are in millions of dollars, at roughly real-world scale. For example: orbiter $0.5–1B, lander $1–2.5B, Crewed Mission $50B and up.
