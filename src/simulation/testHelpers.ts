@@ -34,12 +34,15 @@ export function withFailures(
     startingMoneyMillions,
     crewHealth,
     suppliesPerMemberPerDayKg,
+    dustStormsEveryTurn = false,
   }: {
     rescueFailureProbability?: number;
     startingMoneyMillions?: number;
     crewHealth?: Partial<CatalogueFiles["crew"]["health"]>;
     /** How fast Crew use Supplies, which the test catalogue makes last longer than most tests follow them. */
     suppliesPerMemberPerDayKg?: number;
+    /** A dust storm over every Landing Site on every Turn, which harms nothing that carries on through it. */
+    dustStormsEveryTurn?: boolean;
   } = {},
 ) {
   const files = testCatalogueFiles();
@@ -54,6 +57,13 @@ export function withFailures(
           usePerMemberPerDayKg:
             suppliesPerMemberPerDayKg ??
             files.crew.supplies.usePerMemberPerDayKg,
+        },
+      },
+      hazards: {
+        ...files.hazards,
+        dustStorm: {
+          ...files.hazards.dustStorm,
+          chancePerSitePerTurn: dustStormsEveryTurn ? 1 : 0,
         },
       },
       program: {

@@ -1,6 +1,7 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { baseFundingFor } from "./baseFunding";
 import { describeMakes, makesPerTurn } from "./ascentPropellant";
+import { describeHabitat, habitatBenefit } from "./habitats";
 import { benefitImpact } from "./benefitImpact";
 import { describeBenefit } from "./benefits";
 import { crewAtMarsView, crewedMissionView } from "./crewView";
@@ -37,6 +38,7 @@ export function newProgram(catalogue: Catalogue, seed: number): Program {
     crewSupplies: {},
     earthReturnStages: [],
     ascentPropellantKg: {},
+    habitatSuppliesKg: {},
     status: { kind: "active" },
   };
 }
@@ -110,6 +112,7 @@ export function programView(
       riskBand: riskBandFor(landingRisk(program, site)),
       landed: program.landedSiteIds.includes(site.id),
       ascentPropellantKg: program.ascentPropellantKg[site.id] ?? 0,
+      habitatSuppliesKg: program.habitatSuppliesKg[site.id] ?? 0,
     })),
     launchVehicles: catalogue.launchVehicles.map((vehicle) => ({
       id: vehicle.id,
@@ -126,12 +129,15 @@ export function programView(
       massTonnes: asset.massTonnes,
       landsAtSite: asset.landsAtSite === true,
       technologyReadiness: readinessOf(program, asset),
-      // An Asset gives a Benefit by raising something for others or by making something at its Landing Site.
+      // An Asset gives a Benefit by raising something for others, by making something at its Landing Site or by housing
+      // the Crew there.
       benefit: asset.benefit
         ? describeBenefit(asset.benefit)
         : asset.makes
           ? describeMakes(asset.makes)
-          : null,
+          : asset.habitat
+            ? describeHabitat(asset.habitat)
+            : null,
       benefitImpact: asset.benefit
         ? benefitImpact(
             catalogue,
@@ -145,6 +151,7 @@ export function programView(
           )
         : null,
       makes: makesPerTurn(catalogue, asset),
+      habitat: habitatBenefit(catalogue, asset),
     })),
   };
 }

@@ -12,7 +12,12 @@ import {
   creditFirstLanding,
   milestoneEntry,
 } from "./arrivals";
-import { crewAtMars, crewAtTurnEnd, crewLeavingMars } from "./crewAtMars";
+import {
+  crewAtMars,
+  crewAtTurnEnd,
+  crewLeavingMars,
+  rehoused,
+} from "./crewAtMars";
 import { welcomeCrewHome } from "./crewHome";
 import {
   journeyHomeDays,
@@ -20,6 +25,7 @@ import {
   stageComingHome,
   stagesAfterTurn,
 } from "./earthReturnStages";
+import { storeHabitatSupplies } from "./habitats";
 import { flyJourneyHome, type JourneyHome } from "./journeyHome";
 import {
   crewArrivedEntry,
@@ -83,6 +89,7 @@ export function resolveTurn(
   const proven = proveTechnologies(catalogue, rules, program, plan, flown);
   const development = carryOutDevelopment(catalogue, program, plan);
   const comingHome = stageComingHome(program, plan);
+  const operating = operateAssets(catalogue, rules, program, plan, flown);
   const crewThere = crewAtMars(
     catalogue,
     rules,
@@ -93,16 +100,19 @@ export function resolveTurn(
       names: comingHome.names,
       leavesOn: journeyHomeDays(catalogue, rules).leavesOn,
     },
+    operating,
   );
   const dustStorms = resolveDustStorms(
     catalogue,
     rules,
     program,
-    operateAssets(catalogue, rules, program, plan, flown),
+    operating,
     crewThere.atWork,
     answers,
   );
-  const { inService, crewAtWork } = dustStorms;
+  const { inService } = dustStorms;
+  // A habitat lost in a dust storm houses its Crew no longer.
+  const crewAtWork = rehoused(catalogue, dustStorms.crewAtWork, inService);
   const survey = carryOutSurvey(catalogue, rules, program, inService);
   const propellant = makeAscentPropellant(catalogue, rules, program, inService);
   const journey =
@@ -117,6 +127,13 @@ export function resolveTurn(
     );
   const homeward = journey?.outcome ?? null;
   const crew = crewAtTurnEnd(crewAtWork, crewThere.crewActivities);
+  const habitatSupplies = storeHabitatSupplies(
+    catalogue,
+    program,
+    inService,
+    crewAtWork,
+    crew.crewSupplies,
+  );
   const suppliesOut = suppliesRanOut(
     catalogue,
     program,
@@ -301,7 +318,7 @@ export function resolveTurn(
           : []),
       ]),
       crewActivities: crew.crewActivities,
-      crewSupplies: crew.crewSupplies,
+      crewSupplies: habitatSupplies.crewSupplies,
       earthReturnStages: stagesAfterTurn(
         program,
         plan,
@@ -309,6 +326,7 @@ export function resolveTurn(
         crew.stillThere,
       ),
       ascentPropellantKg: propellant.ascentPropellantKg,
+      habitatSuppliesKg: habitatSupplies.habitatSuppliesKg,
       status:
         faded.cancellationReason === null
           ? program.status

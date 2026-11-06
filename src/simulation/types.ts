@@ -166,6 +166,11 @@ export interface Program {
    * made some. It stays there when the plant stops.
    */
   ascentPropellantKg: Record<string, number>;
+  /**
+   * The Supplies held in habitats at each Landing Site, in kilograms, by the site's id, for each site where a habitat
+   * operates. Crew there draw on them once their own run out, and Supplies left at the end of a Turn fill them first.
+   */
+  habitatSuppliesKg: Record<string, number>;
   status: ProgramStatus;
 }
 
@@ -232,6 +237,16 @@ export interface ProgramView {
     benefitImpact: BenefitImpact | null;
     /** What it makes at its Landing Site over a whole Turn of operating there, or null if it makes nothing. */
     makes: { ascentPropellantKgPerTurn: number } | null;
+    /**
+     * What it does for Crew at its Landing Site, if it is a habitat: the share by which it slows time at Mars, the
+     * Supplies it holds, and how many more days a Crew member landing beside it with full Health and no Protection
+     * would last at Mars. Null if it isn't a habitat.
+     */
+    habitat: {
+      timeAtMarsCutPercent: number;
+      suppliesKg: number;
+      extraDays: number;
+    } | null;
   }[];
   /** What a Crewed Mission can carry: the Crew sizes, Supplies and Protection on offer, what each costs and weighs, and the Health Crew start with. */
   crewedMission: {
@@ -283,6 +298,8 @@ export interface ProgramView {
     landed: boolean;
     /** The ascent propellant here, in kilograms, which a fuel plant makes. */
     ascentPropellantKg: number;
+    /** The Supplies held in habitats here, in kilograms. */
+    habitatSuppliesKg: number;
   }[];
 }
 

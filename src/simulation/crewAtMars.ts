@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import type { AssetInService } from "./assetsInService";
 import { arrivingCrewActivity } from "./crew";
 import {
   crewAtMarsOf,
@@ -12,9 +13,11 @@ import {
   drainsAtMars,
   drainsWithoutSupplies,
   healthCourse,
+  type HabitatDays,
   type HealthBlow,
   type HealthCourse,
 } from "./health";
+import { habitatDaysAt, habitatSuppliesFor } from "./habitats";
 import { healthRanOut, type CrewLoss } from "./lostCrew";
 import { protectionIdOf, radiationCutOf } from "./protection";
 import { addDays, type Rules } from "./rules";
@@ -39,6 +42,8 @@ export interface CrewStay {
   shelter?: { fromDay: number; toDay: number };
   /** The days the Supplies in their place are out, which lower their Health faster. */
   outages: Outage[];
+  /** The days a habitat at their Landing Site slows the Health they lose to time at Mars. */
+  housed: HabitatDays[];
 }
 
 /** The Crew operating in one place at Mars during a Turn, who share one Activity. */
@@ -66,7 +71,8 @@ export interface CrewAtWork {
 
 /**
  * A Crew member's days at Mars from `fromDay` to the end of the Turn, or to the day they leave for home, with these
- * blows to their Health and these days without Supplies, and radiation slowed by their own Protection.
+ * blows to their Health and these days without Supplies, radiation slowed by their own Protection, and time at Mars
+ * by any habitat housing them.
  */
 function stayOf(
   catalogue: Catalogue,
@@ -74,7 +80,8 @@ function stayOf(
     member,
     fromDay,
     leavesOn,
-  }: Pick<CrewStay, "member" | "fromDay" | "leavesOn">,
+    housed,
+  }: Pick<CrewStay, "member" | "fromDay" | "leavesOn" | "housed">,
   blows: HealthBlow[],
   outages: Outage[],
 ): Omit<CrewStay, "shelter"> {
@@ -87,6 +94,7 @@ function stayOf(
         fromDay,
         toDay,
         radiationCutOf(catalogue, member.protectionId),
+        housed,
       ),
       ...drainsWithoutSupplies(catalogue, outages, fromDay, toDay),
     ],
@@ -100,6 +108,7 @@ function stayOf(
     health,
     blows,
     outages,
+    housed,
   };
 }
 
@@ -148,10 +157,37 @@ export function withSupplies(
 }
 
 /**
+ * The Crew at each Landing Site with the days the habitats there house them, as a dust storm may have changed them,
+ * and their Supplies settled again where it did.
+ */
+export function rehoused(
+  catalogue: Catalogue,
+  atWork: CrewAtWork[],
+  inService: readonly AssetInService[],
+): CrewAtWork[] {
+  return atWork.map((crew) => {
+    if (crew.place.kind !== "landingSite") return crew;
+    const housed = habitatDaysAt(
+      catalogue,
+      inService,
+      crew.place.landingSiteId,
+    );
+    const same = (days: HabitatDays[]) =>
+      JSON.stringify(days) === JSON.stringify(housed);
+    if (crew.stays.every((stay) => same(stay.housed))) return crew;
+    return withSupplies(catalogue, {
+      ...crew,
+      stays: crew.stays.map((stay) => ({ ...stay, housed })),
+    });
+  });
+}
+
+/**
  * The Crew at Mars this Turn, by place: those already there, and any the Mission delivers, who arrive in Mars orbit or
  * at its Landing Site with the Health their flight left them, and take up the Activity of any Crew already there. Each
- * loses Health for every day at Mars, and dies on the day it runs out. Also what each place's Crew do from now on.
- * A dust storm can still change their stays (`dustStorms.ts`), before `crewAtTurnEnd` says who is left.
+ * loses Health for every day at Mars, less to time at Mars beside a habitat, and dies on the day it runs out. Crew at
+ * a Landing Site share their Supplies with the habitats there (`habitats.ts`). Also what each place's Crew do from now
+ * on. A dust storm can still change their stays (`dustStorms.ts`), before `crewAtTurnEnd` says who is left.
  */
 export function crewAtMars(
   catalogue: Catalogue,
@@ -164,6 +200,8 @@ export function crewAtMars(
   >,
   /** The Crew at Mars who leave for home this Turn, if any do, and the day they leave. */
   homeward: { names: string[]; leavesOn: number } | null,
+  /** The Assets at Mars this Turn, for the habitats among them. */
+  inService: readonly AssetInService[],
 ): {
   atWork: CrewAtWork[];
   arrived: CrewMemberAtMars[];
@@ -193,6 +231,12 @@ export function crewAtMars(
     ).id;
   }
   const leaving = new Set(homeward?.names ?? []);
+  const housedAt = (where: PlaceAtMars) =>
+    habitatDaysAt(
+      catalogue,
+      inService,
+      where.kind === "landingSite" ? where.landingSiteId : null,
+    );
   const stays: CrewStay[] = [
     ...crewAtMarsOf(program).map((member) =>
       stayOf(
@@ -203,6 +247,7 @@ export function crewAtMars(
           leavesOn: leaving.has(member.name)
             ? (homeward?.leavesOn ?? null)
             : null,
+          housed: housedAt(member.location),
         },
         [],
         [],
@@ -211,7 +256,12 @@ export function crewAtMars(
     ...arrived.map((member) =>
       stayOf(
         catalogue,
-        { member, fromDay: arrivalDay, leavesOn: null },
+        {
+          member,
+          fromDay: arrivalDay,
+          leavesOn: null,
+          housed: housedAt(member.location),
+        },
         [],
         [],
       ),
@@ -228,6 +278,10 @@ export function crewAtMars(
     if (!where) return [];
     const locationName = locationNameOf(rules, where);
     const arrivesHere = arrived.length > 0 && crewKeyOf(place) === key;
+    const habitats =
+      where.kind === "landingSite"
+        ? habitatSuppliesFor(catalogue, program, inService, where.landingSiteId)
+        : { startKg: 0, refills: [] };
     return [
       withShareTakenHome(catalogue, {
         key,
@@ -237,10 +291,13 @@ export function crewAtMars(
         activityId: crewActivities[key] ?? "",
         stays: here,
         supplies: {
-          startKg: program.crewSupplies[key] ?? 0,
-          refills: arrivesHere
-            ? [{ day: arrivalDay, kg: flown.crewSuppliesKg }]
-            : [],
+          startKg: (program.crewSupplies[key] ?? 0) + habitats.startKg,
+          refills: [
+            ...(arrivesHere
+              ? [{ day: arrivalDay, kg: flown.crewSuppliesKg }]
+              : []),
+            ...habitats.refills,
+          ],
           leftKg: 0,
           outages: [],
           takenHomeKg: 0,

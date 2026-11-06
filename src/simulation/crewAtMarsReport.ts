@@ -32,11 +32,17 @@ export function healthLostSummary(
   const atMars = (name: string) =>
     stays.find(({ member }) => member.name === name)?.health;
   const flownNames = new Set(flown.crewHealth.map(({ name }) => name));
-  // What Protection saved is left out for those it saved nothing, such as Crew with none.
-  const withSaved = (name: string, lost: HealthLost[], saved: number) => ({
+  // What Protection or a habitat saved is left out for those it saved nothing, such as Crew with none.
+  const withSaved = (
+    name: string,
+    lost: HealthLost[],
+    saved: number,
+    savedByHabitat = 0,
+  ) => ({
     name,
     lost,
     ...(saved > 0 ? { savedByProtection: saved } : {}),
+    ...(savedByHabitat > 0 ? { savedByHabitat } : {}),
   });
   return [
     ...stays
@@ -49,6 +55,7 @@ export function healthLostSummary(
           member.name,
           bothLost(health.lost, home?.lost ?? []),
           health.saved + (home?.saved ?? 0),
+          health.savedByHabitat,
         );
       }),
     ...flown.crewHealth.map(({ name, lost, saved }) =>
@@ -56,6 +63,7 @@ export function healthLostSummary(
         name,
         bothLost(lost, atMars(name)?.lost ?? []),
         saved + (atMars(name)?.saved ?? 0),
+        atMars(name)?.savedByHabitat,
       ),
     ),
   ].filter(({ lost }) => lost.length > 0);

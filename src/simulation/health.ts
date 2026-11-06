@@ -11,7 +11,9 @@ import type { Outage } from "./supplies";
  *
  * Radiation is a cause of its own, in flight, in a solar particle event and at Mars, so Protection (`protection.ts`)
  * can slow just that, and having no Supplies left adds a faster drain of its own, in flight or at Mars, for the days
- * they are out (`supplies.ts`). What Protection saved is the radiation's harm over the same days without it.
+ * they are out (`supplies.ts`). What Protection saved is the radiation's harm over the same days without it. Time at
+ * Mars is a cause of its own too, so that a habitat (`habitats.ts`) can slow just that, and what it saved is time at
+ * Mars's harm over the same days without it.
  */
 
 /** Why a Crew member lost Health. */
@@ -43,6 +45,8 @@ export interface HealthDrain {
   perDay: number;
   /** What it would be with no Protection, if Protection slows it. */
   unprotectedPerDay?: number;
+  /** What it would be with no habitat, if a habitat slows it. */
+  withoutHabitatPerDay?: number;
 }
 
 /** Health lost all at once, on one day of the Turn. */
@@ -70,6 +74,8 @@ export interface HealthCourse {
   lost: HealthLost[];
   /** How much more radiation would have taken over the same days with no Protection. */
   saved: number;
+  /** How much more time at Mars would have taken over the same days with no habitat. */
+  savedByHabitat: number;
 }
 
 const causeOrder = Object.keys(healthLossCauses) as HealthLossCause[];
@@ -125,7 +131,13 @@ export function healthCourse(
     ...blows.map(({ day }) => day),
   ];
   if (days.length === 0) {
-    return { health: start, diedOn: null, lost: [], saved: 0 };
+    return {
+      health: start,
+      diedOn: null,
+      lost: [],
+      saved: 0,
+      savedByHabitat: 0,
+    };
   }
   const unprotected = {
     drains: drains.map((drain) => ({
@@ -140,6 +152,13 @@ export function healthCourse(
   const savedBy = (day: number) =>
     totalOf(lostBy(unprotected.drains, unprotected.blows, day)) -
     totalOf(lostBy(drains, blows, day));
+  const withoutHabitat = drains.map((drain) => ({
+    ...drain,
+    perDay: drain.withoutHabitatPerDay ?? drain.perDay,
+  }));
+  const savedByHabitatBy = (day: number) =>
+    totalOf(lostBy(withoutHabitat, blows, day)) -
+    totalOf(lostBy(drains, blows, day));
   let first = Math.min(...days);
   let last = Math.max(...days);
   const atEnd = lostBy(drains, blows, last);
@@ -149,6 +168,7 @@ export function healthCourse(
       diedOn: null,
       lost: listed(atEnd, start),
       saved: savedBy(last),
+      savedByHabitat: savedByHabitatBy(last),
     };
   }
   // Health only ever falls, so the first day it runs out can be searched for.
@@ -162,6 +182,7 @@ export function healthCourse(
     diedOn: first,
     lost: listed(lostBy(drains, blows, first), start),
     saved: savedBy(first),
+    savedByHabitat: savedByHabitatBy(first),
   };
 }
 
@@ -207,15 +228,62 @@ export function drainsInFlight(
   ];
 }
 
+/** Days on which a habitat slows time at Mars's harm by a share, in percent. */
+export interface HabitatDays {
+  fromDay: number;
+  toDay: number;
+  cutPercent: number;
+}
+
+/**
+ * Time at Mars over these days, split where the share a habitat slows it by changes. Habitats don't add up: on each
+ * day the largest share applies.
+ */
+function timeAtMars(
+  perDay: number,
+  fromDay: number,
+  toDay: number,
+  housed: readonly HabitatDays[],
+): HealthDrain[] {
+  const days = [
+    ...new Set([
+      fromDay,
+      toDay,
+      ...housed.flatMap((each) => [each.fromDay, each.toDay]),
+    ]),
+  ]
+    .filter((day) => day >= fromDay && day <= toDay)
+    .toSorted((first, second) => first - second);
+  return days.slice(0, -1).flatMap((from, index): HealthDrain[] => {
+    const to = days[index + 1] ?? from;
+    const cut = Math.max(
+      0,
+      ...housed
+        .filter((each) => each.fromDay <= from && each.toDay >= to)
+        .map(({ cutPercent }) => cutPercent),
+    );
+    return [
+      {
+        cause: "timeAtMars",
+        fromDay: from,
+        toDay: to,
+        perDay: (perDay * (100 - cut)) / 100,
+        ...(cut > 0 ? { withoutHabitatPerDay: perDay } : {}),
+      },
+    ];
+  });
+}
+
 /**
  * Radiation and everything else that being at Mars does, over these days, with the radiation slowed by Protection
- * that cuts its harm by this share.
+ * that cuts its harm by this share, and time at Mars slowed on the days a habitat houses them.
  */
 export function drainsAtMars(
   catalogue: Catalogue,
   fromDay: number,
   toDay: number,
   radiationCutPercent: number,
+  housed: readonly HabitatDays[] = [],
 ): HealthDrain[] {
   const { radiationPerDay, timeAtMarsPerDay } = catalogue.crew.health;
   return [
@@ -225,7 +293,16 @@ export function drainsAtMars(
       toDay,
       ...radiation(radiationPerDay.atMars, radiationCutPercent),
     },
-    { cause: "timeAtMars", fromDay, toDay, perDay: timeAtMarsPerDay },
+    ...(housed.length === 0
+      ? [
+          {
+            cause: "timeAtMars" as const,
+            fromDay,
+            toDay,
+            perDay: timeAtMarsPerDay,
+          },
+        ]
+      : timeAtMars(timeAtMarsPerDay, fromDay, toDay, housed)),
   ];
 }
 

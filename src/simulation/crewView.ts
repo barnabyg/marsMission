@@ -197,9 +197,13 @@ export function crewAtMarsView(
           health,
           arrivedOn,
         })),
+        // Crew at a Landing Site draw on the Supplies held in habitats there too.
         suppliesDaysLeft: daysOfSupplies(
           catalogue,
-          program.crewSupplies[key] ?? 0,
+          (program.crewSupplies[key] ?? 0) +
+            (place.kind === "landingSite"
+              ? (program.habitatSuppliesKg[place.landingSiteId] ?? 0)
+              : 0),
           members.length,
         ),
         waysHome: waysHomeFrom(catalogue, rules, program, key),

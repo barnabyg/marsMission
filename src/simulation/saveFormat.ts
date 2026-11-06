@@ -209,7 +209,15 @@ const format10 = format9.extend({
   ascentPropellantKg: z.record(z.string(), count),
 });
 
-const newestFormat = format10;
+/**
+ * Adds the Supplies held in habitats, in kilograms, by the Landing Site's id. A save from before habitats has none
+ * anywhere.
+ */
+const format11 = format10.extend({
+  habitatSuppliesKg: z.record(z.string(), z.number().nonnegative()),
+});
+
+const newestFormat = format11;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -313,6 +321,13 @@ const formats: readonly SaveFormat[] = [
     upgrade: (old: z.output<typeof format9>): z.output<typeof format10> => ({
       ...old,
       ascentPropellantKg: {},
+    }),
+  },
+  {
+    schema: format10,
+    upgrade: (old: z.output<typeof format10>): z.output<typeof format11> => ({
+      ...old,
+      habitatSuppliesKg: {},
     }),
   },
   { schema: newestFormat },
