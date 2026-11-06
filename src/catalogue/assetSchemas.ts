@@ -84,6 +84,14 @@ export const assetsSchema = z.array(
         percent: z.number().int().positive(),
       })
       .optional(),
+    // What it makes at its Landing Site on each day it operates there, whatever its Activity, which builds up there
+    // from Turn to Turn and stays if it stops. Each one makes its own, so two at one site make twice as much.
+    makes: z
+      .strictObject({
+        // For Crew leaving the surface, in whole kilograms a day.
+        ascentPropellantKgPerDay: z.number().int().positive(),
+      })
+      .optional(),
     ...technologyFields,
   }),
 );

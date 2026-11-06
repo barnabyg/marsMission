@@ -162,12 +162,17 @@ describe("a productive Program in the real data files", () => {
     };
   }
 
-  /** A first orbiter for its Surveys, and then the dearest thing that lands that the money allows, at a new site if there is one. */
+  /**
+   * A first orbiter for its Surveys, and then the dearest thing that lands and does research that the money allows, at
+   * a new site if there is one. A fuel plant, which came in Phase 8, earns nothing of its own.
+   */
   function nextPlan(program: Program): TurnPlan {
     const { turnNumber } = safe.readProgram(program);
     const choices = files.assets
-      .filter(({ landsAtSite, kind }) =>
-        turnNumber === 1 ? kind === "orbiter" : landsAtSite,
+      .filter(({ landsAtSite, kind, makes }) =>
+        turnNumber === 1
+          ? kind === "orbiter"
+          : landsAtSite === true && makes === undefined,
       )
       .toSorted((first, second) => second.costMillions - first.costMillions)
       .flatMap((asset) =>

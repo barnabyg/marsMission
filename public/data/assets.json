@@ -151,5 +151,35 @@
       "raises": "surfaceResearch",
       "percent": 75
     }
+  },
+  {
+    "id": "wellspring-fuel-plant",
+    "name": "Wellspring Fuel Plant",
+    "kind": "fuel-plant",
+    "costMillions": 1200,
+    "upkeepMillionsPerTurn": 15,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "activities": ["propellant-production"],
+    "massTonnes": 4.5,
+    "serviceLifeOptions": [
+      {
+        "days": 1300,
+        "costMillions": 0
+      },
+      {
+        "days": 2100,
+        "costMillions": 150
+      }
+    ],
+    "failureChancePerTurn": 0.12,
+    "technologyReadiness": "built",
+    "unproven": {
+      "costMillions": 1400,
+      "failureMultiplier": 1.5
+    },
+    "makes": {
+      "ascentPropellantKgPerDay": 40
+    }
   }
 ]
