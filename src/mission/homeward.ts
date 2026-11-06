@@ -40,7 +40,7 @@ export const homewardPlayMs: Record<HomewardPart, number> = {
 };
 
 /** One Mission Event of the way home: which of the Timeline's entries it is, its day, and whether it failed. */
-export interface HomewardMoment {
+interface HomewardMoment {
   entryIndex: number;
   day: number;
   failed: boolean;
@@ -52,7 +52,7 @@ export interface Homeward extends JourneyHomeOnTimeline {
 }
 
 /** Whether an entry is one of the way home's Mission Events, and which. */
-export function homewardPartOf(entry: TimelineEntry): HomewardPart | null {
+function homewardPartOf(entry: TimelineEntry): HomewardPart | null {
   if (entry.kind !== "missionEvent" || entry.homeward !== true) return null;
   return (
     partsInOrder.find((part) => homewardEventIds[part] === entry.eventId) ??

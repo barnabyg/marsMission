@@ -28,7 +28,7 @@ const bounceMs = 1800;
  * - docked: joined, ready to leave for home
  * - missed: it hit and tumbled away, leaving those aboard stranded in Mars orbit
  */
-export type MarsRendezvousStage = "closing" | "docked" | "missed";
+type MarsRendezvousStage = "closing" | "docked" | "missed";
 
 /** What the spacecraft view shows of the rendezvous now. */
 export interface MarsRendezvousNow {

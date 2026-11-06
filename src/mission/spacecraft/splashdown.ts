@@ -31,7 +31,7 @@ export const breakUpMs = 1900;
  * - splashedDown: floating in the ocean
  * - brokenUp: the heat shield failed, and it broke up in the glow
  */
-export type EarthEntryStage =
+type EarthEntryStage =
   "entering" | "descending" | "splashedDown" | "brokenUp";
 
 export interface EarthEntryNow {

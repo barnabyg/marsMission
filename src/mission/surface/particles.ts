@@ -73,10 +73,10 @@ export function hide({ colors }: ParticlePool, index: number) {
 const engineHeight = 0.45;
 
 /** Keeps particles from sinking into the ground. */
-export const justAboveGround = 0.03;
+const justAboveGround = 0.03;
 
 /** Fades everything out before the sequence ends, so that nothing vanishes all at once. */
-export function fadeToEnd(elapsedMs: number): number {
+function fadeToEnd(elapsedMs: number): number {
   return 1 - smooth((elapsedMs - (sequenceMs - 1500)) / 1500);
 }
 
