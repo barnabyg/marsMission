@@ -104,8 +104,7 @@ function stayOf(
 }
 
 /** Whether a stay ended in death, rather than going on past the Turn or leaving for home. */
-const diedAtMars = (stay: CrewStay): boolean =>
-  stay.health.diedOn !== null;
+const diedAtMars = (stay: CrewStay): boolean => stay.health.diedOn !== null;
 
 /**
  * A Crew member's stay with one more blow to their Health, which can end it sooner. Fewer Crew make their place's

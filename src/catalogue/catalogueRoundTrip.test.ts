@@ -36,9 +36,9 @@ describe("round trips in the real data files", () => {
       "earth-entry",
     ]);
     for (const eventId of crew.roundTrip.missionEvents) {
-      expect(
-        missionEvents.find(({ id }) => id === eventId)?.timing.from,
-      ).toBe("leavingMars");
+      expect(missionEvents.find(({ id }) => id === eventId)?.timing.from).toBe(
+        "leavingMars",
+      );
       expect(
         contingencies.some(({ missionEvent }) => missionEvent === eventId),
       ).toBe(true);
@@ -83,9 +83,7 @@ describe("validating the round trip", () => {
   });
 
   it("rejects a round trip with no mass", () => {
-    expect(errorFrom(withRoundTrip({ massTonnes: 0 }))).toContain(
-      "crew.json",
-    );
+    expect(errorFrom(withRoundTrip({ massTonnes: 0 }))).toContain("crew.json");
   });
 
   it("rejects a Milestone for Crew coming home that names anything else", () => {
