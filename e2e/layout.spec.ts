@@ -10,9 +10,15 @@ import { screenSizes, whatScrolls, unreadableText } from "./layoutHelpers";
 import { successSeed } from "./seeds";
 
 const realFiles = realCatalogueFiles();
-/** Every Asset a new Program can choose, leaving out any that need Development first. */
+/**
+ * Every Asset a new Program can choose, leaving out any that need Development first, and the fuel plant, which the
+ * Meridian Colossus can't carry beside all the others.
+ */
 const allAssets = realFiles.assets
-  .filter(({ technologyReadiness }) => technologyReadiness !== "not-built")
+  .filter(
+    ({ technologyReadiness, makes }) =>
+      technologyReadiness !== "not-built" && makes === undefined,
+  )
   .map(({ name }) => name);
 
 /** Ticks every Asset that can fly, on the Meridian Colossus, the only Launch Vehicle that carries them all. */
