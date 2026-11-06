@@ -20,7 +20,9 @@ function withRelayBenefit(
 describe("Benefits in the real data files", () => {
   it("has a relay orbiter that raises surface research, with a Technology Readiness like every Asset", () => {
     const { assets } = parseCatalogue(realCatalogueFiles());
-    const giving = assets.filter(({ benefit }) => benefit !== undefined);
+    const giving = assets.filter(
+      ({ benefit }) => benefit?.raises === "surfaceResearch",
+    );
     expect(giving.map(({ kind }) => kind)).toEqual(["orbiter"]);
     const [relay] = giving;
     expect(relay?.benefit?.raises).toBe("surfaceResearch");

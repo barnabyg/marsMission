@@ -102,5 +102,13 @@
     "effect": {
       "kind": "nothing"
     }
+  },
+  {
+    "id": "sample-analysis",
+    "name": "Sample analysis",
+    "description": "Studies the samples that rovers and Crew at its Landing Site bring in, which raises their Research Grants. It earns no Science of its own.",
+    "effect": {
+      "kind": "nothing"
+    }
   }
 ]

@@ -76,13 +76,24 @@ export const assetsSchema = z.array(
     // What the landing risk is multiplied by when this Asset lands. A landing is as risky as the riskiest Asset in it.
     landingRiskMultiplier: z.number().positive().optional(),
     // What it raises for other Assets, and by what percentage, on each day it operates at Mars, whatever its Activity.
-    // "surfaceResearch" is the Ongoing Research of every Asset and Crew on the surface. Benefits that raise the same
-    // thing don't add up: on each day the largest applies.
+    // Benefits that raise the same thing don't add up: on each day the largest applies.
     benefit: z
-      .strictObject({
-        raises: z.enum(["surfaceResearch"]),
-        percent: z.number().int().positive(),
-      })
+      .discriminatedUnion("raises", [
+        // The Ongoing Research of every Asset and Crew on the surface: its Science and Public Support, and so its
+        // Research Grant.
+        z.strictObject({
+          raises: z.literal("surfaceResearch"),
+          percent: z.number().int().positive(),
+        }),
+        // The Research Grant rates of the Ongoing Research at its own Landing Site of the Assets of these kinds, and of
+        // the Crew there if `crew` is set. Their Science and Public Support stay as they are.
+        z.strictObject({
+          raises: z.literal("siteResearchGrants"),
+          percent: z.number().int().positive(),
+          assetKinds: z.array(id),
+          crew: z.boolean(),
+        }),
+      ])
       .optional(),
     // What it makes at its Landing Site on each day it operates there, whatever its Activity, which builds up there
     // from Turn to Turn and stays if it stops. Each one makes its own, so two at one site make twice as much.

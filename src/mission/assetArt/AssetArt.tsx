@@ -28,6 +28,8 @@ const modelsByKind: Partial<Record<string, ReactNode>> = {
   "fuel-plant": <models.lander />,
   // A habitat too, until its own model comes.
   habitat: <models.lander />,
+  // And a Mars lab.
+  lab: <models.lander />,
 };
 
 /** The camera looks from in front, a little to the right and above, where a lander's hatch and a rover's front show. */

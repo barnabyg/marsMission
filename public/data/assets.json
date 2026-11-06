@@ -212,5 +212,38 @@
       "timeAtMarsCutPercent": 50,
       "suppliesKg": 1500
     }
+  },
+  {
+    "id": "curie-lab",
+    "name": "Curie Station",
+    "kind": "lab",
+    "costMillions": 1100,
+    "upkeepMillionsPerTurn": 20,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "activities": ["sample-analysis"],
+    "massTonnes": 4,
+    "serviceLifeOptions": [
+      {
+        "days": 1300,
+        "costMillions": 0
+      },
+      {
+        "days": 2100,
+        "costMillions": 150
+      }
+    ],
+    "failureChancePerTurn": 0.1,
+    "technologyReadiness": "built",
+    "unproven": {
+      "costMillions": 1300,
+      "failureMultiplier": 1.5
+    },
+    "benefit": {
+      "raises": "siteResearchGrants",
+      "percent": 25,
+      "assetKinds": ["rover"],
+      "crew": true
+    }
   }
 ]

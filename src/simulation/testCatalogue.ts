@@ -174,6 +174,27 @@ export function testCatalogueFiles(): CatalogueFiles {
         // Halves time at Mars, and holds 400 kg of Supplies, which last a Crew of two 800 days.
         habitat: { timeAtMarsCutPercent: 50, suppliesKg: 400 },
       },
+      {
+        id: "test-lab",
+        name: "Test Lab",
+        kind: "lab",
+        costMillions: 200,
+        upkeepMillionsPerTurn: 10,
+        massTonnes: 2,
+        failureChancePerTurn: 0,
+        serviceLifeOptions: longLife,
+        missionEvents: ["test-landing"],
+        technologyReadiness: "flight-proven",
+        activities: ["test-nothing"],
+        landsAtSite: true,
+        // Doubles the Research Grants of rovers and Crew at its Landing Site.
+        benefit: {
+          raises: "siteResearchGrants",
+          percent: 100,
+          assetKinds: ["rover"],
+          crew: true,
+        },
+      },
       ...technologies.assets,
     ],
     crew: testCrew(),
