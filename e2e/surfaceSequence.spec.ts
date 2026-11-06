@@ -4,6 +4,7 @@ import {
   holdSequence,
   holdTurnWhenShown,
   launchHeld,
+  missionViewport,
   playFastUntil,
   surfaceAssets,
   termsWithoutTooltips,
@@ -11,6 +12,8 @@ import {
   watchForProblems,
 } from "./helpers";
 import { landingSeed, roverSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 /** Where the camera is at the surface view's usual shot, as the scene reports it. */
 const surfaceCamera = "0.000 2.200 12.500";
@@ -43,6 +46,7 @@ function playedMs(page: Page) {
 test("moves the view to the surface for a landing at 3840×2160, with a smooth camera move and the landing playing", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 3840, height: 2160 });
   // Over 5 s: a landing takes the same real time as it would in play.
   const problems = watchForProblems(page);
   await launchLanding(page);

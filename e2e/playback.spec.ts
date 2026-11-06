@@ -1,12 +1,15 @@
 import { expect, test } from "@playwright/test";
 import {
   chooseAssets,
+  missionViewport,
   pauseAtEvent,
   pauseAtEventAfter,
   playToNextTurn,
   watchForProblems,
 } from "./helpers";
 import { successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 // Mission Mode's playback controls and the events column beside the view.
 
@@ -76,6 +79,8 @@ test("pauses Mission Mode and resumes from exactly where it stopped, without car
 test("keeps the events column beside the solar system view, scrolling by itself if it fills", async ({
   page,
 }) => {
+  // Checks where things sit on screen, at the size this was laid out for.
+  await page.setViewportSize({ width: 3840, height: 2160 });
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await pauseAtEvent(page, "Launch", () =>

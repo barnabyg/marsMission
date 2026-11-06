@@ -1,10 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
+  missionViewport,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
 import { dustStormLossSeed, dustStormSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 function decisionPoint(page: Page) {
   return page.getByTestId("decision-point");

@@ -3,10 +3,13 @@ import {
   chooseAssets,
   endTurnAndContinue,
   endTurnWithoutLaunching,
+  missionViewport,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
 import { successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 test("pays Upkeep for an Asset kept at Mars, shown before the Turn and in its summary, until its mission is ended", async ({
   page,

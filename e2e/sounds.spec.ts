@@ -1,14 +1,17 @@
 import { expect, test } from "@playwright/test";
 import {
+  chooseAssets,
   eventEntries,
   listenForSounds,
+  missionViewport,
   pauseAtEvent,
   playToNextTurn,
   soundsHeard,
   watchForProblems,
-  chooseAssets,
 } from "./helpers";
 import { seedFailingAt, successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 for (const speed of ["1x", "10x"]) {
   test(`plays each sound with what is on screen at ${speed}`, async ({

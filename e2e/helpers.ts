@@ -9,6 +9,13 @@ import { termPattern } from "../src/ui/tooltips";
 const knownThirdPartyWarning =
   "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.";
 
+/**
+ * The window for tests of how Mission Mode plays, rather than how it's laid out: 1920×1080, a display the game supports.
+ * Software rendering at 4K takes a worker most of a CPU core, and a starved frame rate holds playback back, so these
+ * tests run about a third faster at this size. Use it with `test.use({ viewport: missionViewport })` at the top of a file.
+ */
+export const missionViewport = { width: 1920, height: 1080 };
+
 /** Fails the test on anything the browser reports as a problem. */
 export function watchForProblems(page: Page): string[] {
   const problems: string[] = [];

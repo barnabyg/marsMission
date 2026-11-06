@@ -7,6 +7,7 @@ import {
   holdSequence,
   launchHeld,
   listenForSounds,
+  missionViewport,
   overrideProgramData,
   pauseAtEvent,
   pauseAtEventAfter,
@@ -22,6 +23,8 @@ import {
   crewLossSeed,
   crewSeed,
 } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 function launchVehicle(page: Page) {
   return page.getByRole("combobox", { name: "Launch Vehicle" });

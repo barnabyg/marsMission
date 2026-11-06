@@ -1,14 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
+  chooseAssets,
   holdTurnWhenShown,
   launchHeld,
+  missionViewport,
   pauseAtEvent,
   termsWithoutTooltips,
   viewButton,
   watchForProblems,
-  chooseAssets,
 } from "./helpers";
 import { seedFailingAt, solarParticleEventSeed, successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 /** Where the camera is at the spacecraft view's shot, as the scene reports it. */
 const spacecraftCamera = "-13.400 1.800 2.400";

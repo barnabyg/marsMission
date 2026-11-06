@@ -1,12 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   cancelledAfterOneTurn,
+  chooseAssets,
+  missionViewport,
   overrideProgramData,
   pauseAtEvent,
   watchForProblems,
-  chooseAssets,
 } from "./helpers";
 import { seedFailingAt, successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 function endTurn(page: Page): Promise<void> {
   return page.getByRole("button", { name: "End Turn", exact: true }).click();

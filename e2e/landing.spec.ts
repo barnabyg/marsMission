@@ -4,6 +4,7 @@ import {
   endTurnAndContinue,
   eventEntries,
   holdTurnWhenShown,
+  missionViewport,
   openLoadDialog,
   openSaveDialog,
   pauseAtEvent,
@@ -20,6 +21,8 @@ import {
   orbiterSafeSeed,
   successSeed,
 } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 async function planLanding(page: Page, seed: number): Promise<void> {
   await page.goto(`/?seed=${seed}`);

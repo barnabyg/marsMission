@@ -2,12 +2,15 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
   launchFirstMission,
+  missionViewport,
   orbiterLabels,
   pauseAtEvent,
   viewButton,
   watchForProblems,
 } from "./helpers";
 import { orbiterSafeSeed, seedFailingAt, successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 /** Where the camera is at each view's shot, as the scene reports it. */
 const solarSystemCamera = "0.000 3.500 2.100";

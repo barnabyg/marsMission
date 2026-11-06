@@ -4,6 +4,7 @@ import {
   chooseAssets,
   eventEntries,
   launchFirstMission,
+  missionViewport,
   overrideProgramData,
   pauseAtEvent,
   pauseAtEventAfter,
@@ -11,6 +12,8 @@ import {
   watchForProblems,
 } from "./helpers";
 import { seedFailingAt, successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 test("plays from a new Program through a launch to the next Turn", async ({
   page,

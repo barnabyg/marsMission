@@ -2,12 +2,15 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
   eventEntries,
+  missionViewport,
   overrideProgramData,
   pauseAtEvent,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
 import { pinpointLandingSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 function pinpointRow(page: Page) {
   return page.locator(".asset-choice", { hasText: "Pinpoint Lander" });

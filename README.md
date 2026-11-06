@@ -49,13 +49,13 @@ A balance change also reaches the current playtest guide's known seeds in `src/c
 | ---------------------- | -------------------------------------------------------------- |
 | `npm.cmd run dev`      | Starts the development server                                  |
 | `npm.cmd test`         | Runs every test that doesn't need a browser                    |
-| `npm.cmd run test:e2e` | Runs the browser tests, mostly at 3840×2160                    |
+| `npm.cmd run test:e2e` | Runs the browser tests, at 3840×2160 or 1920×1080              |
 | `npm.cmd run verify`   | Runs every check (the canonical verification)                  |
 | `npm.cmd run balance`  | Plays thousands of Programs and prints a report on the balance |
 
 No source, test, script or style file is over 500 lines, so that each can be read whole. ESLint's `max-lines` rule enforces this for TypeScript and scripts, and CSS files keep to it by hand. It doesn't cover `package-lock.json`, the data files in `public/data`, the generated art and sounds in `public`, or Markdown. When a file nears the limit, split it at a natural seam, such as by subject for tests or by screen for styles. A new style file is imported from `src/app/main.tsx`, in cascade order.
 
-The browser tests need Chromium, once per machine: `npx.cmd playwright install chromium`.
+The browser tests need Chromium, once per machine: `npx.cmd playwright install chromium`. They run at 3840×2160, except the tests of how Mission Mode plays, which use `missionViewport` from `e2e/helpers.ts`, 1920×1080, because software rendering at 4K slows them by about a third. A test of the layout, or of something only 4K shows, stays at 3840×2160.
 
 The sound effects in `public/sounds` are synthesised by `node scripts/generate-sounds.mjs`, and the files it makes are committed. Rerun it only to change a sound.
 

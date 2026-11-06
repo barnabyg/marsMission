@@ -4,6 +4,7 @@ import {
   eventEntries,
   holdSequence,
   holdTurnWhenShown,
+  missionViewport,
   pauseAtEvent,
   surfaceAssets,
   watchForProblems,
@@ -13,6 +14,8 @@ import {
   orbitInsertionRescuedSeed,
   orbitInsertionRescueFailsSeed,
 } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 function decisionPoint(page: Page) {
   return page.getByTestId("decision-point");

@@ -3,6 +3,7 @@ import {
   chooseAssets,
   continueFromSave,
   launchHeld,
+  missionViewport,
   overrideProgramData,
   pauseAtEvent,
   termsWithoutTooltips,
@@ -15,6 +16,8 @@ import {
   colossusSeed,
   rendezvousFailureSeed,
 } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 /** Where the camera is at each shot, as the scene reports it. */
 const solarSystemCamera = "0.000 3.500 2.100";
