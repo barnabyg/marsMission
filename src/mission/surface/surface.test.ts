@@ -395,6 +395,12 @@ describe("what the player reads about the Landing Site shown", () => {
     ]);
   });
 
+  it("says nothing is operating at a site that what was there has left through Mars ascent", () => {
+    expect(describeSite(timelineOf([]), 70, "Alpha Plain", true)).toEqual([
+      "Nothing operating here",
+    ]);
+  });
+
   it("adds what is on its way to what is already there", () => {
     const timeline = timelineOf(
       [asset({ name: "Old", landingSiteName: "Beta Basin" })],

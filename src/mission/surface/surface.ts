@@ -213,11 +213,15 @@ export function dustStormAt(
   );
 }
 
-/** What the player reads about a Landing Site on a given day, one line each. */
+/**
+ * What the player reads about a Landing Site on a given day, one line each. `leftFrom` says whether something has left
+ * the site this Turn, through Mars ascent, so that it isn't new.
+ */
 export function describeSite(
   timeline: Pick<Timeline, "assetsAtMars" | "mission">,
   day: number,
   siteName: string,
+  leftFrom = false,
 ): string[] {
   const here = surfaceAssetsAt(timeline, day, siteName).map((asset) =>
     asset.model === "crewLander"
@@ -234,7 +238,10 @@ export function describeSite(
       lostOnDay !== null &&
       day >= lostOnDay,
   );
-  const nothing = crashedHere ? "Nothing operating here" : "Nothing here yet";
+  const nothing =
+    crashedHere === true || leftFrom
+      ? "Nothing operating here"
+      : "Nothing here yet";
   return [
     ...(here.length > 0 ? here : [nothing]),
     ...(coming.length > 0 ? [`On its way: ${coming.join(", ")}`] : []),

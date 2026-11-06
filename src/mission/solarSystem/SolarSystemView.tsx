@@ -7,15 +7,23 @@ import {
   Vector3,
 } from "three";
 import { addDays, type Timeline } from "../../simulation/simulation";
+import { homewardOf } from "../homeward";
+import {
+  homewardLabel,
+  homewardOnDay,
+  type HomewardOnDay,
+} from "./homewardJourney";
 import {
   crewColor,
   degreesToRadians,
   isCrew,
+  useDisposal,
   useTexture,
   type CameraPose,
   type SceneLabel,
 } from "../sceneParts";
 import {
+  homewardPosition,
   journeyHasFailed,
   journeyIsReturning,
   orbits,
@@ -185,6 +193,59 @@ function Spacecraft({
   );
 }
 
+/** The colour of the way home, for Crew or for samples. */
+const homewardColor = "#7fe7ff";
+
+/** The way home from Mars to Earth, and what is on it while it's on its way, ringed if it's bringing Crew home. */
+function HomewardJourney({
+  journey,
+  startDate,
+}: {
+  journey: HomewardOnDay;
+  startDate: string;
+}) {
+  const { fromDay, toDay } = journey;
+  const geometry = useMemo(() => {
+    const points: Vector3[] = [];
+    for (let step = 0; step <= 120; step++) {
+      const { x, z } = homewardPosition(
+        startDate,
+        { fromDay, toDay },
+        step / 120,
+      );
+      points.push(new Vector3(x, 0, z));
+    }
+    return new TubeGeometry(new CatmullRomCurve3(points), 480, 0.0045, 8);
+  }, [startDate, fromDay, toDay]);
+  useDisposal(geometry);
+  const { x, z } = homewardPosition(
+    startDate,
+    { fromDay, toDay },
+    journey.progress,
+  );
+  return (
+    <>
+      <mesh geometry={geometry}>
+        <meshBasicMaterial color={homewardColor} transparent opacity={0.7} />
+      </mesh>
+      {journey.onItsWay && (
+        <group position={[x, 0, z]}>
+          <mesh>
+            <sphereGeometry args={[0.022, 24, 24]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+          {journey.crewed && (
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.04, 0.005, 8, 40]} />
+              <meshBasicMaterial color={crewColor} />
+            </mesh>
+          )}
+        </group>
+      )}
+    </>
+  );
+}
+
 /** One small marker circling Mars for each operating Asset. */
 function OperatingAssetMarkers({
   date,
@@ -230,6 +291,10 @@ export function SolarSystemScene({
   const returning = mission !== null && journeyIsReturning(mission, day);
   // A Mission that swings back isn't left lost in space.
   const lost = failed && mission.returnsToEarth === undefined;
+  const homeward = homewardOnDay(
+    useMemo(() => homewardOf(timeline), [timeline]),
+    day,
+  );
 
   return (
     <>
@@ -274,6 +339,7 @@ export function SolarSystemScene({
           lost={lost}
         />
       )}
+      {homeward && <HomewardJourney journey={homeward} startDate={startDate} />}
       <OperatingAssetMarkers
         date={date}
         day={day}
@@ -318,6 +384,16 @@ export function solarSystemLabels(
       position: [spacecraft.x, 0, spacecraft.z - 0.04],
       className: "spacecraft-label",
       testId: "returning-spacecraft",
+    });
+  }
+  const homeward = homewardOnDay(homewardOf(timeline), day);
+  if (homeward?.onItsWay) {
+    const { x, z } = homewardPosition(startDate, homeward, homeward.progress);
+    labels.push({
+      text: homewardLabel(homeward),
+      position: [x, 0, z - 0.04],
+      className: homeward.crewed ? "crew-label" : "spacecraft-label",
+      testId: "homeward-spacecraft",
     });
   }
   return labels;

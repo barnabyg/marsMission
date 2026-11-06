@@ -13,6 +13,7 @@ import {
   newParticlePools,
   writeParticles,
   type ParticlePool,
+  type ParticlePools,
 } from "./particles";
 import type { LandingSequence } from "./sequence";
 import { landerSpot } from "./surface";
@@ -70,7 +71,6 @@ export function SequenceParticles({
   elapsedMs: number;
 }) {
   const { siteName, assets, crashed } = sequence;
-  const pools = useMemo(() => newParticlePools(), []);
   const emitters = useMemo(
     () =>
       assets.map(({ place, lander }) => {
@@ -79,6 +79,28 @@ export function SequenceParticles({
       }),
     [assets, siteName],
   );
+  return (
+    <ParticleLayers
+      elapsedMs={elapsedMs}
+      write={(pools) => {
+        writeParticles(crashed, elapsedMs, emitters, pools);
+      }}
+    />
+  );
+}
+
+/**
+ * Plumes and fire over dust, worked out by `write` for each moment of a sequence, which a pause holds. It frees
+ * everything when it goes.
+ */
+export function ParticleLayers({
+  elapsedMs,
+  write,
+}: {
+  elapsedMs: number;
+  write: (pools: ParticlePools) => void;
+}) {
+  const pools = useMemo(() => newParticlePools(), []);
   const plume = useMemo(() => geometryOf(pools.plume), [pools]);
   const dust = useMemo(() => geometryOf(pools.dust), [pools]);
   const dot = useMemo(() => softDot(), []);
@@ -91,7 +113,7 @@ export function SequenceParticles({
   useFrame(() => {
     if (drawnMs.current === elapsedMs) return;
     drawnMs.current = elapsedMs;
-    writeParticles(crashed, elapsedMs, emitters, pools);
+    write(pools);
     markChanged(plume);
     markChanged(dust);
   });

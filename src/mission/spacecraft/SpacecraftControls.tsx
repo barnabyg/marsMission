@@ -1,7 +1,9 @@
 import type { Timeline } from "../../simulation/simulation";
 import { GameText } from "../../ui/GameText";
 import type { MissionViewId } from "../missionViews";
+import { marsRendezvousStatus, type MarsRendezvousNow } from "./marsRendezvous";
 import { earthOrbitStatus, type EarthOrbitNow } from "./refuelling";
+import { earthEntryStatus, type EarthEntryNow } from "./splashdown";
 import { assetsOnBoard } from "./spacecraft";
 
 /** Why the spacecraft view's button is disabled, which the button itself tells the player. */
@@ -18,6 +20,10 @@ interface SpacecraftControlsProps {
   particles: boolean;
   /** The Mission in Earth orbit for Orbital refuelling, if it's there. */
   earthOrbit: EarthOrbitNow | null;
+  /** The rendezvous in Mars orbit on the way home, while it plays. */
+  marsRendezvous: MarsRendezvousNow | null;
+  /** Earth entry at the end of the way home, while it plays. */
+  earthEntry: EarthEntryNow | null;
 }
 
 /** How the player reads a kind on board, where the Crew's ship is named for its Crew. */
@@ -53,8 +59,25 @@ export function SpacecraftControls({
   available,
   particles,
   earthOrbit,
+  marsRendezvous,
+  earthEntry,
 }: SpacecraftControlsProps) {
   if (!available || view !== "spacecraft") return null;
+  // The way home, close up, shows nothing else.
+  const homeward =
+    marsRendezvousStatus(marsRendezvous) ?? earthEntryStatus(earthEntry);
+  if (homeward !== null) {
+    return (
+      <>
+        <h2>On board</h2>
+        <ul data-testid="spacecraft-status">
+          <li>
+            <GameText>{homeward}</GameText>
+          </li>
+        </ul>
+      </>
+    );
+  }
   return (
     <>
       <h2>On board</h2>

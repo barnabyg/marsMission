@@ -41,11 +41,11 @@ const shares = Float32Array.from({ length: 1024 }, (_, index) => {
 });
 
 /** The same share for the same particle and purpose. */
-function shareFor(particle: number, purpose: number): number {
+export function shareFor(particle: number, purpose: number): number {
   return shares[(particle * 7 + purpose * 131) & 1023] ?? 0;
 }
 
-function put(
+export function put(
   { positions, colors }: ParticlePool,
   index: number,
   x: number,
@@ -65,7 +65,7 @@ function put(
   colors[index * 4 + 3] = opacity;
 }
 
-function hide({ colors }: ParticlePool, index: number) {
+export function hide({ colors }: ParticlePool, index: number) {
   colors[index * 4 + 3] = 0;
 }
 
@@ -73,10 +73,10 @@ function hide({ colors }: ParticlePool, index: number) {
 const engineHeight = 0.45;
 
 /** Keeps particles from sinking into the ground. */
-const justAboveGround = 0.03;
+export const justAboveGround = 0.03;
 
 /** Fades everything out before the sequence ends, so that nothing vanishes all at once. */
-function fadeToEnd(elapsedMs: number): number {
+export function fadeToEnd(elapsedMs: number): number {
   return 1 - smooth((elapsedMs - (sequenceMs - 1500)) / 1500);
 }
 
@@ -147,9 +147,10 @@ function writeLandingDust(
 function writeCrashPlume(
   index: number,
   elapsedMs: number,
-  { x, y, z }: Emitter,
+  emitter: Emitter,
   pool: ParticlePool,
 ) {
+  const { x, y, z } = emitter;
   const angle = shareFor(index, 2) * Math.PI * 2;
   if (elapsedMs < impactMs) {
     const lifeMs = 400 + shareFor(index, 0) * 500;
@@ -174,8 +175,19 @@ function writeCrashPlume(
     );
     return;
   }
+  writeImpactFire(index, elapsedMs - impactMs, emitter, pool);
+}
+
+/** A burst of fire thrown up and out from where something hit the ground, this long ago. */
+export function writeImpactFire(
+  index: number,
+  sinceImpactMs: number,
+  { x, y, z }: Emitter,
+  pool: ParticlePool,
+) {
+  const angle = shareFor(index, 2) * Math.PI * 2;
   const lifeMs = 500 + shareFor(index, 0) * 1000;
-  const share = (elapsedMs - impactMs - shareFor(index, 1) * 200) / lifeMs;
+  const share = (sinceImpactMs - shareFor(index, 1) * 200) / lifeMs;
   if (share < 0 || share >= 1) {
     hide(pool, index);
     return;
@@ -200,12 +212,29 @@ function writeCrashPlume(
 function writeCrashDust(
   index: number,
   elapsedMs: number,
-  { x, y, z }: Emitter,
+  emitter: Emitter,
   pool: ParticlePool,
 ) {
-  const bornMs = impactMs + shareFor(index, 0) * 1100;
+  writeImpactSmoke(
+    index,
+    elapsedMs - impactMs,
+    emitter,
+    pool,
+    fadeToEnd(elapsedMs),
+  );
+}
+
+/** Dust and dark smoke billowing up from where something hit the ground this long ago, faded by `fade`. */
+export function writeImpactSmoke(
+  index: number,
+  sinceImpactMs: number,
+  { x, y, z }: Emitter,
+  pool: ParticlePool,
+  fade: number,
+) {
+  const bornMs = shareFor(index, 0) * 1100;
   const lifeMs = 1400 + shareFor(index, 1) * 2000;
-  const share = (elapsedMs - bornMs) / lifeMs;
+  const share = (sinceImpactMs - bornMs) / lifeMs;
   if (share < 0 || share >= 1) {
     hide(pool, index);
     return;
@@ -223,7 +252,7 @@ function writeCrashDust(
     0.74 - smoke * 0.6,
     0.47 - smoke * 0.38,
     0.3 - smoke * 0.24,
-    Math.sin(share * Math.PI) * 0.62 * fadeToEnd(elapsedMs),
+    Math.sin(share * Math.PI) * 0.62 * fade,
   );
 }
 

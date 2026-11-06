@@ -53,8 +53,11 @@ export function landingSequenceOf({
   Timeline,
   "assetsAtMars" | "mission" | "entries"
 >): LandingSequence | null {
+  // Mars ascent asks for the surface too, but it plays as a sequence of its own (ascent.ts).
   const entryIndex = entries.findIndex(
-    (entry) => viewAskedForBy(entry) === "surface",
+    (entry) =>
+      viewAskedForBy(entry) === "surface" &&
+      !(entry.kind === "missionEvent" && entry.homeward),
   );
   const entry = entries[entryIndex];
   if (entry?.kind !== "missionEvent") return null;
