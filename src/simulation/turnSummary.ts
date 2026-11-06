@@ -124,6 +124,8 @@ export interface TurnSummary {
     crew: string[];
     /** The samples aboard with them, from their Landing Site and their own, which a failure loses. */
     samples: number;
+    /** The Landing Site they left, whose samples they took, or null if they left Mars orbit. */
+    samplesFrom: string | null;
     failure: { missionEventName: string; publicSupportLost: number } | null;
   } | null;
   /** The samples cached at each Landing Site this Turn, leaving out sites where none were. */

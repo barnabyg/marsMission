@@ -45,9 +45,50 @@ export function researchActivity(
     })[0];
 }
 
+/** The Activity that caches samples, among these, if one does. */
+export const cachingActivity = (activities: PlannedActivity[]) =>
+  activities.find(({ cachesPerTurn }) => cachesPerTurn !== null);
+
+/** The Landing Sites, by id, where an Asset of this kind operates with Service Life left. */
+const sitesWith = (view: ProgramView, kind: string) =>
+  new Set(
+    view.operatingAssets.flatMap(({ kind: each, landingSiteId, daysLeft }) =>
+      each === kind && daysLeft > 0 && landingSiteId !== null
+        ? [landingSiteId]
+        : [],
+    ),
+  );
+
+/** Whether an ascent vehicle operates with Service Life left at this Landing Site, so that samples there can go home. */
+export const ascentVehicleAt = (view: ProgramView, siteId: string | null) =>
+  siteId !== null && sitesWith(view, "ascent-vehicle").has(siteId);
+
+/** Where an ascent vehicle would go: the Landing Site with the most samples and none there, if any has samples. */
+export function siteNeedingAscent(view: ProgramView) {
+  const lifted = sitesWith(view, "ascent-vehicle");
+  return view.landingSites
+    .filter(({ id, samples }) => !lifted.has(id) && samples > 0)
+    .toSorted((first, second) => second.samples - first.samples)[0];
+}
+
+/**
+ * The rover, by its key, that caches samples while the Program is rich, when the PlayStyle caches them: the first
+ * operating with Service Life left. Rovers beside an ascent vehicle cache them too.
+ */
+export const richCacher = (view: ProgramView, playStyle: PlayStyle) =>
+  playStyle.cachesSamples && view.moneyMillions >= richMillions
+    ? view.operatingAssets.find(
+        ({ kind, daysLeft }) => kind === "rover" && daysLeft > 0,
+      )?.key
+    : undefined;
+
+/** The Money above which a Program is rich enough for the dearer choices: several rovers' worth. */
+export const richMillions = 5000;
+
 /**
  * The site to land at: a new one before one already landed at, a surveyed one before a riskier one, then the most
- * Science. A Mars lab goes where its Benefit tag says it would add most, if it would add anything.
+ * Science. A Mars lab goes where its Benefit tag says it would add most, if it would add anything, and an ascent
+ * vehicle where samples wait without one.
  */
 function landingSiteFor(
   view: ProgramView,
@@ -57,6 +98,7 @@ function landingSiteFor(
   const besideRovers = asset?.grantImpact?.landingSiteName;
   const labSite = view.landingSites.find(({ name }) => name === besideRovers);
   if (labSite) return labSite;
+  if (asset?.kind === "ascent-vehicle") return siteNeedingAscent(view);
   return view.landingSites
     .filter(({ surveyed }) => surveyed || !playStyle.onlySurveyedSites)
     .toSorted(
@@ -122,6 +164,9 @@ function missionsForAsset(
       : undefined;
   const activityId =
     survey?.id ??
+    (playStyle.cachesSamples && ascentVehicleAt(view, site?.id ?? null)
+      ? cachingActivity(planned.activities)?.id
+      : undefined) ??
     researchActivity(planned.activities, aimOf(playStyle, view))?.id ??
     planned.activityId;
   // Short of money for a retry, a longer Service Life is the first thing to give up.

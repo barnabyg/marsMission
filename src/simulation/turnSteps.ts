@@ -428,6 +428,7 @@ export function resolveTurn(
       journeyHome: journey && {
         crew: journey.crew,
         samples: samples.withCrew,
+        samplesFrom: samples.takenWithCrew,
         failure: journey.outcome.failedEvent
           ? {
               missionEventName: journey.outcome.failedEvent.name,

@@ -11,6 +11,7 @@ import {
   fuelPlantWhenRich,
   crewHomeFromFuelPlant,
   labBesideRovers,
+  samplesHomeFromRovers,
 } from "./styleParts";
 
 /**
@@ -27,6 +28,11 @@ export const bigProgramStrategies: Strategy[] = [
     "big Program: land a Mars lab beside rovers",
     "As big Program: one Asset per Mission, also landing Curie Station, with its longest Service Life, before anything else whenever it has the money for several rovers and its Benefit tag says it would add money this Turn, at the Landing Site where it would add most, so that it raises the Research Grants of the rovers there.",
     labBesideRovers,
+  ),
+  playStyle(
+    "big Program: cache samples and send them home",
+    "As big Program: one Asset per Mission, but once it has the money for several rovers, its first rover caches samples rather than doing research, as do rovers beside a Kestrel Lifter. While rich, it lands a Kestrel Lifter where the most samples wait without one and sends an Albatross Orbiter to Mars orbit while samples wait without one there, together on the Meridian Heavy when it needs both, before anything else. It sends a site's samples home on the first Turn it can.",
+    samplesHomeFromRovers,
   ),
   playStyle(
     "big Program: fill the Meridian Heavy when rich",

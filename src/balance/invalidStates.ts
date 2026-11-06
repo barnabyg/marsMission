@@ -91,6 +91,7 @@ export function invalidStates(
         summary.publicSupportGained -
         (summary.failure?.publicSupportLost ?? 0) -
         (summary.journeyHome?.failure?.publicSupportLost ?? 0) -
+        (summary.sampleJourney?.failure?.publicSupportLost ?? 0) -
         sum(
           summary.crewLost.map(({ publicSupportLost }) => publicSupportLost),
         ) -
@@ -333,7 +334,7 @@ export function timelineMissionEventProblems(
   ) => (flown[failedAt(flown)]?.title ?? null) !== failedTitle(failed);
   const days = (flown: typeof all) => flown.map(({ day }) => day);
   const failedOnDay = timeline.mission?.failedOnDay ?? null;
-  // The Mission and a journey home fly apart, so each is checked on its own.
+  // The Mission and a journey home, of Crew or of samples, fly apart, so each is checked on its own.
   const checks: [impossible: boolean, problem: string][] = [
     [
       new Set(days(events)).size < events.length ||
@@ -349,8 +350,15 @@ export function timelineMissionEventProblems(
         events,
         summary.failure && !summary.failure.hazard ? summary.failure : null,
       ) ||
-        unlike(homewardEvents, summary.journeyHome?.failure ?? null) ||
-        (homewardEvents.length > 0 && summary.journeyHome === null),
+        unlike(
+          homewardEvents,
+          summary.journeyHome?.failure ??
+            summary.sampleJourney?.failure ??
+            null,
+        ) ||
+        (homewardEvents.length > 0 &&
+          summary.journeyHome === null &&
+          summary.sampleJourney === null),
       "The Mission Event that failed doesn't match the Turn summary.",
     ],
     [

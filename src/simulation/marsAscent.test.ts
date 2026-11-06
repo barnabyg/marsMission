@@ -157,6 +157,7 @@ describe("bringing Crew home from a Landing Site", () => {
     expect(summary.journeyHome).toEqual({
       crew: ["Ann Able", "Ben Baker"],
       samples: 6,
+      samplesFrom: "Alpha Plain",
       failure: { missionEventName: "Test ascent", publicSupportLost: 15 },
     });
     expect(summary.crewLost.flatMap(({ names }) => names)).toEqual([

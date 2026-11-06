@@ -1,5 +1,6 @@
 import { canFly, type ProgramView } from "../simulation/simulation";
 import type { CrewStyle } from "./crewPlay";
+import { richMillions, siteNeedingAscent } from "./assetMissions";
 import { surveyorInService, surveyThenLand } from "./playStyle";
 import type { PlayStyle } from "./playStyleOptions";
 
@@ -152,3 +153,32 @@ export const crewHomeFromFuelPlant: CrewStyle = {
 };
 /** The same landing Crew beside a habitat, which goes with them if none operates at a surveyed Landing Site. */
 export const crewBesideHabitat: CrewStyle = { ...crewLanding, habitat: true };
+
+/**
+ * Whether it is rich and a Landing Site with samples has no ascent vehicle, or samples wait with no Earth return orbiter
+ * in Mars orbit, which says which of them it would send.
+ */
+const sampleReturnWanted = (view: ProgramView): string[] => {
+  if (view.moneyMillions < richMillions) return [];
+  const orbiterWaiting = view.operatingAssets.some(
+    ({ kind, daysLeft }) => kind === "return-orbiter" && daysLeft > 0,
+  );
+  const samplesWaiting = view.landingSites.some(({ samples }) => samples > 0);
+  return [
+    ...(siteNeedingAscent(view) ? ["ascent-vehicle"] : []),
+    ...(samplesWaiting && !orbiterWaiting ? ["return-orbiter"] : []),
+  ];
+};
+
+/**
+ * As bigProgram, with one rover caching samples once rich, and the rovers beside an ascent vehicle, then landing an
+ * ascent vehicle where they wait and an Earth return orbiter for them, together on the Meridian Heavy when both are
+ * wanted, before anything else, and sending them home on the first Turn it can.
+ */
+export const samplesHomeFromRovers: PlayStyle = {
+  ...bigProgram,
+  cachesSamples: true,
+  order: (view) => [...sampleReturnWanted(view), ...bigProgram.order(view)],
+  fillsVehicle: "meridian-heavy",
+  fillsWhile: (view) => sampleReturnWanted(view).length > 1,
+};

@@ -182,6 +182,11 @@ export function settleSamples(
   return {
     ...cached,
     withCrew: withCrew.aboard,
+    takenWithCrew:
+      withCrew.takenFrom === null
+        ? null
+        : (rules.landingSiteById(withCrew.takenFrom)?.name ??
+          withCrew.takenFrom),
     welcome: welcomeSamplesHome(catalogue, program, [
       ...withCrew.homecomings,
       ...robotSamplesHome(robotic),

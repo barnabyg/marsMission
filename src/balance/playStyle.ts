@@ -1,5 +1,8 @@
 import {
   aimOf,
+  ascentVehicleAt,
+  cachingActivity,
+  richCacher,
   canSurvey,
   fuller,
   missionsFor,
@@ -35,11 +38,13 @@ export const surveyThenLand =
 function operatingActivities(view: ProgramView, playStyle: PlayStyle) {
   let surveying = false;
   const changes: Record<string, string> = {};
+  const cacher = richCacher(view, playStyle);
   for (const {
     key,
     activityId,
     activities,
     daysLeft,
+    landingSiteId,
   } of view.operatingAssets) {
     const survey: PlannedActivity | undefined =
       !surveying && daysLeft > 0 && wantsSurvey(view, playStyle)
@@ -47,7 +52,12 @@ function operatingActivities(view: ProgramView, playStyle: PlayStyle) {
         : undefined;
     surveying ||= survey !== undefined;
     const wanted =
-      survey?.id ?? researchActivity(activities, aimOf(playStyle, view))?.id;
+      survey?.id ??
+      (key === cacher ||
+      (playStyle.cachesSamples && ascentVehicleAt(view, landingSiteId))
+        ? cachingActivity(activities)?.id
+        : undefined) ??
+      researchActivity(activities, aimOf(playStyle, view))?.id;
     if (wanted !== undefined && wanted !== activityId) changes[key] = wanted;
   }
   return { changes, surveying };
@@ -163,7 +173,9 @@ export function playStyle(
       })[kind],
     plan(given, givenTools) {
       // A journey home costs nothing more this Turn, so it goes with whatever else the Turn does.
-      const bringHome = chosen.fliesCrew && wayHome(given, chosen.fliesCrew);
+      const bringHome =
+        (chosen.fliesCrew && wayHome(given, chosen.fliesCrew)) ??
+        (chosen.cachesSamples ? samplesHome(given) : undefined);
       const kept = {
         ...planPayingUpkeep(given, givenTools, chosen, 0),
         ...(bringHome ? { bringHome } : {}),
@@ -187,6 +199,10 @@ export function playStyle(
     },
   };
 }
+
+/** The first Landing Site's samples that can go home this Turn, by the key a plan names them with, if any can. */
+const samplesHome = (view: ProgramView) =>
+  view.sampleReturns.find(({ reason }) => reason === null)?.key;
 
 /** The Turn's plan, paying the upkeep of the Assets it keeps, after ending the missions of `alsoEnd` of them. */
 function planPayingUpkeep(

@@ -58,6 +58,11 @@ export interface PlayStyle {
   dustStorms?: "shelter" | "carryOn";
   /** What it does at a solar particle event, which is safe mode unless it says otherwise. */
   solarParticleEvents?: "safeMode" | "carryOn";
+  /**
+   * Whether its rovers cache samples rather than doing research where an ascent vehicle operates beside them, and it
+   * sends a Landing Site's samples home on the first Turn it can, when it brings no Crew home.
+   */
+  cachesSamples?: boolean;
   /** What it does at a go/no-go check before a landing, which is to hold off unless it says otherwise. */
   goNoGo?: "go" | "holdOff";
 }

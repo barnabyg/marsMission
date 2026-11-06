@@ -376,6 +376,25 @@ function healthSavedByHabitats(plays: Play[]): string[] {
     : [];
 }
 
+/** The samples that reached Earth per Program, and the Science they earned, or nothing for a strategy that returns none. */
+function samplesReturned(plays: Play[]): string[] {
+  const records = plays.flat();
+  const samples = records.reduce(
+    (total, { samplesHome }) => total + samplesHome,
+    0,
+  );
+  const science = records.reduce(
+    (total, { sampleScience }) => total + sampleScience,
+    0,
+  );
+  // Left out with none, so that strategies that never return samples report as they did before samples.
+  return samples > 0
+    ? [
+        `Samples per Program that reached Earth: ${(samples / plays.length).toFixed(1)}, earning ${Math.round(science / plays.length)} Science`,
+      ]
+    : [];
+}
+
 /** What Mars labs added to Research Grants per Program, or nothing for a strategy that never lands one beside them. */
 function grantsAddedByLabs(plays: Play[]): string[] {
   const added = plays
@@ -472,6 +491,7 @@ export function balanceReport(
       ...ascentPropellant(plays),
       ...healthSavedByHabitats(plays),
       ...grantsAddedByLabs(plays),
+      ...samplesReturned(plays),
     );
   }
   return `${lines.join("\n")}\n`;
