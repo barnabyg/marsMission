@@ -24,6 +24,8 @@ Phases are defined in the [Build order](#build-order). Phases 1 to 7 are built:
 
 - **Since the Phase 7 playtest:** Restart Program in place of Retire Program, starting a new Program straight away; an Asset or Crewed Mission that wouldn't fit or can't be afforded can't be ticked; what the Turn will spend, and what it leaves, beside the Money at the top of Planning Mode; every Reliability choice in the Mission Events step, the Mission Events' on the way and then each Asset's in service at Mars; Upkeep for each Asset kept at Mars, and ending an Asset's mission to stop it; base funding each Turn, sized by Public Support, so that a failed Mission is a setback rather than the end, with cautious and bold strategies in the balance runs to measure how the game rewards risk; a cheaper Courier Relay, with its Benefit tag showing the Science it would add this Turn.
 
+- **Phase 8, so far:** round trips for Crew in Mars orbit, with an Earth return stage that brings them home on a later Turn through the journey home's own Mission Events; Public Support for every Crew member home safe, from a journey home or a Free-return, and the First Crew home Milestone; a balance strategy that brings Crew home.
+
 Any rule in the design files beyond these is planned, so its absence from the code isn't a bug.
 
 ## Rules by area
