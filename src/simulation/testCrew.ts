@@ -78,6 +78,16 @@ export function testCrew(): CatalogueFiles["crew"] {
         propellantKg: 5000,
       },
     },
+    // Light enough to fly on the Test Vehicle on its own, and beside the smaller Crew on the Test Heavy, with room for
+    // one Crew of two.
+    returnVehicle: {
+      name: "Test return vehicle",
+      description: "Fetches Crew.",
+      costMillions: 400,
+      massTonnes: 2,
+      crewRoom: 2,
+      missionEvents: ["test-arrival"],
+    },
     publicSupportPerMemberHome: 40,
     orbitActivities: ["test-research", "test-nothing"],
     // Twice the rate of research in orbit, as a test of earning at the surface's own rates.

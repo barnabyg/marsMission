@@ -101,6 +101,20 @@ export const crewSchema = z.strictObject({
       propellantKg: z.number().int().positive(),
     }),
   }),
+  // A return vehicle: an Earth return stage that a later Mission flies to Mars orbit on its own, with or without Crew of
+  // its own, to bring home Crew already at Mars, such as those who went one way. It waits there for them, and they
+  // come home in it on a later Turn as round-trip Crew do.
+  returnVehicle: z.strictObject({
+    name: z.string().min(1),
+    description: z.string().min(1),
+    // What it adds to the Mission's cost and mass.
+    costMillions: money,
+    massTonnes: z.number().positive(),
+    // How many Crew it has room to bring home.
+    crewRoom: z.number().int().positive(),
+    // The Mission Events that take it to Mars orbit, as an Asset's do. It arrives when the last of them succeeds.
+    missionEvents: z.array(id).min(1),
+  }),
   // The Public Support earned for each Crew member who comes home safe, however they come home.
   publicSupportPerMemberHome: z.number().int().nonnegative(),
   // What Crew in Mars orbit can do, which all of them there share. The first is what they do unless the player picks

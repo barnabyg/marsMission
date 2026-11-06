@@ -75,6 +75,14 @@
       "propellantKg": 20000
     }
   },
+  "returnVehicle": {
+    "name": "Homeward",
+    "description": "An Earth return stage flown to Mars orbit on its own, with room for Crew already at Mars, which waits there to bring them home on a later Turn.",
+    "costMillions": 1000,
+    "massTonnes": 3.5,
+    "crewRoom": 4,
+    "missionEvents": ["mars-orbit-insertion"]
+  },
   "publicSupportPerMemberHome": 100,
   "orbitActivities": ["crew-research", "nothing"],
   "surfaceActivities": ["crew-field-research", "nothing"],

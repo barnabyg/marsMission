@@ -3,7 +3,8 @@ import { catalogueFileNames, type Catalogue } from "./schemas";
 
 /**
  * The Crewed Mission: its Mission Events to Mars orbit, to a Landing Site and home from a round trip, with Mars ascent
- * first for Crew who landed, Crew sizes, Health, Supplies, Protection, Activities and names.
+ * first for Crew who landed, the return vehicle's to Mars orbit and its room for Crew, Crew sizes, Health, Supplies,
+ * Protection, Activities and names.
  */
 export function crewProblems({
   crew,
@@ -13,27 +14,39 @@ export function crewProblems({
 }: Catalogue): string[] {
   const problems: string[] = [];
   const file = catalogueFileNames.crew;
-  const eventFor = (eventId: string) => {
+  const eventFor = (eventId: string, what = "the Crewed Mission") => {
     const event = missionEvents.find(({ id }) => id === eventId);
     if (!event) {
       problems.push(
-        `${file}: the Crewed Mission refers to the Mission Event "${eventId}", which isn't in ${catalogueFileNames.missionEvents}`,
+        `${file}: ${what} refers to the Mission Event "${eventId}", which isn't in ${catalogueFileNames.missionEvents}`,
       );
     } else if (event.timing.from === "leavingMars") {
       problems.push(
-        `${file}: the Crewed Mission brings the Mission Event "${eventId}", which is timed from leaving Mars, on the way to Mars`,
+        `${file}: ${what} brings the Mission Event "${eventId}", which is timed from leaving Mars, on the way to Mars`,
       );
     }
     return event;
   };
-  for (const eventId of crew.missionEvents) {
-    if (eventFor(eventId)?.failureProbability === "landingSite") {
-      problems.push(
-        `${file}: the Crewed Mission can't use the Mission Event "${eventId}" to reach Mars orbit, because it needs a Landing Site`,
-      );
+  const toMarsOrbit = (eventIds: string[], what: string) => {
+    for (const eventId of eventIds) {
+      if (eventFor(eventId, what)?.failureProbability === "landingSite") {
+        problems.push(
+          `${file}: ${what} can't use the Mission Event "${eventId}" to reach Mars orbit, because it needs a Landing Site`,
+        );
+      }
     }
-  }
+  };
+  toMarsOrbit(crew.missionEvents, "the Crewed Mission");
   for (const eventId of crew.landingMissionEvents) eventFor(eventId);
+  // A return vehicle waits in Mars orbit, with room for at least one Crewed Mission's Crew.
+  toMarsOrbit(crew.returnVehicle.missionEvents, "the return vehicle");
+  const smallestCrew = Math.min(...crew.sizes.map((size) => size.crew));
+  if (crew.returnVehicle.crewRoom < smallestCrew) {
+    const { crewRoom } = crew.returnVehicle;
+    problems.push(
+      `${file}: the return vehicle has room for ${crewRoom} Crew ${crewRoom === 1 ? "member" : "members"}, fewer than the smallest Crew size, ${smallestCrew}`,
+    );
+  }
   crew.sizes.forEach((size, index) => {
     const smaller = crew.sizes[index - 1];
     if (smaller && size.crew <= smaller.crew) {
