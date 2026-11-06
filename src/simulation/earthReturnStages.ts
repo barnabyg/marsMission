@@ -16,7 +16,7 @@ import type {
  */
 
 /** How a plan names an Earth return stage to bring its Crew home. One Mission arrives each Turn, so no two share a day. */
-export const stageKeyOf = ({ arrivedOn }: { arrivedOn: string }): string =>
+const stageKeyOf = ({ arrivedOn }: { arrivedOn: string }): string =>
   `earth-return-stage:${arrivedOn}`;
 
 /** The day of the Turn a journey home leaves Mars, and the day it is home if nothing goes wrong. */
