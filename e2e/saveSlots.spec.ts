@@ -4,12 +4,15 @@ import { tooltips } from "../src/ui/tooltips";
 import {
   chooseAssets,
   endTurnAndContinue,
+  missionViewport,
   openLoadDialog,
   openSaveDialog,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
 import { orbiterAndLanderSeed, successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 test("saves to a slot, moves on a Turn, loads the slot and sees the earlier state", async ({
   page,

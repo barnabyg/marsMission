@@ -10,7 +10,7 @@ import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
 import { ActivitySelect } from "./ActivitySelect";
 import { assetImageUrl } from "./assetImages";
-import { describeBenefitImpact } from "./benefitImpact";
+import { describeBenefitImpact } from "./benefitImpactText";
 import { fitReason, type Fit } from "./missionFit";
 import { ReadinessTag } from "./ReadinessTag";
 import { UnavailableReason } from "./UnavailableReason";

@@ -2,11 +2,14 @@ import { expect, test } from "@playwright/test";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
 import {
   chooseAssets,
+  missionViewport,
   overrideProgramData,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
 import { landerAndRoverMoney, relayAndLanderSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 const relay = realCatalogueFiles().assets.find(
   ({ id }) => id === "courier-relay-orbiter",

@@ -2,9 +2,11 @@ import { expect, test, type Locator } from "@playwright/test";
 import {
   chooseAssets,
   eventEntries,
+  fourKViewport,
   holdTurnWhenShown,
   launchFirstMission,
   launchHeld,
+  missionViewport,
   orbiterLabels,
   pauseAtEvent,
   pauseAtEventAfter,
@@ -14,6 +16,8 @@ import {
   watchForProblems,
 } from "./helpers";
 import { crashSeed, landingSeed, seedFailingAt, successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 test("switches to the Mars orbit view and back during a Turn, at any speed and while paused", async ({
   page,
@@ -235,6 +239,8 @@ test("keeps the controls still as the date changes, even in a window too small f
 test("groups the toolbar: views on the left, playback with icons in the centre and End Turn on the right", async ({
   page,
 }) => {
+  // Checks where things sit on screen, at the size this was laid out for.
+  await page.setViewportSize(fourKViewport);
   await launchFirstMission(page, successSeed);
   const box = async (locator: Locator) => {
     const found = await locator.boundingBox();

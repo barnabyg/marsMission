@@ -1,9 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
+  fourKViewport,
   holdSequence,
   holdTurnWhenShown,
   launchHeld,
+  missionViewport,
   playFastUntil,
   surfaceAssets,
   termsWithoutTooltips,
@@ -11,6 +13,8 @@ import {
   watchForProblems,
 } from "./helpers";
 import { landingSeed, roverSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 /** Where the camera is at the surface view's usual shot, as the scene reports it. */
 const surfaceCamera = "0.000 2.200 12.500";
@@ -43,6 +47,7 @@ function playedMs(page: Page) {
 test("moves the view to the surface for a landing at 3840×2160, with a smooth camera move and the landing playing", async ({
   page,
 }) => {
+  await page.setViewportSize(fourKViewport);
   // Over 5 s: a landing takes the same real time as it would in play.
   const problems = watchForProblems(page);
   await launchLanding(page);
@@ -59,7 +64,10 @@ test("moves the view to the surface for a landing at 3840×2160, with a smooth c
       attributeFilter: ["data-camera-position"],
     });
   });
+  // Held partway through, as on a busy machine the checks below can outlast the landing and the rest of the Turn.
+  const landing = holdSequence(page, 1500);
   await playToLanding(page);
+  await landing;
 
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
   await expect(scene(page)).toHaveAttribute("data-sequence", "landing");
@@ -70,7 +78,9 @@ test("moves the view to the surface for a landing at 3840×2160, with a smooth c
   await expect(surfaceAssets(page)).toHaveText(["Prospector Lander"]);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await holdSequence(page);
+  const over = holdSequence(page);
+  await page.getByRole("button", { name: "1x" }).click();
+  await over;
   await expect(canvas).toHaveAttribute("data-camera-position", surfaceCamera);
   await expect(scene(page)).not.toHaveAttribute("data-sequence");
   await expect(page.getByTestId("surface-status")).not.toContainText(

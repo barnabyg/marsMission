@@ -1,19 +1,19 @@
 import { expect, test } from "@playwright/test";
-import { productionBaseURL } from "../playwright.config";
 import {
   cancelledAfterOneTurn,
   chooseAssets,
-  endTurnAndContinue,
   eventEntries,
   launchFirstMission,
+  missionViewport,
   overrideProgramData,
   pauseAtEvent,
   pauseAtEventAfter,
-  playToNextTurn,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
 import { seedFailingAt, successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 test("plays from a new Program through a launch to the next Turn", async ({
   page,
@@ -183,229 +183,6 @@ for (const { missionEvent, before } of [
   });
 }
 
-test("uses a known seed in a production build, as the playtest command runs it", async ({
-  page,
-}) => {
-  await page.goto(`${productionBaseURL}/?seed=${seedFailingAt("Launch")}`);
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(eventEntries(page).first().getByRole("heading")).toHaveText(
-    "Launch failed",
-  );
-});
-
-test("loads the data files, Mission Mode's view and its art from a production build", async ({
-  page,
-}) => {
-  const problems = watchForProblems(page);
-  const artTypes: (string | undefined)[] = [];
-  page.on("response", (response) => {
-    if (new URL(response.url()).pathname.startsWith("/art/")) {
-      artTypes.push(response.headers()["content-type"]);
-    }
-  });
-  await page.goto(`${productionBaseURL}/?seed=${successSeed}`);
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(
-    page.getByTestId("mission-scene").locator("canvas"),
-  ).toBeVisible();
-  // A failed file is only reported once its request ends, which can be after the canvas appears.
-  await page.waitForLoadState("networkidle");
-  expect(problems).toEqual([]);
-  // For a missing file, vite preview sends the game's page with status 200, and the browser reports no problem, so each
-  // must come back as an image: Mars and Earth for the scene, and the Asset cards' pictures in Planning Mode.
-  expect(artTypes.filter((type) => type === "image/jpeg")).toHaveLength(2);
-  expect(
-    artTypes.filter((type) => type === "image/png").length,
-  ).toBeGreaterThan(0);
-  expect(artTypes.filter((type) => !type?.startsWith("image/"))).toEqual([]);
-});
-
-test("pauses Mission Mode and resumes from exactly where it stopped, without carrying into the next Turn", async ({
-  page,
-}) => {
-  // Over 5 s: this tests playback itself, across a whole Turn and into the next.
-  const problems = watchForProblems(page);
-  await page.goto(`/?seed=${successSeed}`);
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  const current = page.getByTestId("current-speed");
-  await expect(current).toHaveText("1x");
-
-  const speed = page.getByRole("group", { name: "Speed" });
-  await expect(speed.getByRole("button")).toHaveText([
-    "Pause",
-    "1x",
-    "5x",
-    "10x",
-  ]);
-  const date = page.getByTestId("mission-date");
-  const journey = page.getByTestId("journey-progress");
-  const turnProgress = page.getByRole("progressbar");
-
-  await speed.getByRole("button", { name: "5x" }).click();
-  await speed.getByRole("button", { name: "Pause" }).click();
-  await expect(current).toHaveText("Paused");
-  await expect(speed.getByRole("button", { name: "Pause" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await expect(speed.getByRole("button", { name: "5x" })).toHaveAttribute(
-    "aria-pressed",
-    "false",
-  );
-
-  const held = {
-    date: await date.textContent(),
-    journey: await journey.textContent(),
-    turn: await turnProgress.getAttribute("value"),
-  };
-  await page.waitForTimeout(500);
-  expect(await date.textContent()).toBe(held.date);
-  expect(await journey.textContent()).toBe(held.journey);
-  expect(await turnProgress.getAttribute("value")).toBe(held.turn);
-
-  // Mute still works.
-  const mute = page.getByRole("button", { name: "Mute sound" });
-  await mute.click();
-  await expect(mute).toHaveAttribute("aria-pressed", "true");
-  await expect(current).toHaveText("Paused");
-  await mute.click();
-
-  await speed.getByRole("button", { name: "10x" }).click();
-  await expect(current).toHaveText("10x");
-  await playToNextTurn(page);
-  await expect(page.getByTestId("turn-number")).toHaveText("2");
-
-  // The next Turn starts at the speed last chosen.
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(current).toHaveText("10x");
-  expect(problems).toEqual([]);
-});
-
-test("keeps the events column beside the solar system view, scrolling by itself if it fills", async ({
-  page,
-}) => {
-  await page.goto(`/?seed=${successSeed}`);
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await pauseAtEvent(page, "Launch", () =>
-    page.getByRole("button", { name: "Launch Mission" }).click(),
-  );
-
-  const column = page.getByTestId("events-column");
-  const scene = page.getByTestId("mission-scene");
-  await expect(scene.locator("canvas")).toBeVisible();
-  const columnBox = await column.boundingBox();
-  const sceneBox = await scene.boundingBox();
-  expect(sceneBox?.x).toBe(0);
-  expect((sceneBox?.x ?? 0) + (sceneBox?.width ?? 0)).toBeCloseTo(
-    columnBox?.x ?? 0,
-  );
-  expect((columnBox?.x ?? 0) + (columnBox?.width ?? 0)).toBeCloseTo(3840);
-
-  // Fast to three months before it, so the hold lands on its day and no later event slips in.
-  await pauseAtEventAfter(
-    page,
-    "Funding Threshold reached: 250 Public Support",
-    "1 April 2029",
-  );
-  await page.setViewportSize({ width: 2560, height: 400 });
-  const entries = page.getByTestId("event-entries");
-  await expect
-    .poll(() =>
-      entries.evaluate((list) => list.scrollHeight > list.clientHeight),
-    )
-    .toBe(true);
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollHeight > innerHeight,
-    ),
-  ).toBe(false);
-  await expect(column).toBeInViewport({ ratio: 1 });
-});
-
-test("lists the planned Mission's Mission Events with rough risk bands, which change with what it carries", async ({
-  page,
-}) => {
-  await page.route("**/data/assets.json", async (route) => {
-    const response = await route.fetch();
-    const assets = (await response.json()) as Record<string, unknown>[];
-    await route.fulfill({
-      json: [
-        ...assets,
-        {
-          id: "test-probe",
-          name: "Flyby Probe",
-          kind: "orbiter",
-          costMillions: 100,
-          massTonnes: 1,
-          serviceLifeOptions: [{ days: 900, costMillions: 0 }],
-          failureChancePerTurn: 0,
-          missionEvents: [],
-          technologyReadiness: "flight-proven",
-          activities: ["nothing"],
-        },
-      ],
-    });
-  });
-  await page.goto("/");
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
-
-  const events = page.getByTestId("mission-event");
-  await expect(events).toHaveCount(3);
-  await expect(events.nth(0)).toContainText("Launch");
-  await expect(events.nth(1)).toContainText("Mars transfer burn");
-  await expect(events.nth(2)).toContainText("Mars orbit insertion");
-  for (const band of await page.getByTestId("risk-band").allTextContents()) {
-    expect(band).toMatch(/^(~\d+%|Over \d+%)$/);
-  }
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-
-  await chooseAssets(page, ["Flyby Probe"]);
-  await expect(events).toHaveCount(2);
-  await expect(page.getByTestId("mission-events")).not.toContainText(
-    "Mars orbit insertion",
-  );
-});
-
-test("buys Reliability, sees the risk band and cost change, and launches", async ({
-  page,
-}) => {
-  const problems = watchForProblems(page);
-  await page.goto(`/?seed=${successSeed}`);
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
-
-  const insertion = page
-    .getByTestId("mission-event")
-    .filter({ hasText: "Mars orbit insertion" });
-  const band = insertion.getByTestId("risk-band");
-  const bandBefore = await band.textContent();
-  const costBefore = await page.getByTestId("mission-cost").textContent();
-  await expect(insertion.getByRole("combobox")).toHaveValue("none");
-
-  await insertion.getByRole("combobox").selectOption("redundant");
-  await expect(band).not.toHaveText(bandBefore ?? "");
-  await expect(page.getByTestId("mission-cost")).not.toHaveText(
-    costBefore ?? "",
-  );
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Mission Mode" }),
-  ).toBeVisible();
-  await endTurnAndContinue(page);
-
-  // Reliability applied to that Mission only.
-  await expect(page.getByTestId("turn-number")).toHaveText("2");
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await expect(page.getByTestId("mission-cost")).toHaveText(costBefore ?? "");
-  await expect(insertion.getByRole("combobox")).toHaveValue("none");
-  expect(problems).toEqual([]);
-});
-
 test("restarts with a new Program after asking first", async ({ page }) => {
   const problems = watchForProblems(page);
   await page.goto("/");
@@ -479,22 +256,4 @@ test("lets a Turn pass without launching, and cancels the Program when Public Su
     "below the Cancellation Level of 90",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
-});
-
-test("refuses to load invalid data files, with a clear error", async ({
-  page,
-}) => {
-  await page.route("**/data/assets.json", (route) =>
-    route.fulfill({
-      json: [{ id: "broken", name: "Broken", kind: "orbiter" }],
-    }),
-  );
-  await page.goto("/");
-
-  const error = page.getByRole("alert");
-  await expect(error).toContainText("assets.json");
-  await expect(error).toContainText("costMillions");
-  await expect(
-    page.getByRole("heading", { name: "Planning Mode" }),
-  ).toHaveCount(0);
 });

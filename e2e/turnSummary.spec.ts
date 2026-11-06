@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import { chooseAssets, termsWithoutTooltips } from "./helpers";
+import { chooseAssets, missionViewport, termsWithoutTooltips } from "./helpers";
 import { successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 /** Flies the first orbiter, whose Turn earns a Milestone and pays a Funding Threshold that covers the Mission's cost. */
 async function flyFirstOrbiter(page: Page) {

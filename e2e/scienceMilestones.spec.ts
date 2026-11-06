@@ -1,8 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
-import { watchForProblems } from "./helpers";
+import { missionViewport, watchForProblems } from "./helpers";
 import { orbiterLastsSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 const { fundingThresholds, milestones } = realCatalogueFiles();
 const firstScienceMilestone = milestones.find(

@@ -1,12 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
+  chooseAssets,
   eventEntries,
+  missionViewport,
   pauseAtEvent,
   viewButton,
   watchForProblems,
-  chooseAssets,
 } from "./helpers";
 import { successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 function trajectory(page: Page) {
   return page.getByRole("combobox", { name: "Trajectory" });

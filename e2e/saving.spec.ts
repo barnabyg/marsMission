@@ -6,11 +6,14 @@ import {
   endTurnAndContinue,
   endTurnWithoutLaunching,
   eventEntries,
+  missionViewport,
   overrideProgramData,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
 import { seedFailingAt, successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 test("keeps a Program between sessions: launches, reaches the next Turn, reloads and continues", async ({
   page,

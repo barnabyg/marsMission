@@ -4,7 +4,8 @@ How the engineering skills should consume this repo's domain documentation when 
 
 ## Before exploring, read these
 
-- **`GLOSSARY.md`** at the repo root.
+- **`GLOSSARY.md`** at the repo root, for looking up the terms in your task. It is long, so search it rather than read it whole.
+- **`docs/design/`**: the rules file for the area you're about to work in, such as `crew.md`. `docs/game-design.md` says which rules are built.
 - **`docs/adr/`**: read ADRs that touch the area you're about to work in.
 
 The `mattpocock-skills:domain-modeling` skill adds to them when terms or decisions get resolved.

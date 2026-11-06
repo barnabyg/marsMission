@@ -1,11 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
+  chooseAssets,
   holdTurnWhenShown,
+  missionViewport,
   termsWithoutTooltips,
   watchForProblems,
-  chooseAssets,
 } from "./helpers";
 import { solarParticleEventSeed, solarParticleLossSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 function decisionPoint(page: Page) {
   return page.getByTestId("decision-point");

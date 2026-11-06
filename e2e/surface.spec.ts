@@ -6,6 +6,7 @@ import {
   holdSequence,
   holdTurnWhenShown,
   launchHeld,
+  missionViewport,
   overrideProgramData,
   pauseAtEvent,
   pauseAtEventAfter,
@@ -24,6 +25,8 @@ import {
   landerLostOnTheWaySeed,
   successSeed,
 } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 /** Waits for the unavailable surface button, which gives the reason itself, so the info box needn't. */
 async function expectSurfaceUnavailable(page: Page): Promise<void> {

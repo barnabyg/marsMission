@@ -1,14 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
+  chooseAssets,
   holdTurnWhenShown,
   launchHeld,
+  missionViewport,
   pauseAtEvent,
   termsWithoutTooltips,
   viewButton,
   watchForProblems,
-  chooseAssets,
 } from "./helpers";
 import { seedFailingAt, solarParticleEventSeed, successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 /** Where the camera is at the spacecraft view's shot, as the scene reports it. */
 const spacecraftCamera = "-13.400 1.800 2.400";
@@ -150,6 +153,8 @@ for (const reachedBy of ["10x", "End Turn"] as const) {
     // The player looks elsewhere, and their answer doesn't pull them back.
     await viewButton(page, "Solar system").click();
     await expect(currentView(page)).toHaveText("Solar system");
+    // Held on the answer, as at 10x the Mission can reach Mars, and move the view there, before the check below.
+    await holdTurnWhenShown(page, "Solar particle event: safe mode");
     await decisionPoint.getByRole("button", { name: "Safe mode" }).click();
     await expect(
       page.getByRole("heading", { name: "Solar particle event: safe mode" }),

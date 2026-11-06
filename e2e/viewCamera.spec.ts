@@ -2,12 +2,15 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
   launchFirstMission,
+  missionViewport,
   orbiterLabels,
   pauseAtEvent,
   viewButton,
   watchForProblems,
 } from "./helpers";
 import { orbiterSafeSeed, seedFailingAt, successSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 /** Where the camera is at each view's shot, as the scene reports it. */
 const solarSystemCamera = "0.000 3.500 2.100";
@@ -76,16 +79,19 @@ test("moves the view to Mars orbit on arrival, and leaves it where the player th
   await viewButton(page, "Solar system").click();
   await expect(current).toHaveText("Solar system");
   await page.getByRole("button", { name: "5x" }).click();
-  const summary = page.getByTestId("turn-summary");
+  // Read together in the page, as the view's name goes when the Turn summary comes, which a second read could wait on.
   await expect
     .poll(async () => {
-      const finished = await summary.count();
-      if (finished === 0) {
-        expect(await current.textContent()).toBe("Solar system");
-      }
+      const { finished, view } = await page.evaluate(() => ({
+        finished: document.querySelector("[data-testid=turn-summary]") !== null,
+        view:
+          document.querySelector("[data-testid=current-view]")?.textContent ??
+          null,
+      }));
+      if (!finished) expect(view).toBe("Solar system");
       return finished;
     })
-    .toBe(1);
+    .toBe(true);
   expect(problems).toEqual([]);
 });
 
@@ -153,8 +159,9 @@ test("a switch away holds until the next Mission Event with a view of its own", 
   await expect(current).toHaveText("Mars orbit");
   await viewButton(page, "Solar system").click();
   await expect(current).toHaveText("Solar system");
+  // At 1x, so that the check below lands well inside the 200 days: at 5x they pass in under a second.
   await pauseAtEvent(page, "Entry/descent/landing failed", async () => {
-    await page.getByRole("button", { name: "5x" }).click();
+    await page.getByRole("button", { name: "1x" }).click();
     await expect(page.getByTestId("mission-date")).not.toHaveText(
       "29 June 2029",
     );

@@ -1,10 +1,13 @@
 import { expect, test } from "@playwright/test";
 import {
   chooseAssets,
+  missionViewport,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
 import { holdOffSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 test("holding off a landing in a dust storm lands it later, with a shorter Service Life", async ({
   page,

@@ -3,6 +3,7 @@ import { storageKeyFor } from "../src/save/saveStore";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
 import {
   chooseAssets,
+  missionViewport,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -12,6 +13,8 @@ import {
   orbiterLastsSeed,
   successSeed,
 } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 test("sets a research Activity, sees what it earns, and sees the Science in the Turn summary", async ({
   page,

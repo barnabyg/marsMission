@@ -192,3 +192,83 @@ test("shows each Asset as a card, greys out those that wouldn't fit, and reveals
   await expect(lander.getByRole("checkbox")).toBeEnabled();
   expect(problems).toEqual([]);
 });
+
+test("lists the planned Mission's Mission Events with rough risk bands, which change with what it carries", async ({
+  page,
+}) => {
+  await page.route("**/data/assets.json", async (route) => {
+    const response = await route.fetch();
+    const assets = (await response.json()) as Record<string, unknown>[];
+    await route.fulfill({
+      json: [
+        ...assets,
+        {
+          id: "test-probe",
+          name: "Flyby Probe",
+          kind: "orbiter",
+          costMillions: 100,
+          massTonnes: 1,
+          serviceLifeOptions: [{ days: 900, costMillions: 0 }],
+          failureChancePerTurn: 0,
+          missionEvents: [],
+          technologyReadiness: "flight-proven",
+          activities: ["nothing"],
+        },
+      ],
+    });
+  });
+  await page.goto("/");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+
+  const events = page.getByTestId("mission-event");
+  await expect(events).toHaveCount(3);
+  await expect(events.nth(0)).toContainText("Launch");
+  await expect(events.nth(1)).toContainText("Mars transfer burn");
+  await expect(events.nth(2)).toContainText("Mars orbit insertion");
+  for (const band of await page.getByTestId("risk-band").allTextContents()) {
+    expect(band).toMatch(/^(~\d+%|Over \d+%)$/);
+  }
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await chooseAssets(page, ["Flyby Probe"]);
+  await expect(events).toHaveCount(2);
+  await expect(page.getByTestId("mission-events")).not.toContainText(
+    "Mars orbit insertion",
+  );
+});
+
+test("buys Reliability, sees the risk band and cost change, and launches", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+
+  const insertion = page
+    .getByTestId("mission-event")
+    .filter({ hasText: "Mars orbit insertion" });
+  const band = insertion.getByTestId("risk-band");
+  const bandBefore = await band.textContent();
+  const costBefore = await page.getByTestId("mission-cost").textContent();
+  await expect(insertion.getByRole("combobox")).toHaveValue("none");
+
+  await insertion.getByRole("combobox").selectOption("redundant");
+  await expect(band).not.toHaveText(bandBefore ?? "");
+  await expect(page.getByTestId("mission-cost")).not.toHaveText(
+    costBefore ?? "",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Mission Mode" }),
+  ).toBeVisible();
+  await endTurnAndContinue(page);
+
+  // Reliability applied to that Mission only.
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await expect(page.getByTestId("mission-cost")).toHaveText(costBefore ?? "");
+  await expect(insertion.getByRole("combobox")).toHaveValue("none");
+  expect(problems).toEqual([]);
+});

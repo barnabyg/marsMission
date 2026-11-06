@@ -4,6 +4,7 @@ import {
   endTurnWithoutLaunching,
   eventEntries,
   listenForSounds,
+  missionViewport,
   overrideProgramData,
   pauseAtEvent,
   soundsHeard,
@@ -11,6 +12,8 @@ import {
   watchForProblems,
 } from "./helpers";
 import { colossusMoney, colossusSeed } from "./seeds";
+
+test.use({ viewport: missionViewport });
 
 function colossusDevelopment(page: Page) {
   return page

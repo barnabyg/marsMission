@@ -2,7 +2,7 @@
 
 ## Start here
 
-[README.md](README.md) has the code map and what each check does. [docs/game-design.md](docs/game-design.md) opens with which rules are built and which are planned.
+[README.md](README.md) has the code map and what each check does. [docs/game-design.md](docs/game-design.md) opens with which rules are built and which are planned, and links to the rules for each area in `docs/design/`. Read only the area your task touches.
 
 - Every check: `npm.cmd run verify`
 - One Vitest file: `npx.cmd vitest run src/simulation/simulation.test.ts`, adding `-t "starting a Program"` to pick tests by name
