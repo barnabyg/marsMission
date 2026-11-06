@@ -1,3 +1,4 @@
+import { makeAscentPropellant } from "./ascentPropellant";
 import { baseFundingFor } from "./baseFunding";
 import type { Catalogue } from "../catalogue/catalogue";
 import {
@@ -103,6 +104,7 @@ export function resolveTurn(
   );
   const { inService, crewAtWork } = dustStorms;
   const survey = carryOutSurvey(catalogue, rules, program, inService);
+  const propellant = makeAscentPropellant(catalogue, rules, program, inService);
   const journey =
     comingHome &&
     flyJourneyHome(
@@ -306,6 +308,7 @@ export function resolveTurn(
         stageArriving(rules, plan.mission, crewThere.arrived),
         crew.stillThere,
       ),
+      ascentPropellantKg: propellant.ascentPropellantKg,
       status:
         faded.cancellationReason === null
           ? program.status
@@ -384,6 +387,7 @@ export function resolveTurn(
       solarParticleEvent: flown.solarParticleEvent?.summary ?? null,
       goNoGo: flown.goNoGo,
       survey: survey.summary,
+      ascentPropellant: propellant.made,
       fundingPayouts: funding.payouts,
       researchGrants: research.researchGrants,
       researchGrantMillions: research.researchGrantMillions,

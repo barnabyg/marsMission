@@ -201,7 +201,15 @@ const format9 = format8.extend({
   ),
 });
 
-const newestFormat = format9;
+/**
+ * Adds ascent propellant: what fuel plants have made at each Landing Site, in kilograms, by the site's id. A save from
+ * before fuel plants has none anywhere.
+ */
+const format10 = format9.extend({
+  ascentPropellantKg: z.record(z.string(), count),
+});
+
+const newestFormat = format10;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -298,6 +306,13 @@ const formats: readonly SaveFormat[] = [
     upgrade: (old: z.output<typeof format8>): z.output<typeof format9> => ({
       ...old,
       earthReturnStages: [],
+    }),
+  },
+  {
+    schema: format9,
+    upgrade: (old: z.output<typeof format9>): z.output<typeof format10> => ({
+      ...old,
+      ascentPropellantKg: {},
     }),
   },
   { schema: newestFormat },

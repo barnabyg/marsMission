@@ -161,6 +161,11 @@ export interface Program {
   crewSupplies: Record<string, number>;
   /** The Earth return stages in Mars orbit, each waiting to bring home the round-trip Crew it came with. */
   earthReturnStages: EarthReturnStage[];
+  /**
+   * The ascent propellant at each Landing Site, in kilograms, by the site's id, for each site where a fuel plant has
+   * made some. It stays there when the plant stops.
+   */
+  ascentPropellantKg: Record<string, number>;
   status: ProgramStatus;
 }
 
@@ -225,6 +230,8 @@ export interface ProgramView {
     benefit: string | null;
     /** What its Benefit would add to what is on the surface as the Turn starts, or null if it gives no Benefit. */
     benefitImpact: BenefitImpact | null;
+    /** What it makes at its Landing Site over a whole Turn of operating there, or null if it makes nothing. */
+    makes: { ascentPropellantKgPerTurn: number } | null;
   }[];
   /** What a Crewed Mission can carry: the Crew sizes, Supplies and Protection on offer, what each costs and weighs, and the Health Crew start with. */
   crewedMission: {
@@ -274,6 +281,8 @@ export interface ProgramView {
     riskBand: string;
     /** Whether anything has landed here, so that landing again earns no Science. */
     landed: boolean;
+    /** The ascent propellant here, in kilograms, which a fuel plant makes. */
+    ascentPropellantKg: number;
   }[];
 }
 

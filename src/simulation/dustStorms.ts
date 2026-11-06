@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import { formatPropellant, propellantMadeBy } from "./ascentPropellant";
 import type { AssetInService } from "./assetsInService";
 import {
   hurt,
@@ -69,7 +70,7 @@ const sheltering = (
 
 /**
  * What sheltering gives up, in the player's terms, for the Assets and Crew at stake, at the raised rate where a Benefit
- * raises it.
+ * raises it, and the ascent propellant any fuel plant there would have made.
  */
 function whatSheltering(
   catalogue: Catalogue,
@@ -110,9 +111,21 @@ function whatSheltering(
   const science = sum(given.map((part) => part.science));
   const publicSupport = sum(given.map((part) => part.publicSupport));
   const grantMillions = sum(given.map((part) => part.grantMillions));
+  const propellantKg = sum(
+    atStake.map(
+      (stay) =>
+        propellantMadeBy(catalogue, stay) -
+        propellantMadeBy(catalogue, { ...stay, shelter: { fromDay, toDay } }),
+    ),
+  );
+  const propellant = `${formatPropellant(propellantKg)} of ascent propellant`;
   if (science === 0 && publicSupport === 0)
-    return "nothing, as none is doing research";
-  return `${science} Science, ${publicSupport} Public Support and ${formatMoney(grantMillions)} of Research Grants`;
+    return propellantKg > 0 ? propellant : "nothing, as none is doing research";
+  const research = `${science} Science, ${publicSupport} Public Support`;
+  const grants = `${formatMoney(grantMillions)} of Research Grants`;
+  return propellantKg > 0
+    ? `${research}, ${grants} and ${propellant}`
+    : `${research} and ${grants}`;
 }
 
 /**

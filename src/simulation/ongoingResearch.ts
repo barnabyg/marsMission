@@ -83,7 +83,7 @@ export function earningsPerTurn(
 }
 
 /** The parts of a stay at Mars, an Asset's or a Crew member's, that aren't spent sheltering. */
-function daysWorking({
+export function daysWorking({
   fromDay,
   untilDay,
   shelter,
