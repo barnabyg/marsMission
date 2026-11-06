@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
+  fourKViewport,
   holdSequence,
   holdTurnWhenShown,
   launchHeld,
@@ -46,7 +47,7 @@ function playedMs(page: Page) {
 test("moves the view to the surface for a landing at 3840×2160, with a smooth camera move and the landing playing", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 3840, height: 2160 });
+  await page.setViewportSize(fourKViewport);
   // Over 5 s: a landing takes the same real time as it would in play.
   const problems = watchForProblems(page);
   await launchLanding(page);

@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   chooseAssets,
+  fourKViewport,
   missionViewport,
   pauseAtEvent,
   pauseAtEventAfter,
@@ -80,7 +81,7 @@ test("keeps the events column beside the solar system view, scrolling by itself 
   page,
 }) => {
   // Checks where things sit on screen, at the size this was laid out for.
-  await page.setViewportSize({ width: 3840, height: 2160 });
+  await page.setViewportSize(fourKViewport);
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await pauseAtEvent(page, "Launch", () =>

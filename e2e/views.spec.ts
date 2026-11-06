@@ -2,6 +2,7 @@ import { expect, test, type Locator } from "@playwright/test";
 import {
   chooseAssets,
   eventEntries,
+  fourKViewport,
   holdTurnWhenShown,
   launchFirstMission,
   launchHeld,
@@ -239,7 +240,7 @@ test("groups the toolbar: views on the left, playback with icons in the centre a
   page,
 }) => {
   // Checks where things sit on screen, at the size this was laid out for.
-  await page.setViewportSize({ width: 3840, height: 2160 });
+  await page.setViewportSize(fourKViewport);
   await launchFirstMission(page, successSeed);
   const box = async (locator: Locator) => {
     const found = await locator.boundingBox();
