@@ -143,3 +143,16 @@ export const roundTripSeed = (() => {
   }
   throw new Error("No seed brings round-trip Crew home");
 })();
+
+/**
+ * A seed where the Meridian Colossus lands the smallest Crew and the Haven Module together at the first known Landing
+ * Site on its first Mission, as Planning Mode plans it once both are chosen, with nothing to answer.
+ */
+export const habitatSeed = colossusSeedWhere(null, {
+  mission: {
+    launchVehicleId: "meridian-colossus",
+    assetIds: ["haven-habitat"],
+    crew: { size: catalogue.crew.sizes[0]?.crew ?? 0, landsAtSite: true },
+    landingSiteId: "jezero-crater",
+  },
+});
