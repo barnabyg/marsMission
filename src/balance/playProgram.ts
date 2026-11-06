@@ -57,8 +57,15 @@ export interface TurnRecord {
   crewFlown: number;
   /** How many Crew were lost this Turn, for each reason. */
   crewLost: Record<CrewLossCause, number>;
-  /** How many Crew a Free-return brought home this Turn. */
+  /** How many Crew came home safe this Turn, from a journey home or on a Free-return. */
   crewHome: number;
+  /**
+   * The same Crew by how they came home: on the journey home of a round trip, on one in a return vehicle that fetched
+   * them, or on a Free-return.
+   */
+  crewHomeBy: { roundTrip: number; fetched: number; freeReturn: number };
+  /** How many Crew were lost on their journey home this Turn, by the Mission Event that failed, or "Health" or "Supplies". */
+  crewLostOnWayHome: Record<string, number>;
   /** How many Crew are at Mars as the Turn ends. */
   crewAtMars: number;
   /** The ascent propellant fuel plants made this Turn, in kilograms, at every Landing Site together. */
@@ -72,6 +79,10 @@ export interface TurnRecord {
   /** The samples that reached Earth this Turn, with Crew or aboard an Earth return orbiter, and the Science they earned. */
   samplesHome: number;
   sampleScience: number;
+  /** The samples lost on the way home this Turn, aboard an Earth return orbiter or with Crew. */
+  samplesLost: number;
+  /** What the Program's backers paid as the Turn ended. */
+  baseFundingMillions: number;
 }
 
 /** What a strategy may ask about the Program it is planning for, which it never sees itself. */
@@ -100,6 +111,7 @@ function recordOf(
   plan: TurnPlan,
   summary: TurnSummary,
   after: ProgramView,
+  fetched: ReadonlySet<string>,
 ): TurnRecord {
   const decisions = decisionsIn(summary);
   return {
@@ -142,6 +154,8 @@ function recordOf(
     crewFlown: plan.mission?.crew?.size ?? 0,
     crewLost: crewLostIn(summary),
     crewHome: summary.crewHome.length,
+    crewHomeBy: crewHomeBy(summary, fetched),
+    crewLostOnWayHome: crewLostOnWayHome(summary),
     crewAtMars: summary.crew.length,
     ascentPropellantKg: summary.ascentPropellant.reduce(
       (total, { madeKg }) => total + madeKg,
@@ -167,7 +181,48 @@ function recordOf(
       (total, { science }) => total + science,
       0,
     ),
+    samplesLost:
+      (summary.journeyHome?.failure ? summary.journeyHome.samples : 0) +
+      (summary.sampleJourney?.failure ? summary.sampleJourney.samples : 0),
+    baseFundingMillions: summary.baseFundingMillions,
   };
+}
+
+/** The Crew home safe this Turn by how they came home, given the Crew a return vehicle has fetched. */
+function crewHomeBy(
+  summary: TurnSummary,
+  fetched: ReadonlySet<string>,
+): TurnRecord["crewHomeBy"] {
+  const journeyed = new Set(summary.journeyHome?.crew);
+  const by = { roundTrip: 0, fetched: 0, freeReturn: 0 };
+  for (const name of summary.crewHome) {
+    if (!journeyed.has(name)) by.freeReturn++;
+    else if (fetched.has(name)) by.fetched++;
+    else by.roundTrip++;
+  }
+  return by;
+}
+
+/** The Crew lost on this Turn's journey home, by the Mission Event that failed, or "Health" or "Supplies". */
+function crewLostOnWayHome(summary: TurnSummary): Record<string, number> {
+  const { journeyHome } = summary;
+  if (!journeyHome) return {};
+  const journeyed = new Set(journeyHome.crew);
+  const lost: Record<string, number> = {};
+  for (const { cause, names } of summary.crewLost) {
+    const count = names.filter((name) => journeyed.has(name)).length;
+    if (count === 0) continue;
+    const key =
+      cause === "missionEvent"
+        ? (journeyHome.failure?.missionEventName ?? "Mission Event")
+        : cause === "health"
+          ? "Health"
+          : cause === "supplies"
+            ? "Supplies"
+            : "Solar particle event";
+    lost[key] = (lost[key] ?? 0) + count;
+  }
+  return lost;
 }
 
 /** How many Crew a Turn's summary says were lost, for each reason. */
@@ -255,6 +310,8 @@ export function playProgram(
   let program = simulation.startProgram(seed);
   let view = simulation.readProgram(program);
   const records: TurnRecord[] = [];
+  // The Crew a return vehicle has fetched, who come home on a journey of their own on a later Turn.
+  const fetched = new Set<string>();
   const fail = (problems: string[]) =>
     new Error(
       `Strategy "${strategy.name}", seed ${seed}, Turn ${view.turnNumber}: ${problems.join(" ")}`,
@@ -280,7 +337,10 @@ export function playProgram(
     ];
     if (invalid.length > 0) throw fail(invalid);
 
-    records.push(recordOf(view, plan, result.summary, after));
+    for (const name of result.summary.returnVehicle?.crew ?? []) {
+      fetched.add(name);
+    }
+    records.push(recordOf(view, plan, result.summary, after, fetched));
     program = result.program;
     view = after;
   }
