@@ -343,3 +343,36 @@ export const fuelPlantSeed = seedWhere(null, {
     landingSiteId: "jezero-crater",
   },
 });
+
+/** A Mission on the Meridian Medium landing this Asset at the first known Landing Site, as Planning Mode offers it. */
+const landingAtJezero = (assetId: string): TurnPlan => ({
+  mission: {
+    launchVehicleId: "meridian-medium",
+    assetIds: [assetId],
+    landingSiteId: "jezero-crater",
+  },
+});
+
+/**
+ * A seed on which a rover lands at the first known Landing Site, and a Mars lab lands beside it on the next Turn and
+ * raises its Research Grant, with nothing to answer on either Turn.
+ */
+export const labSeed = ((): number => {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const first = simulation.workOutTurn(
+      simulation.startProgram(seed),
+      landingAtJezero("trailblazer-rover"),
+    );
+    if (first.decisionPoint || first.result.summary.failure) continue;
+    const second = simulation.workOutTurn(
+      first.result.program,
+      landingAtJezero("curie-lab"),
+    );
+    if (second.decisionPoint || second.result.summary.failure) continue;
+    const raised = second.result.summary.researchGrants.some(
+      ({ name, benefit }) => name === "Trailblazer Rover" && benefit,
+    );
+    if (raised) return seed;
+  }
+  throw new Error("No seed lands a rover and then a Mars lab beside it");
+})();
