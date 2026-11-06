@@ -166,7 +166,7 @@
     "id": "wellspring-fuel-plant",
     "name": "Wellspring Fuel Plant",
     "kind": "fuel-plant",
-    "costMillions": 1200,
+    "costMillions": 800,
     "upkeepMillionsPerTurn": 15,
     "missionEvents": ["entry-descent-landing"],
     "landsAtSite": true,
@@ -174,18 +174,18 @@
     "massTonnes": 4.5,
     "serviceLifeOptions": [
       {
-        "days": 1300,
+        "days": 2100,
         "costMillions": 0
       },
       {
-        "days": 2100,
-        "costMillions": 150
+        "days": 3600,
+        "costMillions": 250
       }
     ],
     "failureChancePerTurn": 0.12,
     "technologyReadiness": "built",
     "unproven": {
-      "costMillions": 1400,
+      "costMillions": 1000,
       "failureMultiplier": 1.5
     },
     "makes": {
@@ -196,30 +196,30 @@
     "id": "haven-habitat",
     "name": "Haven Module",
     "kind": "habitat",
-    "costMillions": 1000,
+    "costMillions": 600,
     "upkeepMillionsPerTurn": 20,
     "missionEvents": ["entry-descent-landing"],
     "landsAtSite": true,
     "activities": ["habitation"],
-    "massTonnes": 4,
+    "massTonnes": 3,
     "serviceLifeOptions": [
       {
-        "days": 1300,
+        "days": 2100,
         "costMillions": 0
       },
       {
-        "days": 2100,
-        "costMillions": 150
+        "days": 3600,
+        "costMillions": 250
       }
     ],
     "failureChancePerTurn": 0.1,
     "technologyReadiness": "built",
     "unproven": {
-      "costMillions": 1200,
+      "costMillions": 750,
       "failureMultiplier": 1.5
     },
     "habitat": {
-      "timeAtMarsCutPercent": 50,
+      "timeAtMarsCutPercent": 90,
       "suppliesKg": 1500
     }
   },
@@ -235,12 +235,12 @@
     "massTonnes": 4,
     "serviceLifeOptions": [
       {
-        "days": 1300,
+        "days": 2100,
         "costMillions": 0
       },
       {
-        "days": 2100,
-        "costMillions": 150
+        "days": 3600,
+        "costMillions": 250
       }
     ],
     "failureChancePerTurn": 0.1,
@@ -251,7 +251,7 @@
     },
     "benefit": {
       "raises": "siteResearchGrants",
-      "percent": 25,
+      "percent": 200,
       "assetKinds": ["rover"],
       "crew": true
     }

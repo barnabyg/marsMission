@@ -32,7 +32,7 @@ test("lands Crew beside a habitat and sees the Health it saved them in the Turn 
   // Its Benefit tag says how many more days a Crew member would last beside it, and its tooltip what it does.
   const card = page.locator(".asset-choice", { hasText: "Haven Module" });
   const tag = card.getByTestId("benefit-tag");
-  await expect(tag).toHaveText(/^Benefit \+\d+ days$/);
+  await expect(tag).toHaveText(/^Benefit \+[\d,]+ days$/);
   await tag.hover();
   await expect(page.getByRole("tooltip")).toContainText(
     "Haven Module: Houses the Crew at its Landing Site",

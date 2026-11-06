@@ -50,10 +50,10 @@ test("lands a Mars lab beside a rover and sees the Research Grant it raised in t
     .click();
 
   // With the rover earning Research Grants at Jezero Crater, the tag shows the money the lab would add there.
-  await expect(tag).toHaveText(/^Benefit \+\$[1-9]\d*M$/);
+  await expect(tag).toHaveText(/^Benefit \+\$[1-9][\d.]*[MB]$/);
   await tag.hover();
   await expect(page.getByRole("tooltip")).toContainText(
-    /Landed at Jezero Crater this Turn, it would raise the Research Grants of the 1 Asset there, adding about \$\d+M over a whole Turn\./,
+    /Landed at Jezero Crater this Turn, it would raise the Research Grants of the 1 Asset there, adding about \$[\d.]+[MB] over a whole Turn\./,
   );
   await chooseAssets(page, ["Curie Station"]);
   await expect(
@@ -65,7 +65,7 @@ test("lands a Mars lab beside a rover and sees the Research Grant it raised in t
     .getByTestId("turn-summary")
     .getByTestId("summary-research-grants");
   await expect(grants).toContainText(
-    /Trailblazer Rover: \$\d+M, raised on \d+ days by the Benefit from Curie Station, which added \$[1-9]\d*M/,
+    /Trailblazer Rover: \$[\d.]+[MB], raised on \d+ days by the Benefit from Curie Station, which added \$[1-9][\d.]*[MB]/,
   );
   await grants.getByText("Benefit", { exact: true }).first().hover();
   await expect(page.getByRole("tooltip")).toContainText(

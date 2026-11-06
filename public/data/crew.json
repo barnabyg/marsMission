@@ -73,7 +73,7 @@
     "ascent": {
       "missionEvents": ["mars-ascent", "mars-orbit-rendezvous"],
       "propellantKg": 20000,
-      "samplesPerMember": 5
+      "samplesPerMember": 10
     }
   },
   "returnVehicle": {
