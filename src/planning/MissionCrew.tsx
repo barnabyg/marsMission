@@ -33,11 +33,14 @@ interface MissionCrewProps {
   onLandsChange: (lands: boolean) => void;
   onSuppliesChange: (suppliesId: string) => void;
   onProtectionChange: (protectionId: string) => void;
+  /** Whether the Crew go on a round trip, with an Earth return stage to bring them home on a later Turn. */
+  roundTrip: boolean;
+  onRoundTripChange: (roundTrip: boolean) => void;
 }
 
 /**
  * Whether the Mission carries Crew and, if it does, how many, who they are, whether they land, the Supplies and
- * Protection they carry and what they will do at Mars. It is a card across the width of the Assets' cards, without
+ * Protection they carry, whether they go on a round trip and what they will do at Mars. It is a card across the width of the Assets' cards, without
  * their `asset-choice` class, so that ticking Assets leaves it alone, with the Supplies and Protection on a second
  * line. Before it is ticked, it shows what the smallest Crew costs and weighs, greyed out with the reason on hovering if they wouldn't fit. Landing brings in the Landing Site
  * choice below the Assets, which a lander shares.
@@ -52,6 +55,8 @@ export function MissionCrew({
   onLandsChange,
   onSuppliesChange,
   onProtectionChange,
+  roundTrip,
+  onRoundTripChange,
 }: MissionCrewProps) {
   const { vehicleName, sizes, maxHealth, namesLeft } = crewedMission;
   const smallest = sizes[0];
@@ -212,6 +217,22 @@ export function MissionCrew({
               ),
             )}
           </select>
+          {/* Crew can't leave the surface yet, so only Crew staying in Mars orbit can go on a round trip. */}
+          {!lands && (
+            <label className="round-trip-choice">
+              <input
+                type="checkbox"
+                checked={roundTrip}
+                aria-label="Round trip"
+                onChange={(event) => {
+                  onRoundTripChange(event.target.checked);
+                }}
+              />
+              <span>
+                <GameText>{`Round trip (+${formatMoney(crewedMission.roundTrip.costMillions)}, +${crewedMission.roundTrip.massTonnes} t)`}</GameText>
+              </span>
+            </label>
+          )}
         </div>
       )}
     </div>

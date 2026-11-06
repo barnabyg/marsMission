@@ -3,6 +3,8 @@ import {
   type PlannedAsset,
   type Simulation,
 } from "../simulation/simulation";
+
+type PlannedMissionEvent = ReturnType<Simulation["previewMission"]>[number];
 import { GameText } from "../ui/GameText";
 
 interface MissionEventChoicesProps {
@@ -29,8 +31,9 @@ function ReliabilityOptions({
 
 /**
  * Every Reliability choice for the Mission, in one place: each Mission Event it goes through on the way, with its Risk
- * Band, the Reliability bought for it and its Contingency, then each Asset in service at Mars, with its Risk Band for
- * each Turn after it arrives and the Reliability bought for that.
+ * Band, the Reliability bought for it and its Contingency, then those of a round trip's journey home, which are bought
+ * now, then each Asset in service at Mars, with its Risk Band for each Turn after it arrives and the Reliability bought
+ * for that.
  */
 export function MissionEventChoices({
   plannedEvents,
@@ -39,51 +42,64 @@ export function MissionEventChoices({
   onAssetReliabilityChange,
   onContingencyChange,
 }: MissionEventChoicesProps) {
+  const onTheWay = plannedEvents.filter(({ homeward }) => !homeward);
+  const homeward = plannedEvents.filter((event) => event.homeward);
+  const eventItem = (event: PlannedMissionEvent) => (
+    <li key={event.eventId} data-testid="mission-event">
+      <span className="mission-event-name">
+        <GameText>{event.name}</GameText>
+      </span>
+      <strong className="risk-band" data-testid="risk-band">
+        {event.riskBand}
+      </strong>
+      <select
+        aria-label={`Reliability for ${event.name}`}
+        value={event.reliabilityLevelId}
+        onChange={(change) => {
+          onReliabilityChange(event.eventId, change.target.value);
+        }}
+      >
+        <ReliabilityOptions levels={event.reliabilityLevels} />
+      </select>
+      {event.contingency && (
+        <label
+          className="contingency-choice"
+          title={event.contingency.description}
+        >
+          <input
+            type="checkbox"
+            checked={event.contingency.bought}
+            onChange={(change) => {
+              const { id } = event.contingency ?? {};
+              if (id === undefined) return;
+              onContingencyChange(id, change.target.checked);
+            }}
+          />
+          <GameText>
+            {`Contingency: ${event.contingency.name} (${formatMoney(event.contingency.costMillions)}, ${event.contingency.massTonnes} t, ${event.contingency.riskBand} if used)`}
+          </GameText>
+        </label>
+      )}
+    </li>
+  );
   return (
     <>
       <p className="mission-events-heading">
         <GameText>On the way, once each</GameText>
       </p>
       <ol className="mission-events" data-testid="mission-events">
-        {plannedEvents.map((event) => (
-          <li key={event.eventId} data-testid="mission-event">
-            <span className="mission-event-name">
-              <GameText>{event.name}</GameText>
-            </span>
-            <strong className="risk-band" data-testid="risk-band">
-              {event.riskBand}
-            </strong>
-            <select
-              aria-label={`Reliability for ${event.name}`}
-              value={event.reliabilityLevelId}
-              onChange={(change) => {
-                onReliabilityChange(event.eventId, change.target.value);
-              }}
-            >
-              <ReliabilityOptions levels={event.reliabilityLevels} />
-            </select>
-            {event.contingency && (
-              <label
-                className="contingency-choice"
-                title={event.contingency.description}
-              >
-                <input
-                  type="checkbox"
-                  checked={event.contingency.bought}
-                  onChange={(change) => {
-                    const { id } = event.contingency ?? {};
-                    if (id === undefined) return;
-                    onContingencyChange(id, change.target.checked);
-                  }}
-                />
-                <GameText>
-                  {`Contingency: ${event.contingency.name} (${formatMoney(event.contingency.costMillions)}, ${event.contingency.massTonnes} t, ${event.contingency.riskBand} if used)`}
-                </GameText>
-              </label>
-            )}
-          </li>
-        ))}
+        {onTheWay.map(eventItem)}
       </ol>
+      {homeward.length > 0 && (
+        <>
+          <p className="mission-events-heading">
+            <GameText>Journey home, on a later Turn</GameText>
+          </p>
+          <ol className="mission-events" data-testid="homeward-events">
+            {homeward.map(eventItem)}
+          </ol>
+        </>
+      )}
       {plannedAssets.length > 0 && (
         <>
           <p className="mission-events-heading">

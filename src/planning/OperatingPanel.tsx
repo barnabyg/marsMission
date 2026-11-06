@@ -1,4 +1,5 @@
 import { formatMoney, type ProgramView } from "../simulation/simulation";
+import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
 import {
@@ -13,6 +14,9 @@ interface OperatingPanelProps {
   /** The new Activities chosen this Turn for the Crew in each place, by its key. */
   chosenCrewActivities: Record<string, string>;
   onCrewActivityChange: (key: string, activityId: string) => void;
+  /** The Earth return stage, by key, whose Crew the player has chosen to bring home this Turn, if any. */
+  bringHome: string | null;
+  onBringHomeChange: (key: string, home: boolean) => void;
   somethingLeftToSurvey: boolean;
   /** The new Activities chosen this Turn, by each Asset's key. */
   chosenActivities: Record<string, string>;
@@ -24,14 +28,16 @@ interface OperatingPanelProps {
 
 /**
  * The Assets already at Mars, each with what is left of its Service Life, its Upkeep, the choice of its Activity and
- * the choice to end its mission, and the Crew
- * there, with their Health and the choice of the Activity they share in each place.
+ * the choice to end its mission, and the Crew there, with their Health, the choice of the Activity they share in each
+ * place and, for round-trip Crew, the choice to bring them home this Turn.
  */
 export function OperatingPanel({
   assets,
   crew,
   chosenCrewActivities,
   onCrewActivityChange,
+  bringHome,
+  onBringHomeChange,
   somethingLeftToSurvey,
   chosenActivities,
   onActivityChange,
@@ -68,6 +74,23 @@ export function OperatingPanel({
                   onCrewActivityChange(group.key, activityId);
                 }}
               />
+              {group.waysHome.map((way) => (
+                <label
+                  key={way.key}
+                  className="end-mission"
+                  title={`${way.names.join(" and ")} leave Mars on ${formatDate(way.leavesMarsOn)} and are home on ${formatDate(way.homeOn)}, if the journey home goes well.`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={bringHome === way.key}
+                    aria-label={`Bring ${way.names.join(" and ")} home`}
+                    onChange={(event) => {
+                      onBringHomeChange(way.key, event.target.checked);
+                    }}
+                  />
+                  <GameText>Bring home</GameText>
+                </label>
+              ))}
             </li>
           ))}
         </ul>

@@ -33,6 +33,16 @@ export const tooltips = {
     "A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, solar particle events, carrying on through a dust storm and having no Supplies lower it, Protection slows the decline, and at zero the Crew member dies.",
   Supplies:
     "The food, water and everything else Crew use up to stay alive, from launch. They are chosen for each Crewed Mission, and last a larger Crew fewer days. Crew in one place share theirs, and Crew who join them bring more. When they run out, Health falls quickly.",
+  "Round trip":
+    "A Crewed Mission to Mars orbit that carries an Earth return stage, so that its Crew can come home on a later Turn. It weighs and costs more than a one-way trip, which leaves its Crew at Mars.",
+  "Earth return stage":
+    "The stage a round trip carries, which waits with its Crew in Mars orbit and brings them home on the Turn the player chooses. The Reliability and Contingencies for their journey home are bought with it.",
+  "Journey home":
+    "Crew leaving Mars for Earth aboard their Earth return stage, on a Turn the player chooses. Its Mission Events, Trans-Earth injection and Earth entry, have Reliability and Contingency, and a failure loses the Crew. Each Crew member home safe earns Public Support, and the first Crew home are a Milestone.",
+  "Trans-Earth injection":
+    "The Mission Event in which an Earth return stage fires its engine and sends its Crew out of Mars orbit on their way home.",
+  "Earth entry":
+    "The Mission Event at the end of a journey home, in which the Crew's capsule comes through Earth's atmosphere and splashes down.",
   Asset:
     "A pre-designed piece of hardware chosen from a catalogue, such as an orbiter, lander, rover, drone, habitat or fuel plant. Assets remain in place and keep working after their Mission until their Service Life ends or they fail.",
   "Service Life":

@@ -52,6 +52,8 @@ export function PlanningMode({
   const [crewActivities, setCrewActivities] = useState<Record<string, string>>(
     {},
   );
+  // At most one journey home flies each Turn.
+  const [bringHome, setBringHome] = useState<string | null>(null);
   const choices = useMissionPlan(
     simulation,
     program,
@@ -60,6 +62,7 @@ export function PlanningMode({
     developmentIds,
     crewActivities,
     endedAssetKeys,
+    bringHome,
   );
 
   function open(dialog: PlanningDialog) {
@@ -137,6 +140,10 @@ export function PlanningMode({
             chosenCrewActivities={crewActivities}
             onCrewActivityChange={(key, activityId) => {
               setCrewActivities({ ...crewActivities, [key]: activityId });
+            }}
+            bringHome={bringHome}
+            onBringHomeChange={(key, home) => {
+              setBringHome(home ? key : null);
             }}
             somethingLeftToSurvey={view.somethingLeftToSurvey}
             chosenActivities={operatingActivities}

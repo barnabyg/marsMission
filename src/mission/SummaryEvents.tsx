@@ -30,7 +30,7 @@ function describeSolarParticleEvent({
   }
 }
 
-/** What went wrong or was decided during the Turn: failures, lost Crew, Decision Points and Hazards. */
+/** What went wrong or was decided during the Turn: failures, lost Crew, Crew home, Decision Points and Hazards. */
 export function SummaryEvents({ summary }: { summary: TurnSummary }) {
   return (
     <>
@@ -65,6 +65,30 @@ export function SummaryEvents({ summary }: { summary: TurnSummary }) {
           </ul>
         </section>
       )}
+      {summary.journeyHome?.failure && (
+        <section data-testid="summary-journey-home-failure">
+          <h2 className="problem">
+            <GameText heading>Journey home failed</GameText>
+          </h2>
+          <ul>
+            <li>
+              <GameText>
+                {`Mission Event that failed: ${summary.journeyHome.failure.missionEventName}`}
+              </GameText>
+            </li>
+            <li>
+              <GameText>
+                {`Crew aboard: ${summary.journeyHome.crew.join(", ")}`}
+              </GameText>
+            </li>
+            <li>
+              <GameText>
+                {`Public Support lost: ${summary.journeyHome.failure.publicSupportLost}`}
+              </GameText>
+            </li>
+          </ul>
+        </section>
+      )}
       {summary.crewLost.length > 0 && (
         <section data-testid="summary-crew-lost">
           <h2 className="problem">
@@ -84,7 +108,7 @@ export function SummaryEvents({ summary }: { summary: TurnSummary }) {
       {summary.crewHome.length > 0 && (
         <p data-testid="summary-crew-home">
           <GameText>
-            {`Crew home safe, who won't fly again: ${summary.crewHome.join(", ")}`}
+            {`Crew home safe, who won't fly again: ${summary.crewHome.join(", ")}. Public Support earned: ${summary.publicSupportForCrewHome}`}
           </GameText>
         </p>
       )}

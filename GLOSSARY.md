@@ -67,6 +67,26 @@ _Avoid_: Condition, hit points
 The food, water and everything else Crew use up to stay alive, from launch. They are chosen for each Crewed Mission, and last a larger Crew fewer days. Crew in one place share theirs, and Crew who join them bring more. When they run out, Health falls quickly.
 _Avoid_: Consumables, life support (as the general term)
 
+**Round trip**:
+A Crewed Mission to Mars orbit that carries an Earth return stage, so that its Crew can come home on a later Turn. It weighs and costs more than a one-way trip, which leaves its Crew at Mars.
+_Avoid_: Return mission
+
+**Earth return stage**:
+The stage a round trip carries, which waits with its Crew in Mars orbit and brings them home on the Turn the player chooses. The Reliability and Contingencies for their journey home are bought with it.
+_Avoid_: Return ship
+
+**Journey home**:
+Crew leaving Mars for Earth aboard their Earth return stage, on a Turn the player chooses. Its Mission Events, Trans-Earth injection and Earth entry, have Reliability and Contingency, and a failure loses the Crew. Each Crew member home safe earns Public Support, and the first Crew home are a Milestone.
+_Avoid_: Return leg, return flight
+
+**Trans-Earth injection**:
+The Mission Event in which an Earth return stage fires its engine and sends its Crew out of Mars orbit on their way home.
+_Avoid_: TEI (in the game's text)
+
+**Earth entry**:
+The Mission Event at the end of a journey home, in which the Crew's capsule comes through Earth's atmosphere and splashes down.
+_Avoid_: Re-entry (as the name of the Mission Event)
+
 ## Assets
 
 **Asset**:

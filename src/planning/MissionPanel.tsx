@@ -112,6 +112,8 @@ export function MissionPanel({
                 onLandsChange={choices.chooseCrewLands}
                 onSuppliesChange={choices.chooseCrewSupplies}
                 onProtectionChange={choices.chooseCrewProtection}
+                roundTrip={choices.crewRoundTrip}
+                onRoundTripChange={choices.chooseCrewRoundTrip}
               />
             </MissionAssets>
           </MissionStepCard>

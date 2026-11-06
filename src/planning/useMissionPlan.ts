@@ -34,6 +34,9 @@ export interface MissionPlan {
   chooseCrewSupplies: (suppliesId: string) => void;
   /** Chooses the Protection the Crewed Mission carries, by id. */
   chooseCrewProtection: (protectionId: string) => void;
+  /** Whether the Crew go on a round trip, with an Earth return stage, which only Crew staying in Mars orbit can. */
+  crewRoundTrip: boolean;
+  chooseCrewRoundTrip: (roundTrip: boolean) => void;
   /** Whether the Mission carries an Asset or Crew that land at a Landing Site. */
   landsOnMars: boolean;
   /** The Landing Site chosen, which only a Mission carrying an Asset or Crew that land has. */
@@ -67,6 +70,8 @@ export function useMissionPlan(
   crewActivities: Record<string, string>,
   /** The Assets at Mars whose missions end as the Turn starts, which either plan sends. */
   endedAssetKeys: string[],
+  /** The Earth return stage whose Crew come home this Turn, if any, which either plan sends. */
+  bringHome: string | null,
 ): MissionPlan {
   // It starts on the first that can fly, because one that needs Development can't be chosen.
   const [launchVehicleId, setLaunchVehicleId] = useState(
@@ -91,6 +96,9 @@ export function useMissionPlan(
   const [crewProtectionId, setCrewProtectionId] = useState<
     string | undefined
   >();
+  const [chosenRoundTrip, setCrewRoundTrip] = useState(false);
+  // Crew can't leave the surface yet, so only Crew staying in Mars orbit go on a round trip.
+  const crewRoundTrip = chosenRoundTrip && !crewLands;
 
   const landsOnMars =
     (crewSize !== null && crewLands) ||
@@ -112,6 +120,7 @@ export function useMissionPlan(
         ...(crewProtectionId !== undefined && {
           protectionId: crewProtectionId,
         }),
+        ...(crewRoundTrip && { roundTrip: true }),
       },
     }),
   };
@@ -140,6 +149,7 @@ export function useMissionPlan(
     developmentIds,
     crewActivities,
     endedAssetKeys,
+    ...(bringHome !== null && { bringHome }),
     mission: {
       ...mission,
       // The Activity they will have, which may be that of Crew already there.
@@ -150,6 +160,7 @@ export function useMissionPlan(
           ...(crewLands && { landsAtSite: true }),
           suppliesId: plannedCrew.suppliesId,
           protectionId: plannedCrew.protectionId,
+          ...(crewRoundTrip && { roundTrip: true }),
         },
       }),
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
@@ -179,6 +190,7 @@ export function useMissionPlan(
     developmentIds,
     crewActivities,
     endedAssetKeys,
+    ...(bringHome !== null && { bringHome }),
   };
 
   const check = simulation.validatePlan(program, plan);
@@ -216,6 +228,8 @@ export function useMissionPlan(
     },
     chooseCrewSupplies: setCrewSuppliesId,
     chooseCrewProtection: setCrewProtectionId,
+    crewRoundTrip,
+    chooseCrewRoundTrip: setCrewRoundTrip,
     landsOnMars,
     landingSite,
     chooseLandingSite: setChosenSiteId,

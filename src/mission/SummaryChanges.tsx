@@ -141,6 +141,14 @@ export function SummaryChanges({ summary }: { summary: TurnSummary }) {
             </span>
             <span>{summary.publicSupportGained}</span>
           </li>
+          {summary.publicSupportForCrewHome > 0 && (
+            <li>
+              <span>
+                <GameText>Of that, for Crew home safe</GameText>
+              </span>
+              <span>{summary.publicSupportForCrewHome}</span>
+            </li>
+          )}
           <li>
             <span>
               <GameText>Faded over the Turn</GameText>
