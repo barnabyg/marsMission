@@ -9,7 +9,7 @@ import {
 
 /**
  * The strategies named `steady:`, which each differ from `steady: Soil analysis` in one choice, in the order the report
- * lists them. `strategies.ts` lists them among the rest.
+ * lists them. `strategies.ts` lists them among the rest, with `steadySurveyOnce` after the `big Program:` ones.
  */
 export const steadyStrategies: Strategy[] = [
   playStyle(
@@ -237,3 +237,17 @@ export const steadyStrategies: Strategy[] = [
     relayBesideRovers,
   ),
 ];
+
+/**
+ * As steady: Soil analysis, with the orbiter changing to research after its first Survey. The report lists it after
+ * the `big Program:` strategies, where it always has, so `strategies.ts` places it there rather than among the rest.
+ */
+export const steadySurveyOnce: Strategy = playStyle(
+  "steady: Survey once",
+  "As steady: Soil analysis, but the orbiter changes to research after its first Survey.",
+  {
+    ...steadyRovers,
+    surveysWhile: (view) =>
+      view.landingSites.every(({ surveyed }) => !surveyed),
+  },
+);

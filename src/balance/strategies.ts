@@ -1,6 +1,6 @@
 import { bigProgramStrategies } from "./bigProgramStrategies";
 import { playStyle } from "./playStyle";
-import { steadyStrategies } from "./steadyStrategies";
+import { steadyStrategies, steadySurveyOnce } from "./steadyStrategies";
 import type { Strategy } from "./strategy";
 import {
   landThenOrbiter,
@@ -12,7 +12,8 @@ import {
 
 /**
  * Every strategy the report covers, in its order, with the `steady:` and `big Program:` ones in files of their own. Add
- * one here, or to one of those lists, and it needs nothing else.
+ * one here, or to one of those lists, and it needs nothing else. `steady: Survey once` comes after the `big Program:`
+ * ones, where the report has always listed it, so that reports from before and after a change still line up.
  */
 export const strategies: Strategy[] = [
   {
@@ -108,15 +109,7 @@ export const strategies: Strategy[] = [
   ),
   ...steadyStrategies,
   ...bigProgramStrategies,
-  playStyle(
-    "steady: Survey once",
-    "As steady: Soil analysis, but the orbiter changes to research after its first Survey.",
-    {
-      ...steadyRovers,
-      surveysWhile: (view) =>
-        view.landingSites.every(({ surveyed }) => !surveyed),
-    },
-  ),
+  steadySurveyOnce,
   // The two yardsticks for how the game rewards risk: Cautious should rarely be cancelled and progress slowly, Bold
   // should be cancelled often but progress fast when it isn't.
   playStyle(
