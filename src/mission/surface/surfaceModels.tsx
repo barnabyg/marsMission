@@ -1,5 +1,7 @@
 import { memo } from "react";
 import type { Point } from "../sceneParts";
+import { AscentVehicle } from "./ascentModels";
+import { FuelPlant, Habitat, MarsLab } from "./baseModels";
 import { CrewLander, CrewLanderWreck } from "./crewModels";
 import { Lander, landerGold } from "./landerModel";
 import { Box as Part, Drum } from "./modelParts";
@@ -10,6 +12,10 @@ const shadowRadii: Record<SurfaceModel, number> = {
   lander: 0.85,
   rover: 0.66,
   crewLander: 0.9,
+  fuelPlant: 0.8,
+  habitat: 0.85,
+  lab: 0.8,
+  ascentVehicle: 0.7,
 };
 
 /** A low shadow to stand a model on, leaning away from the Sun. It stays on the ground while the model comes down. */
@@ -30,6 +36,10 @@ export const models: Record<SurfaceModel, typeof Lander> = {
   lander: Lander,
   rover: Rover,
   crewLander: CrewLander,
+  fuelPlant: FuelPlant,
+  habitat: Habitat,
+  lab: MarsLab,
+  ascentVehicle: AscentVehicle,
 };
 
 function Scorch() {
@@ -135,4 +145,9 @@ export const wrecks: Record<SurfaceModel, typeof LanderWreck> = {
   lander: LanderWreck,
   rover: RoverWreck,
   crewLander: CrewLanderWreck,
+  // What else lands crashes as a lander does, scattering what it carried.
+  fuelPlant: LanderWreck,
+  habitat: LanderWreck,
+  lab: LanderWreck,
+  ascentVehicle: LanderWreck,
 };

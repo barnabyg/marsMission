@@ -70,6 +70,7 @@ describe("planning a rover", () => {
       { science: 78, publicSupport: 0, researchGrantMillions: 39 },
       { science: 156, publicSupport: 0, researchGrantMillions: 0 },
       null,
+      null,
     ]);
     expect(rover?.serviceLifeOptions).toHaveLength(2);
     expect(rover?.reliabilityLevels).toHaveLength(3);

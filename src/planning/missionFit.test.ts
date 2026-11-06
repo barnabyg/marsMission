@@ -55,6 +55,14 @@ describe("whether adding to a Mission would fit", () => {
   it("marks Crew too heavy for the Launch Vehicle", () => {
     expect(adding({ crewSize: 2 }).overCapacity).toBe(true);
   });
+
+  it("fits a return vehicle in what the Launch Vehicle has left, whatever the plan's problems", () => {
+    // The 2-tonne Test return vehicle beside the orbiter's 2 tonnes, with no Crew at Mars yet to fetch.
+    expect(adding({ returnVehicleFor: "mars-orbit" })).toEqual({
+      overCapacity: false,
+      overMoney: false,
+    });
+  });
 });
 
 describe("why something can't be added", () => {

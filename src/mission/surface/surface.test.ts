@@ -6,6 +6,7 @@ import {
   describeSite,
   landingShot,
   landingsOnTheirWay,
+  modelOf,
   placeOf,
   siteShown,
   sitesToShow,
@@ -60,6 +61,25 @@ const timelineOf = (
         },
 });
 
+describe("the model each kind of Asset stands on the surface as", () => {
+  it("has one of its own for each kind that lands in the data files", () => {
+    const landing = realCatalogueFiles()
+      .assets.filter(
+        ({ kind }) => kind !== "orbiter" && kind !== "return-orbiter",
+      )
+      .map(({ kind }) => [kind, modelOf(kind)]);
+    expect(Object.fromEntries(landing)).toEqual({
+      lander: "lander",
+      rover: "rover",
+      "fuel-plant": "fuelPlant",
+      habitat: "habitat",
+      lab: "lab",
+      "ascent-vehicle": "ascentVehicle",
+    });
+    expect(modelOf("crew")).toBe("crewLander");
+  });
+});
+
 describe("the Assets on show at a Landing Site", () => {
   const namesAt = (assets: AssetAtMars[], day: number) =>
     surfaceAssetsAt({ assetsAtMars: assets }, day, "Alpha Plain").map(
@@ -98,13 +118,14 @@ describe("the Assets on show at a Landing Site", () => {
     ).toEqual(["Here"]);
   });
 
-  it("tells a rover from a lander, and treats anything else that lands as standing still", () => {
+  it("gives each kind with a model of its own that model, and stands anything else that lands as a lander", () => {
     const shown = surfaceAssetsAt(
       {
         assetsAtMars: [
           asset({ name: "L" }),
           asset({ name: "R", kind: "rover" }),
           asset({ name: "H", kind: "habitat" }),
+          asset({ name: "S", kind: "seismometer" }),
         ],
       },
       10,
@@ -113,6 +134,7 @@ describe("the Assets on show at a Landing Site", () => {
     expect(shown.map(({ model }) => model)).toEqual([
       "lander",
       "rover",
+      "habitat",
       "lander",
     ]);
   });
@@ -370,6 +392,12 @@ describe("what the player reads about the Landing Site shown", () => {
     ]);
     expect(describeSite(timeline, 205, "Alpha Plain")).toEqual([
       "Nothing here yet",
+    ]);
+  });
+
+  it("says nothing is operating at a site that what was there has left through Mars ascent", () => {
+    expect(describeSite(timelineOf([]), 70, "Alpha Plain", true)).toEqual([
+      "Nothing operating here",
     ]);
   });
 

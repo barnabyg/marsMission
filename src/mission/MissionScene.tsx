@@ -13,8 +13,20 @@ import type { MissionViewId } from "./missionViews";
 import type { CameraPose, SceneLabel } from "./sceneParts";
 import { earthOrbitLabels, EarthOrbitScene } from "./spacecraft/EarthOrbitView";
 import type { EarthOrbitNow } from "./spacecraft/refuelling";
+import {
+  marsRendezvousShot,
+  type MarsRendezvousNow,
+} from "./spacecraft/marsRendezvous";
+import {
+  marsRendezvousLabels,
+  MarsRendezvousScene,
+} from "./spacecraft/MarsRendezvousView";
 import { earthOrbitShot, spacecraftShot } from "./spacecraft/spacecraft";
+import { splashdownShot, type EarthEntryNow } from "./spacecraft/splashdown";
+import { splashdownLabels, SplashdownScene } from "./spacecraft/SplashdownView";
 import { spacecraftLabels, SpacecraftScene } from "./spacecraft/SpacecraftView";
+import { ascentKind, ascentRunning, type AscentNow } from "./surface/ascent";
+import { ascentLabels } from "./surface/AscentView";
 import { crewOutsideAt } from "./surface/crewAtSite";
 import {
   sequenceKind,
@@ -37,10 +49,16 @@ interface MissionSceneProps {
   site: string | null;
   /** The Turn's landing or crash, once it has started. */
   sequence: SequenceNow | null;
+  /** The Turn's Mars ascent, once it has started. */
+  ascent: AscentNow | null;
   /** Whether a solar particle event is sweeping past the Mission. */
   particles: boolean;
   /** The Mission in Earth orbit for Orbital refuelling, which the spacecraft view shows instead while it's there. */
   earthOrbit: EarthOrbitNow | null;
+  /** The rendezvous in Mars orbit on the way home, while it plays, which the spacecraft view shows instead. */
+  marsRendezvous: MarsRendezvousNow | null;
+  /** Earth entry at the end of the way home, while it plays, which the spacecraft view shows instead. */
+  earthEntry: EarthEntryNow | null;
   /** How many Assets are operating at Mars right now. */
   operatingAssetCount: number;
 }
@@ -149,6 +167,51 @@ function LabelTracker({
   return null;
 }
 
+/** What plays at a Landing Site now, as the browser tests read it: a landing or crash, or Mars ascent, which are never on the same day. */
+function surfaceSequenceOf(
+  sequence: SequenceNow | null,
+  ascent: AscentNow | null,
+): { kind: string; elapsedMs: number; siteName: string } | null {
+  if (sequenceRunning(sequence)) {
+    return {
+      kind: sequenceKind(sequence.sequence),
+      elapsedMs: sequence.elapsedMs,
+      siteName: sequence.sequence.siteName,
+    };
+  }
+  return ascentRunning(ascent)
+    ? {
+        kind: ascentKind(ascent.sequence),
+        elapsedMs: ascent.elapsedMs,
+        siteName: ascent.sequence.siteName,
+      }
+    : null;
+}
+
+/**
+ * What the spacecraft view shows close up instead of the Mission in transit, with its shot and labels: the rendezvous
+ * in Mars orbit or Earth entry on the way home while each plays, or the Mission in Earth orbit for Orbital refuelling.
+ */
+function spacecraftCloseUp(
+  timeline: Timeline,
+  earthOrbit: EarthOrbitNow | null,
+  marsRendezvous: MarsRendezvousNow | null,
+  earthEntry: EarthEntryNow | null,
+): { shot: CameraPose; labels: SceneLabel[] } | null {
+  if (marsRendezvous) {
+    return {
+      shot: marsRendezvousShot,
+      labels: marsRendezvousLabels(marsRendezvous),
+    };
+  }
+  if (earthEntry) {
+    return { shot: splashdownShot, labels: splashdownLabels(earthEntry) };
+  }
+  return earthOrbit
+    ? { shot: earthOrbitShot, labels: earthOrbitLabels(timeline, earthOrbit) }
+    : null;
+}
+
 /** Mission Mode's 3D scene: one Canvas and one camera, holding every view. */
 export default function MissionScene({
   timeline,
@@ -156,20 +219,32 @@ export default function MissionScene({
   view,
   site,
   sequence,
+  ascent,
   particles,
   earthOrbit,
+  marsRendezvous,
+  earthEntry,
   operatingAssetCount,
 }: MissionSceneProps) {
   const labelLayer = useRef<HTMLDivElement>(null);
   const { shot: viewShot, labels: labelsOnDay } = viewSettings[view];
   const inEarthOrbit = view === "spacecraft" && earthOrbit !== null;
-  const shot = inEarthOrbit ? earthOrbitShot : viewShot;
-  const labels = inEarthOrbit
-    ? earthOrbitLabels(timeline, earthOrbit)
-    : labelsOnDay(timeline, day, site, sequence);
-  const running = sequenceRunning(sequence);
+  const closeUp =
+    view === "spacecraft"
+      ? spacecraftCloseUp(timeline, earthOrbit, marsRendezvous, earthEntry)
+      : null;
+  const shot = closeUp?.shot ?? viewShot;
+  const labels = closeUp
+    ? closeUp.labels
+    : [
+        ...labelsOnDay(timeline, day, site, sequence),
+        ...(view === "surface" && site !== null
+          ? ascentLabels(ascent, site)
+          : []),
+      ];
+  const surfaceSequence = surfaceSequenceOf(sequence, ascent);
   const showingSequence =
-    view === "surface" && running && sequence.sequence.siteName === site;
+    view === "surface" && surfaceSequence?.siteName === site;
 
   // Once the last site goes, the land stays for the camera to move away from, with nothing on it operating.
   const [lastSite, setLastSite] = useState(site);
@@ -180,9 +255,11 @@ export default function MissionScene({
       className="mission-scene"
       data-testid="mission-scene"
       // The browser tests can't see into the scene, so this is how they follow a sequence.
-      data-sequence={running ? sequenceKind(sequence.sequence) : undefined}
+      data-sequence={surfaceSequence?.kind}
       data-sequence-ms={
-        running ? Math.floor(sequence.elapsedMs / 100) * 100 : undefined
+        surfaceSequence
+          ? Math.floor(surfaceSequence.elapsedMs / 100) * 100
+          : undefined
       }
       data-dust-storm={
         view === "surface" && site !== null && dustStormAt(timeline, day, site)
@@ -198,6 +275,10 @@ export default function MissionScene({
         view === "spacecraft" && particles ? "showing" : undefined
       }
       data-earth-orbit={inEarthOrbit ? earthOrbit.stage : undefined}
+      data-mars-rendezvous={
+        view === "spacecraft" ? marsRendezvous?.stage : undefined
+      }
+      data-earth-entry={view === "spacecraft" ? earthEntry?.stage : undefined}
       data-rendezvous-ms={
         inEarthOrbit && earthOrbit.sinceRendezvousMs !== null
           ? Math.floor(earthOrbit.sinceRendezvousMs / 100) * 100
@@ -221,12 +302,15 @@ export default function MissionScene({
           />
         )}
         <EarthOrbitScene timeline={timeline} now={earthOrbit} />
+        <MarsRendezvousScene now={marsRendezvous} />
+        <SplashdownScene now={earthEntry} />
         {lastSite !== null && (
           <SurfaceScene
             timeline={timeline}
             day={day}
             siteName={lastSite}
             sequence={sequence}
+            ascent={ascent}
           />
         )}
         <CameraRig shot={showingSequence ? landingShot : shot} />

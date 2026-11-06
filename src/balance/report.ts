@@ -7,6 +7,8 @@ import { sum } from "./sum";
 import { mean, percent, table, tenth, whole } from "./reportFormat";
 import { technology } from "./technologyReport";
 import { crew } from "./crewReport";
+import { baseLines } from "./baseReport";
+import { comingHome } from "./comingHomeReport";
 
 /** How many Turns each Program plays at most. */
 const turnHorizon = 20;
@@ -391,6 +393,10 @@ export function balanceReport(
     "== Crew ==",
     "",
     ...crew(results),
+    "",
+    "== Coming Home ==",
+    "",
+    ...comingHome(results),
   ];
   for (const { strategy, plays } of results) {
     lines.push(
@@ -411,6 +417,7 @@ export function balanceReport(
       ...decisionPoints(plays),
       "",
       researchScience(plays),
+      ...baseLines(plays),
     );
   }
   return `${lines.join("\n")}\n`;

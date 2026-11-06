@@ -90,7 +90,15 @@ function Cylinder({
 }
 
 /** A rocket engine's flame, pointing back along -x from where it starts. It flickers by real time played, so a pause holds it. */
-function Flame({ x, ms, size }: { x: number; ms: number; size: number }) {
+export function Flame({
+  x,
+  ms,
+  size,
+}: {
+  x: number;
+  ms: number;
+  size: number;
+}) {
   const length = size * (1 + 0.15 * Math.sin(ms / 37) * Math.sin(ms / 53));
   return (
     <group position={[x - length / 2, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
@@ -200,7 +208,7 @@ function TransferGlow({ x, ms }: { x: number; ms: number }) {
 }
 
 /** A burst of light where the Mission was lost, growing and fading. */
-function Flash({ place, share }: { place: Point; share: number }) {
+export function Flash({ place, share }: { place: Point; share: number }) {
   return (
     <mesh position={place}>
       <sphereGeometry args={[0.25 + share * 1.3, 24, 16]} />

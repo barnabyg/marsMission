@@ -130,7 +130,7 @@ describe("a Free-return after a failed arrival burn", () => {
     mission: { ...crewMission, trajectoryId: "test-free-return" },
   };
 
-  it("brings the Crew home alive, with no Public Support gained or lost for them", () => {
+  it("brings the Crew home alive, earning Public Support for each and the First Crew home Milestone, and losing none for them", () => {
     const { simulation, program } = withFailures(["test-arrival"]);
     const { summary } = simulation.runTurn(program, freeReturn);
     expect(summary.crewHome).toEqual(["Ann Able", "Ben Baker"]);
@@ -139,8 +139,9 @@ describe("a Free-return after a failed arrival burn", () => {
       returnedToEarth: true,
       publicSupportLost: 0,
     });
-    expect(summary.publicSupportGained).toBe(0);
-    expect(summary.publicSupportEnd).toBe(85);
+    // 40 for each Crew member home and 300 for the Milestone, before the drain.
+    expect(summary.publicSupportGained).toBe(2 * 40 + 300);
+    expect(summary.publicSupportEnd).toBe(Math.round((100 + 380) * 0.85));
   });
 
   it("names the Crew home in the events column, and never flies them again", () => {

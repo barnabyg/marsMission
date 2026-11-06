@@ -3,7 +3,8 @@ import { catalogueFileNames, type Catalogue } from "./schemas";
 
 /**
  * The Mission Events that Launch Vehicles, Assets and Contingencies refer to exist, with at most one Contingency each,
- * and each Launch Vehicle's Mission Events near Earth happen in a clear order and are over before any arrival.
+ * none timed from leaving Mars on the way to Mars, and each Launch Vehicle's Mission Events near Earth happen in a clear
+ * order and are over before any arrival.
  */
 export function missionEventProblems({
   launchVehicles,
@@ -14,6 +15,11 @@ export function missionEventProblems({
 }: Catalogue): string[] {
   const problems: string[] = [];
   const eventIds = new Set(missionEvents.map((event) => event.id));
+  const homewardIds = new Set(
+    missionEvents
+      .filter(({ timing }) => timing.from === "leavingMars")
+      .map(({ id }) => id),
+  );
   const eventUsers = [
     [catalogueFileNames.launchVehicles, launchVehicles],
     [catalogueFileNames.assets, assets],
@@ -24,6 +30,10 @@ export function missionEventProblems({
         if (!eventIds.has(eventId)) {
           problems.push(
             `${file}: "${item.id}" refers to the Mission Event "${eventId}", which isn't in ${catalogueFileNames.missionEvents}`,
+          );
+        } else if (homewardIds.has(eventId)) {
+          problems.push(
+            `${file}: "${item.id}" brings the Mission Event "${eventId}", which is timed from leaving Mars, on the way to Mars`,
           );
         }
       }

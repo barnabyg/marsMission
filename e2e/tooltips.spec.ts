@@ -12,14 +12,8 @@ import {
   termsInButtons,
   termsWithoutTooltips,
 } from "./helpers";
-import {
-  colossusBuiltSave,
-  colossusMoney,
-  crewSeed,
-  landingSeed,
-  pinpointLandingSeed,
-  successSeed,
-} from "./seeds";
+import { colossusBuiltSave, colossusMoney, crewSeed } from "./colossusSeeds";
+import { landingSeed, pinpointLandingSeed, successSeed } from "./seeds";
 
 test("explains a game term on hover and on keyboard focus", async ({
   page,

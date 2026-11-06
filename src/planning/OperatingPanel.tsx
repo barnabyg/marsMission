@@ -1,6 +1,12 @@
-import { formatMoney, type ProgramView } from "../simulation/simulation";
+import {
+  formatMoney,
+  formatPropellant,
+  type ProgramView,
+} from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
+import { SamplesWaiting } from "./SamplesHomeChoice";
+import { WayHomeChoice } from "./WayHomeChoice";
 import {
   isSurveying,
   NothingLeftToSurvey,
@@ -10,9 +16,16 @@ import {
 interface OperatingPanelProps {
   assets: ProgramView["operatingAssets"];
   crew: ProgramView["crew"];
+  /** The known Landing Sites, for the ascent propellant at each. */
+  landingSites: ProgramView["landingSites"];
+  /** The samples waiting at each Landing Site that has any, and whether they can go home this Turn. */
+  sampleReturns: ProgramView["sampleReturns"];
   /** The new Activities chosen this Turn for the Crew in each place, by its key. */
   chosenCrewActivities: Record<string, string>;
   onCrewActivityChange: (key: string, activityId: string) => void;
+  /** The journey home the player has chosen this Turn, by key, if any: an Earth return stage's Crew, or samples. */
+  bringHome: string | null;
+  onBringHomeChange: (key: string, home: boolean) => void;
   somethingLeftToSurvey: boolean;
   /** The new Activities chosen this Turn, by each Asset's key. */
   chosenActivities: Record<string, string>;
@@ -24,21 +37,39 @@ interface OperatingPanelProps {
 
 /**
  * The Assets already at Mars, each with what is left of its Service Life, its Upkeep, the choice of its Activity and
- * the choice to end its mission, and the Crew
- * there, with their Health and the choice of the Activity they share in each place.
+ * the choice to end its mission, and the Crew there, with their Health, the choice of the Activity they share in each
+ * place and, for round-trip Crew, the choice to bring them home this Turn, greyed out with the reason when they can't. Below them are the samples
+ * waiting at each Landing Site, with the choice to send them home, then the ascent propellant at each
+ * Landing Site that has any, which stays there whether or not anything is still operating, and the Supplies held in
+ * Habitats at each Landing Site.
  */
 export function OperatingPanel({
   assets,
   crew,
+  landingSites,
+  sampleReturns,
   chosenCrewActivities,
   onCrewActivityChange,
+  bringHome,
+  onBringHomeChange,
   somethingLeftToSurvey,
   chosenActivities,
   onActivityChange,
   endedKeys,
   onEndedChange,
 }: OperatingPanelProps) {
-  const empty = assets.length === 0 && crew.length === 0;
+  const stocked = landingSites.filter(
+    ({ ascentPropellantKg }) => ascentPropellantKg > 0,
+  );
+  const held = landingSites.filter(
+    ({ habitatSuppliesKg }) => habitatSuppliesKg > 0,
+  );
+  const empty =
+    assets.length === 0 &&
+    crew.length === 0 &&
+    stocked.length === 0 &&
+    held.length === 0 &&
+    sampleReturns.length === 0;
   return (
     <section
       className={empty ? "panel empty" : "panel"}
@@ -68,6 +99,16 @@ export function OperatingPanel({
                   onCrewActivityChange(group.key, activityId);
                 }}
               />
+              {group.waysHome.map((way) => (
+                <WayHomeChoice
+                  key={way.key}
+                  way={way}
+                  chosen={bringHome === way.key}
+                  onChange={(home) => {
+                    onBringHomeChange(way.key, home);
+                  }}
+                />
+              ))}
             </li>
           ))}
         </ul>
@@ -160,6 +201,35 @@ export function OperatingPanel({
             })}
           </ul>
         </>
+      )}
+      <SamplesWaiting
+        samples={sampleReturns}
+        bringHome={bringHome}
+        onBringHomeChange={onBringHomeChange}
+      />
+      {stocked.length > 0 && (
+        <p data-testid="ascent-propellant">
+          <GameText>
+            {`Ascent propellant: ${stocked
+              .map(
+                ({ name, ascentPropellantKg }) =>
+                  `${formatPropellant(ascentPropellantKg)} at ${name}`,
+              )
+              .join(", ")}`}
+          </GameText>
+        </p>
+      )}
+      {held.length > 0 && (
+        <p data-testid="habitat-supplies">
+          <GameText>
+            {`Supplies in Habitats: ${held
+              .map(
+                ({ name, habitatSuppliesKg }) =>
+                  `${Math.floor(habitatSuppliesKg).toLocaleString("en")} kg at ${name}`,
+              )
+              .join(", ")}`}
+          </GameText>
+        </p>
       )}
     </section>
   );

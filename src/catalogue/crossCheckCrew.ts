@@ -1,31 +1,52 @@
 import { findDuplicates } from "./crossCheckIds";
 import { catalogueFileNames, type Catalogue } from "./schemas";
 
-/** The Crewed Mission: its Mission Events to Mars orbit and to a Landing Site, Crew sizes, Health, Supplies, Protection, Activities and names. */
+/**
+ * The Crewed Mission: its Mission Events to Mars orbit, to a Landing Site and home from a round trip, with Mars ascent
+ * first for Crew who landed, the return vehicle's to Mars orbit and its room for Crew, Crew sizes, Health, Supplies,
+ * Protection, Activities and names.
+ */
 export function crewProblems({
   crew,
   activities,
   missionEvents,
+  program,
 }: Catalogue): string[] {
   const problems: string[] = [];
   const file = catalogueFileNames.crew;
-  const eventFor = (eventId: string) => {
+  const eventFor = (eventId: string, what = "the Crewed Mission") => {
     const event = missionEvents.find(({ id }) => id === eventId);
     if (!event) {
       problems.push(
-        `${file}: the Crewed Mission refers to the Mission Event "${eventId}", which isn't in ${catalogueFileNames.missionEvents}`,
+        `${file}: ${what} refers to the Mission Event "${eventId}", which isn't in ${catalogueFileNames.missionEvents}`,
+      );
+    } else if (event.timing.from === "leavingMars") {
+      problems.push(
+        `${file}: ${what} brings the Mission Event "${eventId}", which is timed from leaving Mars, on the way to Mars`,
       );
     }
     return event;
   };
-  for (const eventId of crew.missionEvents) {
-    if (eventFor(eventId)?.failureProbability === "landingSite") {
-      problems.push(
-        `${file}: the Crewed Mission can't use the Mission Event "${eventId}" to reach Mars orbit, because it needs a Landing Site`,
-      );
+  const toMarsOrbit = (eventIds: string[], what: string) => {
+    for (const eventId of eventIds) {
+      if (eventFor(eventId, what)?.failureProbability === "landingSite") {
+        problems.push(
+          `${file}: ${what} can't use the Mission Event "${eventId}" to reach Mars orbit, because it needs a Landing Site`,
+        );
+      }
     }
-  }
+  };
+  toMarsOrbit(crew.missionEvents, "the Crewed Mission");
   for (const eventId of crew.landingMissionEvents) eventFor(eventId);
+  // A return vehicle waits in Mars orbit, with room for at least one Crewed Mission's Crew.
+  toMarsOrbit(crew.returnVehicle.missionEvents, "the return vehicle");
+  const smallestCrew = Math.min(...crew.sizes.map((size) => size.crew));
+  if (crew.returnVehicle.crewRoom < smallestCrew) {
+    const { crewRoom } = crew.returnVehicle;
+    problems.push(
+      `${file}: the return vehicle has room for ${crewRoom} Crew ${crewRoom === 1 ? "member" : "members"}, fewer than the smallest Crew size, ${smallestCrew}`,
+    );
+  }
   crew.sizes.forEach((size, index) => {
     const smaller = crew.sizes[index - 1];
     if (smaller && size.crew <= smaller.crew) {
@@ -90,6 +111,13 @@ export function crewProblems({
     );
   }
   problems.push(...protectionProblems(crew.protection));
+  problems.push(
+    ...roundTripProblems(
+      crew.roundTrip,
+      missionEvents,
+      program.launchWindowIntervalDays,
+    ),
+  );
   const largest = Math.max(...crew.sizes.map((size) => size.crew));
   if (crew.names.length < largest) {
     problems.push(
@@ -124,6 +152,76 @@ function protectionProblems(
   )) {
     problems.push(
       `${file}: the Protection level "${duplicate}" is listed more than once`,
+    );
+  }
+  return problems;
+}
+
+/**
+ * A round trip's journey home: Mission Events that exist, each timed from leaving Mars, none needing a Landing Site, and
+ * home before the Turn it leaves in ends. Mars ascent's come before the journey home's first, so that Crew who landed
+ * reach their Earth return stage before it leaves, each on a day of its own, and none is listed twice across the two.
+ */
+function roundTripProblems(
+  roundTrip: Catalogue["crew"]["roundTrip"],
+  missionEvents: Catalogue["missionEvents"],
+  turnDays: number,
+): string[] {
+  const file = catalogueFileNames.crew;
+  const problems: string[] = [];
+  /** The days after leaving Mars of each Mission Event listed that exists, with what's wrong with any. */
+  const daysOf = (eventIds: string[], what: string): number[] =>
+    eventIds.flatMap((eventId) => {
+      const event = missionEvents.find(({ id }) => id === eventId);
+      if (!event) {
+        problems.push(
+          `${file}: ${what} refers to the Mission Event "${eventId}", which isn't in ${catalogueFileNames.missionEvents}`,
+        );
+        return [];
+      }
+      if (event.timing.from !== "leavingMars") {
+        problems.push(
+          `${file}: ${what} brings the Mission Event "${eventId}" on the way home, but it isn't timed from leaving Mars`,
+        );
+      }
+      if (event.failureProbability === "landingSite") {
+        problems.push(
+          `${file}: ${what} can't use the Mission Event "${eventId}" on the way home, because it needs a Landing Site`,
+        );
+      }
+      return [event.timing.days];
+    });
+  const homeDays = daysOf(roundTrip.missionEvents, "the round trip");
+  const ascentDays = daysOf(roundTrip.ascent.missionEvents, "Mars ascent");
+  for (const duplicate of new Set(
+    findDuplicates([
+      ...roundTrip.missionEvents,
+      ...roundTrip.ascent.missionEvents,
+    ]),
+  )) {
+    problems.push(
+      `${file}: the round trip lists the Mission Event "${duplicate}" more than once`,
+    );
+  }
+  const firstHome = Math.min(...homeDays);
+  const lastAscent = Math.max(...ascentDays);
+  if (lastAscent >= firstHome) {
+    problems.push(
+      `${file}: Mars ascent ends ${lastAscent} days after leaving Mars, no earlier than the journey home's first Mission Event ${firstHome} days after, which it must come before`,
+    );
+  }
+  // Like a Launch Vehicle's near Earth, each happens on a day of its own, so that their order is clear.
+  for (const day of new Set(
+    findDuplicates([...homeDays, ...ascentDays].map(String)),
+  )) {
+    problems.push(
+      `${file}: two Mission Events of the way home happen ${day} days after leaving Mars. Each needs a day of its own`,
+    );
+  }
+  const homeOn = roundTrip.leavesMarsOnDay + Math.max(0, ...homeDays);
+  if (homeOn >= turnDays) {
+    problems.push(
+      `${file}: the journey home ends on day ${homeOn} of the Turn, which must be before the Turn ends on day ${turnDays}`,
     );
   }
   return problems;

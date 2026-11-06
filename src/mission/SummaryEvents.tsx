@@ -30,7 +30,10 @@ function describeSolarParticleEvent({
   }
 }
 
-/** What went wrong or was decided during the Turn: failures, lost Crew, Decision Points and Hazards. */
+/**
+ * What went wrong or was decided during the Turn: failures, lost Crew, Crew home, a return vehicle waiting for Crew,
+ * Decision Points and Hazards.
+ */
 export function SummaryEvents({ summary }: { summary: TurnSummary }) {
   return (
     <>
@@ -65,6 +68,37 @@ export function SummaryEvents({ summary }: { summary: TurnSummary }) {
           </ul>
         </section>
       )}
+      {summary.journeyHome?.failure && (
+        <section data-testid="summary-journey-home-failure">
+          <h2 className="problem">
+            <GameText heading>Journey home failed</GameText>
+          </h2>
+          <ul>
+            <li>
+              <GameText>
+                {`Mission Event that failed: ${summary.journeyHome.failure.missionEventName}`}
+              </GameText>
+            </li>
+            <li>
+              <GameText>
+                {`Crew aboard: ${summary.journeyHome.crew.join(", ")}`}
+              </GameText>
+            </li>
+            {summary.journeyHome.samples > 0 && (
+              <li>
+                <GameText>
+                  {`Samples lost with them: ${String(summary.journeyHome.samples)}`}
+                </GameText>
+              </li>
+            )}
+            <li>
+              <GameText>
+                {`Public Support lost: ${summary.journeyHome.failure.publicSupportLost}`}
+              </GameText>
+            </li>
+          </ul>
+        </section>
+      )}
       {summary.crewLost.length > 0 && (
         <section data-testid="summary-crew-lost">
           <h2 className="problem">
@@ -84,7 +118,16 @@ export function SummaryEvents({ summary }: { summary: TurnSummary }) {
       {summary.crewHome.length > 0 && (
         <p data-testid="summary-crew-home">
           <GameText>
-            {`Crew home safe, who won't fly again: ${summary.crewHome.join(", ")}`}
+            {`Crew home safe, who won't fly again: ${summary.crewHome.join(", ")}. Public Support earned: ${summary.publicSupportForCrewHome}`}
+          </GameText>
+        </p>
+      )}
+      {summary.returnVehicle && (
+        <p data-testid="summary-return-vehicle">
+          <GameText>
+            {summary.returnVehicle.crew.length > 0
+              ? `Return vehicle ${summary.returnVehicle.name} in Mars orbit, waiting to bring home on a later Turn: ${summary.returnVehicle.crew.join(", ")}`
+              : `Return vehicle ${summary.returnVehicle.name} in Mars orbit, but none of the Crew it was sent for are left at Mars`}
           </GameText>
         </p>
       )}

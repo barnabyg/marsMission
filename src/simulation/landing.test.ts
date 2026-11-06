@@ -160,6 +160,7 @@ describe("a successful landing", () => {
             description: "Does no work.",
             surveys: false,
             earnsPerTurn: null,
+            cachesPerTurn: null,
           },
           {
             id: "test-research",
@@ -171,6 +172,7 @@ describe("a successful landing", () => {
               publicSupport: 39,
               researchGrantMillions: 0,
             },
+            cachesPerTurn: null,
           },
         ],
         daysLeft: 49_425,

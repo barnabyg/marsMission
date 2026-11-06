@@ -9,6 +9,8 @@ export interface MissionEventEntry {
   outcome: "success" | "failure";
   /** Whether this failure sends the Mission back to Earth rather than ending it where it is. */
   returningToEarth?: true;
+  /** Whether it is on a journey home from Mars, rather than on the Turn's Mission. */
+  homeward?: true;
 }
 
 /** A Mission on a Free-return Trajectory has got back to Earth. */
@@ -64,9 +66,33 @@ export interface CrewArrivedEntry {
   description: string;
 }
 
+/** A return vehicle has reached Mars orbit, where it waits for the Crew it was sent for. */
+export interface ReturnVehicleArrivedEntry {
+  kind: "returnVehicleArrived";
+  day: number;
+  title: string;
+  description: string;
+}
+
 /** Crew have been lost, which the events column shows as a failure. */
 export interface CrewLostEntry {
   kind: "crewLost";
+  day: number;
+  title: string;
+  description: string;
+}
+
+/** Crew have come home to Earth safe, from a journey home or a Free-return, never to fly again. */
+export interface CrewHomeEntry {
+  kind: "crewHome";
+  day: number;
+  title: string;
+  description: string;
+}
+
+/** Samples have reached Earth, earning Science, or couldn't leave their Landing Site for home. */
+export interface SamplesEntry {
+  kind: "samples";
   day: number;
   title: string;
   description: string;
@@ -126,7 +152,10 @@ export type TimelineEntry =
   | SurveyEntry
   | FlightProvenEntry
   | CrewArrivedEntry
+  | ReturnVehicleArrivedEntry
   | CrewLostEntry
+  | CrewHomeEntry
+  | SamplesEntry
   | SuppliesOutEntry
   | MissionEventEntry
   | MilestoneEntry
@@ -136,7 +165,7 @@ export type TimelineEntry =
 /** One Asset on this Turn's Mission, or the ship carrying its Crew, and how its journey ended. */
 export interface MissionAsset {
   name: string;
-  /** The Asset's kind, or "crew" for the ship carrying the Crew. */
+  /** The Asset's kind, "crew" for the ship carrying the Crew, or "return vehicle" for a return vehicle. */
   kind: string;
   /** The Landing Site it is heading for, if it lands. */
   landingSiteName: string | null;
@@ -213,5 +242,20 @@ export interface Timeline {
   assetsAtMars: AssetAtMars[];
   /** The dust storms over the Landing Sites known so far. Each is over by toDay. */
   dustStorms: { siteName: string; fromDay: number; toDay: number }[];
+  /** The Turn's journey home from Mars, of Crew or of samples, if one leaves. Its Mission Events are marked `homeward`. */
+  journeyHome?: JourneyHomeOnTimeline | undefined;
   entries: TimelineEntry[];
+}
+
+/** A journey home from Mars as Mission Mode shows it. */
+export interface JourneyHomeOnTimeline {
+  aboard: "crew" | "samples";
+  /** The Landing Site it lifts off from through Mars ascent, or null if it leaves from Mars orbit. */
+  siteName: string | null;
+  /** What brings it home from Mars orbit: the Crew's Earth return stage, or the Earth return orbiter by name. */
+  vehicleName: string;
+  /** The day of the Turn it leaves Mars. */
+  leavesOnDay: number;
+  /** The day of the Turn it gets home if nothing goes wrong. */
+  homeOnDay: number;
 }

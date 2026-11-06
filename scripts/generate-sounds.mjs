@@ -120,6 +120,44 @@ function crewLost() {
   );
 }
 
+/** A soft horn-like note, swelling in and fading away, with a little vibrato. */
+function horn(time, frequency, start, length) {
+  if (time < start || time > start + length) return 0;
+  const since = time - start;
+  const swell =
+    Math.min(1, since / 0.09) * Math.min(1, (length - since) / 0.35);
+  const wobble = 1 + 0.004 * Math.sin(2 * Math.PI * 5.5 * since);
+  const phase = 2 * Math.PI * frequency * wobble * since;
+  return (
+    swell *
+    (Math.sin(phase) * 0.6 +
+      Math.sin(2 * phase) * 0.25 +
+      Math.sin(3 * phase) * 0.1)
+  );
+}
+
+function crewHome() {
+  // A warm welcome: a rising major call of soft horns, landing on a held chord, with a chime on top.
+  const call = [
+    [392, 0, 0.32],
+    [493.88, 0.22, 0.32],
+    [587.33, 0.44, 0.38],
+  ];
+  const chord = [392, 493.88, 587.33, 783.99];
+  return render(2.8, (time) => {
+    const rising = call.reduce(
+      (total, [note, start, length]) =>
+        total + horn(time, note, start, length) * 0.3,
+      0,
+    );
+    const held = chord.reduce(
+      (total, note) => total + horn(time, note, 0.7, 2.1) * 0.17,
+      0,
+    );
+    return rising + held + bell(time, 1567.98, 0.7, 0.5) * 0.12;
+  });
+}
+
 /** Mono 16-bit PCM, which every browser can play. */
 function toWav(samples) {
   const dataSize = samples.length * 2;
@@ -150,6 +188,7 @@ const sounds = {
   "funding-threshold.wav": fundingThreshold,
   "rendezvous.wav": rendezvous,
   "crew-lost.wav": crewLost,
+  "crew-home.wav": crewHome,
 };
 
 for (const [fileName, make] of Object.entries(sounds)) {

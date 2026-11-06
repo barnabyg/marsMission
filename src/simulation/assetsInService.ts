@@ -1,7 +1,8 @@
-import { deliveryDayOf } from "./flight";
+import { deliveryDayOf, type MissionOutcome } from "./flight";
 import type { Catalogue } from "../catalogue/catalogue";
 import {
   addDays,
+  daysBetween,
   daysUntilServiceEnds,
   operatingKey,
   roll,
@@ -9,9 +10,11 @@ import {
   type LandingSite,
   type Rules,
 } from "./rules";
+import { homewardPurchase } from "./earthReturnStages";
 import { isFlightProven } from "./technologyReadiness";
 import type { Program, TurnPlan } from "./types";
 import type {
+  AssetAtMars,
   AssetEndedEntry,
   AssetFailedEntry,
   SurveyEntry,
@@ -28,6 +31,8 @@ export interface AssetInService {
   failed: boolean;
   /** The Landing Site of the dust storm it failed in, if that's how it stopped. */
   failedInStormAt?: string;
+  /** Whether it stopped by leaving Mars, flying samples home, rather than its Service Life ending. */
+  leftForHome?: true;
   /** When it sheltered from a dust storm and so earned nothing, if it did. */
   shelter?: { fromDay: number; toDay: number };
 }
@@ -90,6 +95,16 @@ export function operateAssets(
       reliabilityLevelId: rules.assetReliabilityFor(plan.mission, asset).id,
       activityId: rules.activityFor(plan.mission, asset).id,
       flewUnproven: !isFlightProven(program, asset),
+      // An ascent vehicle or an Earth return orbiter keeps what its Mission bought for sending samples home.
+      ...(asset.sampleReturn
+        ? {
+            homeward: homewardPurchase(
+              rules,
+              plan.mission,
+              rules.sampleReturnEventsOf(asset),
+            ),
+          }
+        : {}),
     },
     fromDay: deliveryDayOf(rules, plan, flown, asset),
   }));
@@ -136,8 +151,10 @@ export function stoppedEntries(
       untilDay,
       failed,
       failedInStormAt,
+      leftForHome,
     }): (AssetEndedEntry | AssetFailedEntry)[] => {
-      if (untilDay === null) return [];
+      // The journey home says when it left.
+      if (untilDay === null || leftForHome) return [];
       const site = rules.landingSiteById(asset.landingSiteId)?.name;
       const place = site ? `at ${site}` : "at Mars";
       if (failed) {
@@ -224,4 +241,32 @@ export function carryOutSurvey(
       siteNameRevealed: revealed?.name ?? null,
     },
   };
+}
+
+/** The Assets at Mars this Turn as Mission Mode shows them, with the Service Life that something on the way cut short for those arriving. */
+export function assetsAtMarsOnTimeline(
+  rules: Rules,
+  program: Program,
+  inService: AssetInService[],
+  flown: Pick<MissionOutcome, "cutServiceLife">,
+): AssetAtMars[] {
+  const cutServiceLife = new Map(
+    [...flown.cutServiceLife].map(([asset, days]) => [asset.id, days]),
+  );
+  return inService.map(({ asset, fromDay, untilDay }): AssetAtMars => {
+    const cutServiceLifeDays =
+      fromDay > 0 ? cutServiceLife.get(asset.assetId) : undefined;
+    return {
+      key: operatingKey(asset),
+      name: asset.name,
+      kind: asset.kind,
+      landingSiteName: rules.landingSiteById(asset.landingSiteId)?.name ?? null,
+      activityName: rules.activityNameOf(asset),
+      surfaceMotion: rules.surfaceMotionOf(asset),
+      arrivedOnDay: daysBetween(program.date, asset.arrivedOn),
+      fromDay,
+      untilDay,
+      ...(cutServiceLifeDays === undefined ? {} : { cutServiceLifeDays }),
+    };
+  });
 }

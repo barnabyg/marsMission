@@ -1,4 +1,5 @@
 import type { TimelineEntry } from "../simulation/simulation";
+import { homewardEventIds } from "./homeward";
 
 /**
  * The views Mission Mode can show, in the order the buttons list them. Adding a view here makes
@@ -26,6 +27,17 @@ const viewsOfMissionEvents: Partial<Record<string, MissionViewId>> = {
   "entry-descent-landing": "surface",
 };
 
+/**
+ * The way home's Mission Events, each with a view of its own: Mars ascent at the Landing Site, the rendezvous and Earth
+ * entry close up, only while each plays, and the way home in the solar system.
+ */
+const viewsOfHomewardEvents: Partial<Record<string, MissionViewId>> = {
+  [homewardEventIds.ascent]: "surface",
+  [homewardEventIds.rendezvous]: "spacecraft",
+  [homewardEventIds.departure]: "solarSystem",
+  [homewardEventIds.entry]: "spacecraft",
+};
+
 /** The burn that sends a Mission on its way to Mars, which the spacecraft view shows only when it goes wrong. */
 const transferBurnId = "mars-transfer-burn";
 
@@ -43,6 +55,7 @@ export function viewAskedForBy(entry: TimelineEntry): MissionViewId | null {
       : null;
   }
   if (entry.kind !== "missionEvent") return null;
+  if (entry.homeward) return viewsOfHomewardEvents[entry.eventId] ?? null;
   // A failure that swings the Mission back is one to watch on its way home.
   if (entry.returningToEarth) return "solarSystem";
   if (entry.eventId === transferBurnId) {
@@ -72,7 +85,10 @@ export function currentView(
   entries: readonly TimelineEntry[],
   entriesHappened: number,
   choice: ViewChoice,
-  /** Whether the entry at this index has finished playing, such as a rendezvous, which then no longer asks for its view. */
+  /**
+   * Whether the entry at this index isn't asking for its view now: it has finished playing, such as a rendezvous, or is
+   * waiting for one before it to finish, such as the journey home leaving Mars orbit.
+   */
   hasPlayed: (entryIndex: number) => boolean = () => false,
 ): MissionViewId {
   const asked = entries
@@ -90,16 +106,21 @@ export interface SitePick {
   entriesHappened: number;
 }
 
-/** The player's pick, unless a landing or a Hazard at a site has happened since, which the camera goes to instead. */
+/**
+ * The player's pick, unless a landing, Mars ascent or a Hazard at a site has happened since, which the camera goes to
+ * instead. `ascentSite` is where the Turn's Mars ascent lifts off from, if it has one.
+ */
 export function landingSitePick(
   entries: readonly TimelineEntry[],
   entriesHappened: number,
   pick: SitePick,
+  ascentSite: string | null = null,
 ): string | null {
   const latest = entries
     .slice(pick.entriesHappened, entriesHappened)
     .findLast((entry) => viewAskedForBy(entry) === "surface");
   if (!latest) return pick.siteName;
+  if (latest.kind === "missionEvent" && latest.homeward) return ascentSite;
   return latest.kind === "decisionPoint" ? (latest.siteName ?? null) : null;
 }
 

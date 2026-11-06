@@ -1,10 +1,19 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { AssetInService } from "./assetsInService";
 import type { CrewAtWork } from "./crewAtMars";
-import { raisedStretches, splitByRaise, type Stretch } from "./benefits";
+import {
+  grantRaisedStretches,
+  raisedStretches,
+  splitByRaise,
+  type Stretch,
+} from "./benefits";
 import { sum, type Activity, type Rules } from "./rules";
 import type { PlannedActivity } from "./previews";
-import type { OngoingResearchEarned, TurnSummary } from "./turnSummary";
+import type {
+  OngoingResearchEarned,
+  ResearchGrantPaid,
+  TurnSummary,
+} from "./turnSummary";
 
 interface Earnings {
   science: number;
@@ -18,14 +27,20 @@ const nothingEarned: Earnings = {
   grantMillions: 0,
 };
 
-/** The Research Grant for this Science, in whole millions, which can round to nothing. */
+/**
+ * The Research Grant for this Science, in whole millions, which can round to nothing, with its rate raised by this
+ * share on average, as a Mars lab raises it.
+ */
 function researchGrantFor(
   catalogue: Catalogue,
   researchKind: string,
   science: number,
+  raisedShare = 1,
 ): number {
   const kind = catalogue.researchKinds.find(({ id }) => id === researchKind);
-  return Math.round(science * (kind?.grantMillionsPerScience ?? 0));
+  return Math.round(
+    science * (kind?.grantMillionsPerScience ?? 0) * raisedShare,
+  );
 }
 
 /** How much a stretch of days counts for: a hundred a day, and a hundred plus its percentage a raised day, so sums stay whole. */
@@ -40,13 +55,37 @@ const weightOf = ({
 }) => (toDay - fromDay) * (100 + percent);
 
 /**
+ * How much a Mars lab raises the Research Grant rate over these stretches, on average for the Science earned on each:
+ * 1 if it raises none of them, and up to 1 plus its percentage if it raises them all.
+ */
+function grantShare(
+  stretches: { fromDay: number; toDay: number; percent: number }[],
+  grantRaised: Stretch[],
+): number {
+  if (grantRaised.length === 0) return 1;
+  const parts = stretches.flatMap((stretch) =>
+    splitByRaise(stretch.fromDay, stretch.toDay, grantRaised).map((part) => ({
+      weight: weightOf({ ...part, percent: stretch.percent }),
+      grantPercent: part.percent,
+    })),
+  );
+  const weight = sum(parts.map((part) => part.weight));
+  return weight > 0
+    ? sum(parts.map((part) => part.weight * (100 + part.grantPercent))) /
+        (100 * weight)
+    : 1;
+}
+
+/**
  * What an Activity earns over these stretches of a Turn, each at its usual rate raised by its percentage, which is
- * nothing if it isn't research. The Science and Public Support are rounded up once for them all.
+ * nothing if it isn't research. The Science and Public Support are rounded up once for them all. Its Research Grant
+ * rate is raised on the days in `grantRaised`, which a Mars lab raises.
  */
 function earningsFor(
   catalogue: Catalogue,
   activity: Activity | undefined,
   stretches: { fromDay: number; toDay: number; percent: number }[],
+  grantRaised: Stretch[] = [],
 ): Earnings {
   const weight = sum(stretches.map(weightOf));
   if (activity?.effect.kind !== "research" || weight <= 0) {
@@ -62,15 +101,24 @@ function earningsFor(
   return {
     science,
     publicSupport: forDays(publicSupportPerTurn),
-    grantMillions: researchGrantFor(catalogue, researchKind, science),
+    grantMillions: researchGrantFor(
+      catalogue,
+      researchKind,
+      science,
+      grantShare(stretches, grantRaised),
+    ),
   };
 }
 
-/** What an Activity earns over a whole Turn in service if it's research, raised by this percentage. */
+/**
+ * What an Activity earns over a whole Turn in service if it's research, raised by this percentage, with its Research
+ * Grant rate raised by `grantPercent`, as a Mars lab raises it.
+ */
 export function earningsPerTurn(
   catalogue: Catalogue,
   activity: Activity,
   percent = 0,
+  grantPercent = 0,
 ): PlannedActivity["earnsPerTurn"] {
   if (activity.effect.kind !== "research") return null;
   const toDay = catalogue.program.launchWindowIntervalDays;
@@ -78,12 +126,15 @@ export function earningsPerTurn(
     catalogue,
     activity,
     [{ fromDay: 0, toDay, percent }],
+    grantPercent > 0
+      ? [{ fromDay: 0, toDay, percent: grantPercent, givenBy: [] }]
+      : [],
   );
   return { science, publicSupport, researchGrantMillions: grantMillions };
 }
 
 /** The parts of a stay at Mars, an Asset's or a Crew member's, that aren't spent sheltering. */
-function daysWorking({
+export function daysWorking({
   fromDay,
   untilDay,
   shelter,
@@ -102,13 +153,15 @@ function daysWorking({
 
 /**
  * What one Asset earns this Turn for its days in service less any it spends sheltering, at the raised rate on days
- * that `raised` covers if it is on the surface, and what it would have earned with nothing raised.
+ * that `raised` covers if it is on the surface, with its Research Grant raised by any Mars lab among `labs` at its
+ * Landing Site, and what it would have earned with nothing raised. `unraisedGrantMillions` is its grant with no lab.
  */
 export function earningsOfStay(
   catalogue: Catalogue,
   rules: Rules,
   stay: AssetInService,
   raised: Stretch[],
+  labs: AssetInService[] = [],
 ) {
   const activity = rules.activityById(stay.asset.activityId);
   const stretches = daysWorking({
@@ -117,15 +170,59 @@ export function earningsOfStay(
   }).flatMap(({ from, to }) =>
     splitByRaise(from, to, stay.asset.landingSiteId === null ? [] : raised),
   );
+  const grantRaised = grantRaisedStretches(
+    catalogue,
+    labs,
+    stay.asset.landingSiteId,
+    { assetKind: stay.asset.kind },
+  );
   return {
     activity,
     stretches,
-    earned: earningsFor(catalogue, activity, stretches),
+    grantRaised,
+    earned: earningsFor(catalogue, activity, stretches, grantRaised),
+    unraisedGrantMillions: earningsFor(catalogue, activity, stretches)
+      .grantMillions,
     usual: earningsFor(
       catalogue,
       activity,
       stretches.map((stretch) => ({ ...stretch, percent: 0 })),
     ),
+  };
+}
+
+/**
+ * What a Mars lab added to a Research Grant, given the days each earner worked, which is left out if it raised none
+ * of them.
+ */
+function grantBenefitPart(
+  worked: Stretch[][],
+  grantRaised: Stretch[],
+  millions: number,
+  unraisedMillions: number,
+): Pick<ResearchGrantPaid, "benefit"> {
+  const raisedParts = worked.map((stretches) =>
+    stretches
+      .flatMap(({ fromDay, toDay }) =>
+        splitByRaise(fromDay, toDay, grantRaised),
+      )
+      .filter(({ percent }) => percent > 0),
+  );
+  const days = Math.max(
+    0,
+    ...raisedParts.map((parts) =>
+      sum(parts.map(({ fromDay, toDay }) => toDay - fromDay)),
+    ),
+  );
+  if (days === 0) return {};
+  return {
+    benefit: {
+      givenBy: [
+        ...new Set(raisedParts.flat().flatMap(({ givenBy }) => givenBy)),
+      ],
+      days,
+      millions: millions - unraisedMillions,
+    },
   };
 }
 
@@ -150,16 +247,24 @@ function benefitPart(
 /**
  * What the Crew in one place earn this Turn, if their Activity is research: its rate for each Crew member, for their
  * days there less any spent sheltering, rounded up for each of them. At a Landing Site, a Benefit that raises research
- * on the surface raises theirs on the days it covers, as it does an Asset's there.
+ * on the surface raises theirs on the days it covers, as it does an Asset's there, and a Mars lab among `labs` there
+ * raises their Research Grants.
  */
 export function crewResearch(
   catalogue: Catalogue,
   rules: Rules,
   { name, place, activityId, stays }: CrewAtWork,
   raised: Stretch[],
+  labs: AssetInService[] = [],
 ) {
   const activity = rules.activityById(activityId);
   const turnDays = catalogue.program.launchWindowIntervalDays;
+  const grantRaised = grantRaisedStretches(
+    catalogue,
+    labs,
+    place.kind === "landingSite" ? place.landingSiteId : null,
+    "crew",
+  );
   const each = stays.flatMap((stay) => {
     const stretches = daysWorking({
       ...stay,
@@ -172,7 +277,8 @@ export function crewResearch(
     return [
       {
         stretches,
-        earned: earningsFor(catalogue, activity, stretches),
+        earned: earningsFor(catalogue, activity, stretches, grantRaised),
+        unraised: earningsFor(catalogue, activity, stretches),
         usual: earningsFor(catalogue, activity, usual),
       },
     ];
@@ -181,8 +287,10 @@ export function crewResearch(
     sum(stretches.map(({ fromDay, toDay }) => toDay - fromDay));
   const days = Math.max(0, ...each.map(({ stretches }) => daysOf(stretches)));
   if (activity?.effect.kind !== "research" || days <= 0) return [];
-  const total = (part: keyof Earnings, which: "earned" | "usual" = "earned") =>
-    sum(each.map((member) => member[which][part]));
+  const total = (
+    part: keyof Earnings,
+    which: "earned" | "unraised" | "usual" = "earned",
+  ) => sum(each.map((member) => member[which][part]));
   const raisedDays = each.map(({ stretches }) =>
     stretches.filter(({ percent }) => percent > 0),
   );
@@ -206,7 +314,16 @@ export function crewResearch(
         }
       : {}),
   };
-  const grant = { name, millions: total("grantMillions") };
+  const grant: ResearchGrantPaid = {
+    name,
+    millions: total("grantMillions"),
+    ...grantBenefitPart(
+      each.map(({ stretches }) => stretches),
+      grantRaised,
+      total("grantMillions"),
+      total("grantMillions", "unraised"),
+    ),
+  };
   return [
     { research, grant, stretches: each.flatMap(({ stretches }) => stretches) },
   ];
@@ -240,12 +357,14 @@ export function carryOutOngoingResearch(
 } {
   const raised = raisedStretches(catalogue, inService, "surfaceResearch");
   const results = inService.flatMap((stay) => {
-    const { activity, stretches, earned, usual } = earningsOfStay(
-      catalogue,
-      rules,
-      stay,
-      raised,
-    );
+    const {
+      activity,
+      stretches,
+      grantRaised,
+      earned,
+      unraisedGrantMillions,
+      usual,
+    } = earningsOfStay(catalogue, rules, stay, raised, inService);
     const days = sum(stretches.map(({ fromDay, toDay }) => toDay - fromDay));
     if (activity?.effect.kind !== "research" || days <= 0) return [];
     const research: OngoingResearchEarned = {
@@ -256,12 +375,21 @@ export function carryOutOngoingResearch(
       days,
       ...benefitPart(stretches, earned, usual),
     };
-    const grant = { name: stay.asset.name, millions: earned.grantMillions };
+    const grant: ResearchGrantPaid = {
+      name: stay.asset.name,
+      millions: earned.grantMillions,
+      ...grantBenefitPart(
+        [stretches],
+        grantRaised,
+        earned.grantMillions,
+        unraisedGrantMillions,
+      ),
+    };
     return [{ research, grant, stretches }];
   });
   results.push(
     ...crewAtWork.flatMap((crew) =>
-      crewResearch(catalogue, rules, crew, raised),
+      crewResearch(catalogue, rules, crew, raised, inService),
     ),
   );
   const earned = results.map(({ research }) => research);

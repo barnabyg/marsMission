@@ -30,7 +30,13 @@ export function flyMission(
   const flight = startFlight(catalogue, rules, program, plan, answers);
   flyEvents(flight);
   endCrewFlight(flight);
-  return flight.outcome;
+  const { outcome } = flight;
+  // A return vehicle is delivered, as an Asset is, unless the Mission stopped before it reached Mars orbit.
+  const stoppedOn = outcome.decisionPoint?.day ?? outcome.failedOnDay;
+  if (outcome.returnVehicle && stoppedOn !== null) {
+    outcome.returnVehicle.delivered = stoppedOn > outcome.returnVehicle.day;
+  }
+  return outcome;
 }
 
 function flyEvents(flight: Flight): void {

@@ -162,12 +162,22 @@ describe("a productive Program in the real data files", () => {
     };
   }
 
-  /** A first orbiter for its Surveys, and then the dearest thing that lands that the money allows, at a new site if there is one. */
+  /**
+   * A first orbiter for its Surveys, and then the dearest thing that lands and does research that the money allows, at
+   * a new site if there is one. A fuel plant, a habitat, a Mars lab and an ascent vehicle, which came in Phase 8, earn
+   * nothing of their own.
+   */
   function nextPlan(program: Program): TurnPlan {
     const { turnNumber } = safe.readProgram(program);
     const choices = files.assets
-      .filter(({ landsAtSite, kind }) =>
-        turnNumber === 1 ? kind === "orbiter" : landsAtSite,
+      .filter(({ landsAtSite, kind, makes, habitat, benefit, sampleReturn }) =>
+        turnNumber === 1
+          ? kind === "orbiter"
+          : landsAtSite === true &&
+            makes === undefined &&
+            habitat === undefined &&
+            benefit === undefined &&
+            sampleReturn === undefined,
       )
       .toSorted((first, second) => second.costMillions - first.costMillions)
       .flatMap((asset) =>
@@ -207,10 +217,16 @@ describe("a productive Program in the real data files", () => {
     },
   );
 
-  // This Program flies no Crew, which came in Phase 7.
+  // This Program flies no Crew, which came in Phase 7, and brings neither Crew nor samples home, which came in Phase 8.
   it.each(
     files.milestones.filter(
-      ({ trigger }) => !("crewArrives" in trigger || "crewLands" in trigger),
+      ({ trigger }) =>
+        !(
+          "crewArrives" in trigger ||
+          "crewLands" in trigger ||
+          "crewComesHome" in trigger ||
+          "samplesComeHome" in trigger
+        ),
     ),
   )("earns the Milestone $name", ({ id }) => {
     expect(played.view.milestones.map((milestone) => milestone.id)).toContain(
@@ -222,9 +238,15 @@ describe("a productive Program in the real data files", () => {
 describe("the balance of Phase 4", () => {
   const real = createSimulation(parseCatalogue(files));
   const steady = played("steady: Soil analysis");
-  // Played here, as a test that plays several would take longer than a test may now that base funding keeps more
-  // Programs going for longer.
+  // Every strategy these tests play is played here, as a test that plays even two would take longer than a test may on
+  // a slower machine, now that base funding keeps more Programs going for longer and Phase 8 gave each Turn more to do.
   for (const name of [
+    "launch nothing",
+    "stop after Turn 4",
+    "steady: Long traverse",
+    "steady: Soil, traverse when rich",
+    "steady: longest on everything",
+    "steady: rover straight away",
     "steady: Tested rovers",
     "steady: Tested everything",
     "steady: shortest Service Life",

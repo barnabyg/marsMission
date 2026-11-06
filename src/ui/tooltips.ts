@@ -30,9 +30,25 @@ export const tooltips = {
   "Crew size":
     "How many Crew fly on a Crewed Mission, chosen in Planning Mode. A larger Crew earns more Ongoing Research, but weighs and costs more.",
   Health:
-    "A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, solar particle events, carrying on through a dust storm and having no Supplies lower it, Protection slows the decline, and at zero the Crew member dies.",
+    "A single value for each Crew member, out of the most they launch with. Radiation on the way and at Mars, time at Mars, Contingency rescues, solar particle events, carrying on through a dust storm and having no Supplies lower it, Protection and a Habitat slow the decline, and at zero the Crew member dies.",
   Supplies:
-    "The food, water and everything else Crew use up to stay alive, from launch. They are chosen for each Crewed Mission, and last a larger Crew fewer days. Crew in one place share theirs, and Crew who join them bring more. When they run out, Health falls quickly.",
+    "The food, water and everything else Crew use up to stay alive, from launch. They are chosen for each Crewed Mission, and last a larger Crew fewer days. Crew in one place share theirs, and Crew who join them bring more, as a Habitat holds more for the Crew at its Landing Site. When they run out, Health falls quickly.",
+  "Round trip":
+    "A Crewed Mission that carries an Earth return stage, so that its Crew can come home on a later Turn, from Mars orbit or, through Mars ascent, from their Landing Site. It weighs and costs more than a one-way trip, which leaves its Crew at Mars.",
+  "Earth return stage":
+    "The stage a round trip carries, or a return vehicle brings for Crew already at Mars, which waits in Mars orbit, whether its Crew stay there or land, and brings them home on the Turn the player chooses. The Reliability and Contingencies for their journey home are bought with it.",
+  "Return vehicle":
+    "An Earth return stage that a later Mission flies to Mars orbit on its own, with or without Crew of its own, for Crew already at Mars who have no way home, such as those who went one way. It has room for only so many Crew, waits in Mars orbit for those it was sent for, and brings them home on a Turn the player chooses, as a round trip's stage does. A Crewed Mission that carries one swaps Crew: its own stay at Mars.",
+  "Journey home":
+    "Crew leaving Mars for Earth aboard their Earth return stage, or samples aboard an Earth return orbiter, on a Turn the player chooses. Its Mission Events, Trans-Earth injection and Earth entry, after Mars ascent and Mars orbit rendezvous for Crew at a Landing Site and for samples, have Reliability and Contingency, and a failure loses the Crew or samples aboard. Each Crew member home safe earns Public Support, samples earn Science, and the first of each home are a Milestone. At most one flies each Turn.",
+  "Mars ascent":
+    "The Mission Event in which Crew at a Landing Site lift off for Mars orbit at the start of their journey home. It uses up ascent propellant made at their site by a fuel plant, so the journey can only be chosen once the site has enough.",
+  "Mars orbit rendezvous":
+    "The Mission Event, the day after Mars ascent, in which Crew who lifted off from the surface meet and dock with their Earth return stage in Mars orbit.",
+  "Trans-Earth injection":
+    "The Mission Event in which an Earth return stage fires its engine and sends its Crew out of Mars orbit on their way home.",
+  "Earth entry":
+    "The Mission Event at the end of a journey home, in which the Crew's capsule comes through Earth's atmosphere and splashes down.",
   Asset:
     "A pre-designed piece of hardware chosen from a catalogue, such as an orbiter, lander, rover, drone, habitat or fuel plant. Assets remain in place and keep working after their Mission until their Service Life ends or they fail.",
   "Service Life":
@@ -40,7 +56,11 @@ export const tooltips = {
   Upkeep:
     "What an Asset operating at Mars costs for each Turn it is kept going after the one it arrives in. The player can end an Asset's mission in Planning Mode, which takes it out of service as the Turn starts and stops its Upkeep.",
   Benefit:
-    "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface. A second Asset giving the same Benefit adds nothing.",
+    "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface, a fuel plant making ascent propellant at its Landing Site, a Habitat slowing the Health the Crew there lose to time at Mars, or a Mars lab raising the Research Grants of the rovers and Crew at its Landing Site. A second Asset raising or slowing the same thing adds nothing, but each fuel plant makes its own.",
+  "Fuel plant":
+    "An Asset that lands at a Landing Site and makes ascent propellant there from the carbon dioxide in the Martian air, on each day it operates, whatever its Activity. Its Benefit tag in Planning Mode says how much it makes over a whole Turn.",
+  "Ascent propellant":
+    "The propellant Crew need to leave the surface of Mars, made by a fuel plant at its Landing Site and used up by Mars ascent. It builds up at that site from Turn to Turn and stays there if the plant stops, and each Landing Site keeps its own.",
   Activity:
     "What an Asset, or all the Crew in one place at Mars, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset or Crew keep their Activity into later Turns until the player changes it.",
   "Landing Site":
@@ -59,6 +79,24 @@ export const tooltips = {
     "An Activity for Crew in Mars orbit: Ongoing Research from orbit, such as studying Mars, driving robots on the surface from above and running experiments aboard. Each Crew member earns it, and it pays a Research Grant.",
   "Field research":
     "An Activity for Crew at a Landing Site: Ongoing Research on the surface, exploring around the site, collecting samples and studying them in their lander. Each Crew member earns it, a Benefit that raises research on the surface raises it too, and it pays a Research Grant.",
+  Habitat:
+    "An Asset that lands at a Landing Site and houses the Crew there, on each day it operates, whatever its Activity: it slows the Health they lose to time at Mars, and holds Supplies for them, which they draw on once their own run out and which Crew landing there top up. Its Benefit tag in Planning Mode says how many more days it would give a Crew member at Mars.",
+  "Mars lab":
+    "An Asset that lands at a Landing Site and studies the samples that rovers and Crew there bring in, on each day it operates, whatever its Activity, raising the Research Grants their Ongoing Research pays. Their Science and Public Support stay as they are. Its Benefit tag in Planning Mode says how much money it would add over a whole Turn.",
+  "Sample caching":
+    "An Activity for a rover: collecting samples of rock and soil at its Landing Site, which stay there from Turn to Turn until an ascent vehicle or Crew coming home take them. It earns no Science until they reach Earth, where each earns Science and the first are a Milestone.",
+  "Ascent vehicle":
+    "An Asset that lands at a Landing Site and waits there to lift the samples cached at its site into Mars orbit, through Mars ascent and Mars orbit rendezvous with an Earth return orbiter, on a Turn the player chooses. Unlike Crew, it needs no ascent propellant.",
+  "Earth return orbiter":
+    "An Asset that waits in Mars orbit for the samples an ascent vehicle brings up, and flies them home through Trans-Earth injection and Earth entry. A failure on the way loses the samples, and it leaves Mars for good once it has flown them.",
+  "Sample analysis":
+    "An Activity for a Mars lab: studying the samples that rovers and Crew at its Landing Site bring in, which earns no Science of its own. A Mars lab raises their Research Grants whatever its Activity.",
+  "Standing by":
+    "An Activity for an ascent vehicle or an Earth return orbiter: waiting, kept ready to fly samples home on the Turn the player chooses, which earns no Science of its own.",
+  Habitation:
+    "An Activity for a Habitat: keeping its air, water, power and Supplies ready for Crew, which earns no Science. A Habitat houses the Crew at its Landing Site whatever its Activity.",
+  "Propellant production":
+    "An Activity for a fuel plant: running it, which earns no Science. A fuel plant makes ascent propellant whatever its Activity.",
   "Planning Mode":
     "The first part of a Turn, in which the player chooses Missions, Assets, Activities, technology and Safety Margin and spends money. No game time passes in Planning Mode.",
   "Mission Mode":
@@ -96,7 +134,7 @@ export const tooltips = {
   "Base funding":
     "What the Program's backers pay as each Turn ends: a fixed amount for each point of Public Support the Program had as the Turn started, up to a most for a Turn. It keeps a Program that has lost a Mission able to try again in time, but never pays as much as Research Grants.",
   "Research Grant":
-    "Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none.",
+    "Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none. A Mars lab raises the rate for rovers and Crew at its Landing Site.",
   "Public Support":
     "Points of public and political backing. Milestones and Ongoing Research add them, setbacks remove them, and a percentage drains away each Turn as excitement fades. Reaching a Funding Threshold pays money; falling below the Cancellation Level cancels the Program.",
   "Funding Threshold":

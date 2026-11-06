@@ -1,6 +1,6 @@
 import type { TechnologyReadiness } from "./technologyReadiness";
 import type { Timeline } from "./timeline";
-import type { CrewAtMars } from "./crew";
+import type { CrewAtMars } from "./crewView";
 import type { PlannedActivity, PlannedDevelopment } from "./previews";
 import type { TurnSummary } from "./turnSummary";
 
@@ -19,6 +19,12 @@ export interface PlannedMission {
   trajectoryId?: string;
   /** The Crew it carries, which makes it a Crewed Mission. Left out, it's a Robotic Mission. */
   crew?: CrewChoices;
+  /**
+   * A return vehicle it carries to Mars orbit, with or without Crew of its own, to fetch Crew already at Mars: those in
+   * one place, by the place's key, who have no way home as the Turn starts. Their journey home's Reliability and
+   * Contingencies are bought with the Mission's own.
+   */
+  returnVehicle?: { forCrewAt: string };
 }
 
 /** The choices made for a Crewed Mission's Crew. */
@@ -36,6 +42,11 @@ interface CrewChoices {
   suppliesId?: string;
   /** The Protection it carries, by id, which slows the Health they lose to radiation. Left out, it's the first the Catalogue lists, which gives none. */
   protectionId?: string;
+  /**
+   * Whether they go on a round trip, with an Earth return stage that waits with them in Mars orbit to bring them home on
+   * a later Turn. Its Mission Events' Reliability and Contingencies are bought with the Mission's own.
+   */
+  roundTrip?: boolean;
 }
 
 export interface AssetChoices {
@@ -56,6 +67,12 @@ export interface TurnPlan {
   crewActivities?: Record<string, string>;
   /** Assets already operating whose missions end as this Turn starts, by their `key`, so that they cost no more upkeep. */
   endedAssetKeys?: string[];
+  /**
+   * The journey home that flies this Turn, by its `key`: an Earth return stage whose Crew come home, or a Landing Site's
+   * samples, sent home by an ascent vehicle there and an Earth return orbiter in Mars orbit. At most one journey home
+   * flies each Turn, of Crew or of samples.
+   */
+  bringHome?: string;
 }
 
 interface OperatingAsset {
@@ -73,6 +90,19 @@ interface OperatingAsset {
   activityId: string;
   /** Whether it flew before its technology was Flight-proven, which raises its chance of failing in service for good. */
   flewUnproven: boolean;
+  /**
+   * For an ascent vehicle or an Earth return orbiter, the Reliability and Contingencies its Mission bought for its part
+   * of the samples' journey home. Left out for any other Asset.
+   */
+  homeward?: HomewardPurchase | undefined;
+}
+
+/** What a Mission bought for a journey home on a later Turn: the Reliability for each Mission Event, and Contingencies. */
+export interface HomewardPurchase {
+  /** The Reliability bought for each Mission Event of the journey home, by id. */
+  reliability: Record<string, string>;
+  /** The Contingencies bought for the journey home, by id. */
+  contingencyIds: string[];
 }
 
 /**
@@ -87,6 +117,20 @@ export interface BenefitImpact {
   alreadyGivenBy: string[];
 }
 
+/**
+ * What a Mars lab would add this Turn, at the Landing Site where it would add the most: how many Assets and Crew there
+ * earn a Research Grant it raises, as the Turn starts, and the extra money over a whole Turn. If labs already there
+ * raise as much, they are named in alreadyGivenBy and it adds nothing. The site is null if nothing at any Landing Site
+ * earns a grant it raises.
+ */
+export interface GrantImpact {
+  landingSiteName: string | null;
+  assets: number;
+  crew: number;
+  extraGrantMillions: number;
+  alreadyGivenBy: string[];
+}
+
 /** A place at Mars where Crew operate: Mars orbit, or a Landing Site. */
 export type PlaceAtMars =
   { kind: "marsOrbit" } | { kind: "landingSite"; landingSiteId: string };
@@ -98,7 +142,7 @@ export type PlaceAtMars =
 export type CrewLossCause =
   "missionEvent" | "solarParticleEvent" | "health" | "supplies";
 
-/** Where a Crew member is: at Mars, lost, or back on Earth after a Free-return, never to fly again. */
+/** Where a Crew member is: at Mars, lost, or back on Earth, never to fly again. */
 type CrewLocation =
   | PlaceAtMars
   | { kind: "lost"; lostOn: string; cause: CrewLossCause }
@@ -152,7 +196,35 @@ export interface Program {
    * them, and Crew who join them add theirs.
    */
   crewSupplies: Record<string, number>;
+  /** The Earth return stages in Mars orbit, each waiting to bring home the round-trip Crew it came with, or was sent for. */
+  earthReturnStages: EarthReturnStage[];
+  /**
+   * The ascent propellant at each Landing Site, in kilograms, by the site's id, for each site where a fuel plant has
+   * made some. It stays there when the plant stops.
+   */
+  ascentPropellantKg: Record<string, number>;
+  /**
+   * The Supplies held in habitats at each Landing Site, in kilograms, by the site's id, for each site where a habitat
+   * operates. Crew there draw on them once their own run out, and Supplies left at the end of a Turn fill them first.
+   */
+  habitatSuppliesKg: Record<string, number>;
+  /**
+   * The samples cached at each Landing Site, by the site's id, for each site that has had any. They stay there until a
+   * journey home takes them, of Crew or of samples.
+   */
+  samplesAtSites: Record<string, number>;
   status: ProgramStatus;
+}
+
+/**
+ * An Earth return stage in Mars orbit, waiting to bring its Crew home: one a round trip brought with its Crew, or a
+ * return vehicle sent for Crew already there.
+ */
+export interface EarthReturnStage extends HomewardPurchase {
+  /** The day it arrived with its Crew, which names it. */
+  arrivedOn: string;
+  /** The Crew it is for who are still at Mars. */
+  crew: string[];
 }
 
 export interface ProgramView {
@@ -204,6 +276,20 @@ export interface ProgramView {
     benefit: string | null;
     /** What its Benefit would add to what is on the surface as the Turn starts, or null if it gives no Benefit. */
     benefitImpact: BenefitImpact | null;
+    /** What its Benefit would add to the Research Grants at a Landing Site this Turn, or null if it isn't a Mars lab. */
+    grantImpact: GrantImpact | null;
+    /** What it makes at its Landing Site over a whole Turn of operating there, or null if it makes nothing. */
+    makes: { ascentPropellantKgPerTurn: number } | null;
+    /**
+     * What it does for Crew at its Landing Site, if it is a habitat: the share by which it slows time at Mars, the
+     * Supplies it holds, and how many more days a Crew member landing beside it with full Health and no Protection
+     * would last at Mars. Null if it isn't a habitat.
+     */
+    habitat: {
+      timeAtMarsCutPercent: number;
+      suppliesKg: number;
+      extraDays: number;
+    } | null;
   }[];
   /** What a Crewed Mission can carry: the Crew sizes, Supplies and Protection on offer, what each costs and weighs, and the Health Crew start with. */
   crewedMission: {
@@ -227,6 +313,28 @@ export interface ProgramView {
     maxHealth: number;
     /** How many names are left to give Crew, which limits the Crew that can still fly. */
     namesLeft: number;
+    /**
+     * What a round trip adds to a Crewed Mission: the Earth return stage that brings the Crew home, and the ascent
+     * propellant that Mars ascent uses at their Landing Site if they land.
+     */
+    roundTrip: {
+      name: string;
+      description: string;
+      costMillions: number;
+      massTonnes: number;
+      ascentPropellantKg: number;
+    };
+    /**
+     * What a return vehicle adds to a Mission, with or without Crew: it waits in Mars orbit to bring home Crew already at
+     * Mars, as many as it has room for.
+     */
+    returnVehicle: {
+      name: string;
+      description: string;
+      costMillions: number;
+      massTonnes: number;
+      crewRoom: number;
+    };
   };
   /** The Crew operating at Mars, by where they are. Crew who are lost or home aren't listed. */
   crew: CrewAtMars[];
@@ -246,7 +354,33 @@ export interface ProgramView {
     riskBand: string;
     /** Whether anything has landed here, so that landing again earns no Science. */
     landed: boolean;
+    /** The ascent propellant here, in kilograms, which a fuel plant makes. */
+    ascentPropellantKg: number;
+    /** The Supplies held in habitats here, in kilograms. */
+    habitatSuppliesKg: number;
+    /** The samples cached here, waiting for a journey home. */
+    samples: number;
   }[];
+  /** The samples Planning Mode offers to send home, one choice for each Landing Site that has any. */
+  sampleReturns: SampleWayHome[];
+}
+
+/**
+ * A choice to send a Landing Site's samples home this Turn: how many, the Science they would earn, the ascent vehicle
+ * and Earth return orbiter that would fly them, when they would leave and get home, and why they can't go this Turn,
+ * if they can't.
+ */
+export interface SampleWayHome {
+  /** How a plan names it, in `bringHome`. */
+  key: string;
+  siteName: string;
+  samples: number;
+  science: number;
+  ascentVehicle: string | null;
+  orbiter: string | null;
+  leavesMarsOn: string;
+  homeOn: string;
+  reason: string | null;
 }
 
 export interface TurnResult {

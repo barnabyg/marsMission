@@ -1,8 +1,8 @@
 import type { CatalogueFiles } from "../catalogue/catalogue";
 
 /**
- * The test catalogue's Mission Events, with orbital refuelling's between the launch and the burn, and the Contingency
- * for each that has one.
+ * The test catalogue's Mission Events, with orbital refuelling's between the launch and the burn, then Mars ascent's
+ * and the journey home's, and the Contingency for each that has one.
  */
 export function testMissionEvents(
   refuellingEvents: CatalogueFiles["missionEvents"],
@@ -46,6 +46,42 @@ export function testMissionEvents(
         failureProbability: "landingSite",
         publicSupportLoss: 50,
       },
+      {
+        id: "test-ascent",
+        name: "Test ascent",
+        description: "Lifts off from the surface.",
+        failureDescription: "The ascent engine failed.",
+        timing: { from: "leavingMars", days: 0 },
+        failureProbability: 0,
+        publicSupportLoss: 15,
+      },
+      {
+        id: "test-docking",
+        name: "Test docking",
+        description: "Docks with the return stage.",
+        failureDescription: "It couldn't dock.",
+        timing: { from: "leavingMars", days: 1 },
+        failureProbability: 0,
+        publicSupportLoss: 10,
+      },
+      {
+        id: "test-departure-home",
+        name: "Test departure home",
+        description: "Leaves Mars orbit for home.",
+        failureDescription: "The engine failed in Mars orbit.",
+        timing: { from: "leavingMars", days: 2 },
+        failureProbability: 0,
+        publicSupportLoss: 25,
+      },
+      {
+        id: "test-splashdown",
+        name: "Test splashdown",
+        description: "Splashes down at home.",
+        failureDescription: "The heat shield failed.",
+        timing: { from: "leavingMars", days: 200 },
+        failureProbability: 0,
+        publicSupportLoss: 35,
+      },
     ],
     contingencies: [
       {
@@ -86,6 +122,33 @@ export function testMissionEvents(
         extraPublicSupportLoss: 15,
         troubleDescription: "{lander} came in too fast at {site}.",
         rescueDescription: "{lander} made a hard landing at {site}.",
+      },
+      {
+        id: "test-ascent-restart",
+        name: "Ascent restart",
+        description: "A second try at the ascent.",
+        missionEvent: "test-ascent",
+        costMillions: 30,
+        // Weightless, so that it fits aboard a Mission that fills the Test Heavy with Crew and a fuel plant.
+        massTonnes: 0,
+        rescueFailureProbability: 0,
+        serviceLifeLossPercent: 0,
+        extraPublicSupportLoss: 5,
+        troubleDescription: "The ascent engine shut down early.",
+        rescueDescription: "The ascent engine relit.",
+      },
+      {
+        id: "test-backup-engine",
+        name: "Backup engine",
+        description: "A second try at leaving for home.",
+        missionEvent: "test-departure-home",
+        costMillions: 40,
+        massTonnes: 0.5,
+        rescueFailureProbability: 0,
+        serviceLifeLossPercent: 0,
+        extraPublicSupportLoss: 5,
+        troubleDescription: "The engine is failing in Mars orbit.",
+        rescueDescription: "The backup engine sent them home.",
       },
     ],
   };

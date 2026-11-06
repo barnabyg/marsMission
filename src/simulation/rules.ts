@@ -1,5 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import type { PlannedMission, Program } from "./types";
+import { isLandingSiteKey } from "./crewPlaces";
 import { technologiesOn, unprovenMultiplier } from "./technologyReadiness";
 import type { SurfaceMotion } from "./timeline";
 
@@ -106,6 +107,9 @@ export function createRules(catalogue: Catalogue) {
         ({ missionEvents }) => missionEvents,
       ),
       ...crewOf(mission).missionEvents,
+      ...(mission?.returnVehicle
+        ? catalogue.crew.returnVehicle.missionEvents
+        : []),
     ]);
     return [...eventIds].flatMap((eventId) =>
       catalogue.missionEvents.filter((event) => event.id === eventId),
@@ -132,10 +136,14 @@ export function createRules(catalogue: Catalogue) {
     return day;
   }
 
-  /** The day of the Turn a Mission Event happens to this Mission. */
+  /**
+   * The day of the Turn a Mission Event happens to this Mission. One timed from leaving Mars counts from `leavesMarsOn`,
+   * the day of the Turn a journey home sets off, and has no day in a Turn without one.
+   */
   function dayOf(
-    { timing }: MissionEvent,
+    { id, timing }: MissionEvent,
     mission: PlannedMission | null,
+    leavesMarsOn: number | null = null,
   ): number {
     switch (timing.from) {
       case "launch":
@@ -144,6 +152,13 @@ export function createRules(catalogue: Catalogue) {
         return departureDay(mission) + timing.days;
       case "arrival":
         return trajectoryFor(mission).transferDays + timing.days;
+      case "leavingMars":
+        if (leavesMarsOn === null) {
+          throw new Error(
+            `The Mission Event "${id}" is timed from leaving Mars, but nothing leaves Mars this Turn`,
+          );
+        }
+        return leavesMarsOn + timing.days;
     }
   }
 
@@ -242,10 +257,12 @@ export function createRules(catalogue: Catalogue) {
     return (activityById(asset.activityId) ?? nothingActivity()).name;
   }
 
-  /** How an operating Asset gets about on the surface, which only research sets. */
+  /** How an operating Asset gets about on the surface, which only research and Sample caching set. */
   function surfaceMotionOf(asset: { activityId: string }): SurfaceMotion {
     const effect = activityById(asset.activityId)?.effect;
-    return effect?.kind === "research" ? effect.surfaceMotion : "still";
+    return effect?.kind === "research" || effect?.kind === "sampleCaching"
+      ? effect.surfaceMotion
+      : "still";
   }
 
   /** The one calculation behind both an Asset's roll in service and the risk band Planning Mode shows. */
@@ -356,6 +373,78 @@ export function createRules(catalogue: Catalogue) {
     );
   }
 
+  /**
+   * The Mission Events of a round trip's journey home, in the order they happen after leaving Mars, with Mars ascent and
+   * the rendezvous first for Crew leaving a Landing Site. The sort is stable, so those on the same day keep their order.
+   */
+  function journeyHomeEvents(fromSurface = false): MissionEvent[] {
+    return fromSurface ? fromSurfaceHome : fromOrbitHome;
+  }
+
+  function eventsHome(fromSurface: boolean): MissionEvent[] {
+    const { roundTrip } = catalogue.crew;
+    return [
+      ...(fromSurface ? roundTrip.ascent.missionEvents : []),
+      ...roundTrip.missionEvents,
+    ]
+      .flatMap((eventId) =>
+        catalogue.missionEvents.filter((event) => event.id === eventId),
+      )
+      .sort((first, second) => first.timing.days - second.timing.days);
+  }
+
+  // Worked out once, as balance runs ask for them for every plan they check. Callers never change them.
+  const fromOrbitHome = eventsHome(false);
+  const fromSurfaceHome = eventsHome(true);
+
+  /**
+   * The Mission Events an ascent vehicle or an Earth return orbiter flies when it sends samples home: Mars ascent and
+   * the rendezvous for an ascent vehicle, and the journey home's for an orbiter, as Crew fly them. Any other Asset flies
+   * none.
+   */
+  function sampleReturnEventsOf(asset: Asset): MissionEvent[] {
+    const { roundTrip } = catalogue.crew;
+    const eventIds =
+      asset.sampleReturn === "ascent"
+        ? roundTrip.ascent.missionEvents
+        : asset.sampleReturn === "earthReturn"
+          ? roundTrip.missionEvents
+          : [];
+    return journeyHomeEvents(true).filter(({ id }) => eventIds.includes(id));
+  }
+
+  /** The Mission Events of the journey home that a Mission's own Crew, or the Crew its return vehicle fetches, fly. */
+  function crewHomewardEventsFor(
+    mission: PlannedMission | null,
+  ): MissionEvent[] {
+    if (mission?.crew?.roundTrip) {
+      return journeyHomeEvents(mission.crew.landsAtSite === true);
+    }
+    return mission?.returnVehicle
+      ? journeyHomeEvents(isLandingSiteKey(mission.returnVehicle.forCrewAt))
+      : [];
+  }
+
+  /**
+   * The Mission Events of a journey home on a later Turn that a Mission buys Reliability and Contingency for: its own
+   * Crew's on a round trip, or those of the Crew its return vehicle fetches, through Mars ascent if they are at a
+   * Landing Site, and those its ascent vehicle and Earth return orbiter fly to send samples home, in the order they
+   * happen. A Mission Event that more than one of them flies is bought once, for them all. A Mission with none of them
+   * has none.
+   */
+  function homewardEventsFor(mission: PlannedMission | null): MissionEvent[] {
+    const sampleReturn = catalogue.assets.filter(
+      ({ id, sampleReturn: part }) =>
+        part !== undefined && mission?.assetIds.includes(id),
+    );
+    if (sampleReturn.length === 0) return crewHomewardEventsFor(mission);
+    const flown = new Set([
+      ...crewHomewardEventsFor(mission),
+      ...sampleReturn.flatMap(sampleReturnEventsOf),
+    ]);
+    return journeyHomeEvents(true).filter((event) => flown.has(event));
+  }
+
   return {
     crewOf,
     trajectoryFor,
@@ -378,6 +467,10 @@ export function createRules(catalogue: Catalogue) {
     failureProbability,
     riskBandFor,
     missionEventsFor,
+    journeyHomeEvents,
+    homewardEventsFor,
+    crewHomewardEventsFor,
+    sampleReturnEventsOf,
   };
 }
 

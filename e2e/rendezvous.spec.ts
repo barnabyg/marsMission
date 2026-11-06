@@ -15,7 +15,7 @@ import {
   colossusMoney,
   colossusSeed,
   rendezvousFailureSeed,
-} from "./seeds";
+} from "./colossusSeeds";
 
 test.use({ viewport: missionViewport });
 

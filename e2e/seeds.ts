@@ -328,112 +328,51 @@ export const freeReturnSeed = seedWhere("Mars orbit insertion", {
   mission: { ...firstPlan.mission, trajectoryId: "free-return" },
 });
 
-/** Enough to develop the Meridian Colossus and then fill it, which a real Program can't afford until later. */
-export const colossusMoney = 7000;
-
-const colossusSimulation = createSimulation(
-  parseCatalogue({
-    ...realCatalogueFiles(),
-    program: { ...catalogue.program, startingMoneyMillions: colossusMoney },
-  }),
-);
-
-/** What the tests launch on the Meridian Colossus once it is built: more mass than any other Launch Vehicle carries. */
-const onColossus: TurnPlan = {
-  mission: {
-    launchVehicleId: "meridian-colossus",
-    assetIds: ["pathfinder-orbiter", "prospector-lander", "trailblazer-rover"],
-    landingSiteId: "jezero-crater",
-  },
-};
-
-/**
- * A seed where the Meridian Colossus, developed over the first two Turns with nothing launched, carries its first
- * Mission with nothing to answer, and the only Mission Event to fail, if any, is the named one.
- */
-function colossusSeedWhere(
-  failedEvent: string | null,
-  plan: TurnPlan = onColossus,
-): number {
-  for (let seed = 1; seed < 100_000; seed++) {
-    const developing = colossusSimulation.runTurn(
-      colossusSimulation.startProgram(seed),
-      { mission: null, developmentIds: ["meridian-colossus"] },
-    );
-    const built = colossusSimulation.runTurn(developing.program, {
-      mission: null,
-    });
-    const progress = colossusSimulation.workOutTurn(built.program, plan);
-    if (
-      !progress.decisionPoint &&
-      (progress.result.summary.failure?.missionEventName ?? null) ===
-        failedEvent
-    ) {
-      return seed;
-    }
-  }
-  throw new Error(
-    `No seed gives the Meridian Colossus's first Mission the outcome ${failedEvent}`,
-  );
-}
-
-/**
- * The automatic save of a Program on this seed, with the Meridian Colossus developed over its first two Turns and
- * nothing launched, as the game itself saves it at the start of Turn 3. Loading it skips playing those two Turns, for a
- * test about what comes after. It needs the game's data to give the Program colossusMoney, as overrideProgramData does.
- */
-export function colossusBuiltSave(seed: number): string {
-  const developing = colossusSimulation.runTurn(
-    colossusSimulation.startProgram(seed),
-    { mission: null, developmentIds: ["meridian-colossus"] },
-  );
-  const built = colossusSimulation.runTurn(developing.program, {
-    mission: null,
-  });
-  return JSON.stringify(colossusSimulation.saveProgram(built.program));
-}
-
-/** A seed where the Meridian Colossus carries its first Mission through the tanker launch and the rendezvous to Mars. */
-export const colossusSeed = colossusSeedWhere(null);
-
-/** A seed where the Meridian Colossus's first Mission collides with its Tanker at the rendezvous. */
-export const rendezvousFailureSeed = colossusSeedWhere("Rendezvous");
-
-/** The smallest Crew on the Meridian Colossus, with nothing else aboard. */
-const smallestCrew: TurnPlan = {
-  mission: {
-    launchVehicleId: "meridian-colossus",
-    assetIds: [],
-    crew: { size: catalogue.crew.sizes[0]?.crew ?? 0 },
-  },
-};
-
-/** A seed where the Meridian Colossus carries the smallest Crew to Mars orbit on its first Mission, with nothing to answer. */
-export const crewSeed = colossusSeedWhere(null, smallestCrew);
-
-/** A seed where the Meridian Colossus's first Mission fails its launch with the smallest Crew aboard, which loses them. */
-export const crewLossSeed = colossusSeedWhere("Launch", smallestCrew);
-
-/**
- * A seed where the Meridian Colossus lands the smallest Crew at the first known Landing Site on its first Mission, as
- * Planning Mode plans it once the Crew are set to land, with nothing to answer.
- */
-export const crewLandingSeed = colossusSeedWhere(null, {
-  mission: {
-    launchVehicleId: "meridian-colossus",
-    assetIds: [],
-    crew: {
-      size: catalogue.crew.sizes[0]?.crew ?? 0,
-      landsAtSite: true,
-      protectionId: "protection-light-shielding",
-    },
-    landingSiteId: "jezero-crater",
-  },
-});
-
 /** A seed whose first Mission succeeds. */
 export const successSeed = seedWhere(null);
 
 /** A seed whose first Mission fails at the named Mission Event. */
 export const seedFailingAt = (missionEventName: string) =>
   seedWhere(missionEventName);
+
+/** A seed whose first Mission lands the fuel plant, which starts unproven, at the first known Landing Site, with nothing to answer. */
+export const fuelPlantSeed = seedWhere(null, {
+  mission: {
+    launchVehicleId: "meridian-heavy",
+    assetIds: ["wellspring-fuel-plant"],
+    landingSiteId: "jezero-crater",
+  },
+});
+
+/** A Mission on the Meridian Medium landing this Asset at the first known Landing Site, as Planning Mode offers it. */
+const landingAtJezero = (assetId: string): TurnPlan => ({
+  mission: {
+    launchVehicleId: "meridian-medium",
+    assetIds: [assetId],
+    landingSiteId: "jezero-crater",
+  },
+});
+
+/**
+ * A seed on which a rover lands at the first known Landing Site, and a Mars lab lands beside it on the next Turn and
+ * raises its Research Grant, with nothing to answer on either Turn.
+ */
+export const labSeed = ((): number => {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const first = simulation.workOutTurn(
+      simulation.startProgram(seed),
+      landingAtJezero("trailblazer-rover"),
+    );
+    if (first.decisionPoint || first.result.summary.failure) continue;
+    const second = simulation.workOutTurn(
+      first.result.program,
+      landingAtJezero("curie-lab"),
+    );
+    if (second.decisionPoint || second.result.summary.failure) continue;
+    const raised = second.result.summary.researchGrants.some(
+      ({ name, benefit }) => name === "Trailblazer Rover" && benefit,
+    );
+    if (raised) return seed;
+  }
+  throw new Error("No seed lands a rover and then a Mars lab beside it");
+})();

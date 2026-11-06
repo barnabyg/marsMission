@@ -7,6 +7,7 @@ import { idProblems } from "./crossCheckIds";
 import { milestoneProblems } from "./crossCheckMilestones";
 import { missionEventProblems } from "./crossCheckMissionEvents";
 import { reliabilityProblems } from "./crossCheckReliability";
+import { sampleProblems } from "./crossCheckSamples";
 import { technologyProblems } from "./crossCheckTechnology";
 import { trajectoryProblems } from "./crossCheckTrajectories";
 import { catalogueFileNames, schemas, type Catalogue } from "./schemas";
@@ -47,6 +48,7 @@ const crossChecks: ((catalogue: Catalogue) => string[])[] = [
   technologyProblems,
   benefitProblems,
   crewProblems,
+  sampleProblems,
 ];
 
 /** Validates the raw contents of the data files and returns the catalogue, or throws a CatalogueError. */

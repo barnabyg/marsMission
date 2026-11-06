@@ -6,7 +6,7 @@ import type { TurnSummary } from "./turnSummary";
 import type { CrewLossCause, CrewMember, Program } from "./types";
 
 /**
- * Crew who leave for good: lost, or brought home by a Free-return. Whatever loses Crew, on the way to Mars or at Mars,
+ * Crew who leave for good: lost, or home safe from a journey home or on a Free-return. Whatever loses Crew, on the way to Mars or at Mars,
  * gives a `CrewLoss` for the Turn, and `loseCrew` works out what losing them costs, the same for every cause.
  */
 
@@ -130,23 +130,27 @@ export function loseCrew(
 }
 
 /**
- * The records of Crew a Free-return brought back to Earth on this day of the Turn, with the Health they have left and
- * their Mission's Protection. They never fly again.
+ * The records of Crew who got back to Earth safe on this day of the Turn, from a journey home or on a Free-return, with
+ * the Health they have left, keeping the day they arrived at Mars if they did. They never fly again.
  */
 export function bringCrewHome(
   program: Program,
   crew: readonly { name: string; health: number }[],
   backOnDay: number,
+  /** The Protection of the Turn's Mission, for its Crew, who aren't on record yet. */
   protectionId: string,
 ): CrewMember[] {
   const backOn = addDays(program.date, backOnDay);
-  return crew.map(({ name, health }) => ({
-    name,
-    health,
-    arrivedOn: null,
-    location: { kind: "home", backOn },
-    protectionId,
-  }));
+  return crew.map(({ name, health }) => {
+    const before = program.crew.find((member) => member.name === name);
+    return {
+      name,
+      health,
+      arrivedOn: before?.arrivedOn ?? null,
+      location: { kind: "home", backOn },
+      protectionId: before?.protectionId ?? protectionId,
+    };
+  });
 }
 
 /**

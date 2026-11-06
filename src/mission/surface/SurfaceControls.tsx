@@ -1,6 +1,7 @@
 import type { Timeline } from "../../simulation/simulation";
 import { GameText } from "../../ui/GameText";
 import type { MissionViewId } from "../missionViews";
+import { ascentStatus, type AscentNow } from "./ascent";
 import { sequenceStatus, type SequenceNow } from "./sequence";
 import { describeSite, dustStormAt } from "./surface";
 
@@ -15,6 +16,7 @@ interface SurfaceControlsProps {
   sites: readonly string[];
   site: string | null;
   sequence: SequenceNow | null;
+  ascent: AscentNow | null;
   onPickSite: (siteName: string) => void;
 }
 
@@ -26,10 +28,11 @@ export function SurfaceControls({
   sites,
   site,
   sequence,
+  ascent,
   onPickSite,
 }: SurfaceControlsProps) {
   if (site === null || view !== "surface") return null;
-  const status = sequenceStatus(sequence, site);
+  const status = sequenceStatus(sequence, site) ?? ascentStatus(ascent, site);
   const storm = dustStormAt(timeline, day, site);
   return (
     <>
@@ -63,7 +66,12 @@ export function SurfaceControls({
           ...(storm === null
             ? []
             : [`Dust storm: ${Math.ceil(storm.toDay - day)} days left`]),
-          ...describeSite(timeline, day, site),
+          ...describeSite(
+            timeline,
+            day,
+            site,
+            ascent?.sequence.siteName === site,
+          ),
         ].map((line) => (
           <li key={line}>
             <GameText>{line}</GameText>

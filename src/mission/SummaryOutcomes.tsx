@@ -1,9 +1,16 @@
-import { formatMoney, type TurnSummary } from "../simulation/simulation";
+import {
+  formatMoney,
+  formatPropellant,
+  type TurnSummary,
+} from "../simulation/simulation";
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { SummaryHealthLost } from "./SummaryHealthLost";
 
-/** Where the Program stands after the Turn: its Crew, technology, research, Assets, Survey and the Money it earned. */
+/**
+ * Where the Program stands after the Turn: its Crew, technology, research, ascent propellant, Assets, Survey and the
+ * Money it earned.
+ */
 export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
   return (
     <>
@@ -96,6 +103,21 @@ export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
           </ul>
         </section>
       )}
+      {(summary.ascentPropellant.length > 0 ||
+        summary.ascentPropellantUsed.length > 0) && (
+        <section data-testid="summary-ascent-propellant">
+          <h2>
+            <GameText heading>Ascent propellant</GameText>
+          </h2>
+          <ul>
+            {propellantBySite(summary).map((line) => (
+              <li key={line}>
+                <GameText>{line}</GameText>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {summary.assetsFailed.length > 0 && (
         <p className="problem" data-testid="summary-assets-failed">
           <GameText>
@@ -157,15 +179,54 @@ export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
             </GameText>
           </h2>
           <ul>
-            {summary.researchGrants.map(({ name, millions }, index) => (
-              // Two copies of an Asset can each be paid the same amount, so the position tells them apart.
-              <li key={`${name}-${index}`}>
-                <GameText>{`${name}: ${formatMoney(millions)}`}</GameText>
-              </li>
-            ))}
+            {summary.researchGrants.map(
+              ({ name, millions, benefit }, index) => (
+                // Two copies of an Asset can each be paid the same amount, so the position tells them apart.
+                <li key={`${name}-${index}`}>
+                  <GameText>
+                    {`${name}: ${formatMoney(millions)}${
+                      benefit
+                        ? `, raised on ${benefit.days} ${benefit.days === 1 ? "day" : "days"} by the Benefit from ${benefit.givenBy.join(" and ")}, which added ${formatMoney(benefit.millions)}`
+                        : ""
+                    }`}
+                  </GameText>
+                </li>
+              ),
+            )}
           </ul>
         </section>
       )}
     </>
   );
+}
+
+/**
+ * What each Landing Site's ascent propellant did this Turn, one line a site: what its fuel plants made, what Mars ascent
+ * used, and what it has now.
+ */
+function propellantBySite({
+  ascentPropellant,
+  ascentPropellantUsed,
+}: TurnSummary): string[] {
+  const sites = [
+    ...new Set(
+      [...ascentPropellant, ...ascentPropellantUsed].map(
+        ({ siteName }) => siteName,
+      ),
+    ),
+  ];
+  return sites.map((siteName) => {
+    const made = ascentPropellant.find((each) => each.siteName === siteName);
+    const used = ascentPropellantUsed.find(
+      (each) => each.siteName === siteName,
+    );
+    const parts = [
+      ...(made
+        ? [`${made.madeBy.join(" and ")} made ${formatPropellant(made.madeKg)}`]
+        : []),
+      ...(used ? [`Mars ascent used ${formatPropellant(used.usedKg)}`] : []),
+    ];
+    const totalKg = used?.totalKg ?? made?.totalKg ?? 0;
+    return `${siteName}: ${parts.join(" and ")}, so it has ${formatPropellant(totalKg)}`;
+  });
 }

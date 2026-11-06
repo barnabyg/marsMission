@@ -62,6 +62,35 @@ export function testCrew(): CatalogueFiles["crew"] {
       ],
     },
     publicSupportLossPerMember: 20,
+    // The journey home leaves Mars on day 100 of the Turn, fires for home on day 102 and splashes down on day 300, 200
+    // days in flight: 20 Health to radiation with no Protection, and 100 kilograms of Supplies for a Crew of two.
+    roundTrip: {
+      name: "Test return stage",
+      description: "Brings the Crew home.",
+      costMillions: 500,
+      massTonnes: 1,
+      leavesMarsOnDay: 100,
+      missionEvents: ["test-departure-home", "test-splashdown"],
+      // Crew who landed lift off on the day the journey leaves Mars and dock with the stage the next day, using 5,000
+      // kg of ascent propellant at their site, less than the Test Fuel Plant makes in a whole Turn.
+      ascent: {
+        missionEvents: ["test-ascent", "test-docking"],
+        propellantKg: 5000,
+        // Crew who come home from a Landing Site bring 3 samples each, on top of those cached there.
+        samplesPerMember: 3,
+      },
+    },
+    // Light enough to fly on the Test Vehicle on its own, and beside the smaller Crew on the Test Heavy, with room for
+    // one Crew of two.
+    returnVehicle: {
+      name: "Test return vehicle",
+      description: "Fetches Crew.",
+      costMillions: 400,
+      massTonnes: 2,
+      crewRoom: 2,
+      missionEvents: ["test-arrival"],
+    },
+    publicSupportPerMemberHome: 40,
     orbitActivities: ["test-research", "test-nothing"],
     // Twice the rate of research in orbit, as a test of earning at the surface's own rates.
     surfaceActivities: ["test-traverse", "test-nothing"],

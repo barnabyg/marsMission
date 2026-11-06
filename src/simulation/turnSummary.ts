@@ -1,4 +1,9 @@
+import type {
+  AscentPropellantMade,
+  AscentPropellantUsed,
+} from "./ascentPropellant";
 import type { HealthLost } from "./health";
+import type { SamplesCached } from "./sampleCaching";
 import type { CrewLossCause, DecisionAnswer } from "./types";
 
 interface AwardedMilestone {
@@ -26,6 +31,20 @@ export interface OngoingResearchEarned {
     days: number;
     science: number;
     publicSupport: number;
+  };
+}
+
+/** The Research Grant one Asset's, or one place's Crew's, Ongoing Research paid during a Turn. */
+export interface ResearchGrantPaid {
+  name: string;
+  millions: number;
+  /** What a Mars lab's Benefit added to it, which millions includes. Left out if no lab raised any of its days. */
+  benefit?: {
+    /** The Assets that gave the Benefit. */
+    givenBy: string[];
+    /** How many of its days were raised. */
+    days: number;
+    millions: number;
   };
 }
 
@@ -79,15 +98,57 @@ export interface TurnSummary {
    * What each Crew member lost in Health this Turn and why, whether they are still at Mars, were lost or came home:
    * those already at Mars first, then those the Mission carried. Anyone who lost none is left out. For a Crew member who
    * died of it, it adds up to the Health they had. `savedByProtection` is how much more radiation would have taken
-   * over the same days with no Protection, left out if it saved nothing.
+   * over the same days with no Protection, left out if it saved nothing, and `savedByHabitat` how much more time at
+   * Mars would have taken with no habitat, left out if it saved nothing.
    */
   healthLost: {
     name: string;
     lost: HealthLost[];
     savedByProtection?: number;
+    savedByHabitat?: number;
   }[];
-  /** The Crew a Free-return brought back to Earth this Turn, safe, who won't fly again. */
+  /** The Crew who came home to Earth safe this Turn, from a journey home or on a Free-return, who won't fly again. */
   crewHome: string[];
+  /** The Public Support the Crew who came home earned, which publicSupportGained includes. */
+  publicSupportForCrewHome: number;
+  /**
+   * The return vehicle the Turn's Mission brought to Mars orbit, if it got there, with those of the Crew it was sent
+   * for who are still at Mars as the Turn ends, who can come home in it on a later Turn.
+   */
+  returnVehicle: { name: string; crew: string[] } | null;
+  /**
+   * The journey home flown this Turn, if one was: the round-trip Crew who left Mars, and the Mission Event that failed
+   * on the way, losing them, if one did, with the Public Support it cost on top of losing them.
+   */
+  journeyHome: {
+    crew: string[];
+    /** The samples aboard with them, from their Landing Site and their own, which a failure loses. */
+    samples: number;
+    /** The Landing Site they left, whose samples they took, or null if they left Mars orbit. */
+    samplesFrom: string | null;
+    failure: { missionEventName: string; publicSupportLost: number } | null;
+  } | null;
+  /** The samples cached at each Landing Site this Turn, leaving out sites where none were. */
+  samplesCached: SamplesCached[];
+  /** The samples that reached Earth this Turn, and the Science each lot earned, which scienceGained includes. */
+  samplesHome: {
+    from: string;
+    samples: number;
+    science: number;
+    /** What brought them: an Earth return orbiter, by name, or "Crew". */
+    broughtBy: string;
+  }[];
+  /**
+   * The samples sent home this Turn by an ascent vehicle and an Earth return orbiter, if any were: from where, how many,
+   * the Mission Event that failed on the way, losing them, if one did, and whether they stayed at their site because
+   * what was to fly them stopped operating first.
+   */
+  sampleJourney: {
+    siteName: string;
+    samples: number;
+    failure: { missionEventName: string; publicSupportLost: number } | null;
+    stayed: boolean;
+  } | null;
   /**
    * When Supplies ran out this Turn, in order: aboard the Crewed Mission on its way, or for the Crew in a place at Mars,
    * such as "Crew in Mars orbit", including Crew who start the Turn with none left.
@@ -102,9 +163,13 @@ export interface TurnSummary {
     siteNamesSurveyed: string[];
     siteNameRevealed: string | null;
   } | null;
+  /** The ascent propellant each Landing Site's fuel plants made this Turn, leaving out sites that made none. */
+  ascentPropellant: AscentPropellantMade[];
+  /** The ascent propellant Mars ascent used at the Landing Site Crew left this Turn, if any did. */
+  ascentPropellantUsed: AscentPropellantUsed[];
   fundingPayouts: { publicSupport: number; payoutMillions: number }[];
   /** What each Asset's Ongoing Research paid in Research Grants, leaving out any that came to nothing. moneyEndMillions includes it. */
-  researchGrants: { name: string; millions: number }[];
+  researchGrants: ResearchGrantPaid[];
   researchGrantMillions: number;
   /** What the Program's backers paid as the Turn ended, for its Public Support as the Turn started. */
   baseFundingMillions: number;

@@ -65,6 +65,22 @@
   color: #6fe6d4;
 }
 
+.fuelPlant-label > span {
+  color: #ffb37a;
+}
+
+.habitat-label > span {
+  color: #f4efe4;
+}
+
+.lab-label > span {
+  color: #7fdcea;
+}
+
+.ascentVehicle-label > span {
+  color: #ffd9bd;
+}
+
 /* The Crew, in every view. */
 .crewLander-label > span,
 .crew-label > span {

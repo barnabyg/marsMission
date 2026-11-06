@@ -17,6 +17,22 @@ describe("the events column's cards", () => {
     expect(ids.filter((id) => !(id in missionEventPictures))).toEqual([]);
   });
 
+  it("gives the journey home's Mission Events pictures of their own", () => {
+    expect(
+      [
+        "mars-ascent",
+        "mars-orbit-rendezvous",
+        "trans-earth-injection",
+        "earth-entry",
+      ].map(missionEventPicture),
+    ).toEqual([
+      "marsAscent",
+      "marsOrbitRendezvous",
+      "transEarthInjection",
+      "earthEntry",
+    ]);
+  });
+
   it("shows a plain spacecraft for a Mission Event with no picture of its own", () => {
     expect(missionEventPicture("aerobraking")).toBe("spacecraft");
   });
@@ -79,6 +95,9 @@ describe("the events column's cards", () => {
     ["survey", "survey", false],
     ["flightProven", "flightProven", false],
     ["missionReturned", "missionReturned", false],
+    ["crewHome", "crewHome", false],
+    ["samples", "samples", false],
+    ["returnVehicleArrived", "returnVehicleArrived", false],
   ] as const)("shows a %s entry as %s, failed: %s", (kind, picture, failed) => {
     const entry = { ...base, kind, milestoneId: "m" } as TimelineEntry;
     expect(eventCardFor(entry)).toMatchObject({ picture, failed });

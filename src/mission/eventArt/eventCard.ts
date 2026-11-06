@@ -22,7 +22,14 @@ export type EventPicture =
   | "crewLost"
   | "suppliesOut"
   | "assetEnded"
-  | "assetFailed";
+  | "assetFailed"
+  | "marsAscent"
+  | "marsOrbitRendezvous"
+  | "transEarthInjection"
+  | "earthEntry"
+  | "crewHome"
+  | "samples"
+  | "returnVehicleArrived";
 
 /** How the events column shows one entry: its picture, the tag beside its date, and whether it went wrong. */
 export interface EventCard {
@@ -41,6 +48,10 @@ export const missionEventPictures: Readonly<Record<string, EventPicture>> = {
   "mars-transfer-burn": "transferBurn",
   "mars-orbit-insertion": "orbitInsertion",
   "entry-descent-landing": "entryDescentLanding",
+  "mars-ascent": "marsAscent",
+  "mars-orbit-rendezvous": "marsOrbitRendezvous",
+  "trans-earth-injection": "transEarthInjection",
+  "earth-entry": "earthEntry",
 };
 
 /** A Mission Event's picture, or a plain spacecraft for one with no picture of its own. */
@@ -90,6 +101,12 @@ export function eventCardFor(entry: TimelineEntry): EventCard {
       return card("flightProven", "Flight-proven", "award");
     case "crewArrived":
       return card("crewArrived", "Crew", "users");
+    case "returnVehicleArrived":
+      return card("returnVehicleArrived", "Return vehicle", "rocket");
+    case "samples":
+      return card("samples", "Science", "flask-conical");
+    case "crewHome":
+      return card("crewHome", "Crew", "users");
     case "crewLost":
       return { ...card("crewLost", "Crew", "heart"), failed: true };
     case "suppliesOut":

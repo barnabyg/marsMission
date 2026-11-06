@@ -13,6 +13,7 @@ import {
   Vector3,
   type Group,
 } from "three";
+import { ReturnOrbiter } from "../spacecraft/homewardModels";
 import { Orbiter } from "../spacecraft/spacecraftModels";
 import { models } from "../surface/surfaceModels";
 
@@ -24,6 +25,11 @@ const modelsByKind: Partial<Record<string, ReactNode>> = {
   lander: <models.lander />,
   rover: <models.rover />,
   crew: <models.crewLander />,
+  "fuel-plant": <models.fuelPlant />,
+  habitat: <models.habitat />,
+  lab: <models.lab />,
+  "ascent-vehicle": <models.ascentVehicle />,
+  "return-orbiter": <ReturnOrbiter lost={false} deployed />,
 };
 
 /** The camera looks from in front, a little to the right and above, where a lander's hatch and a rover's front show. */

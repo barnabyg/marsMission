@@ -80,7 +80,12 @@
     "upkeepMillionsPerTurn": 15,
     "missionEvents": ["entry-descent-landing"],
     "landsAtSite": true,
-    "activities": ["soil-analysis", "long-traverse", "nothing"],
+    "activities": [
+      "soil-analysis",
+      "long-traverse",
+      "sample-caching",
+      "nothing"
+    ],
     "massTonnes": 3.5,
     "serviceLifeOptions": [
       {
@@ -103,7 +108,12 @@
     "upkeepMillionsPerTurn": 15,
     "missionEvents": ["entry-descent-landing"],
     "landsAtSite": true,
-    "activities": ["soil-analysis", "long-traverse", "nothing"],
+    "activities": [
+      "soil-analysis",
+      "long-traverse",
+      "sample-caching",
+      "nothing"
+    ],
     "massTonnes": 3.5,
     "serviceLifeOptions": [
       {
@@ -151,5 +161,154 @@
       "raises": "surfaceResearch",
       "percent": 75
     }
+  },
+  {
+    "id": "wellspring-fuel-plant",
+    "name": "Wellspring Fuel Plant",
+    "kind": "fuel-plant",
+    "costMillions": 800,
+    "upkeepMillionsPerTurn": 15,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "activities": ["propellant-production"],
+    "massTonnes": 4.5,
+    "serviceLifeOptions": [
+      {
+        "days": 2100,
+        "costMillions": 0
+      },
+      {
+        "days": 3600,
+        "costMillions": 250
+      }
+    ],
+    "failureChancePerTurn": 0.12,
+    "technologyReadiness": "built",
+    "unproven": {
+      "costMillions": 1000,
+      "failureMultiplier": 1.5
+    },
+    "makes": {
+      "ascentPropellantKgPerDay": 40
+    }
+  },
+  {
+    "id": "haven-habitat",
+    "name": "Haven Module",
+    "kind": "habitat",
+    "costMillions": 600,
+    "upkeepMillionsPerTurn": 20,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "activities": ["habitation"],
+    "massTonnes": 3,
+    "serviceLifeOptions": [
+      {
+        "days": 2100,
+        "costMillions": 0
+      },
+      {
+        "days": 3600,
+        "costMillions": 250
+      }
+    ],
+    "failureChancePerTurn": 0.1,
+    "technologyReadiness": "built",
+    "unproven": {
+      "costMillions": 750,
+      "failureMultiplier": 1.5
+    },
+    "habitat": {
+      "timeAtMarsCutPercent": 90,
+      "suppliesKg": 1500
+    }
+  },
+  {
+    "id": "curie-lab",
+    "name": "Curie Station",
+    "kind": "lab",
+    "costMillions": 1100,
+    "upkeepMillionsPerTurn": 20,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "activities": ["sample-analysis"],
+    "massTonnes": 4,
+    "serviceLifeOptions": [
+      {
+        "days": 2100,
+        "costMillions": 0
+      },
+      {
+        "days": 3600,
+        "costMillions": 250
+      }
+    ],
+    "failureChancePerTurn": 0.1,
+    "technologyReadiness": "built",
+    "unproven": {
+      "costMillions": 1300,
+      "failureMultiplier": 1.5
+    },
+    "benefit": {
+      "raises": "siteResearchGrants",
+      "percent": 200,
+      "assetKinds": ["rover"],
+      "crew": true
+    }
+  },
+  {
+    "id": "kestrel-ascent-vehicle",
+    "name": "Kestrel Lifter",
+    "kind": "ascent-vehicle",
+    "costMillions": 1000,
+    "upkeepMillionsPerTurn": 10,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "activities": ["standing-by"],
+    "massTonnes": 4,
+    "serviceLifeOptions": [
+      {
+        "days": 1300,
+        "costMillions": 0
+      },
+      {
+        "days": 2100,
+        "costMillions": 150
+      }
+    ],
+    "failureChancePerTurn": 0.08,
+    "technologyReadiness": "built",
+    "unproven": {
+      "costMillions": 1200,
+      "failureMultiplier": 1.5
+    },
+    "sampleReturn": "ascent"
+  },
+  {
+    "id": "albatross-return-orbiter",
+    "name": "Albatross Orbiter",
+    "kind": "return-orbiter",
+    "costMillions": 900,
+    "upkeepMillionsPerTurn": 10,
+    "missionEvents": ["mars-orbit-insertion"],
+    "activities": ["standing-by"],
+    "massTonnes": 3,
+    "serviceLifeOptions": [
+      {
+        "days": 1300,
+        "costMillions": 0
+      },
+      {
+        "days": 2100,
+        "costMillions": 150
+      }
+    ],
+    "failureChancePerTurn": 0.1,
+    "technologyReadiness": "built",
+    "unproven": {
+      "costMillions": 1100,
+      "failureMultiplier": 1.5
+    },
+    "sampleReturn": "earthReturn"
   }
 ]

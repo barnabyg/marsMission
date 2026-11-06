@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { describeBenefitImpact } from "./benefitImpactText";
+import {
+  describeBenefitImpact,
+  describeGrantImpact,
+} from "./benefitImpactText";
 
 const impact = { assets: 0, crew: 0, extraScience: 0, alreadyGivenBy: [] };
 
@@ -32,6 +35,44 @@ describe("what a Benefit would add this Turn", () => {
       }),
     ).toBe(
       "It adds nothing this Turn, as Courier Relay at Mars already gives this Benefit.",
+    );
+  });
+});
+
+const grantImpact = {
+  landingSiteName: "Jezero Crater",
+  assets: 0,
+  crew: 0,
+  extraGrantMillions: 0,
+  alreadyGivenBy: [],
+};
+
+describe("what a Mars lab's Benefit would add this Turn", () => {
+  it("names the Landing Site, what it would raise there and the money it would add", () => {
+    expect(
+      describeGrantImpact({
+        ...grantImpact,
+        assets: 1,
+        crew: 2,
+        extraGrantMillions: 250,
+      }),
+    ).toBe(
+      "Landed at Jezero Crater this Turn, it would raise the Research Grants of the 1 Asset and 2 Crew there, adding about $250M over a whole Turn.",
+    );
+  });
+
+  it("says why it adds nothing", () => {
+    expect(describeGrantImpact({ ...grantImpact, landingSiteName: null })).toBe(
+      "It adds nothing this Turn, as nothing it raises at a Landing Site is earning a Research Grant. It pays once landed beside them.",
+    );
+    expect(
+      describeGrantImpact({
+        ...grantImpact,
+        assets: 1,
+        alreadyGivenBy: ["Curie Station"],
+      }),
+    ).toBe(
+      "It adds nothing this Turn at Jezero Crater, the best place for it, as Curie Station there already gives this Benefit.",
     );
   });
 });

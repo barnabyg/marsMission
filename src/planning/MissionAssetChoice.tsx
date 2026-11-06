@@ -2,6 +2,7 @@ import { useId } from "react";
 import {
   canFly,
   formatMoney,
+  formatPropellant,
   type AssetChoices,
   type PlannedAsset,
   type ProgramView,
@@ -10,7 +11,10 @@ import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
 import { ActivitySelect } from "./ActivitySelect";
 import { assetImageUrl } from "./assetImages";
-import { describeBenefitImpact } from "./benefitImpactText";
+import {
+  describeBenefitImpact,
+  describeGrantImpact,
+} from "./benefitImpactText";
 import { fitReason, type Fit } from "./missionFit";
 import { ReadinessTag } from "./ReadinessTag";
 import { UnavailableReason } from "./UnavailableReason";
@@ -105,6 +109,46 @@ export function MissionAssetChoice({
             tabIndex={0}
           >
             Benefit +{asset.benefitImpact.extraScience} Science
+          </span>
+        )}
+        {asset.benefit && asset.grantImpact && (
+          // It shows the money its Benefit would add this Turn where it would add most, and its tooltip says what the
+          // Benefit does and where it would add that much, after what a Benefit is.
+          <span
+            className="term benefit-tag"
+            data-term="Benefit"
+            data-detail={`${asset.name}: ${asset.benefit} ${describeGrantImpact(asset.grantImpact)}`}
+            data-testid="benefit-tag"
+            tabIndex={0}
+          >
+            Benefit +{formatMoney(asset.grantImpact.extraGrantMillions)}
+          </span>
+        )}
+        {asset.benefit && asset.makes && (
+          // It shows the ascent propellant it would make over a whole Turn at Mars, and its tooltip says what it makes
+          // and where, after what a Benefit is.
+          <span
+            className="term benefit-tag"
+            data-term="Benefit"
+            data-detail={`${asset.name}: ${asset.benefit} Over a whole Turn at Mars it makes ${formatPropellant(asset.makes.ascentPropellantKgPerTurn)}.`}
+            data-testid="benefit-tag"
+            tabIndex={0}
+          >
+            Benefit +{formatPropellant(asset.makes.ascentPropellantKgPerTurn)}{" "}
+            propellant
+          </span>
+        )}
+        {asset.benefit && asset.habitat && (
+          // It shows how many more days it would give a Crew member at Mars, and its tooltip says what it does for the
+          // Crew there and what those days assume, after what a Benefit is.
+          <span
+            className="term benefit-tag"
+            data-term="Benefit"
+            data-detail={`${asset.name}: ${asset.benefit} A Crew member landing beside it with full Health and no Protection would last about ${asset.habitat.extraDays.toLocaleString("en")} more days at Mars before their Health runs out.`}
+            data-testid="benefit-tag"
+            tabIndex={0}
+          >
+            Benefit +{asset.habitat.extraDays.toLocaleString("en")} days
           </span>
         )}
         {operatingCount > 0 && (

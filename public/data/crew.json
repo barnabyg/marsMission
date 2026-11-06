@@ -63,6 +63,28 @@
     ]
   },
   "publicSupportLossPerMember": 75,
+  "roundTrip": {
+    "name": "Earth return stage",
+    "description": "A stage that waits with the Crew in Mars orbit and brings them home on a later Turn.",
+    "costMillions": 600,
+    "massTonnes": 1.5,
+    "leavesMarsOnDay": 60,
+    "missionEvents": ["trans-earth-injection", "earth-entry"],
+    "ascent": {
+      "missionEvents": ["mars-ascent", "mars-orbit-rendezvous"],
+      "propellantKg": 20000,
+      "samplesPerMember": 10
+    }
+  },
+  "returnVehicle": {
+    "name": "Homeward",
+    "description": "An Earth return stage flown to Mars orbit on its own, with room for Crew already at Mars, which waits there to bring them home on a later Turn.",
+    "costMillions": 1000,
+    "massTonnes": 3.5,
+    "crewRoom": 4,
+    "missionEvents": ["mars-orbit-insertion"]
+  },
+  "publicSupportPerMemberHome": 100,
   "orbitActivities": ["crew-research", "nothing"],
   "surfaceActivities": ["crew-field-research", "nothing"],
   "names": [

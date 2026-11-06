@@ -18,11 +18,15 @@ export function milestoneProblems({
       }
       continue;
     }
-    // Every catalogue has a Crewed Mission, which can land, so Crew can always arrive and land.
+    // Every catalogue has a Crewed Mission, which can land or make a round trip, so Crew can always arrive, land and
+    // come home.
     if (
       "totalScience" in milestone.trigger ||
       "crewArrives" in milestone.trigger ||
-      "crewLands" in milestone.trigger
+      "crewLands" in milestone.trigger ||
+      "crewComesHome" in milestone.trigger ||
+      // Checked with the rest of sample return (`crossCheckSamples.ts`).
+      "samplesComeHome" in milestone.trigger
     ) {
       continue;
     }

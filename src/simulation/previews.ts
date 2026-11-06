@@ -28,6 +28,8 @@ export interface PlannedActivity {
     /** The Research Grant it pays for that Science. Zero if it pays none. */
     researchGrantMillions: number;
   } | null;
+  /** The samples it caches over a whole Turn in service, and the Science they earn once home, or null if it caches none. */
+  cachesPerTurn: { samples: number; science: number } | null;
   /** The Benefit that earnsPerTurn is raised by, as long as the Assets giving it keep operating. Left out if none raises it. */
   raisedBy?: Raise;
 }
@@ -78,6 +80,8 @@ export interface PlannedAsset {
 export interface PlannedMissionEvent {
   eventId: string;
   name: string;
+  /** Whether it is on the way home from a round trip, on a later Turn, rather than on the way to Mars. */
+  homeward: boolean;
   riskBand: string;
   reliabilityLevelId: string;
   reliabilityLevels: {

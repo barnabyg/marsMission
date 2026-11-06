@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import { formatPropellant, propellantMadeBy } from "./ascentPropellant";
 import type { AssetInService } from "./assetsInService";
 import {
   hurt,
@@ -69,7 +70,7 @@ const sheltering = (
 
 /**
  * What sheltering gives up, in the player's terms, for the Assets and Crew at stake, at the raised rate where a Benefit
- * raises it.
+ * raises it, and the ascent propellant any fuel plant there would have made.
  */
 function whatSheltering(
   catalogue: Catalogue,
@@ -78,10 +79,11 @@ function whatSheltering(
   crewAtStake: { crew: CrewAtWork; stays: CrewStay[] }[],
   { fromDay, toDay }: DustStorm,
   raised: Stretch[],
+  labs: AssetInService[],
 ): string {
   const crewGiven = crewAtStake.map(({ crew, stays }) => {
     const earned = (group: CrewAtWork) =>
-      crewResearch(catalogue, rules, group, raised)[0];
+      crewResearch(catalogue, rules, group, raised, labs)[0];
     const full = earned(crew);
     const less = earned(sheltering(crew, stays, { fromDay, toDay }));
     return {
@@ -93,12 +95,13 @@ function whatSheltering(
     };
   });
   const assetsGiven = atStake.map((stay) => {
-    const full = earningsOfStay(catalogue, rules, stay, raised).earned;
+    const full = earningsOfStay(catalogue, rules, stay, raised, labs).earned;
     const less = earningsOfStay(
       catalogue,
       rules,
       { ...stay, shelter: { fromDay, toDay } },
       raised,
+      labs,
     ).earned;
     return {
       science: full.science - less.science,
@@ -110,9 +113,21 @@ function whatSheltering(
   const science = sum(given.map((part) => part.science));
   const publicSupport = sum(given.map((part) => part.publicSupport));
   const grantMillions = sum(given.map((part) => part.grantMillions));
+  const propellantKg = sum(
+    atStake.map(
+      (stay) =>
+        propellantMadeBy(catalogue, stay) -
+        propellantMadeBy(catalogue, { ...stay, shelter: { fromDay, toDay } }),
+    ),
+  );
+  const propellant = `${formatPropellant(propellantKg)} of ascent propellant`;
   if (science === 0 && publicSupport === 0)
-    return "nothing, as none is doing research";
-  return `${science} Science, ${publicSupport} Public Support and ${formatMoney(grantMillions)} of Research Grants`;
+    return propellantKg > 0 ? propellant : "nothing, as none is doing research";
+  const research = `${science} Science, ${publicSupport} Public Support`;
+  const grants = `${formatMoney(grantMillions)} of Research Grants`;
+  return propellantKg > 0
+    ? `${research}, ${grants} and ${propellant}`
+    : `${research} and ${grants}`;
 }
 
 /**
@@ -228,7 +243,7 @@ export function resolveDustStorms(
               answer: "shelter",
               label: "Shelter",
               riskBand: null,
-              description: `Sheltering keeps ${names.join(", ")} safe, but nothing there earns Ongoing Research for the storm's ${days} days. That gives up ${whatSheltering(catalogue, rules, atStake, crewAtStake, storm, raised)}.`,
+              description: `Sheltering keeps ${names.join(", ")} safe, but nothing there earns Ongoing Research for the storm's ${days} days. That gives up ${whatSheltering(catalogue, rules, atStake, crewAtStake, storm, raised, inService)}.`,
             },
             {
               answer: "carryOn",

@@ -11,6 +11,15 @@ import {
   SuppliesOutScene,
 } from "./groundScenes";
 import {
+  CrewHomeScene,
+  EarthEntryScene,
+  MarsAscentScene,
+  MarsOrbitRendezvousScene,
+  ReturnVehicleArrivedScene,
+  SamplesScene,
+  TransEarthInjectionScene,
+} from "./homewardScenes";
+import {
   AssetFailedScene,
   EntryDescentLandingScene,
   FlightProvenScene,
@@ -46,6 +55,13 @@ const scenes: Record<EventPicture, ComponentType> = {
   suppliesOut: SuppliesOutScene,
   assetEnded: AssetEndedScene,
   assetFailed: AssetFailedScene,
+  marsAscent: MarsAscentScene,
+  marsOrbitRendezvous: MarsOrbitRendezvousScene,
+  transEarthInjection: TransEarthInjectionScene,
+  earthEntry: EarthEntryScene,
+  crewHome: CrewHomeScene,
+  samples: SamplesScene,
+  returnVehicleArrived: ReturnVehicleArrivedScene,
 };
 
 /** Draws one of the events column's pictures. */

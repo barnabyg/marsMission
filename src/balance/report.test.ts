@@ -67,7 +67,9 @@ describe("the report", () => {
       ?.trim()
       .split(/\s+/);
 
-  it("gives the same bytes every time", () => {
+  // It plays every strategy twice, which takes about 2.5 s on its own, more with each strategy added, and over Vitest's
+  // 5 s default beside the rest of the tests at below-normal priority.
+  it("gives the same bytes every time", { timeout: 30_000 }, () => {
     expect(balanceReport(files, 3, [launchNothing])).toBe(report);
     expect(balanceReport(files, 3)).toBe(balanceReport(files, 3));
   });

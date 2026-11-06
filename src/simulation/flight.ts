@@ -64,6 +64,11 @@ export interface MissionOutcome {
   deliveredAssets: Asset[];
   /** The names of the Crew it delivered to Mars, which is none if it carried none or lost them on the way. */
   deliveredCrew: string[];
+  /**
+   * The return vehicle it carries, if it carries one: its name, the day it reaches Mars orbit if nothing goes wrong,
+   * and whether it did, which it hasn't if the Mission failed or stopped at a Decision Point before then.
+   */
+  returnVehicle: { name: string; day: number; delivered: boolean } | null;
   /** The Crew it lost on the way, if it did, which costs Public Support as well as publicSupportLost. */
   crewLost: CrewLoss[];
   /** What hit the Crew's Health all at once on the way, such as a Contingency rescue, and who it hit. */
@@ -127,14 +132,24 @@ export interface Flight {
   landingSite: LandingSite | undefined;
   freeReturn: Trajectory["freeReturn"];
   outcome: MissionOutcome;
-  /** How long a landing has waited for a dust storm to pass, which moves it and everything after it. */
+  /** How long a landing has waited for a dust storm to pass, which moves it and everything after it on the way to Mars. */
   daysHeld: number;
-  /** The day a Mission Event happens, after any wait for a dust storm. */
+  /**
+   * The day of the Turn a journey home leaves Mars, on a Turn after the one its Crew arrived in, which Mission Events
+   * timed from leaving Mars count from. Null in a Turn with no journey home.
+   */
+  leavesMarsOn: number | null;
+  /** The day a Mission Event happens: on the way to Mars after any wait for a dust storm, or on the way home. */
   dayOf: (event: MissionEvent) => number;
   /** The Assets not yet delivered when this Mission Event is due. */
   stillOnBoard: (event: MissionEvent) => Asset[];
   /** The names of the Crew not yet delivered when this Mission Event is due, or on this day if it's a day, and still alive then. */
   crewOnBoard: (when: MissionEvent | number) => string[];
+  /**
+   * What is on board besides Assets and Crew when this Mission Event is due, by name: a return vehicle that hasn't
+   * reached Mars orbit yet, or, on a journey home of samples, what flies them and the samples themselves.
+   */
+  cargoOnBoard: (event: MissionEvent) => string[];
   /** What the flight has done to a Crew member's Health from launch to this day. */
   healthInFlight: (name: string, toDay: number) => HealthCourse;
   /** The days the Crew have had no Supplies left on board, if they keep flying to the end of the Turn. */
@@ -209,33 +224,22 @@ function whatLands(
   return named.charAt(0).toUpperCase() + named.slice(1);
 }
 
-/** The Turn's Mission on the launch pad, with nothing yet happened to it. */
-export function startFlight(
-  catalogue: Catalogue,
-  rules: Rules,
-  program: Program,
-  plan: TurnPlan,
-  answers: DecisionAnswers,
-): Flight {
-  const { mission } = plan;
-  const vehicle = catalogue.launchVehicles.find(
-    (candidate) => candidate.id === mission?.launchVehicleId,
-  );
-  const assets = (mission?.assetIds ?? []).flatMap((assetId) =>
-    catalogue.assets.filter((candidate) => candidate.id === assetId),
-  );
-  const crew = crewNamesFor(catalogue, program, mission);
-  const radiationCutPercent =
-    protectionOf(catalogue, mission)?.radiationCutPercent ?? 0;
-  const landingSite = rules.landingSiteById(mission?.landingSiteId);
-  const outcome: MissionOutcome = {
-    vehicleName: vehicle?.name ?? null,
+/** The outcome of a flight before anything has happened to it, with everything it carries to be delivered. */
+export function outcomeBefore(
+  vehicleName: string | null,
+  assets: Asset[],
+  crew: string[],
+  landingSite: LandingSite | undefined,
+): MissionOutcome {
+  return {
+    vehicleName,
     assets,
     entries: [],
     failedEvent: undefined,
     failedOnDay: null,
     deliveredAssets: assets,
     deliveredCrew: crew,
+    returnVehicle: null,
     crewLost: [],
     crewBlows: [],
     crewHealth: [],
@@ -252,6 +256,49 @@ export function startFlight(
     heldLanding: null,
     goNoGo: null,
   };
+}
+
+/**
+ * The Turn's Mission on the launch pad, with nothing yet happened to it, and the day a journey home leaves Mars if the
+ * Turn has one.
+ */
+export function startFlight(
+  catalogue: Catalogue,
+  rules: Rules,
+  program: Program,
+  plan: TurnPlan,
+  answers: DecisionAnswers,
+  leavesMarsOn: number | null = null,
+): Flight {
+  const { mission } = plan;
+  const vehicle = catalogue.launchVehicles.find(
+    (candidate) => candidate.id === mission?.launchVehicleId,
+  );
+  const assets = (mission?.assetIds ?? []).flatMap((assetId) =>
+    catalogue.assets.filter((candidate) => candidate.id === assetId),
+  );
+  const crew = crewNamesFor(catalogue, program, mission);
+  const radiationCutPercent =
+    protectionOf(catalogue, mission)?.radiationCutPercent ?? 0;
+  const landingSite = rules.landingSiteById(mission?.landingSiteId);
+  const outcome = outcomeBefore(
+    vehicle?.name ?? null,
+    assets,
+    crew,
+    landingSite,
+  );
+  const returnVehicle = mission?.returnVehicle
+    ? catalogue.crew.returnVehicle
+    : null;
+  const returnVehicleDay =
+    returnVehicle && rules.deliveryDay(returnVehicle, mission);
+  if (returnVehicle && returnVehicleDay !== null) {
+    outcome.returnVehicle = {
+      name: returnVehicle.name,
+      day: returnVehicleDay,
+      delivered: true,
+    };
+  }
   const shorten = (onBoard: Asset[], to: (days: number) => number) => {
     for (const asset of onBoard) {
       const days =
@@ -310,7 +357,11 @@ export function startFlight(
     freeReturn: rules.trajectoryFor(mission).freeReturn,
     outcome,
     daysHeld: 0,
-    dayOf: (event) => rules.dayOf(event, mission) + flight.daysHeld,
+    leavesMarsOn,
+    dayOf: (event) =>
+      event.timing.from === "leavingMars"
+        ? rules.dayOf(event, mission, flight.leavesMarsOn)
+        : rules.dayOf(event, mission) + flight.daysHeld,
     stillOnBoard: (event) =>
       assets.filter(
         (asset) =>
@@ -323,6 +374,12 @@ export function startFlight(
         ? flight.aliveOn(crew, day)
         : [];
     },
+    cargoOnBoard: (event) =>
+      returnVehicle &&
+      returnVehicleDay !== null &&
+      returnVehicleDay >= rules.dayOf(event, mission)
+        ? [returnVehicle.name]
+        : [],
     healthInFlight: (name, toDay) => healthWith(name, toDay, settled().outages),
     suppliesOutages: () => settled().outages,
     suppliesLeftOn: (day) =>

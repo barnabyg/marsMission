@@ -56,11 +56,20 @@ export function crewProblems(
     .flatMap(({ names }) => names);
   const turnDays = daysBetween(before.date, after.date);
   const particles = summary.solarParticleEvent;
-  // With the same Crew all Turn, Supplies fall by exactly a Turn's worth, and never below zero.
+  // A habitat landing brings Supplies of its own to the Crew at its Landing Site.
+  const keysBefore = new Set(before.operatingAssets.map(({ key }) => key));
+  const habitatLandedAt = new Set(
+    after.operatingAssets.flatMap(({ key, kind, landingSiteId }) =>
+      kind === "habitat" && !keysBefore.has(key) ? [landingSiteId] : [],
+    ),
+  );
+  // With the same Crew all Turn, and no habitat landing beside them, Supplies fall by exactly a Turn's worth, and never
+  // below zero.
   const unchangedPlaces = after.crew.flatMap((place) => {
     const earlier = before.crew.find(({ key }) => key === place.key);
     const same =
       earlier !== undefined &&
+      !habitatLandedAt.has(place.landingSiteId) &&
       sorted(earlier.members.map(({ name }) => name)) ===
         sorted(place.members.map(({ name }) => name));
     return same ? [{ earlier, later: place }] : [];

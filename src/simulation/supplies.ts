@@ -194,7 +194,7 @@ export function settleSupplies<User extends SuppliesUser>(
 }
 
 /**
- * When Supplies ran out this Turn, on the way or in each place at Mars, for the events column and the Turn summary.
+ * When Supplies ran out this Turn, on the way, on the way home or in each place at Mars, for the events column and the Turn summary.
  * Crew who start a Turn with none left are told so again on its first day.
  */
 export function suppliesRanOut(
@@ -202,6 +202,8 @@ export function suppliesRanOut(
   program: Program,
   atWork: CrewAtWork[],
   flown: Pick<MissionOutcome, "crewSuppliesOutOn">,
+  /** The journey home, if one flew, whose Crew can run out on the way. */
+  homeward: Pick<MissionOutcome, "crewSuppliesOutOn" | "vehicleName"> | null,
 ): {
   entries: SuppliesOutEntry[];
   summary: TurnSummary["suppliesRanOut"];
@@ -235,9 +237,19 @@ export function suppliesRanOut(
             day: flown.crewSuppliesOutOn,
           },
         ];
+  const onTheWayHome =
+    homeward?.crewSuppliesOutOn === undefined ||
+    homeward.crewSuppliesOutOn === null
+      ? []
+      : [
+          {
+            crew: `Crew aboard the ${homeward.vehicleName ?? ""}`,
+            day: homeward.crewSuppliesOutOn,
+          },
+        ];
   return {
     entries: atMars.map(({ entry }) => entry),
-    summary: [...onTheWay, ...atMars]
+    summary: [...onTheWay, ...onTheWayHome, ...atMars]
       .toSorted((first, second) => first.day - second.day)
       .map(({ crew, day }) => ({ crew, on: addDays(program.date, day) })),
   };

@@ -14,6 +14,8 @@ import {
   type LandingSequence,
   type SequenceNow,
 } from "./sequence";
+import type { AscentNow } from "./ascent";
+import { AscentAtSite } from "./AscentView";
 import { crewFiguresOn, crewLandersStanding } from "./crewAtSite";
 import { CrewFigure } from "./crewModels";
 import { DustStormEffect } from "./DustStormEffect";
@@ -39,6 +41,10 @@ const labelHeights: Record<SurfaceModel, number> = {
   lander: 1.5,
   rover: 1.05,
   crewLander: 2.2,
+  fuelPlant: 1.5,
+  habitat: 1.4,
+  lab: 1.45,
+  ascentVehicle: 1.95,
 };
 
 function Terrain({ siteName }: { siteName: string }) {
@@ -185,11 +191,14 @@ export function SurfaceScene({
   day,
   siteName,
   sequence,
+  ascent,
 }: {
   timeline: Pick<Timeline, "assetsAtMars" | "dustStorms">;
   day: number;
   siteName: string;
   sequence: SequenceNow | null;
+  /** The Turn's Mars ascent, once it has started, which stays to show what it left behind. */
+  ascent: AscentNow | null;
 }) {
   const here = sequenceAt(sequence, siteName);
   return (
@@ -229,6 +238,9 @@ export function SurfaceScene({
           elapsedMs={here.elapsedMs}
           siteName={siteName}
         />
+      )}
+      {ascent?.sequence.siteName === siteName && (
+        <AscentAtSite ascent={ascent} siteName={siteName} />
       )}
       {dustStormAt(timeline, day, siteName) && <DustStormEffect />}
       {sequenceRunning(here) && (

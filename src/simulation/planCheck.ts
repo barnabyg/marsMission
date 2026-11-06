@@ -6,6 +6,9 @@ import { developmentsStarting } from "./development";
 import type { PlanCheck } from "./previews";
 import type { PlannedMission, Program, TurnPlan } from "./types";
 import { endedAssetProblems, upkeepFor } from "./upkeep";
+import { journeyHomeProblems } from "./earthReturnStages";
+import { sampleReturnProblems } from "./sampleReturn";
+import { checkReturnVehicle } from "./returnVehicles";
 
 const noMission = { costMillions: 0, massTonnes: 0, capacityTonnes: 0 };
 
@@ -14,6 +17,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
   const {
     activityById,
     assetReliabilityFor,
+    homewardEventsFor,
     knownLandingSites,
     missionEventsFor,
     reliabilityLevelFor,
@@ -86,6 +90,8 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
       ...operatingActivityProblems(program, plan),
       ...endedAssetProblems(program, plan),
       ...operatingCrewProblems(catalogue, rules, program, plan),
+      ...journeyHomeProblems(catalogue, rules, program, plan),
+      ...sampleReturnProblems(catalogue, rules, program, plan),
       ...mission.problems,
       ...developments.problems,
     ];
@@ -148,7 +154,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     } else
       problems.push(`There is no Launch Vehicle called "${launchVehicleId}".`);
 
-    if (assetIds.length === 0 && !planned.crew) {
+    if (assetIds.length === 0 && !planned.crew && !planned.returnVehicle) {
       problems.push("A Mission must carry at least one Asset or Crew.");
     }
     if (new Set(assetIds).size < assetIds.length) {
@@ -168,7 +174,15 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
     costMillions += crew.costMillions;
     massTonnes += crew.massTonnes;
     problems.push(...crew.problems);
-    const plannedEvents = missionEventsFor(planned);
+    const fetching = checkReturnVehicle(catalogue, rules, program, planned);
+    costMillions += fetching.costMillions;
+    massTonnes += fetching.massTonnes;
+    problems.push(...fetching.problems);
+    // A journey home is bought with the round trip or return vehicle that makes it, though it flies on a later Turn.
+    const plannedEvents = [
+      ...missionEventsFor(planned),
+      ...homewardEventsFor(planned),
+    ];
     if (new Set(contingencyIds).size < contingencyIds.length) {
       problems.push("A Mission can't buy the same Contingency twice.");
     }

@@ -79,6 +79,25 @@ export function journeyIsReturning(journey: JourneyDays, day: number): boolean {
   );
 }
 
+/** A point along a way between the planets, from one planet on one day of the Turn to the other on a later day, sweeping round with them. */
+function journeyBetween(
+  startDate: string,
+  from: { planet: Planet; day: number },
+  to: { planet: Planet; day: number },
+  progress: number,
+): PlanePosition {
+  const fromLongitude = longitudeDegrees(
+    from.planet,
+    addDays(startDate, from.day),
+  );
+  const toLongitude = longitudeDegrees(to.planet, addDays(startDate, to.day));
+  const sweep = (((toLongitude - fromLongitude) % 360) + 360) % 360;
+  const eased = progress * progress * (3 - 2 * progress);
+  const fromRadius = orbits[from.planet].radius;
+  const radius = fromRadius + (orbits[to.planet].radius - fromRadius) * eased;
+  return fromPolar(radius, fromLongitude + sweep * progress);
+}
+
 /** A point along the way back: inwards from where Mars was on arrival to where Earth will be on the day it's back. */
 export function returnJourneyPosition(
   startDate: string,
@@ -86,13 +105,26 @@ export function returnJourneyPosition(
   progress: number,
 ): PlanePosition {
   const backOnDay = journey.returnsToEarth?.backOnDay ?? journey.arrivalDay;
-  const from = longitudeDegrees("mars", addDays(startDate, journey.arrivalDay));
-  const to = longitudeDegrees("earth", addDays(startDate, backOnDay));
-  const sweep = (((to - from) % 360) + 360) % 360;
-  const eased = progress * progress * (3 - 2 * progress);
-  const radius =
-    orbits.mars.radius + (orbits.earth.radius - orbits.mars.radius) * eased;
-  return fromPolar(radius, from + sweep * progress);
+  return journeyBetween(
+    startDate,
+    { planet: "mars", day: journey.arrivalDay },
+    { planet: "earth", day: backOnDay },
+    progress,
+  );
+}
+
+/** A point along a journey home from Mars: inwards from where Mars is on the day it leaves orbit to where Earth is on the day it gets home. */
+export function homewardPosition(
+  startDate: string,
+  { fromDay, toDay }: { fromDay: number; toDay: number },
+  progress: number,
+): PlanePosition {
+  return journeyBetween(
+    startDate,
+    { planet: "mars", day: fromDay },
+    { planet: "earth", day: toDay },
+    progress,
+  );
 }
 
 /** A point along the way out: outwards from Earth at launch to where Mars will be on arrival. */

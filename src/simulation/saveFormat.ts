@@ -185,7 +185,59 @@ const format8 = format7.extend({
   crewSupplies: z.record(z.string(), z.number().nonnegative()),
 });
 
-const newestFormat = format8;
+/**
+ * Adds round trips: the Earth return stages in Mars orbit, each with the Crew it waits to bring home and the
+ * Reliability and Contingencies bought for their journey. A save from before them has none, so every Crew member at
+ * Mars in it went one way.
+ */
+const format9 = format8.extend({
+  earthReturnStages: z.array(
+    z.strictObject({
+      arrivedOn: isoDate,
+      crew: z.array(z.string()),
+      reliability: z.record(z.string(), z.string()),
+      contingencyIds: z.array(z.string()),
+    }),
+  ),
+});
+
+/**
+ * Adds ascent propellant: what fuel plants have made at each Landing Site, in kilograms, by the site's id. A save from
+ * before fuel plants has none anywhere.
+ */
+const format10 = format9.extend({
+  ascentPropellantKg: z.record(z.string(), count),
+});
+
+/**
+ * Adds the Supplies held in habitats, in kilograms, by the Landing Site's id. A save from before habitats has none
+ * anywhere.
+ */
+const format11 = format10.extend({
+  habitatSuppliesKg: z.record(z.string(), z.number().nonnegative()),
+});
+
+const homewardPurchase = z.strictObject({
+  reliability: z.record(z.string(), z.string()),
+  contingencyIds: z.array(z.string()),
+});
+
+/**
+ * Adds samples: those cached at each Landing Site, by the site's id, and what the Missions of ascent vehicles and Earth
+ * return orbiters bought for the samples' journey home, on each of them. A save from before samples has none anywhere,
+ * and none of its Assets has bought anything for a journey home.
+ */
+const format12 = format11.extend({
+  samplesAtSites: z.record(z.string(), count),
+  operatingAssets: z.array(
+    z.strictObject({
+      ...format7.shape.operatingAssets.element.shape,
+      homeward: homewardPurchase.optional(),
+    }),
+  ),
+});
+
+const newestFormat = format12;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -275,6 +327,34 @@ const formats: readonly SaveFormat[] = [
       crew: [],
       crewActivities: {},
       crewSupplies: {},
+    }),
+  },
+  {
+    schema: format8,
+    upgrade: (old: z.output<typeof format8>): z.output<typeof format9> => ({
+      ...old,
+      earthReturnStages: [],
+    }),
+  },
+  {
+    schema: format9,
+    upgrade: (old: z.output<typeof format9>): z.output<typeof format10> => ({
+      ...old,
+      ascentPropellantKg: {},
+    }),
+  },
+  {
+    schema: format10,
+    upgrade: (old: z.output<typeof format10>): z.output<typeof format11> => ({
+      ...old,
+      habitatSuppliesKg: {},
+    }),
+  },
+  {
+    schema: format11,
+    upgrade: (old: z.output<typeof format11>): z.output<typeof format12> => ({
+      ...old,
+      samplesAtSites: {},
     }),
   },
   { schema: newestFormat },

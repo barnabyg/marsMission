@@ -70,5 +70,53 @@
     },
     "failureProbability": "landingSite",
     "publicSupportLoss": 20
+  },
+  {
+    "id": "mars-ascent",
+    "name": "Mars ascent",
+    "description": "The ascent engine lifted {aboard} off the surface of Mars and into orbit.",
+    "failureDescription": "The ascent engine failed as it lifted {aboard} off the surface of Mars.",
+    "timing": {
+      "from": "leavingMars",
+      "days": 0
+    },
+    "failureProbability": 0.06,
+    "publicSupportLoss": 20
+  },
+  {
+    "id": "mars-orbit-rendezvous",
+    "name": "Mars orbit rendezvous",
+    "description": "The ascent craft carrying {aboard} met {stage} in Mars orbit and docked with it.",
+    "failureDescription": "The ascent craft couldn't dock with {stage}, leaving {aboard} stranded in Mars orbit.",
+    "timing": {
+      "from": "leavingMars",
+      "days": 1
+    },
+    "failureProbability": 0.03,
+    "publicSupportLoss": 20
+  },
+  {
+    "id": "trans-earth-injection",
+    "name": "Trans-Earth injection",
+    "description": "{Stage} fired its engine and sent {aboard} out of Mars orbit on the way home.",
+    "failureDescription": "The engine of {stage} failed, leaving {aboard} with no way out of Mars orbit.",
+    "timing": {
+      "from": "leavingMars",
+      "days": 2
+    },
+    "failureProbability": 0.05,
+    "publicSupportLoss": 20
+  },
+  {
+    "id": "earth-entry",
+    "name": "Earth entry",
+    "description": "The capsule carrying {aboard} came through Earth's atmosphere and splashed down under its parachutes.",
+    "failureDescription": "The capsule's heat shield failed as it came into Earth's atmosphere.",
+    "timing": {
+      "from": "leavingMars",
+      "days": 210
+    },
+    "failureProbability": 0.03,
+    "publicSupportLoss": 20
   }
 ]

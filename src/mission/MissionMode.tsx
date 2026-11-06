@@ -37,6 +37,14 @@ import {
   SpacecraftControls,
   spacecraftUnavailableReason,
 } from "./spacecraft/SpacecraftControls";
+import {
+  ascentNow,
+  ascentSequenceOf,
+  sitesDuringAscent,
+} from "./surface/ascent";
+import { homewardInSpace, homewardOf, homewardQuiet } from "./homeward";
+import { marsRendezvousNow } from "./spacecraft/marsRendezvous";
+import { earthEntryNow } from "./spacecraft/splashdown";
 import { useMissionView } from "./useMissionView";
 import { usePlayback } from "./usePlayback";
 import { useSounds } from "./useSounds";
@@ -85,8 +93,21 @@ export function MissionMode({
     [timeline],
   );
   const sequence = sequenceNow(landingSequence, state);
-  const sites = sitesDuring(sitesToShow(timeline, state.day), sequence);
-  const spacecraftAvailable = spacecraftHasSomethingToShow(timeline, state);
+  const homeward = useMemo(() => homewardOf(timeline), [timeline]);
+  const ascentSequence = useMemo(
+    () => ascentSequenceOf(timeline, homeward),
+    [timeline, homeward],
+  );
+  const ascent = ascentNow(ascentSequence, homeward, state);
+  const sites = sitesDuringAscent(
+    sitesDuring(sitesToShow(timeline, state.day), sequence),
+    ascent,
+  );
+  const inSpace = homewardInSpace(homeward, state);
+  const marsRendezvous = marsRendezvousNow(homeward, inSpace);
+  const earthEntry = earthEntryNow(homeward, inSpace);
+  const spacecraftAvailable =
+    spacecraftHasSomethingToShow(timeline, state) || inSpace !== null;
   const particles = solarParticleEventShowing(timeline.entries, state);
   const refuelling = useMemo(() => refuellingOf(timeline.entries), [timeline]);
   const earthOrbit = earthOrbitNow(refuelling, state);
@@ -97,7 +118,10 @@ export function MissionMode({
     spacecraftAvailable
       ? null
       : spacecraftFallback(timeline.mission, state.day),
-    (entryIndex) => rendezvousHasPlayed(refuelling, state, entryIndex),
+    (entryIndex) =>
+      rendezvousHasPlayed(refuelling, state, entryIndex) ||
+      homewardQuiet(homeward, state, entryIndex),
+    homeward?.siteName ?? null,
   );
   /** Why each view's button is disabled, while its view has nothing to show. */
   const unavailable: Partial<Record<MissionViewId, string>> = {
@@ -123,8 +147,11 @@ export function MissionMode({
           view={view}
           site={site}
           sequence={sequence}
+          ascent={ascent}
           particles={particles}
           earthOrbit={earthOrbit}
+          marsRendezvous={marsRendezvous}
+          earthEntry={earthEntry}
           operatingAssetCount={operatingAssets.length}
         />
       </Suspense>
@@ -232,6 +259,7 @@ export function MissionMode({
           sites={sites}
           site={site}
           sequence={sequence}
+          ascent={ascent}
           onPickSite={pickSite}
         />
         <SpacecraftControls
@@ -241,6 +269,8 @@ export function MissionMode({
           available={spacecraftAvailable}
           particles={particles}
           earthOrbit={earthOrbit}
+          marsRendezvous={marsRendezvous}
+          earthEntry={earthEntry}
         />
         <h2>Operating at Mars</h2>
         <ul data-testid="operating-at-mars">

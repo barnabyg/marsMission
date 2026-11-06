@@ -1,130 +1,30 @@
 import { expect, test, type Page } from "@playwright/test";
-import { storageKeyFor } from "../src/save/saveStore";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
 import {
   chooseAssets,
   endTurnWithoutLaunching,
   overrideProgramData,
 } from "./helpers";
+import { openBusyProgram, realMilestones } from "./busyProgram";
 import { screenSizes, whatScrolls, unreadableText } from "./layoutHelpers";
 import { successSeed } from "./seeds";
 
 const realFiles = realCatalogueFiles();
-/** Every Asset a new Program can choose, leaving out any that need Development first. */
-const allAssets = realFiles.assets
-  .filter(({ technologyReadiness }) => technologyReadiness !== "not-built")
-  .map(({ name }) => name);
-const realMilestones = realFiles.milestones;
-const allLandingSiteIds = realFiles.landingSites.map(({ id }) => id);
-
 /**
- * Opens Planning Mode with every Milestone earned and several operating Assets listed, and if asked,
- * with nothing left to Survey, which adds a note to each panel with an Asset set to Survey.
+ * Every Asset a new Program can choose, leaving out any that need Development first, and the fuel plant, the habitat,
+ * the Mars lab, the ascent vehicle and the Earth return orbiter, which the Meridian Colossus can't carry beside all the
+ * others.
  */
-async function openBusyProgram(
-  page: Page,
-  { allSurveyed = false, colossusBuilt = false, crewAtMars = false } = {},
-): Promise<void> {
-  const saved = busyProgram(allSurveyed);
-  const developed = {
-    ...saved.program,
-    provenTechnologyIds: [],
-    developments: [{ technologyId: "meridian-colossus", finishesOnTurn: 9 }],
-    operatingAssets: saved.program.operatingAssets.map((asset) => ({
-      ...asset,
-      flewUnproven: false,
-    })),
-  };
-  await page.addInitScript(
-    ([key, value]) => {
-      localStorage.setItem(key, value);
-    },
-    [
-      storageKeyFor("automatic"),
-      JSON.stringify(
-        crewAtMars
-          ? {
-              // Format 8 holds Crew, here with the largest Crew in Mars orbit.
-              formatVersion: 8,
-              program: {
-                ...developed,
-                // Enough for a large Crewed Mission and a lander, so that nothing shows a problem.
-                moneyMillions: 9000,
-                crew: realFiles.crew.names.slice(0, 4).map((name) => ({
-                  name,
-                  health: realFiles.crew.maxHealth,
-                  arrivedOn: "2043-07-01",
-                  location: { kind: "marsOrbit" },
-                  protectionId: realFiles.crew.protection[0]?.id,
-                })),
-                crewActivities: { "mars-orbit": "crew-research" },
-                crewSupplies: { "mars-orbit": 3500 },
-              },
-            }
-          : colossusBuilt
-            ? // Format 7 holds Development, here with the Meridian Colossus built.
-              { formatVersion: 7, program: developed }
-            : saved,
-      ),
-    ] as const,
-  );
-  await page.goto("/");
-  await page.getByRole("button", { name: "Continue this Program" }).click();
-  await expect(page.getByTestId("turn-number")).toHaveText("9");
-}
-
-/** A Program in save format 6 with every Milestone earned and several operating Assets. */
-function busyProgram(allSurveyed: boolean) {
-  return {
-    formatVersion: 6,
-    program: {
-      seed: successSeed,
-      turnNumber: 9,
-      date: "2045-01-01",
-      // Enough for every Asset that can fly, on the Meridian Colossus, with every Contingency and Development.
-      moneyMillions: 20000,
-      publicSupport: 200,
-      science: 800,
-      milestoneIds: realMilestones.map(({ id }) => id),
-      landedSiteIds: ["jezero-crater"],
-      knownLandingSiteIds: allSurveyed
-        ? allLandingSiteIds
-        : ["jezero-crater", "gale-crater"],
-      surveyedLandingSiteIds: allSurveyed ? allLandingSiteIds : [],
-      fundingThresholdsPaid: [250],
-      // A lander and a rover at a Landing Site too, whose rows are the longest and whose research lengthens the panel's text.
-      operatingAssets: Array.from({ length: 8 }, (_, index) => ({
-        ...(index < 6
-          ? {
-              assetId: "pathfinder-orbiter",
-              name: "Pathfinder Orbiter",
-              kind: "orbiter",
-              landingSiteId: null,
-              activityId: "survey",
-            }
-          : index < 7
-            ? {
-                assetId: "prospector-lander",
-                name: "Prospector Lander",
-                kind: "lander",
-                landingSiteId: "jezero-crater",
-                activityId: "surface-research",
-              }
-            : {
-                assetId: "trailblazer-rover",
-                name: "Trailblazer Rover",
-                kind: "rover",
-                landingSiteId: "jezero-crater",
-                activityId: "long-traverse",
-              }),
-        arrivedOn: `203${index}-08-01`,
-        serviceLifeDays: 9000,
-        reliabilityLevelId: "none",
-      })),
-      status: { kind: "active" },
-    },
-  };
-}
+const allAssets = realFiles.assets
+  .filter(
+    ({ technologyReadiness, makes, habitat, benefit, sampleReturn }) =>
+      technologyReadiness !== "not-built" &&
+      makes === undefined &&
+      habitat === undefined &&
+      benefit?.raises !== "siteResearchGrants" &&
+      sampleReturn === undefined,
+  )
+  .map(({ name }) => name);
 
 /** Ticks every Asset that can fly, on the Meridian Colossus, the only Launch Vehicle that carries them all. */
 async function chooseEveryAsset(page: Page): Promise<void> {
@@ -321,85 +221,6 @@ for (const size of screenSizes) {
       await page
         .getByRole("combobox", { name: "Trajectory" })
         .selectOption("free-return");
-      await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      expect(await whatScrolls(page)).toEqual([]);
-      for (const name of ["Launch Mission", "End Turn without launching"]) {
-        await expect(page.getByRole("button", { name })).toBeInViewport({
-          ratio: 1,
-        });
-      }
-    });
-
-    test("Planning Mode fits on one screen with Crew at Mars, and a Crewed Mission with everything else chosen", async ({
-      page,
-    }) => {
-      await openBusyProgram(page, { crewAtMars: true });
-      await page
-        .getByRole("combobox", { name: "Launch Vehicle" })
-        .selectOption("meridian-colossus");
-      await page.getByRole("checkbox", { name: /Crewed Mission/ }).check();
-      // The smallest Crew, which leaves room for a lander, Supplies, Contingencies and a Free-return, so that a landing
-      // is planned as well.
-      await page.getByRole("combobox", { name: "Crew size" }).selectOption("2");
-      await page
-        .getByRole("combobox", { name: "Protection" })
-        .selectOption("protection-light-shielding");
-      await chooseAssets(page, ["Prospector Lander"]);
-      for (const contingency of await page
-        .getByRole("checkbox", { name: /Contingency/ })
-        .all()) {
-        await contingency.check();
-      }
-      await page
-        .getByRole("combobox", { name: "Trajectory" })
-        .selectOption("free-return");
-      await expect(page.getByTestId("crew-joining")).toBeVisible();
-      await expect(page.getByTestId("crew-at-mars")).toContainText(
-        realFiles.crew.names[3] ?? "",
-      );
-      await expect(page.getByRole("alert")).toHaveCount(0);
-      await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      expect(await whatScrolls(page)).toEqual([]);
-      for (const name of ["Launch Mission", "End Turn without launching"]) {
-        await expect(page.getByRole("button", { name })).toBeInViewport({
-          ratio: 1,
-        });
-      }
-    });
-
-    test("Planning Mode fits on one screen with Crew at Mars, and a Crewed Mission that lands with everything else chosen", async ({
-      page,
-    }) => {
-      await openBusyProgram(page, { crewAtMars: true });
-      await page
-        .getByRole("combobox", { name: "Launch Vehicle" })
-        .selectOption("meridian-colossus");
-      await page.getByRole("checkbox", { name: /Crewed Mission/ }).check();
-      // The smallest Crew, which leaves room for a lander, Supplies, Contingencies and a Free-return.
-      await page.getByRole("combobox", { name: "Crew size" }).selectOption("2");
-      // Landing, they can't join the Crew in Mars orbit, so they choose an Activity of their own, which is the widest row.
-      await page
-        .getByRole("combobox", { name: "Crew destination" })
-        .selectOption("landingSite");
-      await page
-        .getByRole("combobox", { name: "Protection" })
-        .selectOption("protection-light-shielding");
-      await chooseAssets(page, ["Prospector Lander"]);
-      for (const contingency of await page
-        .getByRole("checkbox", { name: /Contingency/ })
-        .all()) {
-        await contingency.check();
-      }
-      await page
-        .getByRole("combobox", { name: "Trajectory" })
-        .selectOption("free-return");
-      await expect(
-        page.getByRole("combobox", {
-          name: "Activity for the Crew",
-          exact: true,
-        }),
-      ).toBeVisible();
-      await expect(page.getByRole("alert")).toHaveCount(0);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
       expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {

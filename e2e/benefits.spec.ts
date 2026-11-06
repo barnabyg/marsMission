@@ -33,7 +33,10 @@ test("puts a relay orbiter at Mars beside a lander and sees the raised earnings"
     .getByTestId("benefit-tag");
   // Nothing is on the surface yet, so it would add nothing this Turn.
   await expect(tag).toHaveText("Benefit +0 Science");
-  await expect(page.getByTestId("benefit-tag")).toHaveCount(1);
+  // Only the relay raises research; the fuel plant's tag is for the propellant it makes.
+  await expect(
+    page.getByTestId("benefit-tag").filter({ hasText: "Science" }),
+  ).toHaveCount(1);
   await tag.hover();
   await expect(page.getByRole("tooltip")).toContainText(
     "Courier Relay: Raises the Ongoing Research of every Asset and Crew on the surface",

@@ -37,5 +37,57 @@
     "extraPublicSupportLoss": 15,
     "troubleDescription": "{lander} came in too fast over {site}. The retro thrusters could be fired for a last try at slowing down.",
     "rescueDescription": "{lander} made a hard landing at {site}, shaken but working."
+  },
+  {
+    "id": "backup-engine",
+    "name": "Backup engine",
+    "description": "A second engine on the Earth return stage, for another try at leaving Mars orbit.",
+    "missionEvent": "trans-earth-injection",
+    "costMillions": 80,
+    "massTonnes": 0.3,
+    "rescueFailureProbability": 0.3,
+    "serviceLifeLossPercent": 0,
+    "extraPublicSupportLoss": 10,
+    "troubleDescription": "The engine of {stage} has failed in Mars orbit. The backup engine could be lit for another try at the burn home.",
+    "rescueDescription": "The backup engine fired and sent {aboard} on the way home."
+  },
+  {
+    "id": "ascent-engine-restart",
+    "name": "Ascent engine restart",
+    "description": "A restart system for the ascent engine, for another try at climbing into Mars orbit.",
+    "missionEvent": "mars-ascent",
+    "costMillions": 100,
+    "massTonnes": 0.3,
+    "rescueFailureProbability": 0.35,
+    "serviceLifeLossPercent": 0,
+    "extraPublicSupportLoss": 10,
+    "troubleDescription": "The ascent engine has shut down early, leaving {aboard} short of Mars orbit. It could be restarted for another try.",
+    "rescueDescription": "The ascent engine relit and lifted {aboard} into Mars orbit at the second try."
+  },
+  {
+    "id": "manual-docking",
+    "name": "Manual docking",
+    "description": "A backup docking system that can be steered by hand, by the Crew aboard or from Earth, for another try at docking in Mars orbit.",
+    "missionEvent": "mars-orbit-rendezvous",
+    "costMillions": 40,
+    "massTonnes": 0.1,
+    "rescueFailureProbability": 0.3,
+    "serviceLifeLossPercent": 0,
+    "extraPublicSupportLoss": 10,
+    "troubleDescription": "The automatic docking with {stage} has failed. The ascent craft could be steered in by hand for another try.",
+    "rescueDescription": "The ascent craft docked with {stage} at the second attempt, steered in by hand."
+  },
+  {
+    "id": "backup-parachutes",
+    "name": "Backup parachutes",
+    "description": "A second set of parachutes for the capsule, for a last chance at a safe splashdown.",
+    "missionEvent": "earth-entry",
+    "costMillions": 60,
+    "massTonnes": 0.2,
+    "rescueFailureProbability": 0.4,
+    "serviceLifeLossPercent": 0,
+    "extraPublicSupportLoss": 10,
+    "troubleDescription": "The capsule's main parachutes didn't open as it came down through Earth's atmosphere. The backup parachutes could still be deployed.",
+    "rescueDescription": "The backup parachutes opened late, and the capsule hit the sea hard with {aboard} inside."
   }
 ]

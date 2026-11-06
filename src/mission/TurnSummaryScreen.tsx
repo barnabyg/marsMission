@@ -4,6 +4,7 @@ import { SummaryChanges } from "./SummaryChanges";
 import { SummaryEvents } from "./SummaryEvents";
 import { SummaryMilestones } from "./SummaryMilestones";
 import { SummaryOutcomes } from "./SummaryOutcomes";
+import { SummarySamples } from "./SummarySamples";
 
 interface TurnSummaryScreenProps {
   summary: TurnSummary;
@@ -31,6 +32,7 @@ export function TurnSummaryScreen({
       <SummaryMilestones milestones={summary.milestones} />
       <div className="turn-summary-details">
         <SummaryEvents summary={summary} />
+        <SummarySamples summary={summary} />
         <SummaryOutcomes summary={summary} />
       </div>
       <button type="button" className="primary" onClick={onContinue}>

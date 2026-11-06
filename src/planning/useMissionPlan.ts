@@ -34,6 +34,12 @@ export interface MissionPlan {
   chooseCrewSupplies: (suppliesId: string) => void;
   /** Chooses the Protection the Crewed Mission carries, by id. */
   chooseCrewProtection: (protectionId: string) => void;
+  /** Whether the Crew go on a round trip, with an Earth return stage, which only Crew staying in Mars orbit can. */
+  crewRoundTrip: boolean;
+  chooseCrewRoundTrip: (roundTrip: boolean) => void;
+  /** The place at Mars, by key, whose Crew with no way home the Mission's return vehicle is for, or null if it has none. */
+  returnVehicleFor: string | null;
+  chooseReturnVehicleFor: (forCrewAt: string | null) => void;
   /** Whether the Mission carries an Asset or Crew that land at a Landing Site. */
   landsOnMars: boolean;
   /** The Landing Site chosen, which only a Mission carrying an Asset or Crew that land has. */
@@ -48,7 +54,7 @@ export interface MissionPlan {
   /** The plan that ends the Turn without launching, which keeps the Activities and Developments chosen. */
   withoutLaunching: TurnPlan;
   withoutLaunchingProblems: string[];
-  /** Whether no Asset or Crew is ticked, so the Turn can only end without launching. */
+  /** Whether no Asset, Crew or return vehicle is ticked, so the Turn can only end without launching. */
   nothingTicked: boolean;
   /** What the Turn will spend: the Mission, Developments and Upkeep, or only the Developments and Upkeep with nothing ticked. */
   spendMillions: number;
@@ -67,6 +73,8 @@ export function useMissionPlan(
   crewActivities: Record<string, string>,
   /** The Assets at Mars whose missions end as the Turn starts, which either plan sends. */
   endedAssetKeys: string[],
+  /** The Earth return stage whose Crew come home this Turn, if any, which either plan sends. */
+  bringHome: string | null,
 ): MissionPlan {
   // It starts on the first that can fly, because one that needs Development can't be chosen.
   const [launchVehicleId, setLaunchVehicleId] = useState(
@@ -91,6 +99,15 @@ export function useMissionPlan(
   const [crewProtectionId, setCrewProtectionId] = useState<
     string | undefined
   >();
+  const [crewRoundTrip, setCrewRoundTrip] = useState(false);
+  const [chosenFetch, setChosenFetch] = useState<string | null>(null);
+  // Only while there are still Crew with no way home there, which a Turn can change.
+  const returnVehicleFor = view.crew.some(
+    ({ key, withoutWayHome }) =>
+      key === chosenFetch && withoutWayHome.length > 0,
+  )
+    ? chosenFetch
+    : null;
 
   const landsOnMars =
     (crewSize !== null && crewLands) ||
@@ -112,7 +129,11 @@ export function useMissionPlan(
         ...(crewProtectionId !== undefined && {
           protectionId: crewProtectionId,
         }),
+        ...(crewRoundTrip && { roundTrip: true }),
       },
+    }),
+    ...(returnVehicleFor !== null && {
+      returnVehicle: { forCrewAt: returnVehicleFor },
     }),
   };
   const mission = {
@@ -140,6 +161,7 @@ export function useMissionPlan(
     developmentIds,
     crewActivities,
     endedAssetKeys,
+    ...(bringHome !== null && { bringHome }),
     mission: {
       ...mission,
       // The Activity they will have, which may be that of Crew already there.
@@ -150,6 +172,7 @@ export function useMissionPlan(
           ...(crewLands && { landsAtSite: true }),
           suppliesId: plannedCrew.suppliesId,
           protectionId: plannedCrew.protectionId,
+          ...(crewRoundTrip && { roundTrip: true }),
         },
       }),
       // Only the Mission Events this Mission goes through, because a choice can outlive a change of Asset.
@@ -179,10 +202,12 @@ export function useMissionPlan(
     developmentIds,
     crewActivities,
     endedAssetKeys,
+    ...(bringHome !== null && { bringHome }),
   };
 
   const check = simulation.validatePlan(program, plan);
-  const nothingTicked = assetIds.length === 0 && plannedCrew === null;
+  const nothingTicked =
+    assetIds.length === 0 && plannedCrew === null && returnVehicleFor === null;
 
   return {
     launchVehicleId,
@@ -216,6 +241,10 @@ export function useMissionPlan(
     },
     chooseCrewSupplies: setCrewSuppliesId,
     chooseCrewProtection: setCrewProtectionId,
+    crewRoundTrip,
+    chooseCrewRoundTrip: setCrewRoundTrip,
+    returnVehicleFor,
+    chooseReturnVehicleFor: setChosenFetch,
     landsOnMars,
     landingSite,
     chooseLandingSite: setChosenSiteId,

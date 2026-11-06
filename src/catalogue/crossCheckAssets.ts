@@ -33,6 +33,16 @@ export function assetProblems({
         );
       }
     }
+    if (asset.makes !== undefined && asset.landsAtSite !== true) {
+      problems.push(
+        `${catalogueFileNames.assets}: "${asset.id}" makes ascent propellant, which is made at a Landing Site, so it must set landsAtSite`,
+      );
+    }
+    if (asset.habitat !== undefined && asset.landsAtSite !== true) {
+      problems.push(
+        `${catalogueFileNames.assets}: "${asset.id}" is a habitat, which houses Crew at a Landing Site, so it must set landsAtSite`,
+      );
+    }
     if (
       asset.landingRiskMultiplier !== undefined &&
       asset.landsAtSite !== true

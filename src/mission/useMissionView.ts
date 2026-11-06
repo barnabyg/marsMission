@@ -27,8 +27,10 @@ export function useMissionView(
   sites: readonly string[],
   /** Where the spacecraft view hands over to, or null while it has something to show. */
   spacecraftFallback: MissionViewId | null,
-  /** Whether the entry at this index has finished playing, after which it no longer asks for its view. */
+  /** Whether the entry at this index isn't asking for its view now: it has finished playing, or waits for one that hasn't. */
   hasPlayed: (entryIndex: number) => boolean,
+  /** Where the Turn's Mars ascent lifts off from, if it has one. */
+  ascentSite: string | null,
 ): MissionView {
   const [choice, setChoice] = useState<ViewChoice>(startingChoice);
   const [pick, setPick] = useState<SitePick>({
@@ -46,7 +48,10 @@ export function useMissionView(
     chooseView: (view) => {
       setChoice({ view, entriesHappened });
     },
-    site: siteShown(sites, landingSitePick(entries, entriesHappened, pick)),
+    site: siteShown(
+      sites,
+      landingSitePick(entries, entriesHappened, pick, ascentSite),
+    ),
     pickSite: (siteName) => {
       setPick({ siteName, entriesHappened });
     },
