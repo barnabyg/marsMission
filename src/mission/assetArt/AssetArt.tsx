@@ -13,6 +13,7 @@ import {
   Vector3,
   type Group,
 } from "three";
+import { ReturnOrbiter } from "../spacecraft/homewardModels";
 import { Orbiter } from "../spacecraft/spacecraftModels";
 import { models } from "../surface/surfaceModels";
 
@@ -24,16 +25,11 @@ const modelsByKind: Partial<Record<string, ReactNode>> = {
   lander: <models.lander />,
   rover: <models.rover />,
   crew: <models.crewLander />,
-  // Until it has a model of its own, a fuel plant stands on the surface as a lander does.
-  "fuel-plant": <models.lander />,
-  // A habitat too, until its own model comes.
-  habitat: <models.lander />,
-  // And a Mars lab.
-  lab: <models.lander />,
-  // And an ascent vehicle, standing on the surface as a lander does.
-  "ascent-vehicle": <models.lander />,
-  // An Earth return orbiter waits in Mars orbit as an orbiter does.
-  "return-orbiter": <Orbiter lost={false} deployed />,
+  "fuel-plant": <models.fuelPlant />,
+  habitat: <models.habitat />,
+  lab: <models.lab />,
+  "ascent-vehicle": <models.ascentVehicle />,
+  "return-orbiter": <ReturnOrbiter lost={false} deployed />,
 };
 
 /** The camera looks from in front, a little to the right and above, where a lander's hatch and a rover's front show. */

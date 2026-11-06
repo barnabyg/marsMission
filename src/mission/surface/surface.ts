@@ -27,12 +27,28 @@ export const landingShot: CameraPose = {
 
 type Mission = Pick<NonNullable<Timeline["mission"]>, "assets">;
 
-export type SurfaceModel = "lander" | "rover" | "crewLander";
+export type SurfaceModel =
+  | "lander"
+  | "rover"
+  | "crewLander"
+  | "fuelPlant"
+  | "habitat"
+  | "lab"
+  | "ascentVehicle";
 
-/** Everything else that lands stands still until it has a model of its own. The Crew come down in a lander of their own. */
+/** The model of each kind of Asset that lands and has one of its own. The Crew come down in a lander of their own. */
+const surfaceModels: Partial<Record<string, SurfaceModel>> = {
+  rover: "rover",
+  crew: "crewLander",
+  "fuel-plant": "fuelPlant",
+  habitat: "habitat",
+  lab: "lab",
+  "ascent-vehicle": "ascentVehicle",
+};
+
+/** Anything else that lands stands still as a lander does, until it has a model of its own. */
 export function modelOf(kind: string): SurfaceModel {
-  if (kind === "crew") return "crewLander";
-  return kind === "rover" ? "rover" : "lander";
+  return surfaceModels[kind] ?? "lander";
 }
 
 export interface SurfaceAsset extends RoverAtWork {

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Point } from "../sceneParts";
+import { EarthReturnStage, ReturnOrbiter } from "./homewardModels";
 import { stackLayout } from "./spacecraft";
 
 /** What's lost is drawn darkened. */
@@ -57,7 +58,7 @@ function CruiseStage({ lost }: { lost: boolean }) {
 }
 
 /** Places a part of a model, which takes its position and turn from here. */
-function At({
+export function At({
   position,
   rotation,
   children,
@@ -78,7 +79,7 @@ const deckSilver = "#c9ccd4";
 const panelBlue = "#20345e";
 
 /** One of the orbiter's two solar arrays, on a yoke out along z, in two panels tilted to face the Sun. */
-function SolarArray({ side, lost }: { side: 1 | -1; lost: boolean }) {
+export function SolarArray({ side, lost }: { side: 1 | -1; lost: boolean }) {
   return (
     <>
       <At position={[0, 0, side * 0.33]} rotation={[Math.PI / 2, 0, 0]}>
@@ -224,24 +225,24 @@ function CrewVehicle({ lost }: { lost: boolean }) {
 }
 
 function AssetModel({ kind, lost }: { kind: string; lost: boolean }) {
-  // A return vehicle carries a capsule for the Crew it fetches, so it looks like the Crew's ship.
-  if (kind === "crew" || kind === "return vehicle") {
-    return <CrewVehicle lost={lost} />;
-  }
-  if (kind === "lander") return <Aeroshell lost={lost} color="#d9d6cf" />;
-  if (kind === "rover") return <Aeroshell lost={lost} color="#eef0f4" />;
-  // A fuel plant lands too, so it travels in an aeroshell until it has a model of its own.
-  if (kind === "fuel-plant") return <Aeroshell lost={lost} color="#e4ddd0" />;
-  // So does a habitat.
-  if (kind === "habitat") return <Aeroshell lost={lost} color="#dfe3d6" />;
-  // And a Mars lab.
-  if (kind === "lab") return <Aeroshell lost={lost} color="#d6dce6" />;
-  // And an ascent vehicle. An Earth return orbiter flies as an orbiter does.
-  if (kind === "ascent-vehicle") {
-    return <Aeroshell lost={lost} color="#e6d8cf" />;
-  }
+  if (kind === "crew") return <CrewVehicle lost={lost} />;
+  // A return vehicle is an Earth return stage flying to Mars orbit on its own.
+  if (kind === "return vehicle") return <EarthReturnStage lost={lost} />;
+  if (kind === "return-orbiter") return <ReturnOrbiter lost={lost} />;
+  // Whatever lands travels in an aeroshell, each kind its own colour.
+  const aeroshell = aeroshellColors[kind];
+  if (aeroshell) return <Aeroshell lost={lost} color={aeroshell} />;
   return <Orbiter lost={lost} />;
 }
+
+const aeroshellColors: Partial<Record<string, string>> = {
+  lander: "#d9d6cf",
+  rover: "#eef0f4",
+  "fuel-plant": "#e4ddd0",
+  habitat: "#dfe3d6",
+  lab: "#d6dce6",
+  "ascent-vehicle": "#e6d8cf",
+};
 
 /**
  * The Mission on its way: the cruise stage with the Assets after it in the order it carries them, on a boom along x.

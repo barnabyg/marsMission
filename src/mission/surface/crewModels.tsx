@@ -37,11 +37,8 @@ const crewLanderLegs = (
   };
 });
 
-/**
- * The Crew's lander is taller and wider than a robot's and white: a grey descent stage on four legs, and a crew cabin
- * on top with windows, a hatch facing the camera and a ladder down to the ground.
- */
-export const CrewLander = memo(function CrewLander() {
+/** The Crew lander's descent stage: four legs, the engines between them, the stage itself and the ladder. It stays on the ground when the cabin lifts off. */
+export const CrewDescentStage = memo(function CrewDescentStage() {
   return (
     <group>
       {crewLanderLegs.map(({ key, foot, middle, length, turn }) => (
@@ -86,6 +83,23 @@ export const CrewLander = memo(function CrewLander() {
         sides={8}
         color="#c2c6ce"
       />
+      <Box
+        size={[0.16, 0.66, 0.03]}
+        position={[0, 0.5, -0.66]}
+        rotation={[-0.35, 0, 0]}
+        color={legGrey}
+      />
+    </group>
+  );
+});
+
+/** How high the cabin sits on the descent stage, where its ascent engine fires from. */
+export const crewCabinBase = 0.9;
+
+/** The crew cabin, which lifts off from the descent stage through Mars ascent: windows, a hatch, thrusters and a docking ring. */
+export const CrewCabin = memo(function CrewCabin() {
+  return (
+    <group>
       <mesh position={[0, 1.22, 0]}>
         <cylinderGeometry args={[0.42, 0.46, 0.64, 16]} />
         <meshBasicMaterial color={hullWhite} toneMapped={false} />
@@ -140,16 +154,23 @@ export const CrewLander = memo(function CrewLander() {
         color="#c2c6ce"
       />
       <Box
-        size={[0.16, 0.66, 0.03]}
-        position={[0, 0.5, -0.66]}
-        rotation={[-0.35, 0, 0]}
-        color={legGrey}
-      />
-      <Box
         size={[0.06, 0.24, 0.06]}
         position={[0.2, 1.92, 0]}
         color={legGrey}
       />
+    </group>
+  );
+});
+
+/**
+ * The Crew's lander is taller and wider than a robot's and white: a grey descent stage on four legs, and a crew cabin
+ * on top with windows, a hatch facing the camera and a ladder down to the ground.
+ */
+export const CrewLander = memo(function CrewLander() {
+  return (
+    <group>
+      <CrewDescentStage />
+      <CrewCabin />
     </group>
   );
 });

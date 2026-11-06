@@ -39,6 +39,10 @@ const labelHeights: Record<SurfaceModel, number> = {
   lander: 1.5,
   rover: 1.05,
   crewLander: 2.2,
+  fuelPlant: 1.5,
+  habitat: 1.4,
+  lab: 1.45,
+  ascentVehicle: 1.95,
 };
 
 function Terrain({ siteName }: { siteName: string }) {
