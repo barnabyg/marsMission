@@ -1,4 +1,8 @@
-import { type ProgramView, type TurnPlan } from "../simulation/simulation";
+import {
+  canFly,
+  type ProgramView,
+  type TurnPlan,
+} from "../simulation/simulation";
 import type { PlanningTools } from "./strategy";
 
 type PlannedMission = NonNullable<TurnPlan["mission"]>;
@@ -21,7 +25,19 @@ export interface CrewStyle {
    * land.
    */
   roundTrip?: boolean;
+  /**
+   * Lands them beside a habitat: at a surveyed Landing Site where one operates, if there is one, and otherwise with a
+   * habitat aboard their Mission whenever it fits and can be afforded.
+   */
+  habitat?: boolean;
 }
+
+/** Whether a habitat with Service Life left operates at this Landing Site. */
+const habitatAt = (view: ProgramView, siteId: string) =>
+  view.operatingAssets.some(
+    ({ kind, landingSiteId, daysLeft }) =>
+      kind === "habitat" && landingSiteId === siteId && daysLeft > 0,
+  );
 
 /** The way home to choose this Turn, by its key, for a CrewStyle that brings Crew home: the first on offer, if any. */
 export function wayHome(
@@ -37,21 +53,30 @@ export function wayHome(
  * Where Crew who land go: a surveyed Landing Site, as Crew are worth more than any Asset, one not yet landed at before
  * one that has been, then the most Science. None until a Survey has made a site safer.
  */
-function crewLandingSite(view: ProgramView): string | undefined {
-  return view.landingSites
-    .filter(({ surveyed }) => surveyed)
-    .toSorted(
+function crewLandingSite(
+  view: ProgramView,
+  besideHabitat: boolean,
+): string | undefined {
+  const surveyed = view.landingSites.filter(({ surveyed }) => surveyed);
+  const housed = besideHabitat
+    ? surveyed.find(({ id }) => habitatAt(view, id))
+    : undefined;
+  return (
+    housed ??
+    surveyed.toSorted(
       (first, second) =>
         Number(first.landed) - Number(second.landed) ||
         second.science - first.science,
-    )[0]?.id;
+    )[0]
+  )?.id;
 }
 
 /**
  * Crewed Missions with no Asset aboard, largest Crew first, then the most Supplies, then the most Protection, unless
  * the CrewStyle says the least, each on the cheapest Flight-proven Launch Vehicle that can carry it, with an Earth
  * return stage if it makes round trips, and with the Activity that earns the most Science. They go to Mars orbit, or
- * land at a surveyed Landing Site if the CrewStyle lands and there is one. None if no Launch Vehicle can carry Crew.
+ * land at a surveyed Landing Site if the CrewStyle lands and there is one, each with a habitat aboard first if the
+ * CrewStyle wants one and none operates there. None if no Launch Vehicle can carry Crew.
  */
 export function crewedMissions(
   view: ProgramView,
@@ -62,9 +87,15 @@ export function crewedMissions(
     noProtection = false,
     reliability = false,
     roundTrip = false,
+    habitat = false,
   }: CrewStyle,
 ): PlannedMission[] {
-  const landingSiteId = lands && !roundTrip ? crewLandingSite(view) : undefined;
+  const landingSiteId =
+    lands && !roundTrip ? crewLandingSite(view, habitat) : undefined;
+  const habitatAboard =
+    habitat && landingSiteId !== undefined && !habitatAt(view, landingSiteId)
+      ? view.assets.find((asset) => asset.kind === "habitat" && canFly(asset))
+      : undefined;
   const returnStage = roundTrip ? view.crewedMission.roundTrip.massTonnes : 0;
   const { supplies: allSupplies, protection: allProtection } =
     view.crewedMission;
@@ -88,8 +119,8 @@ export function crewedMissions(
           protection.indexOf(second.shielding),
       )
     : choices;
-  return ordered.flatMap(
-    ({ size: { crew, massTonnes }, carried, shielding }) => {
+  const missionsWith = (aboard: ProgramView["assets"][number] | undefined) =>
+    ordered.flatMap(({ size: { crew, massTonnes }, carried, shielding }) => {
       const vehicle = view.launchVehicles
         .filter(
           (candidate) =>
@@ -99,7 +130,8 @@ export function crewedMissions(
               massTonnes +
                 carried.massTonnes +
                 shielding.massTonnes +
-                returnStage,
+                returnStage +
+                (aboard?.massTonnes ?? 0),
         )
         .toSorted(
           (first, second) => first.costMillions - second.costMillions,
@@ -107,7 +139,7 @@ export function crewedMissions(
       if (!vehicle) return [];
       const mission = {
         launchVehicleId: vehicle.id,
-        assetIds: [],
+        assetIds: aboard ? [aboard.id] : [],
         crew: {
           size: crew,
           landsAtSite: landingSiteId !== undefined,
@@ -129,8 +161,11 @@ export function crewedMissions(
         crew: { ...mission.crew, activityId: best?.id ?? planned.activityId },
       };
       return reliability ? [mostReliable(chosen, tools), chosen] : [chosen];
-    },
-  );
+    });
+  return [
+    ...(habitatAboard ? missionsWith(habitatAboard) : []),
+    ...missionsWith(undefined),
+  ];
 }
 
 /** The Mission with the dearest Reliability on each of its Mission Events. */

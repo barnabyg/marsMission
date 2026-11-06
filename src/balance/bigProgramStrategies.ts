@@ -5,6 +5,7 @@ import {
   colossusWhenRich,
   crewInOrbit,
   crewLanding,
+  crewBesideHabitat,
   crewRoundTrip,
   fuelPlantWhenRich,
 } from "./styleParts";
@@ -52,6 +53,11 @@ export const bigProgramStrategies: Strategy[] = [
     "big Program: land Crew and a fuel plant",
     "As big Program: develop the Meridian Colossus and land Crew when rich, also landing the Wellspring Fuel Plant at a surveyed Landing Site before any other Asset whenever it has the money for several rovers and none is operating, so that ascent propellant builds up for Crew to leave the surface.",
     { ...fuelPlantWhenRich, fliesCrew: crewLanding },
+  ),
+  playStyle(
+    "big Program: land Crew beside a habitat",
+    "As big Program: develop the Meridian Colossus and land Crew when rich, but its Crew land at a surveyed Landing Site where a Haven Module operates, if there is one, and otherwise take one with them whenever it fits and can be afforded, so that they lose less Health to time at Mars and have its Supplies.",
+    { ...colossusWhenRich, fliesCrew: crewBesideHabitat },
   ),
   playStyle(
     "big Program: land Crew, least Supplies",

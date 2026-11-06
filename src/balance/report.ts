@@ -348,6 +348,19 @@ function ascentPropellant(plays: Play[]): string[] {
     : [];
 }
 
+/** The Health habitats saved per Program, or nothing for a strategy that never lands Crew beside one. */
+function healthSavedByHabitats(plays: Play[]): string[] {
+  const saved = plays
+    .flat()
+    .reduce((total, { healthSavedByHabitats: each }) => total + each, 0);
+  // Left out with none, so that strategies that never land a habitat report as they did before habitats.
+  return saved > 0
+    ? [
+        `Health per Program that habitats saved Crew: ${(saved / plays.length).toFixed(1)}`,
+      ]
+    : [];
+}
+
 function howToRead(programs: number): string[] {
   return [
     `Programs per strategy: ${programs} (seeds 1 to ${programs}). Each plays up to ${turnHorizon} Turns.`,
@@ -425,6 +438,7 @@ export function balanceReport(
       "",
       researchScience(plays),
       ...ascentPropellant(plays),
+      ...healthSavedByHabitats(plays),
     );
   }
   return `${lines.join("\n")}\n`;

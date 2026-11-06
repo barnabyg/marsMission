@@ -119,3 +119,5 @@ export const crewInOrbit: CrewStyle = { reliability: true };
 export const crewRoundTrip: CrewStyle = { ...crewInOrbit, roundTrip: true };
 /** The same Crew landing at a surveyed Landing Site once there is one. */
 export const crewLanding: CrewStyle = { ...crewInOrbit, lands: true };
+/** The same landing Crew beside a habitat, which goes with them if none operates at a surveyed Landing Site. */
+export const crewBesideHabitat: CrewStyle = { ...crewLanding, habitat: true };
