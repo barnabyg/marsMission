@@ -137,6 +137,7 @@ export function PlanningMode({
           <OperatingPanel
             assets={view.operatingAssets}
             crew={view.crew}
+            landingSites={view.landingSites}
             chosenCrewActivities={crewActivities}
             onCrewActivityChange={(key, activityId) => {
               setCrewActivities({ ...crewActivities, [key]: activityId });

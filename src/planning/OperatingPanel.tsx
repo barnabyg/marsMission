@@ -1,4 +1,8 @@
-import { formatMoney, type ProgramView } from "../simulation/simulation";
+import {
+  formatMoney,
+  formatPropellant,
+  type ProgramView,
+} from "../simulation/simulation";
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { ActivitySelect } from "./ActivitySelect";
@@ -11,6 +15,8 @@ import {
 interface OperatingPanelProps {
   assets: ProgramView["operatingAssets"];
   crew: ProgramView["crew"];
+  /** The known Landing Sites, for the ascent propellant at each. */
+  landingSites: ProgramView["landingSites"];
   /** The new Activities chosen this Turn for the Crew in each place, by its key. */
   chosenCrewActivities: Record<string, string>;
   onCrewActivityChange: (key: string, activityId: string) => void;
@@ -29,11 +35,13 @@ interface OperatingPanelProps {
 /**
  * The Assets already at Mars, each with what is left of its Service Life, its Upkeep, the choice of its Activity and
  * the choice to end its mission, and the Crew there, with their Health, the choice of the Activity they share in each
- * place and, for round-trip Crew, the choice to bring them home this Turn.
+ * place and, for round-trip Crew, the choice to bring them home this Turn. Below them is the ascent propellant at each
+ * Landing Site that has any, which stays there whether or not anything is still operating.
  */
 export function OperatingPanel({
   assets,
   crew,
+  landingSites,
   chosenCrewActivities,
   onCrewActivityChange,
   bringHome,
@@ -44,7 +52,11 @@ export function OperatingPanel({
   endedKeys,
   onEndedChange,
 }: OperatingPanelProps) {
-  const empty = assets.length === 0 && crew.length === 0;
+  const stocked = landingSites.filter(
+    ({ ascentPropellantKg }) => ascentPropellantKg > 0,
+  );
+  const empty =
+    assets.length === 0 && crew.length === 0 && stocked.length === 0;
   return (
     <section
       className={empty ? "panel empty" : "panel"}
@@ -183,6 +195,18 @@ export function OperatingPanel({
             })}
           </ul>
         </>
+      )}
+      {stocked.length > 0 && (
+        <p data-testid="ascent-propellant">
+          <GameText>
+            {`Ascent propellant: ${stocked
+              .map(
+                ({ name, ascentPropellantKg }) =>
+                  `${formatPropellant(ascentPropellantKg)} at ${name}`,
+              )
+              .join(", ")}`}
+          </GameText>
+        </p>
       )}
     </section>
   );

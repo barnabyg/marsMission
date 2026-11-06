@@ -2,6 +2,7 @@ import { useId } from "react";
 import {
   canFly,
   formatMoney,
+  formatPropellant,
   type AssetChoices,
   type PlannedAsset,
   type ProgramView,
@@ -105,6 +106,20 @@ export function MissionAssetChoice({
             tabIndex={0}
           >
             Benefit +{asset.benefitImpact.extraScience} Science
+          </span>
+        )}
+        {asset.benefit && asset.makes && (
+          // It shows the ascent propellant it would make over a whole Turn at Mars, and its tooltip says what it makes
+          // and where, after what a Benefit is.
+          <span
+            className="term benefit-tag"
+            data-term="Benefit"
+            data-detail={`${asset.name}: ${asset.benefit} Over a whole Turn at Mars it makes ${formatPropellant(asset.makes.ascentPropellantKgPerTurn)}.`}
+            data-testid="benefit-tag"
+            tabIndex={0}
+          >
+            Benefit +{formatPropellant(asset.makes.ascentPropellantKgPerTurn)}{" "}
+            propellant
           </span>
         )}
         {operatingCount > 0 && (

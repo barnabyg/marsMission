@@ -50,7 +50,11 @@ export const tooltips = {
   Upkeep:
     "What an Asset operating at Mars costs for each Turn it is kept going after the one it arrives in. The player can end an Asset's mission in Planning Mode, which takes it out of service as the Turn starts and stops its Upkeep.",
   Benefit:
-    "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface. A second Asset giving the same Benefit adds nothing.",
+    "What one Asset does for others on each day it operates at Mars, whatever its Activity, such as a relay orbiter raising the Ongoing Research of every Asset and Crew on the surface, or a fuel plant making ascent propellant at its Landing Site. A second Asset raising the same thing adds nothing, but each fuel plant makes its own.",
+  "Fuel plant":
+    "An Asset that lands at a Landing Site and makes ascent propellant there from the carbon dioxide in the Martian air, on each day it operates, whatever its Activity. Its Benefit tag in Planning Mode says how much it makes over a whole Turn.",
+  "Ascent propellant":
+    "The propellant Crew need to leave the surface of Mars, made by a fuel plant at its Landing Site. It builds up at that site from Turn to Turn and stays there if the plant stops, and each Landing Site keeps its own.",
   Activity:
     "What an Asset, or all the Crew in one place at Mars, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset or Crew keep their Activity into later Turns until the player changes it.",
   "Landing Site":
@@ -69,6 +73,8 @@ export const tooltips = {
     "An Activity for Crew in Mars orbit: Ongoing Research from orbit, such as studying Mars, driving robots on the surface from above and running experiments aboard. Each Crew member earns it, and it pays a Research Grant.",
   "Field research":
     "An Activity for Crew at a Landing Site: Ongoing Research on the surface, exploring around the site, collecting samples and studying them in their lander. Each Crew member earns it, a Benefit that raises research on the surface raises it too, and it pays a Research Grant.",
+  "Propellant production":
+    "An Activity for a fuel plant: running it, which earns no Science. A fuel plant makes ascent propellant whatever its Activity.",
   "Planning Mode":
     "The first part of a Turn, in which the player chooses Missions, Assets, Activities, technology and Safety Margin and spends money. No game time passes in Planning Mode.",
   "Mission Mode":

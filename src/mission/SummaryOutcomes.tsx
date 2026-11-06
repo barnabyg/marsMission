@@ -1,9 +1,16 @@
-import { formatMoney, type TurnSummary } from "../simulation/simulation";
+import {
+  formatMoney,
+  formatPropellant,
+  type TurnSummary,
+} from "../simulation/simulation";
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { SummaryHealthLost } from "./SummaryHealthLost";
 
-/** Where the Program stands after the Turn: its Crew, technology, research, Assets, Survey and the Money it earned. */
+/**
+ * Where the Program stands after the Turn: its Crew, technology, research, ascent propellant, Assets, Survey and the
+ * Money it earned.
+ */
 export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
   return (
     <>
@@ -89,6 +96,24 @@ export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
                         ? `, raised on ${benefit.days} of them by the Benefit from ${benefit.givenBy.join(" and ")}, which added ${benefit.science} Science and ${benefit.publicSupport} Public Support`
                         : ""
                     }`}
+                  </GameText>
+                </li>
+              ),
+            )}
+          </ul>
+        </section>
+      )}
+      {summary.ascentPropellant.length > 0 && (
+        <section data-testid="summary-ascent-propellant">
+          <h2>
+            <GameText heading>Ascent propellant</GameText>
+          </h2>
+          <ul>
+            {summary.ascentPropellant.map(
+              ({ siteName, madeBy, madeKg, totalKg }) => (
+                <li key={siteName}>
+                  <GameText>
+                    {`${siteName}: ${madeBy.join(" and ")} made ${formatPropellant(madeKg)}, so it has ${formatPropellant(totalKg)}`}
                   </GameText>
                 </li>
               ),

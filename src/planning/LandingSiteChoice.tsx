@@ -1,4 +1,4 @@
-import type { ProgramView } from "../simulation/simulation";
+import { formatPropellant, type ProgramView } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 
 interface LandingSiteChoiceProps {
@@ -39,6 +39,10 @@ export function LandingSiteChoice({
             landingSite.landed
               ? "Already landed at, so landing again earns no Science."
               : `The first landing here earns ${landingSite.science} Science.`
+          }${
+            landingSite.ascentPropellantKg > 0
+              ? ` Ascent propellant here: ${formatPropellant(landingSite.ascentPropellantKg)}.`
+              : ""
           }`}
         </GameText>
       </p>

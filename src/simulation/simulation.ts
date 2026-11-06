@@ -23,6 +23,7 @@ import type {
 } from "./types";
 
 export { addDays, daysBetween, formatMoney } from "./rules";
+export { formatPropellant } from "./ascentPropellant";
 export { corruptSave, SaveError } from "./saveFormat";
 export {
   canFly,
