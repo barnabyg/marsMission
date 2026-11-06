@@ -30,6 +30,18 @@ Part of the [game design](../game-design.md), whose Status says which of these r
 - Mission Mode shows a fuel plant as a lander in each view, travelling in an aeroshell and standing still on the surface, until it has a model of its own, and its card's picture is drawn from that lander model.
 - A spacecraft that can make the round trip costs more than a one-way one.
 
+## Habitat
+
+- A habitat is an Asset that lands at a Landing Site like any lander, through entry/descent/landing at the site's landing risk, and can share a Mission and a landing with other Assets and Crew. It has Technology Readiness, a Service Life, Reliability in service and Upkeep as other Assets do, and starts built but unproven. Its only Activity, Habitation, earns no Ongoing Research.
+- Its Benefit is housing the Crew at its Landing Site, on each day it operates there, whatever its Activity, from the day it lands until it fails, its Service Life ends or the player ends its mission. It slows the Health they lose to time at Mars by the share given in the data files, which [Crew](crew.md) describes, and holds Supplies for them.
+- Habitats at one site don't add up their shares: on each day the largest applies, as for Benefits that raise something. Each holds its own Supplies, so two at one site hold twice as much.
+- It keeps housing the Crew while they shelter from a dust storm, as they shelter in it. A habitat lost in a dust storm that the Crew carried on through houses them no longer from the day it fails.
+- A habitat lands holding the Supplies the data files give, in whole kilograms. They join the Supplies of the Crew at its site, as [Crew](crew.md) describes, and stay there while a habitat operates at the site, with no Crew there too. When the last habitat at a site stops, the Crew there keep what it held, and with no Crew there its Supplies go with it.
+- The habitat's card has a Benefit tag with how many more days a Crew member landing beside it, with full Health and no Protection, would last at Mars before their Health runs out, and its tooltip says what it does for the Crew there and how many Supplies it holds. Operating at Mars lists the Supplies held in habitats at each Landing Site that has any.
+- The Turn summary says how much Health living in a habitat saved each Crew member: how much more time at Mars would have taken over the same days with no habitat, after what Protection saved.
+- The Program saves the Supplies held in habitats at each Landing Site. A save from before habitats upgrades with none anywhere.
+- Mission Mode shows a habitat as a lander in each view, travelling in an aeroshell and standing still on the surface, until it has a model of its own, and its card's picture is drawn from that lander model. Its name leaves out the word Habitat, a game term, which Asset names don't explain with a tooltip.
+
 ## Landing Sites
 
 - Mars has named Landing Sites. Each has a landing risk and a Science value, earned by the first successful landing there. Resources such as water ice are left out until a rule uses them.
