@@ -11,11 +11,17 @@ const allLandingSiteIds = realFiles.landingSites.map(({ id }) => id);
 
 /**
  * Opens Planning Mode with every Milestone earned and several operating Assets listed, and if asked,
- * with nothing left to Survey, which adds a note to each panel with an Asset set to Survey.
+ * with nothing left to Survey, which adds a note to each panel with an Asset set to Survey, or with Crew at Mars, one-way
+ * Crew among them if asked.
  */
 export async function openBusyProgram(
   page: Page,
-  { allSurveyed = false, colossusBuilt = false, crewAtMars = false } = {},
+  {
+    allSurveyed = false,
+    colossusBuilt = false,
+    crewAtMars = false,
+    oneWayCrew = false,
+  } = {},
 ): Promise<void> {
   const saved = busyProgram(allSurveyed);
   const developed = {
@@ -43,13 +49,25 @@ export async function openBusyProgram(
                 ...developed,
                 // Enough for a large Crewed Mission and a lander, so that nothing shows a problem.
                 moneyMillions: 9000,
-                crew: realFiles.crew.names.slice(0, 4).map((name) => ({
-                  name,
-                  health: realFiles.crew.maxHealth,
-                  arrivedOn: "2043-07-01",
-                  location: { kind: "marsOrbit" },
-                  protectionId: realFiles.crew.protection[0]?.id,
-                })),
+                crew: [
+                  ...realFiles.crew.names.slice(0, 4).map((name) => ({
+                    name,
+                    health: realFiles.crew.maxHealth,
+                    arrivedOn: "2043-07-01",
+                    location: { kind: "marsOrbit" },
+                    protectionId: realFiles.crew.protection[0]?.id,
+                  })),
+                  // If asked, one-way Crew who joined them, so that Planning Mode offers a return vehicle for them.
+                  ...(oneWayCrew ? realFiles.crew.names.slice(4, 6) : []).map(
+                    (name) => ({
+                      name,
+                      health: realFiles.crew.maxHealth,
+                      arrivedOn: "2044-07-01",
+                      location: { kind: "marsOrbit" },
+                      protectionId: realFiles.crew.protection[0]?.id,
+                    }),
+                  ),
+                ],
                 crewActivities: { "mars-orbit": "crew-research" },
                 crewSupplies: { "mars-orbit": 3500 },
                 earthReturnStages: [

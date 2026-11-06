@@ -236,3 +236,74 @@ export const ascentSeed = (() => {
   }
   throw new Error("No seed brings round-trip Crew home from the surface");
 })();
+
+/** The smallest Crew sent one way to Mars orbit on Turn 3, with Heavy shielding so that they live to be fetched. */
+const oneWayCrew: TurnPlan = {
+  mission: {
+    launchVehicleId: "meridian-colossus",
+    assetIds: [],
+    crew: {
+      size: catalogue.crew.sizes[0]?.crew ?? 0,
+      protectionId: "protection-heavy-shielding",
+    },
+  },
+};
+
+/** Enough on Turn 4 for a return vehicle on its own, whatever Turn 3 left. */
+const fetchMoney = 3000;
+
+/** A Program on this seed at the start of Turn 4, with one-way Crew in Mars orbit, or null if they didn't get there. */
+function oneWayCrewThere(seed: number): Program | null {
+  const out = colossusSimulation.workOutTurn(colossusBuilt(seed), oneWayCrew);
+  if (out.decisionPoint || out.result.summary.failure) return null;
+  return { ...out.result.program, moneyMillions: fetchMoney };
+}
+
+/** A return vehicle on its own for the Crew in Mars orbit, on the first Launch Vehicle, as Planning Mode plans it once ticked. */
+const fetchFromOrbit: TurnPlan = {
+  mission: {
+    launchVehicleId: catalogue.launchVehicles[0]?.id ?? "",
+    assetIds: [],
+    returnVehicle: { forCrewAt: "mars-orbit" },
+  },
+};
+
+/**
+ * A seed where the Meridian Colossus's first Mission carries the smallest Crew one way to Mars orbit on Turn 3, a
+ * return vehicle on its own reaches them on Turn 4, and on Turn 5, with nothing launched, their journey home brings them
+ * home safe, each Turn with nothing to answer.
+ */
+export const fetchSeed = (() => {
+  for (let seed = 1; seed < 100_000; seed++) {
+    const there = oneWayCrewThere(seed);
+    if (!there) continue;
+    const fetched = colossusSimulation.workOutTurn(there, fetchFromOrbit);
+    if (fetched.decisionPoint || fetched.result.summary.failure) continue;
+    const way = colossusSimulation.readProgram(fetched.result.program).crew[0]
+      ?.waysHome[0];
+    if (way?.reason !== null) continue;
+    const home = colossusSimulation.workOutTurn(fetched.result.program, {
+      mission: null,
+      bringHome: way.key,
+    });
+    if (!home.decisionPoint && home.result.summary.crewHome.length > 0) {
+      return seed;
+    }
+  }
+  throw new Error("No seed fetches one-way Crew and brings them home");
+})();
+
+/**
+ * A save in format 8, from before round trips, of a Program on this seed at the start of Turn 4 with one-way Crew in
+ * Mars orbit, as a Phase 7 game saved it, which the game upgrades with no way home for them.
+ */
+export function oneWayCrewSave(seed: number): string {
+  const there = oneWayCrewThere(seed);
+  if (!there) throw new Error(`The Crew on seed ${String(seed)} are lost`);
+  // Format 8 has none of what later formats added.
+  const phase7: Partial<Program> = { ...there };
+  delete phase7.earthReturnStages;
+  delete phase7.ascentPropellantKg;
+  delete phase7.habitatSuppliesKg;
+  return JSON.stringify({ formatVersion: 8, program: phase7 });
+}

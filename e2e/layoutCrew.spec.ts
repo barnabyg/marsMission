@@ -125,5 +125,40 @@ for (const size of screenSizes) {
         });
       }
     });
+
+    test("Planning Mode fits on one screen with one-way Crew to fetch, and a Crewed Mission that swaps Crew with a return vehicle", async ({
+      page,
+    }) => {
+      await openBusyProgram(page, { crewAtMars: true, oneWayCrew: true });
+      await page.getByRole("checkbox", { name: /^Bring .* home$/ }).check();
+      await page
+        .getByRole("combobox", { name: "Launch Vehicle" })
+        .selectOption("meridian-colossus");
+      await page.getByRole("checkbox", { name: /Crewed Mission/ }).check();
+      await page.getByRole("combobox", { name: "Crew size" }).selectOption("2");
+      // Landing, they choose an Activity of their own, which is the widest row.
+      await page
+        .getByRole("combobox", { name: "Crew destination" })
+        .selectOption("landingSite");
+      await page
+        .getByRole("combobox", { name: "Protection" })
+        .selectOption("protection-light-shielding");
+      await page.getByRole("checkbox", { name: /Return vehicle/ }).check();
+      await expect(
+        page.getByRole("combobox", { name: "Crew to fetch" }),
+      ).toContainText(realFiles.crew.names[4] ?? "");
+      // The journey home of the one-way Crew it fetches from Mars orbit, beside the round-trip Crew there.
+      await expect(
+        page.getByTestId("homeward-events").getByTestId("mission-event"),
+      ).toHaveCount(2);
+      await expect(page.getByRole("alert")).toHaveCount(0);
+      await expect(page.getByTestId("landing-site-details")).toBeVisible();
+      expect(await whatScrolls(page)).toEqual([]);
+      for (const name of ["Launch Mission", "End Turn without launching"]) {
+        await expect(page.getByRole("button", { name })).toBeInViewport({
+          ratio: 1,
+        });
+      }
+    });
   });
 }
