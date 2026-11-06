@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import type { TurnPlan } from "./simulation";
 import type { PlannedMission } from "./types";
 import { setup, steadyHealth, withFailures } from "./testHelpers";
 
@@ -25,6 +24,7 @@ describe("planning a round trip", () => {
       description: "Brings the Crew home.",
       costMillions: 500,
       massTonnes: 1,
+      ascentPropellantKg: 5000,
     });
   });
 
@@ -37,20 +37,6 @@ describe("planning a round trip", () => {
       massTonnes: 6 + 1 + 1,
       problems: [],
     });
-  });
-
-  it("only goes to Mars orbit, as Crew can't leave the surface yet", () => {
-    const { simulation, program } = setup();
-    const landing: TurnPlan = {
-      mission: {
-        ...roundTrip,
-        crew: { size: 2, roundTrip: true, landsAtSite: true },
-        landingSiteId: "alpha-plain",
-      },
-    };
-    expect(simulation.validatePlan(program, landing).problems).toEqual([
-      "A round trip can only go to Mars orbit, as Crew can't leave the surface yet.",
-    ]);
   });
 
   it("lists the journey home's Mission Events after the way there, with their Reliability and Contingency", () => {
@@ -114,6 +100,7 @@ describe("round-trip Crew at Mars", () => {
             names: ["Ann Able", "Ben Baker"],
             leavesMarsOn: "2031-04-30",
             homeOn: "2031-11-16",
+            reason: null,
           },
         ],
       }),

@@ -129,7 +129,8 @@ export function testMissionEvents(
         description: "A second try at the ascent.",
         missionEvent: "test-ascent",
         costMillions: 30,
-        massTonnes: 0.5,
+        // Weightless, so that it fits aboard a Mission that fills the Test Heavy with Crew and a fuel plant.
+        massTonnes: 0,
         rescueFailureProbability: 0,
         serviceLifeLossPercent: 0,
         extraPublicSupportLoss: 5,

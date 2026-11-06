@@ -65,6 +65,7 @@ describe("planning a Crewed Mission", () => {
         description: "Brings the Crew home.",
         costMillions: 500,
         massTonnes: 1,
+        ascentPropellantKg: 5000,
       },
     });
   });

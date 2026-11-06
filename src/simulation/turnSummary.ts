@@ -1,4 +1,7 @@
-import type { AscentPropellantMade } from "./ascentPropellant";
+import type {
+  AscentPropellantMade,
+  AscentPropellantUsed,
+} from "./ascentPropellant";
 import type { HealthLost } from "./health";
 import type { CrewLossCause, DecisionAnswer } from "./types";
 
@@ -131,6 +134,8 @@ export interface TurnSummary {
   } | null;
   /** The ascent propellant each Landing Site's fuel plants made this Turn, leaving out sites that made none. */
   ascentPropellant: AscentPropellantMade[];
+  /** The ascent propellant Mars ascent used at the Landing Site Crew left this Turn, if any did. */
+  ascentPropellantUsed: AscentPropellantUsed[];
   fundingPayouts: { publicSupport: number; payoutMillions: number }[];
   /** What each Asset's Ongoing Research paid in Research Grants, leaving out any that came to nothing. moneyEndMillions includes it. */
   researchGrants: ResearchGrantPaid[];

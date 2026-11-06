@@ -1,8 +1,10 @@
 import type { Catalogue } from "../catalogue/catalogue";
-import { crewAtMarsOf, crewKeyOf } from "./crewPlaces";
+import { formatPropellant } from "./ascentPropellant";
+import { crewAtMarsOf, crewKeyOf, locationNameOf } from "./crewPlaces";
 import { addDays, type Rules } from "./rules";
 import type {
   EarthReturnStage,
+  PlaceAtMars,
   PlannedMission,
   Program,
   TurnPlan,
@@ -11,8 +13,8 @@ import type {
 /**
  * Earth return stages: what a round trip leaves in Mars orbit with its Crew, waiting to bring them home on a later Turn
  * when the player chooses. Each keeps the Reliability and Contingencies bought for the journey home with its Mission,
- * and is gone once its journey home has flown or none of its Crew are left at Mars. The journey itself is flown by
- * `journeyHome.ts`.
+ * and is gone once its journey home has flown or none of its Crew are left at Mars. Crew who landed reach it through
+ * Mars ascent, which needs the ascent propellant at their Landing Site. The journey itself is flown by `journeyHome.ts`.
  */
 
 /** How a plan names an Earth return stage to bring its Crew home. One Mission arrives each Turn, so no two share a day. */
@@ -29,44 +31,86 @@ export function journeyHomeDays(
   return { leavesOn, homeOn: leavesOn + (last?.timing.days ?? 0) };
 }
 
-/** The Earth return stage a plan brings home this Turn, with its Crew at Mars as the Turn starts, if it names one. */
+/**
+ * The Earth return stage a plan brings home this Turn, with its Crew at Mars as the Turn starts and where they are, if it
+ * names one. A round trip's Crew arrive together, so they are all in one place.
+ */
 export function stageComingHome(
   program: Program,
   plan: TurnPlan,
-): { stage: EarthReturnStage; names: string[] } | null {
+): { stage: EarthReturnStage; names: string[]; from: PlaceAtMars } | null {
   const stage = program.earthReturnStages.find(
     (candidate) => stageKeyOf(candidate) === plan.bringHome,
   );
   if (!stage) return null;
-  const atMars = new Set(crewAtMarsOf(program).map(({ name }) => name));
-  const names = stage.crew.filter((name) => atMars.has(name));
-  return names.length > 0 ? { stage, names } : null;
+  const here = crewAtMarsOf(program).filter(({ name }) =>
+    stage.crew.includes(name),
+  );
+  const [first] = here;
+  return first
+    ? { stage, names: here.map(({ name }) => name), from: first.location }
+    : null;
+}
+
+/**
+ * Why Crew in this place can't come home this Turn, or null if they can: Crew at a Landing Site need the ascent
+ * propellant that Mars ascent uses up there.
+ */
+function cantLeave(
+  catalogue: Catalogue,
+  rules: Rules,
+  program: Program,
+  from: PlaceAtMars,
+): string | null {
+  if (from.kind !== "landingSite") return null;
+  const needKg = catalogue.crew.roundTrip.ascent.propellantKg;
+  const haveKg = program.ascentPropellantKg[from.landingSiteId] ?? 0;
+  return haveKg >= needKg
+    ? null
+    : `Mars ascent from ${locationNameOf(rules, from)} needs ${formatPropellant(needKg)} of ascent propellant, but only ${formatPropellant(haveKg)} is there. A fuel plant there makes it.`;
 }
 
 /** What's wrong with the journey home a plan chooses, if anything. */
 export function journeyHomeProblems(
+  catalogue: Catalogue,
+  rules: Rules,
   program: Program,
   plan: TurnPlan,
 ): string[] {
-  return plan.bringHome === undefined || stageComingHome(program, plan)
-    ? []
-    : [
-        `There are no Crew at Mars waiting to come home aboard "${plan.bringHome}".`,
-      ];
+  if (plan.bringHome === undefined) return [];
+  const coming = stageComingHome(program, plan);
+  if (!coming) {
+    return [
+      `There are no Crew at Mars waiting to come home aboard "${plan.bringHome}".`,
+    ];
+  }
+  const reason = cantLeave(catalogue, rules, program, coming.from);
+  return reason === null ? [] : [reason];
 }
 
-/** The ways home that Planning Mode offers the Crew in one place at Mars, by the place's key. */
+/**
+ * The ways home that Planning Mode offers the Crew in one place at Mars, by the place's key, each with why it can't be
+ * taken this Turn, if it can't.
+ */
 export function waysHomeFrom(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
   placeKey: string,
-): { key: string; names: string[]; leavesMarsOn: string; homeOn: string }[] {
-  const here = new Set(
-    crewAtMarsOf(program)
-      .filter(({ location }) => crewKeyOf(location) === placeKey)
-      .map(({ name }) => name),
+): {
+  key: string;
+  names: string[];
+  leavesMarsOn: string;
+  homeOn: string;
+  reason: string | null;
+}[] {
+  const there = crewAtMarsOf(program).filter(
+    ({ location }) => crewKeyOf(location) === placeKey,
   );
+  const here = new Set(there.map(({ name }) => name));
+  const from = there[0]?.location;
+  if (!from) return [];
+  const reason = cantLeave(catalogue, rules, program, from);
   const { leavesOn, homeOn } = journeyHomeDays(catalogue, rules);
   return program.earthReturnStages.flatMap((stage) => {
     const names = stage.crew.filter((name) => here.has(name));
@@ -77,6 +121,7 @@ export function waysHomeFrom(
             names,
             leavesMarsOn: addDays(program.date, leavesOn),
             homeOn: addDays(program.date, homeOn),
+            reason,
           },
         ]
       : [];
@@ -103,9 +148,9 @@ export function stageArriving(
         ),
       ),
       contingencyIds: (mission?.contingencyIds ?? []).filter((id) =>
-        rules
-          .journeyHomeEvents()
-          .some((event) => rules.contingencyFor(mission, event.id)?.id === id),
+        homeward.some(
+          (event) => rules.contingencyFor(mission, event.id)?.id === id,
+        ),
       ),
     },
   ];

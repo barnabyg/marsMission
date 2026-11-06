@@ -367,9 +367,16 @@ export function createRules(catalogue: Catalogue) {
     );
   }
 
-  /** The Mission Events of a round trip's journey home, in the order they happen after leaving Mars. */
-  function journeyHomeEvents(): MissionEvent[] {
-    return catalogue.crew.roundTrip.missionEvents
+  /**
+   * The Mission Events of a round trip's journey home, in the order they happen after leaving Mars, with Mars ascent and
+   * the rendezvous first for Crew leaving a Landing Site. The sort is stable, so those on the same day keep their order.
+   */
+  function journeyHomeEvents(fromSurface = false): MissionEvent[] {
+    const { roundTrip } = catalogue.crew;
+    return [
+      ...(fromSurface ? roundTrip.ascent.missionEvents : []),
+      ...roundTrip.missionEvents,
+    ]
       .flatMap((eventId) =>
         catalogue.missionEvents.filter((event) => event.id === eventId),
       )
@@ -378,7 +385,9 @@ export function createRules(catalogue: Catalogue) {
 
   /** The Mission Events a Mission's Crew go through on the way home on a later Turn, which only a round trip has. */
   function homewardEventsFor(mission: PlannedMission | null): MissionEvent[] {
-    return mission?.crew?.roundTrip ? journeyHomeEvents() : [];
+    return mission?.crew?.roundTrip
+      ? journeyHomeEvents(mission.crew.landsAtSite === true)
+      : [];
   }
 
   return {

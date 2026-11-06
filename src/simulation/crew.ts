@@ -155,12 +155,6 @@ export function checkCrew(
       (protection?.massTonnes ?? 0) +
       (returnStage?.massTonnes ?? 0),
     problems: [
-      // Phase 8 brings Crew home from Mars orbit first; leaving the surface needs Mars ascent, which comes later.
-      ...(crew.roundTrip && crew.landsAtSite
-        ? [
-            "A round trip can only go to Mars orbit, as Crew can't leave the surface yet.",
-          ]
-        : []),
       ...(size ? [] : [`There is no Crew size of ${crew.size}.`]),
       ...(supplies
         ? []

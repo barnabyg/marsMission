@@ -88,7 +88,7 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
       ...operatingActivityProblems(program, plan),
       ...endedAssetProblems(program, plan),
       ...operatingCrewProblems(catalogue, rules, program, plan),
-      ...journeyHomeProblems(program, plan),
+      ...journeyHomeProblems(catalogue, rules, program, plan),
       ...mission.problems,
       ...developments.problems,
     ];

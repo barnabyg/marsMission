@@ -44,14 +44,16 @@ export interface CrewAtMars {
   /** How many days the Supplies they share will last them all, which is 0 once they have run out. */
   suppliesDaysLeft: number;
   /**
-   * The Earth return stages that can bring round-trip Crew here home this Turn, each with who it would bring, the day
-   * they would leave Mars and the day they would be home.
+   * The Earth return stages that can bring round-trip Crew here home, each with who it would bring, the day they would
+   * leave Mars and the day they would be home, and why it can't this Turn, such as too little ascent propellant for
+   * Mars ascent, or null if it can.
    */
   waysHome: {
     key: string;
     names: string[];
     leavesMarsOn: string;
     homeOn: string;
+    reason: string | null;
   }[];
 }
 
@@ -160,6 +162,7 @@ export function crewedMissionView(
       description: catalogue.crew.roundTrip.description,
       costMillions: catalogue.crew.roundTrip.costMillions,
       massTonnes: catalogue.crew.roundTrip.massTonnes,
+      ascentPropellantKg: catalogue.crew.roundTrip.ascent.propellantKg,
     },
   };
 }

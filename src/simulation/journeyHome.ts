@@ -28,7 +28,8 @@ import type {
  * Mission, to Earth. It flies as a `Flight` of its own, with the Crew aboard and no Assets, so a Mission Event that
  * fails and its Contingency work as they do on the way to Mars (`contingency.ts`, `missionEventFailure.ts`): a failure
  * loses the Crew aboard. Radiation and having no Supplies lower their Health on the way, as on the way out, with each
- * Crew member's own Protection slowing the radiation.
+ * Crew member's own Protection slowing the radiation. Crew leaving a Landing Site first fly Mars ascent, which uses up
+ * the ascent propellant it needs there whether or not it succeeds, and the rendezvous with their stage in Mars orbit.
  */
 
 /** What became of a journey home, as far as the answers so far take it. */
@@ -39,6 +40,8 @@ export interface JourneyHome {
   homeOn: number;
   /** Its `deliveredCrew` are the Crew home safe, and its `crewLost` those lost on the way. */
   outcome: MissionOutcome;
+  /** The ascent propellant Mars ascent used at the Landing Site it left, if Crew left one and the ascent flew. */
+  propellantUsed: { landingSiteId: string; kg: number } | null;
 }
 
 /** Flies the journey home of the Crew leaving Mars this Turn with the Supplies they take, if any leave alive. */
@@ -63,9 +66,19 @@ export function flyJourneyHome(
     leaving,
     answers,
   );
-  for (const event of rules.journeyHomeEvents()) {
+  const from = leaving.crew[0]?.member.location;
+  const site = from?.kind === "landingSite" ? from.landingSiteId : null;
+  const [ascent] = site === null ? [] : rules.journeyHomeEvents(true);
+  let propellantUsed: JourneyHome["propellantUsed"] = null;
+  for (const event of rules.journeyHomeEvents(site !== null)) {
     // Crew whose Health ran out before this Mission Event leave no one to fly it.
     if (flight.crewOnBoard(event).length === 0) break;
+    if (site !== null && event === ascent) {
+      propellantUsed = {
+        landingSiteId: site,
+        kg: catalogue.crew.roundTrip.ascent.propellantKg,
+      };
+    }
     const risk = rules.failureProbability(
       event,
       rules.reliabilityLevelFor(flight.mission, event.id),
@@ -93,7 +106,7 @@ export function flyJourneyHome(
   flight.outcome.entries = flight.outcome.entries.map((entry) =>
     entry.kind === "missionEvent" ? { ...entry, homeward: true } : entry,
   );
-  return { crew: flight.crew, homeOn, outcome: flight.outcome };
+  return { crew: flight.crew, homeOn, outcome: flight.outcome, propellantUsed };
 }
 
 /** The journey home as a `Flight`, on the day it leaves Mars, with nothing yet happened to it. */

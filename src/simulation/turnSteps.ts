@@ -1,4 +1,7 @@
-import { makeAscentPropellant } from "./ascentPropellant";
+import {
+  makeAscentPropellant,
+  spendAscentPropellant,
+} from "./ascentPropellant";
 import { baseFundingFor } from "./baseFunding";
 import type { Catalogue } from "../catalogue/catalogue";
 import {
@@ -114,7 +117,7 @@ export function resolveTurn(
   // A habitat lost in a dust storm houses its Crew no longer.
   const crewAtWork = rehoused(catalogue, dustStorms.crewAtWork, inService);
   const survey = carryOutSurvey(catalogue, rules, program, inService);
-  const propellant = makeAscentPropellant(catalogue, rules, program, inService);
+  const made = makeAscentPropellant(catalogue, rules, program, inService);
   const journey =
     comingHome &&
     flyJourneyHome(
@@ -126,6 +129,11 @@ export function resolveTurn(
       answers,
     );
   const homeward = journey?.outcome ?? null;
+  const propellant = spendAscentPropellant(
+    rules,
+    made,
+    journey?.propellantUsed ?? null,
+  );
   const crew = crewAtTurnEnd(crewAtWork, crewThere.crewActivities);
   const habitatSupplies = storeHabitatSupplies(
     catalogue,
@@ -406,6 +414,7 @@ export function resolveTurn(
       goNoGo: flown.goNoGo,
       survey: survey.summary,
       ascentPropellant: propellant.made,
+      ascentPropellantUsed: propellant.used,
       fundingPayouts: funding.payouts,
       researchGrants: research.researchGrants,
       researchGrantMillions: research.researchGrantMillions,

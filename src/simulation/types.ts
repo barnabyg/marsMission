@@ -286,12 +286,16 @@ export interface ProgramView {
     maxHealth: number;
     /** How many names are left to give Crew, which limits the Crew that can still fly. */
     namesLeft: number;
-    /** What a round trip adds to a Crewed Mission to Mars orbit: the Earth return stage that brings the Crew home. */
+    /**
+     * What a round trip adds to a Crewed Mission: the Earth return stage that brings the Crew home, and the ascent
+     * propellant that Mars ascent uses at their Landing Site if they land.
+     */
     roundTrip: {
       name: string;
       description: string;
       costMillions: number;
       massTonnes: number;
+      ascentPropellantKg: number;
     };
   };
   /** The Crew operating at Mars, by where they are. Crew who are lost or home aren't listed. */
