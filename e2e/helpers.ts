@@ -421,3 +421,33 @@ export async function launchFirstMission(
     page.getByTestId("mission-scene").locator("canvas"),
   ).toBeVisible();
 }
+
+/**
+ * Holds the Turn from inside the page once the scene's data attribute, named as `dataset` names it, has this value, or
+ * once it has none if the value is null. It resolves then, so start it before anything that sets the Turn going.
+ */
+export function holdSceneAt(
+  page: Page,
+  attribute: string,
+  value: string | null,
+): Promise<void> {
+  return page.evaluate(
+    ([name, wanted]) =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(function check() {
+          const scene = document.querySelector<HTMLElement>(
+            "[data-testid=mission-scene]",
+          );
+          if (scene && (scene.dataset[name] ?? null) === wanted) {
+            [...document.querySelectorAll("button")]
+              .find((button) => button.textContent === "Pause")
+              ?.click();
+            resolve();
+          } else {
+            requestAnimationFrame(check);
+          }
+        });
+      }),
+    [attribute, value] as const,
+  );
+}

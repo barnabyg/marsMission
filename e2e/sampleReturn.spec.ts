@@ -9,7 +9,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
-import { sampleReturnMoney, sampleReturnSeed } from "./seeds";
+import { sampleReturnMoney, sampleReturnSeed } from "./sampleSeeds";
 
 test.use({ viewport: missionViewport });
 

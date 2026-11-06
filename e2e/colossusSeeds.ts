@@ -149,6 +149,15 @@ export const roundTripSeed = (() => {
 })();
 
 /**
+ * The automatic save of a Program on this seed at the start of Turn 4, with the smallest Crew in Mars orbit on a round
+ * trip flown on Turn 3, as the game saves it. It needs the game's data to give the Program colossusMoney.
+ */
+export function roundTripThereSave(seed: number): string {
+  const there = colossusSimulation.runTurn(colossusBuilt(seed), roundTrip);
+  return JSON.stringify(colossusSimulation.saveProgram(there.program));
+}
+
+/**
  * A seed where the Meridian Colossus lands the smallest Crew and the Haven Module together at the first known Landing
  * Site on its first Mission, as Planning Mode plans it once both are chosen, with nothing to answer.
  */
@@ -192,22 +201,36 @@ export function fuelPlantLandedSave(seed: number): string {
   return JSON.stringify(richSimulation.saveProgram(fuelPlantLanded(seed)));
 }
 
+/** The smallest Crew landing at Jezero Crater on a round trip, as Planning Mode plans it once set to land with Light shielding. */
+const roundTripLanding: TurnPlan = {
+  mission: crewLanding.mission && {
+    ...crewLanding.mission,
+    crew: {
+      size: catalogue.crew.sizes[0]?.crew ?? 0,
+      ...crewLanding.mission.crew,
+      roundTrip: true,
+    },
+  },
+};
+
+/**
+ * The automatic save of a Program on this seed at the start of Turn 5, with round-trip Crew landed at Jezero Crater on
+ * Turn 4 beside the fuel plant landed there on Turn 3. It needs the game's data to give the Program fuelPlantColossusMoney.
+ */
+export function roundTripLandedSave(seed: number): string {
+  const landed = richSimulation.runTurn(
+    fuelPlantLanded(seed),
+    roundTripLanding,
+  );
+  return JSON.stringify(richSimulation.saveProgram(landed.program));
+}
+
 /**
  * A seed where the Wellspring Fuel Plant lands at Jezero Crater on Turn 3, the smallest Crew land beside it on a round
  * trip on Turn 4, as Planning Mode plans it once the Crew are set to land with Light shielding, and on Turn 5, with
  * nothing launched, they come home safe through Mars ascent, each Turn with nothing to answer.
  */
 export const ascentSeed = (() => {
-  const roundTripLanding: TurnPlan = {
-    mission: crewLanding.mission && {
-      ...crewLanding.mission,
-      crew: {
-        size: catalogue.crew.sizes[0]?.crew ?? 0,
-        ...crewLanding.mission.crew,
-        roundTrip: true,
-      },
-    },
-  };
   for (let seed = 1; seed < 100_000; seed++) {
     const plant = richSimulation.workOutTurn(
       colossusBuilt(seed, richSimulation),
