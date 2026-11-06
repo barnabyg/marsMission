@@ -123,7 +123,7 @@ describe("round-trip Crew at Mars", () => {
         bringHome: "earth-return-stage:2029-06-19",
       }).problems,
     ).toEqual([
-      'There are no Crew at Mars waiting to come home aboard "earth-return-stage:2029-06-19".',
+      "There are no Crew at Mars waiting to come home aboard the Earth return stage this plan chooses.",
     ]);
   });
 

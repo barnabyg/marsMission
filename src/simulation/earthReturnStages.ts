@@ -84,9 +84,10 @@ export function journeyHomeProblems(
   // Samples sent home are checked with the rest of sample return.
   if (plan.bringHome === undefined || isSamplesKey(plan.bringHome)) return [];
   const coming = stageComingHome(program, plan);
+  // The key is how the plan names the stage, so the player is never shown it.
   if (!coming) {
     return [
-      `There are no Crew at Mars waiting to come home aboard "${plan.bringHome}".`,
+      "There are no Crew at Mars waiting to come home aboard the Earth return stage this plan chooses.",
     ];
   }
   const reason = cantLeave(catalogue, rules, program, coming.from);

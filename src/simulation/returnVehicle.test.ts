@@ -116,7 +116,7 @@ describe("planning a return vehicle", () => {
     const { simulation, program } = setup();
     expect(
       simulation.validatePlan(program, { mission: fetching() }).problems,
-    ).toEqual(['There are no Crew at Mars at "mars-orbit".']);
+    ).toEqual(["There are no Crew in Mars orbit."]);
     const roundTrip = crewOneWay([], {
       ...oneWay,
       crew: { size: 2, roundTrip: true },
@@ -130,7 +130,9 @@ describe("planning a return vehicle", () => {
       simulation.validatePlan(program, {
         mission: fetching("landing-site:nowhere"),
       }).problems,
-    ).toEqual(['There are no Crew at Mars at "landing-site:nowhere".']);
+    ).toEqual([
+      "There are no Crew at Mars where the Test return vehicle is sent.",
+    ]);
   });
 
   it("rejects one without room for the Crew it is for", () => {

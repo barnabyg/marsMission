@@ -2,6 +2,7 @@ import type { Catalogue } from "../catalogue/catalogue";
 import {
   crewAtMarsOf,
   crewKeyOf,
+  isLandingSiteKey,
   locationNameOf,
   type CrewMemberAtMars,
 } from "./crewPlaces";
@@ -45,6 +46,18 @@ function crewToFetch(program: Program, placeKey: string): CrewMemberAtMars[] {
 const inPlace = (rules: Rules, place: PlaceAtMars) =>
   `${place.kind === "marsOrbit" ? "in" : "at"} ${locationNameOf(rules, place)}`;
 
+/**
+ * Where a plan sends a return vehicle, to end a sentence, by the place's key, which the player is never shown: such as
+ * "in Mars orbit", "at Alpha Plain", or for a Landing Site the Catalogue doesn't have, where the vehicle is sent.
+ */
+function placeNamed(rules: Rules, key: string, vehicleName: string): string {
+  if (key === crewKeyOf({ kind: "marsOrbit" })) return "in Mars orbit";
+  const site = rules.landingSiteById(key.slice("landing-site:".length));
+  return isLandingSiteKey(key) && site
+    ? `at ${site.name}`
+    : `at Mars where the ${vehicleName} is sent`;
+}
+
 /** What a Mission's return vehicle costs and weighs, and what's wrong with it, if it carries one. */
 export function checkReturnVehicle(
   catalogue: Catalogue,
@@ -62,7 +75,7 @@ export function checkReturnVehicle(
   );
   const fetched = crewToFetch(program, key).length;
   const problems = !there
-    ? [`There are no Crew at Mars at "${key}".`]
+    ? [`There are no Crew ${placeNamed(rules, key, vehicle.name)}.`]
     : fetched === 0
       ? [
           `There are no Crew ${inPlace(rules, there.location)} without a way home to fetch.`,

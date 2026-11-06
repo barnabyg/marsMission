@@ -121,7 +121,7 @@ describe("bringing round-trip Crew home", () => {
     const { simulation, program } = atMars();
     const { program: home } = simulation.runTurn(program, bringThemHome);
     expect(simulation.validatePlan(home, bringThemHome).problems).toEqual([
-      `There are no Crew at Mars waiting to come home aboard "${stageKey}".`,
+      "There are no Crew at Mars waiting to come home aboard the Earth return stage this plan chooses.",
     ]);
   });
 });

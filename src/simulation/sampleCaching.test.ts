@@ -177,6 +177,13 @@ describe("offering to send samples home", () => {
     expect(simulation.validatePlan(program, sendHome).problems).toEqual([
       "There are no samples at Alpha Plain to send home.",
     ]);
+    // A plan names the site by its key, which the player is never shown.
+    expect(
+      simulation.validatePlan(program, {
+        ...sendHome,
+        bringHome: "samples:nowhere",
+      }).problems,
+    ).toEqual(["There are no samples at that Landing Site to send home."]);
   });
 });
 

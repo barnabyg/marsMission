@@ -95,8 +95,9 @@ function reasonFor(
   return null;
 }
 
+/** A Landing Site's name, or for one the Catalogue doesn't have, words that don't show the player its id. */
 const siteNameOf = (rules: Rules, siteId: string) =>
-  rules.landingSiteById(siteId)?.name ?? siteId;
+  rules.landingSiteById(siteId)?.name ?? "that Landing Site";
 
 /** The choices Planning Mode offers to send samples home, one for each Landing Site with any, in the Catalogue's order. */
 export function sampleReturnsOf(
