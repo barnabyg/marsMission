@@ -79,16 +79,19 @@ test("moves the view to Mars orbit on arrival, and leaves it where the player th
   await viewButton(page, "Solar system").click();
   await expect(current).toHaveText("Solar system");
   await page.getByRole("button", { name: "5x" }).click();
-  const summary = page.getByTestId("turn-summary");
+  // Read together in the page, as the view's name goes when the Turn summary comes, which a second read could wait on.
   await expect
     .poll(async () => {
-      const finished = await summary.count();
-      if (finished === 0) {
-        expect(await current.textContent()).toBe("Solar system");
-      }
+      const { finished, view } = await page.evaluate(() => ({
+        finished: document.querySelector("[data-testid=turn-summary]") !== null,
+        view:
+          document.querySelector("[data-testid=current-view]")?.textContent ??
+          null,
+      }));
+      if (!finished) expect(view).toBe("Solar system");
       return finished;
     })
-    .toBe(1);
+    .toBe(true);
   expect(problems).toEqual([]);
 });
 
