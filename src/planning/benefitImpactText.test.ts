@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeBenefitImpact } from "./benefitImpact";
+import { describeBenefitImpact } from "./benefitImpactText";
 
 const impact = { assets: 0, crew: 0, extraScience: 0, alreadyGivenBy: [] };
 
