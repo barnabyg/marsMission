@@ -236,6 +236,10 @@ function AssetModel({ kind, lost }: { kind: string; lost: boolean }) {
   if (kind === "habitat") return <Aeroshell lost={lost} color="#dfe3d6" />;
   // And a Mars lab.
   if (kind === "lab") return <Aeroshell lost={lost} color="#d6dce6" />;
+  // And an ascent vehicle. An Earth return orbiter flies as an orbiter does.
+  if (kind === "ascent-vehicle") {
+    return <Aeroshell lost={lost} color="#e6d8cf" />;
+  }
   return <Orbiter lost={lost} />;
 }
 

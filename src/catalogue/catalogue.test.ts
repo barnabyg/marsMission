@@ -13,7 +13,7 @@ describe("the real data files", () => {
   it.each([
     ["orbiter", ["survey", "research", "nothing"]],
     ["lander", ["research", "nothing"]],
-    ["rover", ["research", "research", "nothing"]],
+    ["rover", ["research", "research", "sampleCaching", "nothing"]],
   ])("give a %s these choices, starting on the first", (kind, expected) => {
     const { assets, activities } = parseCatalogue(realCatalogueFiles());
     const effects = assets

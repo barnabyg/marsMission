@@ -123,7 +123,9 @@ describe("validating the round trip", () => {
 
   it("rejects a Mars ascent Mission Event that isn't in the data files or isn't timed from leaving Mars", () => {
     const ascent = (missionEvents: string[]) =>
-      withRoundTrip({ ascent: { missionEvents, propellantKg: 5000 } });
+      withRoundTrip({
+        ascent: { missionEvents, propellantKg: 5000, samplesPerMember: 0 },
+      });
     expect(errorFrom(ascent(["test-nowhere"]))).toContain(
       `crew.json: Mars ascent refers to the Mission Event "test-nowhere", which isn't in mission-events.json`,
     );
@@ -139,6 +141,7 @@ describe("validating the round trip", () => {
           ascent: {
             missionEvents: ["test-ascent", "test-splashdown"],
             propellantKg: 5000,
+            samplesPerMember: 0,
           },
           missionEvents: ["test-departure-home"],
         }),
@@ -171,6 +174,7 @@ describe("validating the round trip", () => {
           ascent: {
             missionEvents: ["test-ascent", "test-departure-home"],
             propellantKg: 5000,
+            samplesPerMember: 0,
           },
         }),
       ),
@@ -183,7 +187,11 @@ describe("validating the round trip", () => {
     expect(
       errorFrom(
         withRoundTrip({
-          ascent: { missionEvents: ["test-ascent"], propellantKg: 0 },
+          ascent: {
+            missionEvents: ["test-ascent"],
+            propellantKg: 0,
+            samplesPerMember: 0,
+          },
         }),
       ),
     ).toContain("crew.json");

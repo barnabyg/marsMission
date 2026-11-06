@@ -110,5 +110,23 @@
     "effect": {
       "kind": "nothing"
     }
+  },
+  {
+    "id": "sample-caching",
+    "name": "Sample caching",
+    "description": "Drills cores of rock and soil around the Landing Site and seals them in tubes left there, until an ascent vehicle or Crew take them home. It earns no Science until they reach Earth.",
+    "effect": {
+      "kind": "sampleCaching",
+      "samplesPerTurn": 10,
+      "surfaceMotion": "nearby"
+    }
+  },
+  {
+    "id": "standing-by",
+    "name": "Standing by",
+    "description": "Waits, kept ready to fly samples home on the Turn the player chooses. It earns no Science of its own.",
+    "effect": {
+      "kind": "nothing"
+    }
   }
 ]

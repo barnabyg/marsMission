@@ -32,6 +32,26 @@ import type {
  * the ascent propellant it needs there whether or not it succeeds, and the rendezvous with their stage in Mars orbit.
  */
 
+const capitalised = (text: string) =>
+  text.charAt(0).toUpperCase() + text.slice(1);
+
+/**
+ * The text of a Mission Event or Contingency of the way home, with what it carries and what carries it filled in, as
+ * the data files share them between Crew and samples: `{aboard}` such as "the Crew", and `{stage}` such as "their
+ * Earth return stage", each with a capital to start a sentence.
+ */
+export function homewardText(
+  text: string,
+  aboard: string,
+  stage: string,
+): string {
+  return text
+    .replaceAll("{aboard}", aboard)
+    .replaceAll("{Aboard}", capitalised(aboard))
+    .replaceAll("{stage}", stage)
+    .replaceAll("{Stage}", capitalised(stage));
+}
+
 /** What became of a journey home, as far as the answers so far take it. */
 export interface JourneyHome {
   /** The Crew who left Mars, alive as they left. */
@@ -89,7 +109,7 @@ export function flyJourneyHome(
       flight.outcome.entries.push({
         ...flight.happened(event),
         title: event.name,
-        description: event.description,
+        description: flight.filledIn(event.description),
         outcome: "success",
       });
       continue;
@@ -208,7 +228,8 @@ function homewardFlight(
         (name) => !crewOnBoard.includes(name),
       );
     },
-    filledIn: (text) => text,
+    filledIn: (text) =>
+      homewardText(text, "the Crew", "their Earth return stage"),
     // Nothing aboard has a Service Life.
     shorten: () => undefined,
     cut: () => undefined,

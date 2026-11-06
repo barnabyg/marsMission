@@ -65,8 +65,10 @@ describe("the Mars lab in the real data files", () => {
     expect(crew.surfaceActivities.some(pays)).toBe(true);
   });
 
-  it("is the last Asset, so that adding it changes no seed's rolls for the others", () => {
-    expect(assets.at(-1)?.kind).toBe("lab");
+  it("comes after every earlier Asset, so that adding it changes no seed's rolls for them", () => {
+    expect(assets.findIndex(({ kind }) => kind === "lab")).toBe(
+      assets.findIndex(({ kind }) => kind === "habitat") + 1,
+    );
   });
 });
 

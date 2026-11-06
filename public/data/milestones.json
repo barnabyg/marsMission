@@ -60,6 +60,16 @@
     "publicSupport": 500
   },
   {
+    "id": "first-samples-home",
+    "name": "First samples returned",
+    "description": "The Program has brought rock and soil from Mars back to Earth, and laboratories everywhere are queuing to study them.",
+    "trigger": {
+      "samplesComeHome": true
+    },
+    "science": 300,
+    "publicSupport": 400
+  },
+  {
     "id": "science-700",
     "name": "700 Science earned",
     "description": "The Program has earned 700 Science, and its first results are in the news as well as the journals.",

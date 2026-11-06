@@ -164,19 +164,20 @@ describe("a productive Program in the real data files", () => {
 
   /**
    * A first orbiter for its Surveys, and then the dearest thing that lands and does research that the money allows, at
-   * a new site if there is one. A fuel plant, a habitat and a Mars lab, which came in Phase 8, earn nothing of their
-   * own.
+   * a new site if there is one. A fuel plant, a habitat, a Mars lab and an ascent vehicle, which came in Phase 8, earn
+   * nothing of their own.
    */
   function nextPlan(program: Program): TurnPlan {
     const { turnNumber } = safe.readProgram(program);
     const choices = files.assets
-      .filter(({ landsAtSite, kind, makes, habitat, benefit }) =>
+      .filter(({ landsAtSite, kind, makes, habitat, benefit, sampleReturn }) =>
         turnNumber === 1
           ? kind === "orbiter"
           : landsAtSite === true &&
             makes === undefined &&
             habitat === undefined &&
-            benefit === undefined,
+            benefit === undefined &&
+            sampleReturn === undefined,
       )
       .toSorted((first, second) => second.costMillions - first.costMillions)
       .flatMap((asset) =>
@@ -216,14 +217,15 @@ describe("a productive Program in the real data files", () => {
     },
   );
 
-  // This Program flies no Crew, which came in Phase 7, and brings none home, which came in Phase 8.
+  // This Program flies no Crew, which came in Phase 7, and brings neither Crew nor samples home, which came in Phase 8.
   it.each(
     files.milestones.filter(
       ({ trigger }) =>
         !(
           "crewArrives" in trigger ||
           "crewLands" in trigger ||
-          "crewComesHome" in trigger
+          "crewComesHome" in trigger ||
+          "samplesComeHome" in trigger
         ),
     ),
   )("earns the Milestone $name", ({ id }) => {

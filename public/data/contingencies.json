@@ -48,8 +48,8 @@
     "rescueFailureProbability": 0.3,
     "serviceLifeLossPercent": 0,
     "extraPublicSupportLoss": 10,
-    "troubleDescription": "The Earth return stage's engine has failed in Mars orbit. The backup engine could be lit for another try at the burn home.",
-    "rescueDescription": "The backup engine fired and sent the Crew on their way home, though the strain of it told on them."
+    "troubleDescription": "The engine of {stage} has failed in Mars orbit. The backup engine could be lit for another try at the burn home.",
+    "rescueDescription": "The backup engine fired and sent {aboard} on the way home."
   },
   {
     "id": "ascent-engine-restart",
@@ -61,21 +61,21 @@
     "rescueFailureProbability": 0.35,
     "serviceLifeLossPercent": 0,
     "extraPublicSupportLoss": 10,
-    "troubleDescription": "The ascent engine has shut down early, leaving the Crew short of Mars orbit. It could be restarted for another try.",
-    "rescueDescription": "The ascent engine relit and lifted the Crew into Mars orbit, though the rough climb told on them."
+    "troubleDescription": "The ascent engine has shut down early, leaving {aboard} short of Mars orbit. It could be restarted for another try.",
+    "rescueDescription": "The ascent engine relit and lifted {aboard} into Mars orbit at the second try."
   },
   {
     "id": "manual-docking",
     "name": "Manual docking",
-    "description": "Training and controls for the Crew to dock with their Earth return stage by hand.",
+    "description": "A backup docking system that can be steered by hand, by the Crew aboard or from Earth, for another try at docking in Mars orbit.",
     "missionEvent": "mars-orbit-rendezvous",
     "costMillions": 40,
     "massTonnes": 0.1,
     "rescueFailureProbability": 0.3,
     "serviceLifeLossPercent": 0,
     "extraPublicSupportLoss": 10,
-    "troubleDescription": "The automatic docking with the Earth return stage has failed. The Crew could take the controls for another try.",
-    "rescueDescription": "The Crew docked by hand at the second attempt, worn out by the long approach."
+    "troubleDescription": "The automatic docking with {stage} has failed. The ascent craft could be steered in by hand for another try.",
+    "rescueDescription": "The ascent craft docked with {stage} at the second attempt, steered in by hand."
   },
   {
     "id": "backup-parachutes",
@@ -88,6 +88,6 @@
     "serviceLifeLossPercent": 0,
     "extraPublicSupportLoss": 10,
     "troubleDescription": "The capsule's main parachutes didn't open as it came down through Earth's atmosphere. The backup parachutes could still be deployed.",
-    "rescueDescription": "The backup parachutes opened late, and the capsule hit the sea hard, shaking up the Crew."
+    "rescueDescription": "The backup parachutes opened late, and the capsule hit the sea hard with {aboard} inside."
   }
 ]

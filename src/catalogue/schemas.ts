@@ -23,6 +23,8 @@ const programSchema = z.strictObject({
   // At least 1%, and a level of at least 1, so a Program that only skips Turns is always cancelled.
   publicSupportDrainPercent: z.number().int().min(1).max(100),
   cancellationLevel: z.number().int().min(1),
+  // The Science each sample earns on the day it reaches Earth, brought home by Crew or by an Earth return orbiter.
+  sciencePerSampleHome: z.number().int().nonnegative(),
   // Base funding: paid as each Turn ends, while the Program is active, for each point of Public Support it had as the
   // Turn started, up to a most for a Turn. Left out, there is none.
   baseFunding: z
@@ -159,7 +161,8 @@ const milestonesSchema = z.array(
     name: z.string().min(1),
     description: z.string().min(1),
     // Earned by the first Asset of a kind to be delivered, the first Asset to land, the first Crew to arrive, the
-    // first Crew to land, the first Crew to come home safe, or reaching a total of Science.
+    // first Crew to land, the first Crew to come home safe, the first samples to reach Earth, or reaching a total of
+    // Science.
     trigger: z.union(
       [
         z.strictObject({ assetKindArrives: id }),
@@ -167,11 +170,12 @@ const milestonesSchema = z.array(
         z.strictObject({ crewArrives: z.literal(true) }),
         z.strictObject({ crewLands: z.literal(true) }),
         z.strictObject({ crewComesHome: z.literal(true) }),
+        z.strictObject({ samplesComeHome: z.literal(true) }),
         z.strictObject({ totalScience: z.number().int().positive() }),
       ],
       {
         error:
-          "must be one of assetKindArrives with a kind of Asset, assetLands with true, crewArrives with true, crewLands with true, crewComesHome with true, or totalScience with a positive whole number",
+          "must be one of assetKindArrives with a kind of Asset, assetLands with true, crewArrives with true, crewLands with true, crewComesHome with true, samplesComeHome with true, or totalScience with a positive whole number",
       },
     ),
     science: z.number().int().nonnegative(),

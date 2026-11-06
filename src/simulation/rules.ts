@@ -257,10 +257,12 @@ export function createRules(catalogue: Catalogue) {
     return (activityById(asset.activityId) ?? nothingActivity()).name;
   }
 
-  /** How an operating Asset gets about on the surface, which only research sets. */
+  /** How an operating Asset gets about on the surface, which only research and Sample caching set. */
   function surfaceMotionOf(asset: { activityId: string }): SurfaceMotion {
     const effect = activityById(asset.activityId)?.effect;
-    return effect?.kind === "research" ? effect.surfaceMotion : "still";
+    return effect?.kind === "research" || effect?.kind === "sampleCaching"
+      ? effect.surfaceMotion
+      : "still";
   }
 
   /** The one calculation behind both an Asset's roll in service and the risk band Planning Mode shows. */

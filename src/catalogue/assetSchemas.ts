@@ -33,6 +33,13 @@ export const activitiesSchema = z
           // How it looks in the surface view. Standing still is the "nothing" effect.
           surfaceMotion: z.enum(["traverse", "nearby"]),
         }),
+        // Collecting samples at its Landing Site, which stay there until something brings them home, for a whole Turn
+        // in service. An Asset in service for part of a Turn collects its share. It earns no Ongoing Research.
+        z.strictObject({
+          kind: z.literal("sampleCaching"),
+          samplesPerTurn: z.number().int().positive(),
+          surfaceMotion: z.enum(["traverse", "nearby"]),
+        }),
       ]),
     }),
   )
@@ -113,6 +120,10 @@ export const assetsSchema = z.array(
         suppliesKg: z.number().int().positive(),
       })
       .optional(),
+    // Its part in bringing samples home: an ascent vehicle lands and flies the samples at its Landing Site up through
+    // Mars ascent and the rendezvous, and an Earth return orbiter waits in Mars orbit and flies them home through the
+    // journey home's Mission Events.
+    sampleReturn: z.enum(["ascent", "earthReturn"]).optional(),
     ...technologyFields,
   }),
 );

@@ -80,7 +80,12 @@
     "upkeepMillionsPerTurn": 15,
     "missionEvents": ["entry-descent-landing"],
     "landsAtSite": true,
-    "activities": ["soil-analysis", "long-traverse", "nothing"],
+    "activities": [
+      "soil-analysis",
+      "long-traverse",
+      "sample-caching",
+      "nothing"
+    ],
     "massTonnes": 3.5,
     "serviceLifeOptions": [
       {
@@ -103,7 +108,12 @@
     "upkeepMillionsPerTurn": 15,
     "missionEvents": ["entry-descent-landing"],
     "landsAtSite": true,
-    "activities": ["soil-analysis", "long-traverse", "nothing"],
+    "activities": [
+      "soil-analysis",
+      "long-traverse",
+      "sample-caching",
+      "nothing"
+    ],
     "massTonnes": 3.5,
     "serviceLifeOptions": [
       {
@@ -245,5 +255,60 @@
       "assetKinds": ["rover"],
       "crew": true
     }
+  },
+  {
+    "id": "kestrel-ascent-vehicle",
+    "name": "Kestrel Lifter",
+    "kind": "ascent-vehicle",
+    "costMillions": 1000,
+    "upkeepMillionsPerTurn": 10,
+    "missionEvents": ["entry-descent-landing"],
+    "landsAtSite": true,
+    "activities": ["standing-by"],
+    "massTonnes": 4,
+    "serviceLifeOptions": [
+      {
+        "days": 1300,
+        "costMillions": 0
+      },
+      {
+        "days": 2100,
+        "costMillions": 150
+      }
+    ],
+    "failureChancePerTurn": 0.08,
+    "technologyReadiness": "built",
+    "unproven": {
+      "costMillions": 1200,
+      "failureMultiplier": 1.5
+    },
+    "sampleReturn": "ascent"
+  },
+  {
+    "id": "albatross-return-orbiter",
+    "name": "Albatross Orbiter",
+    "kind": "return-orbiter",
+    "costMillions": 900,
+    "upkeepMillionsPerTurn": 10,
+    "missionEvents": ["mars-orbit-insertion"],
+    "activities": ["standing-by"],
+    "massTonnes": 3,
+    "serviceLifeOptions": [
+      {
+        "days": 1300,
+        "costMillions": 0
+      },
+      {
+        "days": 2100,
+        "costMillions": 150
+      }
+    ],
+    "failureChancePerTurn": 0.1,
+    "technologyReadiness": "built",
+    "unproven": {
+      "costMillions": 1100,
+      "failureMultiplier": 1.5
+    },
+    "sampleReturn": "earthReturn"
   }
 ]

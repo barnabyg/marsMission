@@ -30,6 +30,10 @@ const modelsByKind: Partial<Record<string, ReactNode>> = {
   habitat: <models.lander />,
   // And a Mars lab.
   lab: <models.lander />,
+  // And an ascent vehicle, standing on the surface as a lander does.
+  "ascent-vehicle": <models.lander />,
+  // An Earth return orbiter waits in Mars orbit as an orbiter does.
+  "return-orbiter": <Orbiter lost={false} deployed />,
 };
 
 /** The camera looks from in front, a little to the right and above, where a lander's hatch and a rover's front show. */

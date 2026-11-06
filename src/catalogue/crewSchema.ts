@@ -99,6 +99,9 @@ export const crewSchema = z.strictObject({
     ascent: z.strictObject({
       missionEvents: z.array(id).min(1),
       propellantKg: z.number().int().positive(),
+      // The samples of their own that each Crew member who comes home from a Landing Site brings, on top of those
+      // cached at their site.
+      samplesPerMember: z.number().int().nonnegative(),
     }),
   }),
   // A return vehicle: an Earth return stage that a later Mission flies to Mars orbit on its own, with or without Crew of

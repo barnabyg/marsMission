@@ -48,6 +48,8 @@ export function awardArrivalMilestones(
     if ("crewLands" in trigger) return crewLanded === null ? [] : [crewLanded];
     // Crew coming home earn theirs as they get home (`crewHome.ts`), not by arriving.
     if ("crewComesHome" in trigger) return [];
+    // Samples earn theirs as they reach Earth (`samplesHome.ts`).
+    if ("samplesComeHome" in trigger) return [];
     return deliveredAssets
       .filter((asset) =>
         "assetLands" in trigger

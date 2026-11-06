@@ -69,6 +69,17 @@ export function testActivities(): Pick<
           surfaceMotion: "traverse",
         },
       },
+      {
+        id: "test-caching",
+        name: "Test caching",
+        description: "Collects samples at the Landing Site.",
+        // One sample every 39 days over the 780-day Turn.
+        effect: {
+          kind: "sampleCaching",
+          samplesPerTurn: 20,
+          surfaceMotion: "nearby",
+        },
+      },
     ],
     researchKinds: [
       { id: "test-unpaid", name: "Unpaid", grantMillionsPerScience: 0 },

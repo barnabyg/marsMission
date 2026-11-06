@@ -72,7 +72,8 @@
     "missionEvents": ["trans-earth-injection", "earth-entry"],
     "ascent": {
       "missionEvents": ["mars-ascent", "mars-orbit-rendezvous"],
-      "propellantKg": 20000
+      "propellantKg": 20000,
+      "samplesPerMember": 5
     }
   },
   "returnVehicle": {

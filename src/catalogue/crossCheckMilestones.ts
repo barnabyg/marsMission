@@ -24,7 +24,9 @@ export function milestoneProblems({
       "totalScience" in milestone.trigger ||
       "crewArrives" in milestone.trigger ||
       "crewLands" in milestone.trigger ||
-      "crewComesHome" in milestone.trigger
+      "crewComesHome" in milestone.trigger ||
+      // Checked with the rest of sample return (`crossCheckSamples.ts`).
+      "samplesComeHome" in milestone.trigger
     ) {
       continue;
     }

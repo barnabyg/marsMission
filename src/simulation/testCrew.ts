@@ -76,6 +76,8 @@ export function testCrew(): CatalogueFiles["crew"] {
       ascent: {
         missionEvents: ["test-ascent", "test-docking"],
         propellantKg: 5000,
+        // Crew who come home from a Landing Site bring 3 samples each, on top of those cached there.
+        samplesPerMember: 3,
       },
     },
     // Light enough to fly on the Test Vehicle on its own, and beside the smaller Crew on the Test Heavy, with room for
