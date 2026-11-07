@@ -14,20 +14,20 @@ The first run installs what it needs. The game then opens in your browser. Press
 
 ## Known seeds
 
-Outcomes normally vary from one Program to the next. To see a particular one, open the game at the address below. If the terminal shows a port other than 4173, use that one instead. If the game offers **Continue this Program**, choose **Start a new Program**, which is what uses the seed.
+Outcomes normally vary from one Program to the next. To see a particular one, open the game at the address below. If the terminal shows a port other than 4280, use that one instead. If the game offers **Continue this Program**, choose **Start a new Program**, which is what uses the seed.
 
 | Address                                                | What happens, with no Reliability and the shortest Service Life                           |
 | ------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| [Crash or survey first](http://localhost:4173/?seed=1) | Landing at Jezero Crater on Turn 1 crashes. An orbiter first, then that landing, succeeds |
-| [Lucky landing](http://localhost:4173/?seed=3)         | Landing at Jezero Crater on Turn 1 succeeds                                               |
-| [Crash after surveying](http://localhost:4173/?seed=4) | An orbiter arrives on Turn 1, and landing at Jezero Crater on Turn 2 still crashes        |
-| [Failure in service](http://localhost:4173/?seed=15)   | An orbiter arrives on Turn 1 and breaks down on Turn 2, whether or not you launch         |
+| [Crash or survey first](http://localhost:4280/?seed=1) | Landing at Jezero Crater on Turn 1 crashes. An orbiter first, then that landing, succeeds |
+| [Lucky landing](http://localhost:4280/?seed=3)         | Landing at Jezero Crater on Turn 1 succeeds                                               |
+| [Crash after surveying](http://localhost:4280/?seed=4) | An orbiter arrives on Turn 1, and landing at Jezero Crater on Turn 2 still crashes        |
+| [Failure in service](http://localhost:4280/?seed=15)   | An orbiter arrives on Turn 1 and breaks down on Turn 2, whether or not you launch         |
 
 Without `?seed=` in the address, each new Program gets its own seed, as in normal play.
 
 ## Scenario
 
-1. **Land straight away.** Open [Crash or survey first](http://localhost:4173/?seed=1). Planning Mode shows Turn 1, $2.3B, 100 Public Support and "$1B at 250 (150 away)" for the next Funding Threshold. Under Assets, untick Pathfinder Orbiter and tick Prospector Lander. A Landing Site choice appears, offering Jezero Crater and Gale Crater, and the text below it says "Not surveyed". Entry/descent/landing shows "Over 30%" and the total cost reads $1.1B. Buying Redundant Reliability on it only brings that down to "~10%", and costs enough that a failed lander couldn't be retried.
+1. **Land straight away.** Open [Crash or survey first](http://localhost:4280/?seed=1). Planning Mode shows Turn 1, $2.3B, 100 Public Support and "$1B at 250 (150 away)" for the next Funding Threshold. Under Assets, untick Pathfinder Orbiter and tick Prospector Lander. A Landing Site choice appears, offering Jezero Crater and Gale Crater, and the text below it says "Not surveyed". Entry/descent/landing shows "Over 30%" and the total cost reads $1.1B. Buying Redundant Reliability on it only brings that down to "~10%", and costs enough that a failed lander couldn't be retried.
 2. **Crash.** Choose Launch Mission, then 10x. When the Mission reaches Mars, the view moves to Mars orbit by itself. "Entry/descent/landing failed" appears in the failure colour with its sound and says the lander crashed at Jezero Crater. The Turn summary shows money $2.3B to $1.2B and Public Support 100 to 68. That still leaves enough for a retry of either kind.
 3. **Survey first.** Open the same address again and choose **Start a new Program**. Launch the Pathfinder Orbiter, which is what's chosen at the start, for $1B. In Mission Mode, press **Mars orbit** and **Solar system** to switch views at any time, at any speed. When the orbiter arrives, the view moves to Mars orbit and shows it going round. The events column adds First orbiter at Mars, Survey from orbit and a Funding Threshold. The Turn summary shows money $2.3B to $2.3B and Public Support 100 to 255.
 4. **Land after a Survey.** Turn 2 shows "$1.5B at 425 (170 away)". Under Operating at Mars, the orbiter has 330 days of Service Life left. Choose only the Prospector Lander. Entry/descent/landing now shows "~10%", the text below the Landing Site says "Surveyed", and there is a third site, Meridiani Planum. Choose Jezero Crater and launch.
@@ -35,7 +35,7 @@ Without `?seed=` in the address, each new Program gets its own seed, as in norma
 6. **Choose your view.** During a Turn, switch to **Solar system** after the view has moved on arrival. It stays there until the next Mission Event with a view of its own. The events column and the outcome don't change.
 7. **Too heavy.** On the next Turn, tick both the orbiter and the lander. Mass reads 5.5 of 4 tonnes, a problem says it's too heavy, and Launch Mission is disabled. Choose Meridian Heavy, and it reads 5.5 of 8 tonnes for $2.2B. Launching them together needs only one launch, but a failed orbit insertion loses the lander too. Launch it if you want to, and if the lander crashes the orbiter carries on.
 8. **Service Life and Reliability for an Asset.** For the orbiter, choose the longer Service Life and watch the total cost rise. Change its Reliability, and its Risk Band per Turn falls from "~10%".
-9. **Failure in service.** Open [Failure in service](http://localhost:4173/?seed=15), start a new Program and launch the orbiter. On Turn 2, choose End Turn without launching. Partway through, "Pathfinder Orbiter failed" appears in the failure colour with its sound, and the Turn summary lists it as failed in service. There is no extra loss of Public Support.
+9. **Failure in service.** Open [Failure in service](http://localhost:4280/?seed=15), start a new Program and launch the orbiter. On Turn 2, choose End Turn without launching. Partway through, "Pathfinder Orbiter failed" appears in the failure colour with its sound, and the Turn summary lists it as failed in service. There is no extra loss of Public Support.
 10. **Saves.** Save to a Save Slot on any Turn, reload the page and load it. Survey progress, the sites you've landed at, and each Asset's time left are unchanged. Saves from Phase 1 and Phase 2 still load.
 
 ## Judge by eye and ear
