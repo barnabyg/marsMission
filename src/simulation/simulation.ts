@@ -53,6 +53,7 @@ export type {
   PlannedActivity,
   PlannedAsset,
   PlannedDevelopment,
+  PlannedServiceLife,
   PlannedTrajectory,
 } from "./previews";
 export type { TurnSummary } from "./turnSummary";

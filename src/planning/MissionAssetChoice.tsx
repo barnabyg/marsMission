@@ -5,6 +5,7 @@ import {
   formatPropellant,
   type AssetChoices,
   type PlannedAsset,
+  type PlannedServiceLife,
   type ProgramView,
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
@@ -33,6 +34,27 @@ interface MissionAssetChoiceProps {
   /** Opens the Asset's details, which only read the plan. */
   onShowDetails: () => void;
 }
+
+/**
+ * A Service Life as its choice names it, with its cost, and for a longer one the days it adds, roughly in Turns, and the
+ * Research Grants the chosen Activity would earn over them, the only earnings that pay towards it.
+ */
+function serviceLifeLabel({
+  days,
+  costMillions,
+  extraDays,
+  extraTurns,
+  extraGrantMillions,
+}: PlannedServiceLife): string {
+  const life = `${days.toLocaleString("en")} days (${formatMoney(costMillions)})`;
+  return extraDays > 0
+    ? `${life}: +${extraDays.toLocaleString("en")} days, about ${String(extraTurns)} Turn${extraTurns === 1 ? "" : "s"}, earning ${formatMoney(extraGrantMillions)} in Research Grants`
+    : life;
+}
+
+/** What each longer Service Life says it earns, on hovering its choice and under the Assets. */
+export const serviceLifePayback =
+  "Each longer Service Life says the Research Grants the Asset's Activity would earn over the days it adds, if the Asset doesn't fail. Only Research Grants pay towards its cost, as Science and Public Support aren't money.";
 
 /**
  * One Asset the Mission can carry, as a card: a picture of its model, its cost, mass, Technology Readiness, Benefit and how many are at Mars,
@@ -197,6 +219,7 @@ export function MissionAssetChoice({
           </span>
           <select
             aria-label={`Service Life for ${asset.name}`}
+            title={serviceLifePayback}
             value={planned.serviceLifeDays}
             onChange={(event) => {
               onChoicesChange({ serviceLifeDays: Number(event.target.value) });
@@ -204,7 +227,7 @@ export function MissionAssetChoice({
           >
             {planned.serviceLifeOptions.map((option) => (
               <option key={option.days} value={option.days}>
-                {option.days} days ({formatMoney(option.costMillions)})
+                {serviceLifeLabel(option)}
               </option>
             ))}
           </select>

@@ -204,7 +204,7 @@ test("opens an Asset's details from its card, and closes them without changing t
   const orbiter = card("Pathfinder Orbiter");
   await orbiter
     .getByRole("combobox", { name: "Activity for Pathfinder Orbiter" })
-    .selectOption({ label: "Orbital research" });
+    .selectOption("orbital-research");
   const spend = await page.getByTestId("budget-bar").textContent();
 
   // From the keyboard, on an Asset that isn't ticked.

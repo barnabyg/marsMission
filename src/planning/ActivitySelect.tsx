@@ -1,4 +1,4 @@
-import type { PlannedActivity } from "../simulation/simulation";
+import { formatMoney, type PlannedActivity } from "../simulation/simulation";
 import { termFor } from "../ui/tooltips";
 
 interface ActivitySelectProps {
@@ -21,7 +21,25 @@ export function describeActivity({
     : description;
 }
 
-/** The choice of what one Asset does. */
+/**
+ * An Activity as its choice names it, with what it earns over a whole Turn in each of Science, Public Support and
+ * Research Grant if it's research, or the samples it collects if it caches them, so that the choices can be compared.
+ */
+function activityLabel({
+  name,
+  earnsPerTurn,
+  cachesPerTurn,
+}: PlannedActivity): string {
+  if (earnsPerTurn) {
+    const { science, publicSupport, researchGrantMillions } = earnsPerTurn;
+    return `${name}: ${String(science)} Science, ${String(publicSupport)} Public Support and ${formatMoney(researchGrantMillions)} Research Grant a Turn`;
+  }
+  return cachesPerTurn
+    ? `${name}: ${String(cachesPerTurn.samples)} samples a Turn`
+    : name;
+}
+
+/** The choice of what one Asset does, each Activity with what it earns a Turn. */
 export function ActivitySelect({
   assetName,
   activityId,
@@ -42,7 +60,7 @@ export function ActivitySelect({
     >
       {activities.map((activity) => (
         <option key={activity.id} value={activity.id}>
-          {activity.name}
+          {activityLabel(activity)}
         </option>
       ))}
     </select>

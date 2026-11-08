@@ -148,6 +148,8 @@
 .operating-assets select {
   flex: none;
   min-width: 10rem;
+  /* Each Activity's choice says what it earns, which is too long for the row, so the closed choice cuts it short. */
+  max-width: 11rem;
 }
 
 /* Beside each Asset's Activity, ending its mission so that it costs no more Upkeep. */
