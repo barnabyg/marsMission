@@ -130,39 +130,44 @@ export interface PartLook {
   double: boolean;
 }
 
+/**
+ * Lighter on top and on the Sun's side, darker underneath and away from it, but never far from the part's own colour,
+ * which is what the models were painted to read as. The glint comes from high in the sky behind the camera. The light
+ * is worked out at each corner rather than each pixel, which software rendering at 4K can't spare, and for both sides
+ * of a face, for the parts seen from inside as well, such as a dish.
+ */
 const partVertex = `
-  varying vec3 vNormal;
-  varying vec3 vToCamera;
+  uniform vec3 color;
+  uniform float gloss;
+  uniform float shine;
+  varying vec3 vFront;
+  varying vec3 vBack;
+  ${sun}
+  const vec3 toGlint = normalize(vec3(-0.35, 0.85, -0.4));
+  vec3 litFacing(vec3 normalOut, vec3 toCamera) {
+    vec3 sunAcross = normalize(vec3(toSun.x, 0.0, toSun.z));
+    float light = 0.9 + 0.16 * normalOut.y + 0.14 * dot(normalOut, sunAcross);
+    float glint = pow(max(dot(reflect(-toGlint, normalOut), toCamera), 0.0), shine);
+    return color * light + gloss * glint;
+  }
   void main() {
     mat4 placed = modelMatrix;
     #ifdef USE_INSTANCING
       placed = modelMatrix * instanceMatrix;
     #endif
     vec4 world = placed * vec4(position, 1.0);
-    vNormal = mat3(placed) * normal;
-    vToCamera = cameraPosition - world.xyz;
+    vec3 normalOut = normalize(mat3(placed) * normal);
+    vec3 toCamera = normalize(cameraPosition - world.xyz);
+    vFront = litFacing(normalOut, toCamera);
+    vBack = litFacing(-normalOut, toCamera);
     gl_Position = projectionMatrix * viewMatrix * world;
   }`;
 
-/**
- * Lighter on top and on the Sun's side, darker underneath and away from it, but never far from the part's own colour,
- * which is what the models were painted to read as. The glint comes from high in the sky behind the camera.
- */
 const partFragment = `
-  uniform vec3 color;
-  uniform float gloss;
-  uniform float shine;
-  varying vec3 vNormal;
-  varying vec3 vToCamera;
-  ${sun}
-  const vec3 toGlint = normalize(vec3(-0.35, 0.85, -0.4));
+  varying vec3 vFront;
+  varying vec3 vBack;
   void main() {
-    vec3 normalOut = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
-    vec3 sunAcross = normalize(vec3(toSun.x, 0.0, toSun.z));
-    float light = 0.9 + 0.16 * normalOut.y + 0.14 * dot(normalOut, sunAcross);
-    vec3 toCamera = normalize(vToCamera);
-    float glint = pow(max(dot(reflect(-toGlint, normalOut), toCamera), 0.0), shine);
-    gl_FragColor = vec4(color * light + gloss * glint, 1.0);
+    gl_FragColor = vec4(gl_FrontFacing ? vFront : vBack, 1.0);
     #include <colorspace_fragment>
   }`;
 
