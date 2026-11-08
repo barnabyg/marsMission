@@ -58,8 +58,9 @@ describe("choosing a Service Life", () => {
     );
   });
 
-  it("says what each longer Service Life adds, in Turns and in the Research Grants its Activity would pay over them", () => {
-    // Paid research earns 78 Science a 780-day Turn, at $0.5M a Science: $39M a Turn.
+  it("says what each longer Service Life adds, in Turns, in the Research Grants its Activity would pay over them and in Upkeep", () => {
+    // Paid research earns 78 Science a 780-day Turn, at $0.5M a Science: $39M a Turn. The orbiter arrives on day 200,
+    // so 1000 days keep it going as Turn 2 starts, 1390 days as Turn 3 starts too, and 2560 days as Turn 4 starts too.
     const files = testCatalogueFiles();
     const simulation = createSimulation(
       parseCatalogue({
@@ -74,6 +75,7 @@ describe("choosing a Service Life", () => {
                   { days: 2560, costMillions: 90 },
                 ],
                 activities: [...asset.activities, "test-paid-research"],
+                upkeepMillionsPerTurn: 10,
               }
             : asset,
         ),
@@ -92,6 +94,7 @@ describe("choosing a Service Life", () => {
         extraDays: 0,
         extraTurns: 0,
         extraGrantMillions: 0,
+        extraUpkeepMillions: 0,
       },
       {
         days: 1390,
@@ -99,6 +102,7 @@ describe("choosing a Service Life", () => {
         extraDays: 390,
         extraTurns: 0.5,
         extraGrantMillions: 20,
+        extraUpkeepMillions: 10,
       },
       {
         days: 2560,
@@ -106,6 +110,7 @@ describe("choosing a Service Life", () => {
         extraDays: 1560,
         extraTurns: 2,
         extraGrantMillions: 78,
+        extraUpkeepMillions: 20,
       },
     ]);
     // Research that pays no Research Grant pays nothing towards a longer Service Life, however much Science it earns.

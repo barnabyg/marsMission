@@ -8,21 +8,19 @@ import {
   type PlannedMission,
   type ViewAsset,
 } from "./adviceItems";
-import type { PlannedAsset } from "../simulation/simulation";
+import { onlyGrantsPay } from "../simulation/simulation";
 import { baseKinds } from "./base";
 import {
   bestActivityReason,
   longestAdds,
   longestCosts,
-  longestEarns,
-  longestWouldNotPay,
-  onlyGrantsPay,
+  longestPays,
 } from "./choiceReasons";
 import { baseSite, crewVehicleOf } from "./route";
 
 /* The advice on the Turn's Mission: each choice the tutorial's plan makes for it, and why. */
 
-const isBasePart = ({ kind }: ViewAsset) =>
+const isBasePart = ({ kind }: { kind: string }) =>
   (baseKinds as readonly string[]).includes(kind);
 
 const names = (assets: readonly ViewAsset[]) =>
@@ -120,11 +118,12 @@ function serviceLifeItems(
 ): AdviceItem[] {
   const planned = tools
     .previewAssets(mission)
-    .filter(({ serviceLifeOptions }) => serviceLifeOptions.length > 1);
-  const kindOf = ({ assetId }: PlannedAsset) =>
-    view.assets.find(({ id }) => id === assetId)?.kind ?? "";
-  const partOfBase = (asset: PlannedAsset) =>
-    (baseKinds as readonly string[]).includes(kindOf(asset));
+    .filter(({ serviceLifeOptions }) => serviceLifeOptions.length > 1)
+    .map((asset) => ({
+      ...asset,
+      kind: view.assets.find(({ id }) => id === asset.assetId)?.kind ?? "",
+    }));
+  type Planned = (typeof planned)[number];
   const longest = planned.filter(
     ({ serviceLifeDays, serviceLifeOptions }) =>
       serviceLifeDays ===
@@ -132,38 +131,39 @@ function serviceLifeItems(
   );
   const short = planned.filter((asset) => !longest.includes(asset));
   const worthLonger = short.filter(
-    (asset) => partOfBase(asset) || kindOf(asset) === "rover",
+    (asset) => isBasePart(asset) || asset.kind === "rover",
   );
   const enough = short.filter((asset) => !worthLonger.includes(asset));
-  const namesOf = (assets: PlannedAsset[]) =>
-    listOf(assets.map(({ name }) => name));
-  const sentences = (
-    assets: PlannedAsset[],
-    each: (asset: PlannedAsset) => string,
-  ) => assets.map(each).join(" ");
+  const namesOf = (assets: Planned[]) => listOf(assets.map(({ name }) => name));
   const items: AdviceItem[] = [];
   if (longest.length > 0) {
-    const [part] = longest.filter(partOfBase);
+    const parts = longest.filter(isBasePart);
+    const others = longest.filter((asset) => !isBasePart(asset));
     items.push({
       topic: "serviceLife",
       advice: `Buy the longest Service Life for ${namesOf(longest)}.`,
-      reason: part
-        ? `The Base counts only while all of it operates, so its parts must last until Crew arrive: ${longestAdds(part)}.`
-        : sentences(longest, longestEarns),
+      reason: [
+        ...(parts.length > 0
+          ? [
+              `The Base counts only while all of it operates, so its parts must last until Crew arrive: ${listOf(parts.map(longestAdds))}.`,
+            ]
+          : []),
+        ...others.map(longestPays),
+      ].join(" "),
     });
   }
   if (worthLonger.length > 0) {
     items.push({
       topic: "serviceLife",
       advice: `Keep the shortest Service Life for ${namesOf(worthLonger)}.`,
-      reason: `${sentences(worthLonger, longestCosts)} There isn't the money for a longer one as well this Turn.`,
+      reason: `${worthLonger.map(longestCosts).join(" ")} There isn't the money for a longer one as well this Turn.`,
     });
   }
   if (enough.length > 0) {
     items.push({
       topic: "serviceLife",
       advice: `Keep the shortest Service Life for ${namesOf(enough)}.`,
-      reason: `${sentences(enough, longestWouldNotPay)} ${onlyGrantsPay}`,
+      reason: `${enough.map(longestPays).join(" ")} ${onlyGrantsPay}`,
     });
   }
   return items;

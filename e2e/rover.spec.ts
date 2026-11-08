@@ -70,18 +70,19 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
     "Sample caching: 10 samples a Turn",
     "Nothing",
   ]);
-  // The longer Service Life says the Research Grants its days would earn with the Activity chosen, against its cost.
+  // The longer Service Life says the Research Grants its days would earn with the Activity chosen, against its cost
+  // and Upkeep.
   const life = row.getByLabel("Service Life for Trailblazer Rover");
   await expect(life.getByRole("option")).toHaveText([
     "1,300 days ($0M)",
-    "2,800 days ($300M): +1,500 days, about 1.9 Turns, earning $1.54B in Research Grants",
+    "2,800 days: +1,500 days (about 1.9 Turns) earn $1.54B in Research Grants against $300M and $30M Upkeep",
   ]);
   await expect(page.getByTestId("service-life-payback")).toContainText(
-    "Only Research Grants pay towards its cost, as Science and Public Support aren't money.",
+    "Only Research Grants pay towards a longer Service Life and its Upkeep, as Science and Public Support aren't money.",
   );
   await activity.selectOption("long-traverse");
   await expect(life.getByRole("option").last()).toHaveText(
-    "2,800 days ($300M): +1,500 days, about 1.9 Turns, earning $0M in Research Grants",
+    "2,800 days: +1,500 days (about 1.9 Turns) earn $0M in Research Grants against $300M and $30M Upkeep",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 

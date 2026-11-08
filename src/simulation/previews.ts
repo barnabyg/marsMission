@@ -59,7 +59,7 @@ export interface PlannedTrajectory {
 
 /**
  * A Service Life on offer for an Asset, with what it adds beyond the shortest on offer, so that a player can see whether
- * it pays for itself. Only Research Grants pay towards its cost, as Science and Public Support aren't money.
+ * it pays for itself: whether its Research Grants cover its cost and Upkeep. Science and Public Support aren't money.
  */
 export interface PlannedServiceLife {
   days: number;
@@ -74,6 +74,8 @@ export interface PlannedServiceLife {
    * if the Asset doesn't fail first.
    */
   extraGrantMillions: number;
+  /** The Upkeep of the extra Turns it would be kept going for, as each starts, if its mission isn't ended first. */
+  extraUpkeepMillions: number;
 }
 
 /** An Asset on a planned Mission as Planning Mode shows it. */

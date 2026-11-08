@@ -23,7 +23,14 @@ import type {
   TutorialOutcome,
 } from "./types";
 
-export { addDays, daysBetween, formatMoney } from "./rules";
+export {
+  addDays,
+  daysBetween,
+  formatDays,
+  formatMoney,
+  formatTurns,
+} from "./rules";
+export { onlyGrantsPay, paysForItself, serviceLifeGain } from "./choiceText";
 export { formatPropellant } from "./ascentPropellant";
 export { corruptSave, SaveError } from "./saveFormat";
 export {

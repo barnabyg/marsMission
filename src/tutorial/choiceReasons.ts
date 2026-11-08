@@ -1,5 +1,9 @@
 import {
+  formatDays,
   formatMoney,
+  formatTurns,
+  paysForItself,
+  serviceLifeGain,
   type PlannedActivity,
   type PlannedAsset,
 } from "../simulation/simulation";
@@ -9,46 +13,33 @@ import {
  * choice, so that a player can check them without the tutorial.
  */
 
-const daysOf = (days: number) => `${days.toLocaleString("en")} days`;
-
-const turnsOf = (turns: number) =>
-  `${String(turns)} Turn${turns === 1 ? "" : "s"}`;
-
-/** The longest Service Life on offer for an Asset. */
+/** The longest Service Life on offer for an Asset, which always has at least one. */
 const longestOf = ({ serviceLifeOptions }: PlannedAsset) =>
-  serviceLifeOptions.toSorted((first, second) => second.days - first.days)[0];
+  serviceLifeOptions.reduce((longest, option) =>
+    option.days > longest.days ? option : longest,
+  );
 
-/** What the longest Service Life adds, as its choice shows it: "2,800 days add 1,500 days, about 1.9 Turns". */
-export function longestAdds(asset: PlannedAsset): string {
+/**
+ * Whether the longest Service Life pays for itself, with the figures its choice shows: "Trailblazer Rover's longest
+ * Service Life, 2,800 days, pays for itself: +1,500 days (about 1.9 Turns) earn $1.54B in Research Grants against
+ * $300M and $30M Upkeep."
+ */
+export function longestPays(asset: PlannedAsset): string {
   const longest = longestOf(asset);
-  if (!longest) return "";
-  return `the longest Service Life adds ${daysOf(longest.extraDays)}, about ${turnsOf(longest.extraTurns)}`;
+  return `${asset.name}'s longest Service Life, ${formatDays(longest.days)}, ${paysForItself(longest) ? "pays" : "wouldn't pay"} for itself: ${serviceLifeGain(longest)}.`;
 }
 
-/** Why the longest Service Life pays for itself for an Asset that earns, in what its choice shows. */
-export function longestEarns(asset: PlannedAsset): string {
+/** What the longest Service Life adds to a part of the Base: "Curie Station's 3,600 days add 1,500 days (about 1.9 Turns)". */
+export function longestAdds(asset: PlannedAsset): string {
   const longest = longestOf(asset);
-  if (!longest) return "";
-  return `${asset.name}'s ${daysOf(longest.days)} add ${daysOf(longest.extraDays)}, about ${turnsOf(longest.extraTurns)}, which earn ${formatMoney(longest.extraGrantMillions)} in Research Grants for ${formatMoney(longest.costMillions)}.`;
+  return `${asset.name}'s ${formatDays(longest.days)} add ${formatDays(longest.extraDays)} (about ${formatTurns(longest.extraTurns)})`;
 }
 
 /** What the longest Service Life would cost, for an Asset kept to its shortest for want of money. */
 export function longestCosts(asset: PlannedAsset): string {
   const longest = longestOf(asset);
-  if (!longest) return "";
-  return `${asset.name}'s ${daysOf(longest.days)} would cost ${formatMoney(longest.costMillions)}.`;
+  return `${asset.name}'s longest Service Life, ${formatDays(longest.days)}, would cost ${formatMoney(longest.costMillions)}.`;
 }
-
-/** Why a longer Service Life wouldn't pay for itself, in what its choice shows. */
-export function longestWouldNotPay(asset: PlannedAsset): string {
-  const longest = longestOf(asset);
-  if (!longest) return "";
-  return `${asset.name}'s ${daysOf(longest.days)} would add ${daysOf(longest.extraDays)}, about ${turnsOf(longest.extraTurns)}, earning ${formatMoney(longest.extraGrantMillions)} in Research Grants for ${formatMoney(longest.costMillions)}.`;
-}
-
-/** That only Research Grants pay towards a longer Service Life. */
-export const onlyGrantsPay =
-  "Only Research Grants pay towards a longer Service Life, as Science and Public Support aren't money.";
 
 /**
  * Why this research Activity is the one for an Asset, in what each Activity's choice shows it earns a Turn: the biggest

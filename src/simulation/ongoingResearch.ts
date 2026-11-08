@@ -141,7 +141,7 @@ export function grantOverDays(
   catalogue: Catalogue,
   activity: Activity,
   days: number,
-  percent = 0,
+  percent: number,
 ): number {
   return earningsFor(catalogue, activity, [
     { fromDay: 0, toDay: days, percent },

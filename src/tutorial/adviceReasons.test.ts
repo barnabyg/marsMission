@@ -18,7 +18,7 @@ describe("the reasons for Service Life and Activities", () => {
   );
   const items = route.flatMap(({ advice }) => advice.items);
 
-  it("says a longer Service Life for the first orbiter would earn no Research Grants for its cost", () => {
+  it("says a longer Service Life for the first orbiter would earn no Research Grants for its cost and Upkeep", () => {
     const first = startOf(succeeding, succeeding.startProgram(1));
     expect(
       reasonsFor(
@@ -27,11 +27,11 @@ describe("the reasons for Service Life and Activities", () => {
         "Keep the shortest Service Life for Pathfinder Orbiter.",
       ),
     ).toEqual([
-      "Pathfinder Orbiter's 2,100 days would add 800 days, about 1 Turn, earning $0M in Research Grants for $150M. Only Research Grants pay towards a longer Service Life, as Science and Public Support aren't money.",
+      "Pathfinder Orbiter's longest Service Life, 2,100 days, wouldn't pay for itself: +800 days (about 1 Turn) earn $0M in Research Grants against $150M and $10M Upkeep. Only Research Grants pay towards a longer Service Life and its Upkeep, as Science and Public Support aren't money.",
     ]);
   });
 
-  it("says what the rovers' longest Service Life earns against its cost", () => {
+  it("says what the rovers' longest Service Life earns against its cost and Upkeep", () => {
     const reasons = reasonsFor(
       items,
       "serviceLife",
@@ -40,9 +40,21 @@ describe("the reasons for Service Life and Activities", () => {
     expect(reasons.length).toBeGreaterThan(0);
     for (const reason of reasons) {
       expect(reason).toMatch(
-        /^Trailblazer Rover's 2,800 days add 1,500 days, about 1\.9 Turns, which earn \$[\d.]+[MB] in Research Grants for \$300M\.$/,
+        /^Trailblazer Rover's longest Service Life, 2,800 days, pays for itself: \+1,500 days \(about 1\.9 Turns\) earn \$[\d.]+[MB] in Research Grants against \$300M and \$\d+M Upkeep\.$/,
       );
     }
+  });
+
+  it("names each part of the Base and what its longest Service Life adds", () => {
+    expect(
+      reasonsFor(
+        items,
+        "serviceLife",
+        "Buy the longest Service Life for Wellspring Fuel Plant, Haven Module and Curie Station.",
+      ),
+    ).toContainEqual(
+      "The Base counts only while all of it operates, so its parts must last until Crew arrive: Wellspring Fuel Plant's 3,600 days add 1,500 days (about 1.9 Turns), Haven Module's 3,600 days add 1,500 days (about 1.9 Turns) and Curie Station's 3,600 days add 1,500 days (about 1.9 Turns).",
+    );
   });
 
   it("names the Science an orbiter's research earns against its other Activities", () => {

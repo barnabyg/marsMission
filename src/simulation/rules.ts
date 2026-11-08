@@ -26,6 +26,16 @@ export function formatMoney(millions: number): string {
   return `${sign}$${String(size)}M`;
 }
 
+/** A number of days as Planning Mode writes it: "2,800 days". */
+export function formatDays(days: number): string {
+  return `${days.toLocaleString("en")} day${days === 1 ? "" : "s"}`;
+}
+
+/** A number of Turns as Planning Mode writes it: "1 Turn", "1.9 Turns". */
+export function formatTurns(turns: number): string {
+  return `${String(turns)} Turn${turns === 1 ? "" : "s"}`;
+}
+
 export function sum(values: number[]): number {
   return values.reduce((total, value) => total + value, 0);
 }

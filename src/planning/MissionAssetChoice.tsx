@@ -1,7 +1,10 @@
 import { useId } from "react";
 import {
   canFly,
+  formatDays,
   formatMoney,
+  onlyGrantsPay,
+  serviceLifeGain,
   formatPropellant,
   type AssetChoices,
   type PlannedAsset,
@@ -36,25 +39,17 @@ interface MissionAssetChoiceProps {
 }
 
 /**
- * A Service Life as its choice names it, with its cost, and for a longer one the days it adds, roughly in Turns, and the
- * Research Grants the chosen Activity would earn over them, the only earnings that pay towards it.
+ * A Service Life as its choice names it: the shortest with its cost, and a longer one with the days it adds, roughly in
+ * Turns, and the Research Grants the chosen Activity would earn over them against its cost and their Upkeep.
  */
-function serviceLifeLabel({
-  days,
-  costMillions,
-  extraDays,
-  extraTurns,
-  extraGrantMillions,
-}: PlannedServiceLife): string {
-  const life = `${days.toLocaleString("en")} days (${formatMoney(costMillions)})`;
-  return extraDays > 0
-    ? `${life}: +${extraDays.toLocaleString("en")} days, about ${String(extraTurns)} Turn${extraTurns === 1 ? "" : "s"}, earning ${formatMoney(extraGrantMillions)} in Research Grants`
-    : life;
+function serviceLifeLabel(option: PlannedServiceLife): string {
+  return option.extraDays > 0
+    ? `${formatDays(option.days)}: ${serviceLifeGain(option)}`
+    : `${formatDays(option.days)} (${formatMoney(option.costMillions)})`;
 }
 
 /** What each longer Service Life says it earns, on hovering its choice and under the Assets. */
-export const serviceLifePayback =
-  "Each longer Service Life says the Research Grants the Asset's Activity would earn over the days it adds, if the Asset doesn't fail. Only Research Grants pay towards its cost, as Science and Public Support aren't money.";
+export const serviceLifePayback = `Each longer Service Life says the Research Grants the Asset's Activity would earn over the days it adds, if the Asset doesn't fail, against its cost and the Upkeep of those Turns. ${onlyGrantsPay}`;
 
 /**
  * One Asset the Mission can carry, as a card: a picture of its model, its cost, mass, Technology Readiness, Benefit and how many are at Mars,
