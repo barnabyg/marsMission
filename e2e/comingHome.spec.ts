@@ -16,7 +16,7 @@ import {
   missionViewport,
   overrideProgramData,
   pauseAtEvent,
-  playFastUntil,
+  playFastUntilSequence,
   soundsHeard,
   termsWithoutTooltips,
   watchForProblems,
@@ -151,9 +151,13 @@ test("shows round-trip Crew heading home from Mars orbit in the solar system, th
   await continueFromSave(page, roundTripThereSave(roundTripSeed));
   await page.getByRole("checkbox", { name: /^Bring .+ home$/ }).check();
 
-  // They leave Mars orbit for home, which the solar system view shows.
-  await pauseAtEvent(page, "Trans-Earth injection", () =>
-    endTurnWithoutLaunching(page),
+  // They leave Mars orbit for home, which the solar system view shows. Played to at 5x, which still holds the Turn
+  // months before Earth entry.
+  await pauseAtEvent(
+    page,
+    "Trans-Earth injection",
+    () => endTurnWithoutLaunching(page),
+    "5x",
   );
   await expect(currentView(page)).toHaveText("Solar system");
   await expect(page.getByTestId("homeward-spacecraft")).toHaveText(
@@ -165,9 +169,9 @@ test("shows round-trip Crew heading home from Mars orbit in the solar system, th
   );
 
   // At Earth, Mission Mode moves to the spacecraft view for Earth entry, ending in a splashdown. Earth entry is on 24
-  // January 2036, and the Turn is slowed to 1x well before then, so there is time left in it for the whole sequence.
+  // January 2036, and the Turn is slowed to 1x as it begins, so there is time left in it for the whole sequence.
   const parachutes = holdSceneAt(page, "earthEntry", "descending");
-  await playFastUntil(page, "24 October 2035");
+  await playFastUntilSequence(page, "earthEntry");
   await parachutes;
   await expect(currentView(page)).toHaveText("Spacecraft");
   await expect(page.getByTestId("spacecraft-status")).toHaveText(

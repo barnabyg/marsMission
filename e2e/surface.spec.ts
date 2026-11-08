@@ -10,7 +10,7 @@ import {
   overrideProgramData,
   pauseAtEvent,
   pauseAtEventAfter,
-  playFastUntil,
+  playFastUntilSequence,
   surfaceAssets,
   switchViewWhilePlaying,
   termsWithoutTooltips,
@@ -120,9 +120,9 @@ test("plays the landing in the surface view, then shows the Assets there and onl
   await expect(current).toHaveText("Surface");
 
   // The landing plays here, and the Assets are at the site afterwards. It's on 4 July 2029, and the Turn is slowed to
-  // 1x well before then, so there's time left in it for the whole landing.
+  // 1x as it begins, which leaves well over a year of the Turn for the whole landing.
   const landed = holdSequence(page);
-  await playFastUntil(page, "25 March 2029");
+  await playFastUntilSequence(page);
   await landed;
   await expect(current).toHaveText("Surface");
   await expect(surfaceAssets(page)).toHaveText([
@@ -425,7 +425,10 @@ test("shows a crash at its own site where other sites have Assets, and then goes
   await viewButton(page, "Surface").click();
   await page.getByLabel("Landing Site to show").selectOption("Jezero Crater");
   await expect(site).toHaveText("Jezero Crater");
-  await pauseAtEventAfter(page, "Entry/descent/landing failed", "1 May 2045");
+  // Held a frame or two after the crash begins. At 10x that can be weeks of the Turn, but the crash plays in real time.
+  await pauseAtEvent(page, "Entry/descent/landing failed", () =>
+    page.getByRole("button", { name: "10x" }).click(),
+  );
   await expect(site).toHaveText("Meridiani Planum");
   await expect(surfaceAssets(page)).toHaveCount(0);
   await expect(page.getByTestId("surface-crash")).toHaveText(

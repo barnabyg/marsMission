@@ -6,7 +6,7 @@ import {
   holdTurnWhenShown,
   launchHeld,
   missionViewport,
-  playFastUntil,
+  playFastUntilSequence,
   surfaceAssets,
   termsWithoutTooltips,
   viewButton,
@@ -31,11 +31,11 @@ async function launchLanding(page: Page): Promise<void> {
 }
 
 /**
- * Plays on to the landing on 4 July 2029, quickly until a few months before it and then at 1x, which leaves the Turn
- * time enough for the whole landing.
+ * Plays on to the landing on 4 July 2029 at 10x, and the landing at 1x, which leaves the Turn well over a year for the
+ * whole landing.
  */
 function playToLanding(page: Page): Promise<void> {
-  return playFastUntil(page, "25 March 2029");
+  return playFastUntilSequence(page);
 }
 
 function playedMs(page: Page) {

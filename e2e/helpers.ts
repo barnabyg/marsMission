@@ -169,7 +169,7 @@ type Speed = "1x" | "5x" | "10x" | "20x";
  * late. With a speed, it also plays at that speed from the first moment it can, which is as Mission Mode opens, or at
  * once if it's open already: a quick way to an event late in the Turn, when how it plays on the way isn't the point.
  * The hold lands a frame or two after the event, so at speed it can be weeks or months late. Where that matters, slow
- * down before the event with pauseAtEventAfter.
+ * down before the event with pauseAtEventAfter, or before a real-time sequence with playFastUntilSequence.
  */
 export async function holdTurnWhenShown(
   page: Page,
@@ -239,6 +239,43 @@ export function playFastUntil(page: Page, slowFrom: string): Promise<void> {
         });
       }),
     slowFrom,
+  );
+}
+
+/**
+ * Plays at 10x until the scene's data attribute, named as `dataset` names it, has a value, as it does once a landing
+ * or another real-time sequence begins, and then at 1x, all from inside the page. A sequence plays for the same real
+ * time at any speed while the Turn's days go on under it, so it wants 1x to fit in the Turn, but the days before it
+ * don't. Hold the Turn in the sequence with holdSequence or holdSceneAt first. Mission Mode must be open already.
+ * Resolves once it has slowed, or once the hold has struck first.
+ */
+export function playFastUntilSequence(
+  page: Page,
+  attribute = "sequence",
+): Promise<void> {
+  return page.evaluate(
+    (name) =>
+      new Promise<void>((resolve) => {
+        const click = (label: string) => {
+          [...document.querySelectorAll("button")]
+            .find((button) => button.textContent === label)
+            ?.click();
+        };
+        const byTestId = (testId: string) =>
+          document.querySelector<HTMLElement>(`[data-testid=${testId}]`);
+        click("10x");
+        requestAnimationFrame(function check() {
+          if (byTestId("current-speed")?.textContent !== "10x") {
+            resolve();
+          } else if (byTestId("mission-scene")?.dataset[name] !== undefined) {
+            click("1x");
+            resolve();
+          } else {
+            requestAnimationFrame(check);
+          }
+        });
+      }),
+    attribute,
   );
 }
 
