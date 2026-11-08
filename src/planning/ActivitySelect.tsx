@@ -12,7 +12,10 @@ interface ActivitySelectProps {
  * What an Activity does, as its choice says on hovering, with what Sample caching collects over a whole Turn and what
  * its samples earn once they reach Earth.
  */
-function describe({ description, cachesPerTurn }: PlannedActivity): string {
+export function describeActivity({
+  description,
+  cachesPerTurn,
+}: PlannedActivity): string {
   return cachesPerTurn
     ? `${description} Over a whole Turn it collects ${String(cachesPerTurn.samples)} samples, which earn ${String(cachesPerTurn.science)} Science once they reach Earth.`
     : description;
@@ -31,7 +34,7 @@ export function ActivitySelect({
       aria-label={`Activity for ${assetName}`}
       // An option can't hold a tooltip, so a game term chosen here has it on the whole choice.
       data-term={chosen && termFor(chosen.name)}
-      title={chosen && describe(chosen)}
+      title={chosen && describeActivity(chosen)}
       value={activityId}
       onChange={(event) => {
         onChange(event.target.value);

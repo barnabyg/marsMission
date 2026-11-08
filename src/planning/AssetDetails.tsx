@@ -7,6 +7,7 @@ import {
 } from "../simulation/simulation";
 import { Dialog } from "../ui/Dialog";
 import { GameText } from "../ui/GameText";
+import { describeActivity } from "./ActivitySelect";
 import { ReadinessTag } from "./ReadinessTag";
 
 interface AssetDetailsProps {
@@ -28,13 +29,9 @@ function Fact({ name, children }: { name: string; children: ReactNode }) {
   );
 }
 
-/** What an Activity is, and what it earns over a whole Turn in service if it's research. */
-function describeActivity({
-  name,
-  description,
-  earnsPerTurn,
-  cachesPerTurn,
-}: PlannedActivity): string {
+/** What an Activity does, as its choice says on hovering, and what it earns over a whole Turn in service if it's research. */
+function activityDetails(activity: PlannedActivity): string {
+  const { earnsPerTurn } = activity;
   const earns = earnsPerTurn
     ? ` Over a whole Turn it earns ${earnsPerTurn.science} Science and ${earnsPerTurn.publicSupport} Public Support${
         earnsPerTurn.researchGrantMillions > 0
@@ -42,10 +39,7 @@ function describeActivity({
           : ""
       }.`
     : "";
-  const caches = cachesPerTurn
-    ? ` Over a whole Turn it caches ${cachesPerTurn.samples} samples, worth ${cachesPerTurn.science} Science once home.`
-    : "";
-  return `${name}: ${description}${earns}${caches}`;
+  return `${activity.name}: ${describeActivity(activity)}${earns}`;
 }
 
 /**
@@ -108,7 +102,7 @@ export function AssetDetails({ asset, planned, onClose }: AssetDetailsProps) {
             <ul>
               {planned.activities.map((activity) => (
                 <li key={activity.id}>
-                  <GameText>{describeActivity(activity)}</GameText>
+                  <GameText>{activityDetails(activity)}</GameText>
                 </li>
               ))}
             </ul>

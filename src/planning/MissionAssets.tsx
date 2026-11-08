@@ -26,7 +26,7 @@ interface MissionAssetsProps {
   onCarriedChange: (assetId: string, carried: boolean) => void;
   onChoicesChange: (assetId: string, choices: AssetChoices) => void;
   /** An Asset's Service Life, Activities and Reliability, as on the Mission if it's ticked, or on its own if it isn't. */
-  detailsOf: (assetId: string) => PlannedAsset | undefined;
+  previewOf: (assetId: string) => PlannedAsset | undefined;
   /** The choice of Crew, shown after the Assets. */
   children: ReactNode;
 }
@@ -40,12 +40,12 @@ export function MissionAssets({
   fitOf,
   onCarriedChange,
   onChoicesChange,
-  detailsOf,
+  previewOf,
   children,
 }: MissionAssetsProps) {
   const [shownId, setShownId] = useState<string | null>(null);
   const shown = view.assets.find(({ id }) => id === shownId);
-  const shownPlan = shown && detailsOf(shown.id);
+  const shownPlan = shown && previewOf(shown.id);
   return (
     <>
       {/* The step's heading names the Assets, so the group needs no legend of its own. */}
