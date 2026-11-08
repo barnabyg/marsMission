@@ -1,7 +1,7 @@
 /** How long a Turn takes at 1x. */
 const realMsPerTurn = 20 * 60_000;
 
-export const speeds = [1, 5, 10] as const;
+export const speeds = [1, 5, 10, 20] as const;
 
 /** The parts of a Timeline that decide how it plays. Its entries are in the order they happen. */
 export interface PlaybackTimeline {
@@ -20,7 +20,7 @@ export interface PlaybackState {
   paused: boolean;
   /** How many of the timeline's entries have happened so far. */
   entriesHappened: number;
-  /** Real time spent playing, at whatever speed, leaving out pauses. It paces what mustn't flash by at 10x. */
+  /** Real time spent playing, at whatever speed, leaving out pauses. It paces what mustn't flash by at 20x. */
   playedMs: number;
   /** The value of playedMs when each entry so far happened. */
   entriesPlayedMs: readonly number[];

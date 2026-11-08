@@ -25,6 +25,13 @@ describe("the real data files", () => {
     expect(effects).toEqual(expected);
   });
 
+  it("describe every Asset", () => {
+    for (const { name, description } of parseCatalogue(realCatalogueFiles())
+      .assets) {
+      expect(description.length, name).toBeGreaterThan(40);
+    }
+  });
+
   it("have a second Launch Vehicle with more capacity at a higher cost", () => {
     const [first, second] = realCatalogueFiles().launchVehicles;
     expect(second?.capacityTonnes).toBeGreaterThan(first?.capacityTonnes ?? 0);
@@ -71,6 +78,18 @@ describe("invalid data files", () => {
     });
     expect(message).toContain("program.json");
     expect(message).toContain("startingMoneyMillions");
+  });
+
+  it("reject an Asset with no description, or an empty one", () => {
+    const files = testCatalogueFiles();
+    for (const description of [undefined, ""]) {
+      const message = errorFrom({
+        ...files,
+        assets: [{ ...files.assets[0], description }],
+      });
+      expect(message).toContain("assets.json");
+      expect(message).toContain("description");
+    }
   });
 
   it("reject a Mission Event reference that doesn't exist", () => {

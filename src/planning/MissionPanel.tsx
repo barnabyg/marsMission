@@ -93,6 +93,7 @@ export function MissionPanel({
               }
               onCarriedChange={choices.setCarried}
               onChoicesChange={choices.changeAssetChoices}
+              previewOf={choices.previewOf}
             >
               <MissionCrew
                 crewedMission={view.crewedMission}

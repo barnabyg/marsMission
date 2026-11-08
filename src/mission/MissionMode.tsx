@@ -51,11 +51,12 @@ import { useSounds } from "./useSounds";
 
 const MissionScene = lazy(() => import("./MissionScene"));
 
-/** The icon beside each speed, faster ones with more arrows. */
+/** The icon beside each speed: faster ones with more arrows, and a lightning bolt for the fastest. */
 const speedIcons: Record<(typeof speeds)[number], IconName> = {
   1: "play",
   5: "fast-forward",
   10: "chevrons-right",
+  20: "zap",
 };
 
 interface MissionModeProps {

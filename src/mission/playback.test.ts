@@ -52,10 +52,20 @@ describe("playing a Turn", () => {
     expect(elapsedMs).toBeLessThan(20.1 * minuteMs);
   });
 
+  it("offers 1x, 5x, 10x and 20x", () => {
+    expect(speeds).toEqual([1, 5, 10, 20]);
+  });
+
   it("is ten times quicker at 10x", () => {
-    const { elapsedMs } = playToEnd(speeds[2]);
+    const { elapsedMs } = playToEnd(10);
     expect(elapsedMs).toBeGreaterThan(1.9 * minuteMs);
     expect(elapsedMs).toBeLessThan(2.1 * minuteMs);
+  });
+
+  it("is twenty times quicker at 20x", () => {
+    const { elapsedMs } = playToEnd(20);
+    expect(elapsedMs).toBeGreaterThan(0.95 * minuteMs);
+    expect(elapsedMs).toBeLessThan(1.05 * minuteMs);
   });
 
   it("reaches every entry and the end of the Turn at every speed", () => {

@@ -5,7 +5,6 @@ import {
   missionViewport,
   pauseAtEvent,
   pauseAtEventAfter,
-  playToNextTurn,
   watchForProblems,
 } from "./helpers";
 import { successSeed } from "./seeds";
@@ -31,7 +30,15 @@ test("pauses Mission Mode and resumes from exactly where it stopped, without car
     "1x",
     "5x",
     "10x",
+    "20x",
   ]);
+  // Each speed has an icon of its own, so the fastest is told apart at a glance.
+  const icons = await speed
+    .getByRole("button")
+    .locator("svg")
+    .evaluateAll((svgs) => svgs.map((svg) => svg.innerHTML));
+  expect(icons).toHaveLength(5);
+  expect(new Set(icons).size).toBe(5);
   const date = page.getByTestId("mission-date");
   const journey = page.getByTestId("journey-progress");
   const turnProgress = page.getByRole("progressbar");
@@ -65,15 +72,18 @@ test("pauses Mission Mode and resumes from exactly where it stopped, without car
   await expect(current).toHaveText("Paused");
   await mute.click();
 
-  await speed.getByRole("button", { name: "10x" }).click();
-  await expect(current).toHaveText("10x");
-  await playToNextTurn(page);
+  await speed.getByRole("button", { name: "20x" }).click();
+  await expect(current).toHaveText("20x");
+  await page
+    .getByTestId("turn-summary")
+    .getByRole("button", { name: "Continue" })
+    .click();
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 
   // The next Turn starts at the speed last chosen.
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(current).toHaveText("10x");
+  await expect(current).toHaveText("20x");
   expect(problems).toEqual([]);
 });
 

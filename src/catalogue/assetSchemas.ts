@@ -59,6 +59,9 @@ export const assetsSchema = z.array(
     id,
     name: z.string().min(1),
     kind: id,
+    // What it is and does, in plain words, which Planning Mode shows in the Asset's details. Figures belong in the
+    // fields below, which the details show beside it, so that tuning them never leaves this out of date.
+    description: z.string().min(1),
     costMillions: money,
     // What it costs for each Turn it is kept operating at Mars after the one it arrives in, until its Service Life
     // ends or the player ends its mission. Left out, it costs nothing.

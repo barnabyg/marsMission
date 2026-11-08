@@ -113,10 +113,10 @@ describe("a landing in the Mars orbit view", () => {
         fromDay: 205,
       }),
     ];
-    expect(landingMarkersOn(flying, 214.9)).toHaveLength(1);
-    expect(landedOn({ assetsAtMars }, 214.9)).toEqual([]);
-    expect(landingMarkersOn(flying, 215)).toEqual([]);
-    expect(landedOn({ assetsAtMars }, 215)).toEqual([
+    expect(landingMarkersOn(flying, 224.9)).toHaveLength(1);
+    expect(landedOn({ assetsAtMars }, 224.9)).toEqual([]);
+    expect(landingMarkersOn(flying, 225)).toEqual([]);
+    expect(landedOn({ assetsAtMars }, 225)).toEqual([
       { name: "Lander", kind: "orbiter", siteName: "Jezero Crater" },
     ]);
   });

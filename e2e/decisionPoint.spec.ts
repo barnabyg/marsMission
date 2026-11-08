@@ -171,7 +171,7 @@ test("no speed gets play past a Decision Point", async ({ page }) => {
   await expect(decisionPoint(page)).toBeVisible();
   const date = await page.getByTestId("mission-date").innerText();
 
-  for (const speed of ["1x", "5x", "10x"]) {
+  for (const speed of ["1x", "5x", "10x", "20x"]) {
     await page.getByRole("button", { name: speed, exact: true }).click();
     await expect(page.getByTestId("current-speed")).toHaveText("Paused");
   }

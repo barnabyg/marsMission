@@ -267,9 +267,13 @@ export interface ProgramView {
     id: string;
     name: string;
     kind: string;
+    /** What it is and does, in plain words. */
+    description: string;
     /** What it costs now, which is more until it is Flight-proven. */
     costMillions: number;
     massTonnes: number;
+    /** What keeping it at Mars costs for each Turn after the one it arrives in. */
+    upkeepMillionsPerTurn: number;
     landsAtSite: boolean;
     technologyReadiness: TechnologyReadiness;
     /** What it does for other Assets while it operates at Mars, or null if it gives no Benefit. */

@@ -21,6 +21,8 @@ export interface MissionPlan {
   assetIds: string[];
   setCarried: (assetId: string, carried: boolean) => void;
   plannedAssets: PlannedAsset[];
+  /** An Asset as the Mission would have it: as ticked, or on its own if it isn't, for its details. */
+  previewOf: (assetId: string) => PlannedAsset | undefined;
   changeAssetChoices: (assetId: string, choices: AssetChoices) => void;
   /** The Crew chosen, which only a Crewed Mission has. */
   plannedCrew: PlannedCrew | null;
@@ -224,6 +226,12 @@ export function useMissionPlan(
       );
     },
     plannedAssets,
+    previewOf: (assetId) =>
+      plannedAssets.find((planned) => planned.assetId === assetId) ??
+      simulation.previewAssets(program, {
+        launchVehicleId,
+        assetIds: [assetId],
+      })[0],
     changeAssetChoices: (assetId, choices) => {
       setAssetChoices({
         ...assetChoices,

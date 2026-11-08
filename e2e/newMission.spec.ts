@@ -193,6 +193,82 @@ test("shows each Asset as a card, greys out those that wouldn't fit, and reveals
   expect(problems).toEqual([]);
 });
 
+test("opens an Asset's details from its card, and closes them without changing the plan", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+  const card = (name: string) =>
+    page.locator(".asset-choice", { hasText: name });
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  const orbiter = card("Pathfinder Orbiter");
+  await orbiter
+    .getByRole("combobox", { name: "Activity for Pathfinder Orbiter" })
+    .selectOption({ label: "Orbital research" });
+  const spend = await page.getByTestId("budget-bar").textContent();
+
+  // From the keyboard, on an Asset that isn't ticked.
+  const about = card("Prospector Lander").getByRole("button", {
+    name: "About Prospector Lander",
+  });
+  await about.focus();
+  await page.keyboard.press("Enter");
+  const details = page.getByRole("dialog", { name: "Prospector Lander" });
+  await expect(details).toBeVisible();
+  await expect(details).toContainText("A stationary lander");
+  for (const [fact, value] of [
+    ["Cost", "$800M"],
+    ["Mass", "3 t"],
+    ["Upkeep", "$10M per Turn"],
+    ["Technology Readiness", "Flight-proven"],
+    ["Lands", "At a Landing Site"],
+    ["Service Life", "1300 days ($0M) or 2100 days ($100M)"],
+  ]) {
+    await expect(details.getByTestId(`detail-${fact}`)).toHaveText(
+      `${fact}${value}`,
+    );
+  }
+  await expect(details.getByTestId("detail-Reliability")).toContainText(
+    "None: ~10% per Turn",
+  );
+  await expect(details.getByTestId("detail-Activities")).toContainText(
+    "Surface research: Studies the rocks and weather",
+  );
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(details).toBeHidden();
+  await expect(about).toBeFocused();
+
+  // An Asset that can't be ticked yet can still be read about, and its Benefit is there in words.
+  await card("Endurance Rover")
+    .getByRole("button", { name: "About Endurance Rover" })
+    .click();
+  await expect(
+    page.getByRole("dialog", { name: "Endurance Rover" }),
+  ).toContainText("Needs Development");
+  await page.getByRole("button", { name: "Close" }).click();
+  await card("Courier Relay")
+    .getByRole("button", { name: "About Courier Relay" })
+    .click();
+  await expect(
+    page
+      .getByRole("dialog", { name: "Courier Relay" })
+      .getByTestId("detail-Benefit"),
+  ).toContainText("Raises the Ongoing Research");
+  await page.getByRole("button", { name: "Close" }).click();
+
+  // The plan is as it was.
+  await expect(orbiter.getByRole("checkbox")).toBeChecked();
+  await expect(
+    card("Prospector Lander").getByRole("checkbox"),
+  ).not.toBeChecked();
+  await expect(
+    orbiter.getByRole("combobox", { name: "Activity for Pathfinder Orbiter" }),
+  ).toHaveValue("orbital-research");
+  await expect(page.getByTestId("budget-bar")).toHaveText(spend ?? "");
+  expect(problems).toEqual([]);
+});
+
 test("lists the planned Mission's Mission Events with rough risk bands, which change with what it carries", async ({
   page,
 }) => {
@@ -206,6 +282,7 @@ test("lists the planned Mission's Mission Events with rough risk bands, which ch
           id: "test-probe",
           name: "Flyby Probe",
           kind: "orbiter",
+          description: "A small probe that flies past Mars.",
           costMillions: 100,
           massTonnes: 1,
           serviceLifeOptions: [{ days: 900, costMillions: 0 }],
