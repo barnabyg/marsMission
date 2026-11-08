@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { failing, succeeding } from "../testing/realBalance";
+import { changeOfCourse } from "./changeOfCourse";
 import { followAdvice, play, startOf } from "./testHelpers";
 import {
   crewAtBase,
@@ -93,6 +94,62 @@ describe("advice for a Planning session", () => {
       /^Last Turn's plan went a different way from the advice, launching nothing rather than sending .+\. This Turn's advice picks up from where the Program is now, sending .+\.$/,
     );
     expect(second.advice.stage).toBe("firstOrbiter");
+  });
+
+  it("names the Launch Vehicle when only that differed from the advice", () => {
+    const advised = first.advice.plan.mission;
+    const other = first.view.launchVehicles.find(
+      ({ id }) =>
+        id !== advised?.launchVehicleId &&
+        advised &&
+        first.tools.problemsWith({
+          ...first.advice.plan,
+          mission: { ...advised, launchVehicleId: id },
+        }).length === 0,
+    );
+    if (!advised || !other) throw new Error("No other Launch Vehicle fits");
+    const played = {
+      ...first.advice.plan,
+      mission: { ...advised, launchVehicleId: other.id },
+    };
+    const advisedName = first.view.launchVehicles.find(
+      ({ id }) => id === advised.launchVehicleId,
+    )?.name;
+    const second = startOf(succeeding, play(succeeding, first, played), {
+      start: first,
+      plan: played,
+    });
+    const note = second.advice.changeOfCourse ?? "";
+    expect(note).toContain(
+      `Last Turn's plan went a different way from the advice, launching on the ${other.name} rather than the ${advisedName ?? ""}.`,
+    );
+    expect(note).not.toMatch(/(?<sent>sending [^.]+) rather than \k<sent>/);
+  });
+
+  it("names a Development that differed from the advice", () => {
+    const [development] = first.view.developments;
+    if (!development) throw new Error("Nothing needs Development");
+    const last = {
+      view: first.view,
+      tools: first.tools,
+      plan: { mission: null },
+    };
+    const advisedThen = { mission: null, developmentIds: [development.id] };
+    expect(
+      changeOfCourse(last, advisedThen, first.view, { mission: null }),
+    ).toBe(
+      `Last Turn's plan went a different way from the advice, not starting Development of the ${development.name}. This Turn's advice picks up from where the Program is now, launching nothing.`,
+    );
+    expect(
+      changeOfCourse(
+        { ...last, plan: advisedThen },
+        { mission: null },
+        first.view,
+        { mission: null },
+      ),
+    ).toContain(
+      `starting Development of the ${development.name}, which the advice didn't`,
+    );
   });
 
   it("explains a Turn with nothing to launch", () => {

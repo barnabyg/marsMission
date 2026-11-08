@@ -35,17 +35,57 @@ function summaryOf(view: ProgramView, mission: PlannedMission | null): string {
   return `sending ${listOf(carried)}${where}`;
 }
 
-/** Whether two plans make the same main choices: the Mission's Launch Vehicle, Assets, Landing Site and Crew, and Development. */
-function sameChoices(first: TurnPlan, second: TurnPlan): boolean {
-  const key = ({ mission, developmentIds = [] }: TurnPlan) =>
-    JSON.stringify([
-      mission?.launchVehicleId ?? null,
-      mission?.assetIds.toSorted() ?? [],
-      mission?.landingSiteId ?? null,
-      mission?.crew?.size ?? 0,
-      developmentIds.toSorted(),
-    ]);
-  return key(first) === key(second);
+/** The Mission's Assets, Landing Site and Crew, as a key that two plans making the same choices share. */
+const missionKey = ({ mission }: TurnPlan) =>
+  JSON.stringify([
+    mission?.assetIds.toSorted() ?? [],
+    mission?.landingSiteId ?? null,
+    mission?.crew?.size ?? 0,
+  ]);
+
+/** A Launch Vehicle or a technology in Development by its name, with "the" as the player reads it. */
+const theNamed = (
+  named: readonly { id: string; name: string }[],
+  id: string,
+): string => `the ${named.find((each) => each.id === id)?.name ?? id}`;
+
+/**
+ * How the plan played differs from the one advised, in its main choices, each as a phrase that names both sides: the
+ * Mission's Assets, Landing Site and Crew, its Launch Vehicle when it carries the same, and Development. None if they
+ * make the same main choices.
+ */
+function differences(
+  view: ProgramView,
+  advised: TurnPlan,
+  played: TurnPlan,
+): string[] {
+  const found: string[] = [];
+  if (missionKey(advised) !== missionKey(played)) {
+    found.push(
+      `${summaryOf(view, played.mission)} rather than ${summaryOf(view, advised.mission)}`,
+    );
+  } else if (
+    advised.mission &&
+    played.mission &&
+    advised.mission.launchVehicleId !== played.mission.launchVehicleId
+  ) {
+    found.push(
+      `launching on ${theNamed(view.launchVehicles, played.mission.launchVehicleId)} rather than ${theNamed(view.launchVehicles, advised.mission.launchVehicleId)}`,
+    );
+  }
+  const advisedIds = advised.developmentIds ?? [];
+  const playedIds = played.developmentIds ?? [];
+  for (const id of advisedIds.filter((each) => !playedIds.includes(each))) {
+    found.push(
+      `not starting Development of ${theNamed(view.developments, id)}`,
+    );
+  }
+  for (const id of playedIds.filter((each) => !advisedIds.includes(each))) {
+    found.push(
+      `starting Development of ${theNamed(view.developments, id)}, which the advice didn't`,
+    );
+  }
+  return found;
 }
 
 /** An Asset at Mars, as a key that stays the same from one Turn's view to the next. */
@@ -163,13 +203,14 @@ export function changeOfCourse(
   plan: TurnPlan,
 ): string | null {
   const { sentences, lostIds, crewLost } = setbacks(last, view);
-  const followed = sameChoices(advisedThen, last.plan);
-  if (followed && sentences.length === 0) return null;
-  const notFollowed = followed
-    ? []
-    : [
-        `Last Turn's plan went a different way from the advice, ${summaryOf(last.view, last.plan.mission)} rather than ${summaryOf(last.view, advisedThen.mission)}.`,
-      ];
+  const differed = differences(last.view, advisedThen, last.plan);
+  if (differed.length === 0 && sentences.length === 0) return null;
+  const notFollowed =
+    differed.length === 0
+      ? []
+      : [
+          `Last Turn's plan went a different way from the advice, ${listOf(differed)}.`,
+        ];
   const retry =
     plan.mission !== null &&
     (plan.mission.assetIds.some((id) => lostIds.includes(id)) ||
