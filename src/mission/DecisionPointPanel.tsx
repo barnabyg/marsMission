@@ -31,9 +31,17 @@ export function DecisionPointPanel({
         <GameText>{description}</GameText>
       </p>
       {advice && suggested && (
-        <p className="decision-advice" data-testid="decision-advice">
-          <GameText>{`Tutorial mode suggests: ${suggested.label}. ${advice.reason}`}</GameText>
-        </p>
+        <div
+          className="decision-advice tutorial-voice"
+          data-testid="decision-advice"
+        >
+          <p>
+            <GameText>{`Tutorial mode suggests: ${suggested.label}.`}</GameText>
+          </p>
+          <p className="tutorial-reason">
+            <GameText>{advice.reason}</GameText>
+          </p>
+        </div>
       )}
       <div className="decision-choices">
         {choices.map(

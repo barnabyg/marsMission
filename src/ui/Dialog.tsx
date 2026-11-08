@@ -8,6 +8,8 @@ interface DialogProps {
   onClose: () => void;
   /** Any buttons to show before the cancel button. */
   actions?: ReactNode;
+  /** A class for the dialog itself, such as the tutorial's own style. */
+  className?: string;
   children?: ReactNode;
 }
 
@@ -17,6 +19,7 @@ export function Dialog({
   cancelLabel,
   onClose,
   actions,
+  className,
   children,
 }: DialogProps) {
   const titleId = useId();
@@ -31,7 +34,12 @@ export function Dialog({
   }, []);
 
   return (
-    <dialog ref={dialog} aria-labelledby={titleId} onClose={onClose}>
+    <dialog
+      ref={dialog}
+      className={className}
+      aria-labelledby={titleId}
+      onClose={onClose}
+    >
       <h2 id={titleId}>
         <GameText heading>{title}</GameText>
       </h2>

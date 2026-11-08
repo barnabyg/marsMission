@@ -13,6 +13,7 @@ export function TutorialEnding({ ending, onClose }: TutorialEndingProps) {
     <Dialog
       title="Tutorial complete"
       cancelLabel="Keep playing"
+      className="tutorial-voice"
       onClose={onClose}
     >
       <div data-testid="tutorial-ending">
@@ -36,7 +37,12 @@ export function TutorialEnding({ ending, onClose }: TutorialEndingProps) {
       </div>
     </Dialog>
   ) : (
-    <Dialog title="Tutorial ended" cancelLabel="Keep playing" onClose={onClose}>
+    <Dialog
+      title="Tutorial ended"
+      cancelLabel="Keep playing"
+      className="tutorial-voice"
+      onClose={onClose}
+    >
       <div data-testid="tutorial-ending">
         <p>
           <GameText>{ending.reason}</GameText>

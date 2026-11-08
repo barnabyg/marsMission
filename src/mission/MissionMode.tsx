@@ -293,7 +293,10 @@ export function MissionMode({
           ))}
         </ul>
         {tutorialOn && (
-          <div className="mission-tutorial" data-testid="mission-tutorial">
+          <div
+            className="mission-tutorial tutorial-voice"
+            data-testid="mission-tutorial"
+          >
             <p>
               <GameText>Tutorial mode is on.</GameText>
             </p>
