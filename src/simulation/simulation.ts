@@ -31,7 +31,7 @@ export {
   formatTurns,
 } from "./rules";
 export {
-  activityEarnings,
+  whatActivityDoes,
   onlyGrantsPay,
   paysForItself,
   serviceLifeGain,

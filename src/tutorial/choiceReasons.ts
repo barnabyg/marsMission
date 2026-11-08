@@ -1,5 +1,5 @@
 import {
-  activityEarnings,
+  whatActivityDoes,
   formatDays,
   formatMoney,
   formatTurns,
@@ -86,7 +86,7 @@ export function bestActivityReason(
     ({ of }) =>
       of(chosen) > 0 && others.every((other) => of(other) < of(chosen)),
   );
-  if (!lead) return `${chosen.name} ${activityEarnings(chosen)}.`;
+  if (!lead) return `${chosen.name} ${whatActivityDoes(chosen)}.`;
   const { of, format, leads, none } = lead;
   const [best] = others.toSorted((first, second) => of(second) - of(first));
   const against =

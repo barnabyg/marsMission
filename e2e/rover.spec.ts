@@ -63,12 +63,13 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   await expect(page.getByTestId("research-earnings")).toHaveText(
     "Ongoing Research for a whole Turn: Soil analysis earns 80 Science and 9 Public Support, and pays a $800M Research Grant. Long traverse earns 160 Science and 14 Public Support.",
   );
-  // Each Activity says what it earns a Turn, in each of Science, Public Support and Research Grant that it earns any of.
+  // Each other Activity says what it earns a Turn, in each of Science, Public Support and Research Grant that it earns
+  // any of, while the chosen one, closed, shows its name in full.
   await expect(activity.getByRole("option")).toHaveText([
-    "Soil analysis: earns 80 Science, 9 Public Support and $800M Research Grant a Turn",
+    "Soil analysis",
     "Long traverse: earns 160 Science and 14 Public Support a Turn",
     "Sample caching: collects 10 samples a Turn",
-    "Nothing: earns nothing",
+    "Nothing: stays in place and does no work this Turn",
   ]);
   // The chosen Activity's earnings are written out under its choice, which is too narrow to show them once closed.
   await expect(row.getByTestId("activity-earnings")).toHaveText(

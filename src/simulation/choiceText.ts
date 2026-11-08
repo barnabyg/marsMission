@@ -8,20 +8,25 @@ import { formatDays, formatMoney, formatTurns } from "./rules";
 
 /**
  * What an Activity earns over a whole Turn, leaving out what it earns none of: "earns 80 Science and $800M Research
- * Grant a Turn", "collects 10 samples a Turn", or "earns nothing".
+ * Grant a Turn", or "collects 10 samples a Turn". One that isn't research says what it does instead: a Survey "lowers
+ * the landing risk of later landings", and any other its description, which starts with a verb so that it reads on
+ * after the Activity's name: "stays in place and does no work this Turn".
  */
-export function activityEarnings({
+export function whatActivityDoes({
+  surveys,
+  description,
   earnsPerTurn,
   cachesPerTurn,
 }: PlannedActivity): string {
+  // A Survey's description is too long for a line under its choice, so it says what it does for every later landing.
+  if (surveys) return "lowers the landing risk of later landings";
   if (cachesPerTurn) {
     return `collects ${String(cachesPerTurn.samples)} samples a Turn`;
   }
-  const {
-    science = 0,
-    publicSupport = 0,
-    researchGrantMillions = 0,
-  } = earnsPerTurn ?? {};
+  if (!earnsPerTurn) {
+    return `${description.charAt(0).toLowerCase()}${description.slice(1).replace(/\.$/, "")}`;
+  }
+  const { science, publicSupport, researchGrantMillions } = earnsPerTurn;
   const parts = [
     ...(science > 0 ? [`${String(science)} Science`] : []),
     ...(publicSupport > 0 ? [`${String(publicSupport)} Public Support`] : []),
