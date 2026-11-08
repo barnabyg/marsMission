@@ -8,6 +8,7 @@ import { mean, percent, table, tenth, whole } from "./reportFormat";
 import { technology } from "./technologyReport";
 import { crew } from "./crewReport";
 import { baseLines } from "./baseReport";
+import { goalLines } from "./goalReport";
 import { comingHome } from "./comingHomeReport";
 
 /** How many Turns each Program plays at most. */
@@ -418,6 +419,7 @@ export function balanceReport(
       "",
       researchScience(plays),
       ...baseLines(plays),
+      ...goalLines(plays),
     );
   }
   return `${lines.join("\n")}\n`;

@@ -83,6 +83,11 @@ export interface TurnRecord {
   samplesLost: number;
   /** What the Program's backers paid as the Turn ended. */
   baseFundingMillions: number;
+  /**
+   * For a strategy with a goal, whether the Program has reached it as the Turn ends, and whether it can no longer.
+   * Left out for any other strategy.
+   */
+  goal?: { reached: boolean; cantRecover: boolean };
 }
 
 /** What a strategy may ask about the Program it is planning for, which it never sees itself. */
@@ -112,9 +117,18 @@ function recordOf(
   summary: TurnSummary,
   after: ProgramView,
   fetched: ReadonlySet<string>,
+  goal: Strategy["goal"],
 ): TurnRecord {
   const decisions = decisionsIn(summary);
   return {
+    ...(goal
+      ? {
+          goal: {
+            reached: goal.reached(after),
+            cantRecover: goal.cantRecover(after),
+          },
+        }
+      : {}),
     moneyMillions: after.moneyMillions,
     science: after.science,
     publicSupport: after.publicSupport,
@@ -275,7 +289,7 @@ function decisionsIn(summary: TurnSummary): TurnRecord["decisions"] {
 }
 
 /** Works out a Turn, answering each Decision Point as the strategy would, one at a time as a player does. */
-function playTurn(
+export function playTurn(
   simulation: Simulation,
   strategy: Strategy,
   program: Program,
@@ -340,7 +354,9 @@ export function playProgram(
     for (const name of result.summary.returnVehicle?.crew ?? []) {
       fetched.add(name);
     }
-    records.push(recordOf(view, plan, result.summary, after, fetched));
+    records.push(
+      recordOf(view, plan, result.summary, after, fetched, strategy.goal),
+    );
     program = result.program;
     view = after;
   }

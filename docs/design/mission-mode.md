@@ -30,4 +30,13 @@ Part of the [game design](../game-design.md), whose Status says which of these r
 
 - Mars and the planets use NASA's public imagery and elevation data. Spacecraft use NASA's free 3D models where they fit, plus simple models made for the project. Plumes, dust and explosions are generated in code. Licensing rules are in [ADR 0005](../adr/0005-free-open-licensed-media-only.md).
 - The first version has simple sound effects and no music.
-- There is no guided tutorial in the first version. Every term has a tooltip instead, except in button labels.
+- Every term has a tooltip, except in button labels.
+- Tutorial mode is a guided tutorial the player can choose as a Program starts (see [Program, Turns and starting conditions](program.md#starting-conditions)). It leads them along one route, from a first orbiter through landing and Surveys, rovers and Research Grants, and developing the Meridian Colossus, to building a Base and landing Crew there. Coming home isn't part of it.
+
+### Tutorial mode
+
+- While Tutorial mode is on, each Planning Mode shows its advice at the top of the column beside the New Mission: what to plan this Turn, choice by choice, each with a sentence or two on why, so the player learns the reasoning rather than following orders. Terms in it have their tooltips. Above the suggestions it names the stage of the route the Program is at, with the whole route, so the player can see where they are heading.
+- The advice is text only. No button fills in the plan, and the panel doesn't mark which suggestions the plan already matches: the player sets every control, and can ignore the advice.
+- The advice is worked out afresh each Turn from the Program as it stands, by a tutorial strategy shaped like the balance runs' strategies (`src/tutorial`), so it recovers from failed Missions, lost Assets or Crew, Hazards and the player not following it. When it changes course, the panel says why before anything else, for example that the lander failed, so this Turn tries the same Landing Site again.
+- At each Decision Point in Mission Mode, Tutorial mode suggests an answer with a short reason, beside the two choices, and outlines the choice it suggests. The player still answers it.
+- The tutorial ends in one of two ways, shown once in a dialog as the Planning Mode where it happened starts. When Crew have landed at a Base, it says the goal is reached and sums up what the player learnt along the route. When the tutorial strategy finds that a Base can no longer be reached, by a rule the balance runs measure, it says what went wrong. Either way the Program carries on without advice: the advice panel and Decision Point suggestions stop, and stay stopped after saving and loading, because the Program records that the tutorial ended.

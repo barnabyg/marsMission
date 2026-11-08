@@ -160,6 +160,18 @@ export interface CrewMember {
   protectionId: string;
 }
 
+/**
+ * Whether the player gets the tutorial's advice: off, on, or ended for good, at its goal or once it couldn't recover.
+ * Only a Program that started with it, or turned it on, can end it.
+ */
+export type TutorialMode =
+  | { kind: "off" }
+  | { kind: "on" }
+  | { kind: "ended"; outcome: TutorialOutcome };
+
+/** How the tutorial ended: Crew landed at a Base, or a Base could no longer be reached. */
+export type TutorialOutcome = "goalReached" | "cantRecover";
+
 type ProgramStatus =
   | { kind: "active" }
   | { kind: "retired" }
@@ -213,6 +225,8 @@ export interface Program {
    * journey home takes them, of Crew or of samples.
    */
   samplesAtSites: Record<string, number>;
+  /** Whether the player gets the tutorial's advice, which they choose as the Program starts and can turn off. */
+  tutorial: TutorialMode;
   status: ProgramStatus;
 }
 
@@ -229,6 +243,7 @@ export interface EarthReturnStage extends HomewardPurchase {
 
 export interface ProgramView {
   status: ProgramStatus;
+  tutorial: TutorialMode;
   cancellationLevel: number;
   turnNumber: number;
   date: string;

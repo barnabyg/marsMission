@@ -20,6 +20,7 @@ import type {
   TurnPlan,
   TurnProgress,
   TurnResult,
+  TutorialOutcome,
 } from "./types";
 
 export { addDays, daysBetween, formatMoney } from "./rules";
@@ -46,6 +47,7 @@ export type {
   TurnPlan,
   TurnProgress,
   TurnResult,
+  TutorialMode,
 } from "./types";
 export type {
   PlannedActivity,
@@ -63,7 +65,12 @@ export type {
 } from "./timeline";
 
 export interface Simulation {
-  startProgram(seed: number): Program;
+  /** A new Program, with Tutorial mode only if the player chose it. */
+  startProgram(seed: number, options?: { tutorial?: boolean }): Program;
+  /** Turns Tutorial mode on or off. Throws once the tutorial has ended, as it can't be turned on again. */
+  setTutorial(program: Program, on: boolean): Program;
+  /** Ends Tutorial mode for good, at its goal or once it couldn't recover. Throws unless it is on. */
+  endTutorial(program: Program, outcome: TutorialOutcome): Program;
   /** A Program as data that can be kept and given to restoreProgram later. */
   saveProgram(program: Program): SavedProgram;
   /** The Program in a save, which plays on as if it was never saved. Throws a SaveError if it can't be continued. */
@@ -107,7 +114,24 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     workOutTurn(catalogue, rules, checkPlan, program, plan, answers);
 
   return {
-    startProgram: (seed) => newProgram(catalogue, seed),
+    startProgram: (seed, { tutorial = false } = {}) =>
+      newProgram(catalogue, seed, tutorial),
+
+    setTutorial(program, on) {
+      if (program.tutorial.kind === "ended") {
+        throw new Error(
+          "The tutorial has ended, so it can't be turned on again.",
+        );
+      }
+      return { ...program, tutorial: { kind: on ? "on" : "off" } };
+    },
+
+    endTutorial(program, outcome) {
+      if (program.tutorial.kind !== "on") {
+        throw new Error("The tutorial isn't on, so it can't end.");
+      }
+      return { ...program, tutorial: { kind: "ended", outcome } };
+    },
 
     saveProgram,
 

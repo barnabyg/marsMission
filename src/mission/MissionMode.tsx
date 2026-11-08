@@ -8,6 +8,8 @@ import {
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { Icon, type IconName } from "../ui/Icon";
+import type { DecisionAdvice } from "../tutorial/tutorial";
+import { TurnOffTutorial } from "../ui/TurnOffTutorial";
 import { DecisionPointPanel } from "./DecisionPointPanel";
 import { EventsColumn } from "./EventsColumn";
 import { missionViews, viewName, type MissionViewId } from "./missionViews";
@@ -68,6 +70,11 @@ interface MissionModeProps {
   initialSpeed: number;
   onSpeedChange: (speed: number) => void;
   onFinished: () => void;
+  /** Tutorial mode's suggested answer to the Decision Point, while it is on. */
+  decisionAdvice: DecisionAdvice | null;
+  /** Whether Tutorial mode is on, which Mission Mode can turn off. */
+  tutorialOn: boolean;
+  onTutorialOff: () => void;
 }
 
 export function MissionMode({
@@ -77,6 +84,9 @@ export function MissionMode({
   initialSpeed,
   onSpeedChange,
   onFinished,
+  decisionAdvice,
+  tutorialOn,
+  onTutorialOff,
 }: MissionModeProps) {
   const { state, setSpeed, pause, skipToDecision } = usePlayback(
     timeline,
@@ -282,10 +292,19 @@ export function MissionMode({
             </li>
           ))}
         </ul>
+        {tutorialOn && (
+          <div className="mission-tutorial" data-testid="mission-tutorial">
+            <p>
+              <GameText>Tutorial mode is on.</GameText>
+            </p>
+            <TurnOffTutorial forGood onTurnOff={onTutorialOff} />
+          </div>
+        )}
       </aside>
       {deciding && (
         <DecisionPointPanel
           decisionPoint={decisionPoint}
+          advice={decisionAdvice}
           onAnswer={(answer) => {
             onAnswer(decisionPoint.id, answer);
           }}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SaveSlots } from "../save/SaveSlots";
 import type { SaveStore } from "../save/saveStore";
+import type { TutorialEnd } from "../tutorial/tutorial";
 import {
   type Program,
   type Simulation,
@@ -12,6 +13,10 @@ import { DevelopmentPanel } from "./DevelopmentPanel";
 import { MissionPanel } from "./MissionPanel";
 import { OperatingPanel } from "./OperatingPanel";
 import { StatusBar } from "./StatusBar";
+import { TutorialAdvice } from "./TutorialAdvice";
+import { TutorialEnding } from "./TutorialEnding";
+import { TutorialPanel } from "./TutorialPanel";
+import { useTutorialAdvice } from "./useTutorialAdvice";
 import { useMissionPlan } from "./useMissionPlan";
 
 interface PlanningModeProps {
@@ -19,6 +24,10 @@ interface PlanningModeProps {
   program: Program;
   /** The Program at the start of the last Turn, or null on the first Turn or after a Load. */
   lastTurn: Program | null;
+  /** The plan played on the last Turn, or null whenever lastTurn is. */
+  lastPlan: TurnPlan | null;
+  /** How the tutorial ended as this session started, shown until the player closes it, or null. */
+  tutorialEnding: TutorialEnd | null;
   /** Whether the automatic save at the start of this Planning Mode worked. */
   saved: boolean;
   saveStore: SaveStore;
@@ -26,6 +35,7 @@ interface PlanningModeProps {
   onSubmit: (plan: TurnPlan) => void;
   /** Ends this Program and starts a new one straight away. */
   onRestart: () => void;
+  onTutorialChange: (on: boolean) => void;
 }
 
 type PlanningDialog = "save" | "load" | "restart";
@@ -34,11 +44,14 @@ export function PlanningMode({
   simulation,
   program,
   lastTurn,
+  lastPlan,
+  tutorialEnding,
   saved,
   saveStore,
   onLoad,
   onSubmit,
   onRestart,
+  onTutorialChange,
 }: PlanningModeProps) {
   const view = simulation.readProgram(program);
   const [openDialog, setOpenDialog] = useState<PlanningDialog | null>(null);
@@ -54,6 +67,8 @@ export function PlanningMode({
   );
   // At most one journey home flies each Turn, of Crew or of samples, so choosing one replaces any other.
   const [bringHome, setBringHome] = useState<string | null>(null);
+  const [endingShown, setEndingShown] = useState(tutorialEnding !== null);
+  const advice = useTutorialAdvice(simulation, program, lastTurn, lastPlan);
   const choices = useMissionPlan(
     simulation,
     program,
@@ -134,6 +149,13 @@ export function PlanningMode({
         />
 
         <div className="planning-side">
+          <TutorialPanel
+            tutorial={view.tutorial}
+            firstTurn={view.turnNumber === 1}
+            onTutorialChange={onTutorialChange}
+          >
+            {advice && <TutorialAdvice advice={advice} />}
+          </TutorialPanel>
           <OperatingPanel
             assets={view.operatingAssets}
             crew={view.crew}
@@ -198,6 +220,14 @@ export function PlanningMode({
         </div>
       </div>
 
+      {tutorialEnding && endingShown && (
+        <TutorialEnding
+          ending={tutorialEnding}
+          onClose={() => {
+            setEndingShown(false);
+          }}
+        />
+      )}
       {openDialog === "restart" && (
         <Dialog
           title="Restart Program"

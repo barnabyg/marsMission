@@ -237,7 +237,22 @@ const format12 = format11.extend({
   ),
 });
 
-const newestFormat = format12;
+/**
+ * Adds Tutorial mode: off, on, or ended for good, at its goal or once it couldn't recover. A save from before it has
+ * it off.
+ */
+const format13 = format12.extend({
+  tutorial: z.discriminatedUnion("kind", [
+    z.strictObject({ kind: z.literal("off") }),
+    z.strictObject({ kind: z.literal("on") }),
+    z.strictObject({
+      kind: z.literal("ended"),
+      outcome: z.enum(["goalReached", "cantRecover"]),
+    }),
+  ]),
+});
+
+const newestFormat = format13;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -355,6 +370,13 @@ const formats: readonly SaveFormat[] = [
     upgrade: (old: z.output<typeof format11>): z.output<typeof format12> => ({
       ...old,
       samplesAtSites: {},
+    }),
+  },
+  {
+    schema: format12,
+    upgrade: (old: z.output<typeof format12>): z.output<typeof format13> => ({
+      ...old,
+      tutorial: { kind: "off" },
     }),
   },
   { schema: newestFormat },

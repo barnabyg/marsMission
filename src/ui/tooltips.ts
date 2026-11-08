@@ -83,6 +83,7 @@ export const tooltips = {
     "An Asset that lands at a Landing Site and houses the Crew there, on each day it operates, whatever its Activity: it slows the Health they lose to time at Mars, and holds Supplies for them, which they draw on once their own run out and which Crew landing there top up. Its Benefit tag in Planning Mode says how many more days it would give a Crew member at Mars.",
   "Mars lab":
     "An Asset that lands at a Landing Site and studies the samples that rovers and Crew there bring in, on each day it operates, whatever its Activity, raising the Research Grants their Ongoing Research pays. Their Science and Public Support stay as they are. Its Benefit tag in Planning Mode says how much money it would add over a whole Turn.",
+  Base: "Assets working together at one Landing Site, such as a fuel plant, a habitat and a Mars lab, whose Benefits help the Crew and rovers there. It is not an Asset of its own, and has nothing to do with Base funding.",
   "Sample caching":
     "An Activity for a rover: collecting samples of rock and soil at its Landing Site, which stay there from Turn to Turn until an ascent vehicle or Crew coming home take them. It earns no Science until they reach Earth, where each earns Science and the first are a Milestone.",
   "Ascent vehicle":
@@ -105,6 +106,8 @@ export const tooltips = {
     "One of three places where the player can keep a Program by hand, usable only in Planning Mode. It is separate from the automatic save made at the start of each Planning Mode.",
   "Decision Point":
     "A moment in Mission Mode when play pauses for the player to make a limited choice, such as aborting or using a Contingency.",
+  "Tutorial mode":
+    "A choice the player makes as a Program starts, which suggests what to plan in each Planning Mode and how to answer each Decision Point, with the reasons, on a route to landing Crew at a Base. The player can turn it off at any time, and it ends once Crew land at a Base or a Base can no longer be reached.",
   "Go/no-go check":
     "A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life for each Asset being landed, while Crew being landed use their Supplies for each day held.",
   "Mission Event":

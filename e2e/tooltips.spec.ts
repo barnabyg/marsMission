@@ -360,7 +360,9 @@ test("no button highlights a game term, while the text around it keeps its toolt
 
   await page.getByRole("button", { name: "Restart Program" }).click();
   expect(await termsInButtons(page)).toEqual([]);
-  await expect(page.locator("p [data-term='Program']")).toBeVisible();
+  await expect(
+    page.getByRole("dialog").locator("p [data-term='Program']"),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Keep going" }).click();
 
   await launch.click();

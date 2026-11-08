@@ -130,7 +130,8 @@ function missionPlan(
         ? plan
         : null;
     };
-    for (const mission of playStyle.fliesCrew
+    for (const mission of playStyle.fliesCrew &&
+    (playStyle.fliesCrewWhile?.(view) ?? true)
       ? crewedMissions(view, tools, playStyle.fliesCrew)
       : []) {
       const plan = affordable(mission);
@@ -181,7 +182,11 @@ export function playStyle(
         ...(bringHome ? { bringHome } : {}),
       };
       // Only short of money, not holding back at its limit of Assets, which ending one would only churn.
-      if (kept.mission || inService(given) >= (chosen.assetLimit ?? Infinity)) {
+      if (
+        kept.mission ||
+        inService(given) >= (chosen.assetLimit ?? Infinity) ||
+        chosen.endsMissionsToLaunch === false
+      ) {
         return kept;
       }
       // With nothing to launch, ending the missions of the Assets with the least Service Life left may free the Money

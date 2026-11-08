@@ -61,7 +61,6 @@ async function launchLanderAndRover(page: Page): Promise<void> {
 test("switches to the surface view and back during a Turn, at any speed and while paused", async ({
   page,
 }) => {
-  // Over 5 s: a landing takes the same real time at any speed.
   const problems = watchForProblems(page);
   await launchLanderAndRover(page);
   const current = page.getByTestId("current-view");
@@ -107,6 +106,18 @@ test("switches to the surface view and back during a Turn, at any speed and whil
   await expect(page.getByTestId("mission-date")).toHaveText(date ?? "");
   expect(await eventEntries(page).count()).toBe(happened);
   expect(await termsWithoutTooltips(page)).toEqual([]);
+  expect(problems).toEqual([]);
+});
+
+test("plays the landing in the surface view, then shows the Assets there and only there, to the Turn's end", async ({
+  page,
+}) => {
+  // Over 5 s: a landing takes the same real time at any speed.
+  const problems = watchForProblems(page);
+  await launchLanderAndRover(page);
+  const current = page.getByTestId("current-view");
+  await viewButton(page, "Surface").click();
+  await expect(current).toHaveText("Surface");
 
   // The landing plays here, and the Assets are at the site afterwards. It's on 4 July 2029, and the Turn is slowed to
   // 1x well before then, so there's time left in it for the whole landing.
@@ -135,11 +146,13 @@ test("switches to the surface view and back during a Turn, at any speed and whil
   await expect(surfaceAssets(page)).toHaveCount(0);
   await expect(page.getByTestId("mars-surface-asset").first()).toBeAttached();
 
-  // At top speed, and the Turn still runs to its end.
+  // At top speed, and the Turn still runs to its end. Switched from inside the page, as at 10x the Turn can end before
+  // a click from out here lands.
+  expect(await switchViewWhilePlaying(page, "10x", "Surface")).toEqual({
+    view: "Surface",
+    speed: "10x",
+  });
   await page.getByRole("button", { name: "10x" }).click();
-  await viewButton(page, "Surface")
-    .click({ timeout: 2000 })
-    .catch(() => undefined);
   await expect(page.getByTestId("turn-summary")).toBeVisible();
   expect(problems).toEqual([]);
 });

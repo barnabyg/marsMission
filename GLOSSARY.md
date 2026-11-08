@@ -127,11 +127,15 @@ _Avoid_: Return fuel, ascent fuel
 
 **Habitat**:
 An Asset that lands at a Landing Site and houses the Crew there, on each day it operates, whatever its Activity: it slows the Health they lose to time at Mars, and holds Supplies for them, which they draw on once their own run out and which Crew landing there top up. Its Benefit tag in Planning Mode says how many more days it would give a Crew member at Mars.
-_Avoid_: Base, outpost, hab module
+_Avoid_: Outpost, hab module
 
 **Mars lab**:
 An Asset that lands at a Landing Site and studies the samples that rovers and Crew there bring in, on each day it operates, whatever its Activity, raising the Research Grants their Ongoing Research pays. Their Science and Public Support stay as they are. Its Benefit tag in Planning Mode says how much money it would add over a whole Turn.
 _Avoid_: Laboratory, research base
+
+**Base**:
+Assets working together at one Landing Site, such as a fuel plant, a habitat and a Mars lab, whose Benefits help the Crew and rovers there. It is not an Asset of its own, and has nothing to do with Base funding.
+_Avoid_: Colony, settlement
 
 **Activity**:
 What an Asset, or all the Crew in one place at Mars, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset or Crew keep their Activity into later Turns until the player changes it.
@@ -204,6 +208,10 @@ _Avoid_: Save file, save game
 **Decision Point**:
 A moment in Mission Mode when play pauses for the player to make a limited choice, such as aborting or using a Contingency.
 _Avoid_: Prompt, intervention
+
+**Tutorial mode**:
+A choice the player makes as a Program starts, which suggests what to plan in each Planning Mode and how to answer each Decision Point, with the reasons, on a route to landing Crew at a Base. The player can turn it off at any time, and it ends once Crew land at a Base or a Base can no longer be reached.
+_Avoid_: Guide, hints, help mode
 
 ## Risk
 

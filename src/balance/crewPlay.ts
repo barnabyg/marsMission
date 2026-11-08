@@ -11,12 +11,16 @@ type PlannedMission = NonNullable<TurnPlan["mission"]>;
 export interface CrewStyle {
   /** Lands them at a surveyed Landing Site, once there is one, rather than keeping them in Mars orbit. */
   lands?: boolean;
+  /** Sends the smallest Crew rather than the largest. */
+  fewestCrew?: boolean;
   /** Carries the least Supplies. */
   leastSupplies?: boolean;
   /** Carries no Protection. */
   noProtection?: boolean;
   /** Buys the best Reliability on every Mission Event that it can afford, before giving up any Supplies or Protection. */
   reliability?: boolean;
+  /** Flies Crew only with that best Reliability, waiting until it can afford it, rather than without it when it can't. */
+  onlyMostReliable?: boolean;
   /** What it does at a solar particle event with Crew aboard, which is as at any other unless it says otherwise. */
   solarParticleEvents?: "safeMode" | "carryOn";
   /**
@@ -165,6 +169,8 @@ export function crewedMissions(
     noProtection = false,
     reliability = false,
     roundTrip = false,
+    fewestCrew = false,
+    onlyMostReliable = false,
     habitat = false,
     besideFuelPlant = false,
     fetches = false,
@@ -191,7 +197,9 @@ export function crewedMissions(
     ? allProtection.slice(0, 1)
     : allProtection.toReversed();
   const choices = view.crewedMission.sizes
-    .toSorted((first, second) => second.crew - first.crew)
+    .toSorted((first, second) =>
+      fewestCrew ? first.crew - second.crew : second.crew - first.crew,
+    )
     .flatMap((size) => supplies.map((carried) => ({ size, carried })))
     .flatMap((choice) =>
       protection.map((shielding) => ({ ...choice, shielding })),
@@ -246,6 +254,7 @@ export function crewedMissions(
         ...mission,
         crew: { ...mission.crew, activityId: best?.id ?? planned.activityId },
       };
+      if (onlyMostReliable) return [mostReliable(chosen, tools)];
       return reliability ? [mostReliable(chosen, tools), chosen] : [chosen];
     });
   return [

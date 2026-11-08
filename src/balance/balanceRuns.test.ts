@@ -27,25 +27,20 @@ describe("strategies with Contingencies", () => {
     ({ name }) => name === "steady: Contingency, declined",
   );
 
-  // It plays 400 Programs, which takes about 2 s locally but has run past Vitest's 5 s default on CI runners.
-  it(
-    "answer Decision Points through the Simulation, with no invalid state",
-    { timeout: 30_000 },
-    () => {
-      if (!usedBy || !declinedBy) throw new Error("Expected both strategies");
-      const met = (strategy: Strategy) =>
-        Array.from({ length: 200 }, (_, index) => index + 1).flatMap(
-          (seed) => playProgram(real, strategy, seed, turns).turns,
-        );
-      const used = met(usedBy);
-      const declined = met(declinedBy);
-      expect(sum(used.map(({ rescues }) => rescues))).toBeGreaterThan(0);
-      expect(
-        sum(declined.map(({ decisionPoints }) => decisionPoints)),
-      ).toBeGreaterThan(0);
-      expect(sum(declined.map(({ rescues }) => rescues))).toBe(0);
-    },
-  );
+  // About half of all seeds use a Contingency to rescue a Mission, and nearly every seed meets a Decision Point, so
+  // the first 20 seeds give several of each.
+  it("answer Decision Points through the Simulation, with no invalid state", () => {
+    if (!usedBy || !declinedBy) throw new Error("Expected both strategies");
+    const met = (strategy: Strategy) =>
+      seeds.flatMap((seed) => playProgram(real, strategy, seed, turns).turns);
+    const used = met(usedBy);
+    const declined = met(declinedBy);
+    expect(sum(used.map(({ rescues }) => rescues))).toBeGreaterThan(1);
+    expect(
+      sum(declined.map(({ decisionPoints }) => decisionPoints)),
+    ).toBeGreaterThan(1);
+    expect(sum(declined.map(({ rescues }) => rescues))).toBe(0);
+  });
 });
 
 describe("every strategy on the real data files", () => {
