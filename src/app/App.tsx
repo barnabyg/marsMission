@@ -4,6 +4,7 @@ import { TurnSummaryScreen } from "../mission/TurnSummaryScreen";
 import { PlanningMode } from "../planning/PlanningMode";
 import { ProgramSummaryScreen } from "../planning/ProgramSummaryScreen";
 import { OpeningScreen } from "../save/OpeningScreen";
+import { decisionAdvice } from "../tutorial/tutorial";
 import type { Program, TurnPlan } from "../simulation/simulation";
 import {
   newProgramScreen,
@@ -93,6 +94,16 @@ export function App({ services, firstScreen }: AppProps) {
       <MissionMode
         timeline={progress.timeline}
         decisionPoint={progress.decisionPoint}
+        decisionAdvice={
+          progress.decisionPoint &&
+          simulation.readProgram(screen.program).tutorial.kind === "on"
+            ? decisionAdvice(
+                progress.decisionPoint,
+                simulation.readProgram(screen.program),
+                screen.plan,
+              )
+            : null
+        }
         tutorialOn={
           simulation.readProgram(screen.program).tutorial.kind === "on"
         }

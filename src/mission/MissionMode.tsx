@@ -8,6 +8,7 @@ import {
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { Icon, type IconName } from "../ui/Icon";
+import type { DecisionAdvice } from "../tutorial/tutorial";
 import { TurnOffTutorial } from "../ui/TurnOffTutorial";
 import { DecisionPointPanel } from "./DecisionPointPanel";
 import { EventsColumn } from "./EventsColumn";
@@ -69,6 +70,8 @@ interface MissionModeProps {
   initialSpeed: number;
   onSpeedChange: (speed: number) => void;
   onFinished: () => void;
+  /** Tutorial mode's suggested answer to the Decision Point, while it is on. */
+  decisionAdvice: DecisionAdvice | null;
   /** Whether Tutorial mode is on, which Mission Mode can turn off. */
   tutorialOn: boolean;
   onTutorialOff: () => void;
@@ -81,6 +84,7 @@ export function MissionMode({
   initialSpeed,
   onSpeedChange,
   onFinished,
+  decisionAdvice,
   tutorialOn,
   onTutorialOff,
 }: MissionModeProps) {
@@ -300,6 +304,7 @@ export function MissionMode({
       {deciding && (
         <DecisionPointPanel
           decisionPoint={decisionPoint}
+          advice={decisionAdvice}
           onAnswer={(answer) => {
             onAnswer(decisionPoint.id, answer);
           }}

@@ -1,17 +1,22 @@
 import type { DecisionAnswer, DecisionPoint } from "../simulation/simulation";
+import type { DecisionAdvice } from "../tutorial/tutorial";
 import { GameText } from "../ui/GameText";
 
 interface DecisionPointPanelProps {
   decisionPoint: DecisionPoint;
   onAnswer: (answer: DecisionAnswer) => void;
+  /** Tutorial mode's suggested answer, while it is on. The player still chooses. */
+  advice?: DecisionAdvice | null;
 }
 
 /** Holds the Turn until the player chooses. It leaves the views and the events column usable, as there's no time limit. */
 export function DecisionPointPanel({
   decisionPoint,
   onAnswer,
+  advice = null,
 }: DecisionPointPanelProps) {
   const { title, description, choices } = decisionPoint;
+  const suggested = choices.find(({ answer }) => answer === advice?.answer);
   return (
     <section
       className="decision-point"
@@ -25,10 +30,19 @@ export function DecisionPointPanel({
       <p>
         <GameText>{description}</GameText>
       </p>
+      {advice && suggested && (
+        <p className="decision-advice" data-testid="decision-advice">
+          <GameText>{`Tutorial mode suggests: ${suggested.label}. ${advice.reason}`}</GameText>
+        </p>
+      )}
       <div className="decision-choices">
         {choices.map(
           ({ answer, label, riskBand, description: what }, index) => (
-            <div key={answer} data-testid={`decision-choice-${answer}`}>
+            <div
+              key={answer}
+              data-testid={`decision-choice-${answer}`}
+              className={suggested?.answer === answer ? "suggested" : undefined}
+            >
               <button
                 type="button"
                 className={index === 0 ? "primary" : undefined}

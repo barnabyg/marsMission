@@ -272,3 +272,15 @@
   padding: 0;
   list-style: none;
 }
+
+/* Tutorial mode's suggested answer, with the choice it suggests outlined. */
+.decision-advice {
+  border-left: 0.3rem solid var(--accent);
+  padding-left: 0.8rem;
+}
+
+.decision-choices > div.suggested {
+  outline: 2px solid var(--accent);
+  outline-offset: 0.6rem;
+  border-radius: 0.3rem;
+}
