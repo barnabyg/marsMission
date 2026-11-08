@@ -34,7 +34,7 @@ function grainHeight(column: number, row: number): number {
     octave(6, 1.4, 0) +
     octave(12, 1, 1) +
     octave(32, 0.6, 2) +
-    octave(64, 0.35, 3) +
+    octave(64, 0.2, 3) +
     pebbles * 5
   );
 }
@@ -67,8 +67,10 @@ export function detailTexels(): Uint8Array {
             length,
           0,
         ) - flatLight;
-      // A little speckle of lighter and darker grains, whatever their slope.
-      const speckle = (noise(seed + 11, column, row, size) - 0.5) * 0.15;
+      // A little speckle of lighter and darker grains, whatever their slope, each two texels across so that it stays
+      // smooth when the texture is drawn larger than it is.
+      const speckle =
+        (noise(seed + 11, column / 2, row / 2, size / 2) - 0.5) * 0.15;
       texels[row * size + column] = Math.round(
         Math.min(Math.max(128 + (light * 0.9 + speckle) * 128, 0), 255),
       );

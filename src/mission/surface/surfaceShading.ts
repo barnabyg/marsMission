@@ -4,7 +4,7 @@ import {
   DoubleSide,
   FrontSide,
   LinearFilter,
-  LinearMipmapLinearFilter,
+  LinearMipmapNearestFilter,
   RedFormat,
   RepeatWrapping,
   ShaderMaterial,
@@ -36,15 +36,15 @@ export function detailTexture(): Texture {
   texture.wrapS = RepeatWrapping;
   texture.wrapT = RepeatWrapping;
   texture.magFilter = LinearFilter;
-  texture.minFilter = LinearMipmapLinearFilter;
+  texture.minFilter = LinearMipmapNearestFilter;
   texture.generateMipmaps = true;
   texture.needsUpdate = true;
   return texture;
 }
 
 /**
- * The terrain's colours, already lit, scaled by the fine grain where the terrain says it shows. The grain is read
- * twice at different sizes, so that its repeats don't line up into a visible pattern.
+ * The terrain's colours, already lit, scaled by the fine grain where the terrain says it shows. The grain is read once
+ * per pixel, from the nearest size of it, as each extra read costs software rendering at 4K a few per cent of its frame.
  */
 export function terrainMaterial(grain: Texture): ShaderMaterial {
   return new ShaderMaterial({
@@ -73,9 +73,7 @@ export function terrainMaterial(grain: Texture): ShaderMaterial {
       varying vec2 vGrain;
       varying float vHaze;
       void main() {
-        float fine = texture2D(grain, vGrain).r * 2.0;
-        float coarse = texture2D(grain, vGrain * 0.37 + 0.37).r * 2.0;
-        float grit = fine * mix(1.0, coarse, 0.35);
+        float grit = texture2D(grain, vGrain).r * 2.0;
         vec3 land = vColor * mix(1.0, grit, vDetail * 0.6);
         gl_FragColor = vec4(mix(land, horizon, vHaze), 1.0);
         #include <colorspace_fragment>

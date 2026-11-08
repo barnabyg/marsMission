@@ -12,7 +12,7 @@ import {
   Vector3,
 } from "three";
 import { useDisposal } from "../sceneParts";
-import { rocksAt } from "./rocks";
+import { rocksAt, type Rock } from "./rocks";
 import { latticeValue } from "./siteNoise";
 import { detailTexture, rockMaterial, terrainMaterial } from "./surfaceShading";
 import { basaltColor, buildTerrain, horizonColor } from "./terrain";
@@ -43,9 +43,12 @@ export function Terrain({ siteName }: { siteName: string }) {
   return <mesh geometry={geometry} material={material} />;
 }
 
-/** A lumpy stone, faceted, that each rock is a stretched and turned copy of. About 1 unit across. */
-function rockGeometry() {
-  const stone = new IcosahedronGeometry(0.5, 1);
+/**
+ * A lumpy stone, faceted, that each rock is a stretched and turned copy of. About 1 unit across. A `detail` of 0 gives
+ * 20 faces, enough for a small stone, and 1 gives 80, for a boulder.
+ */
+function rockGeometry(detail: number) {
+  const stone = new IcosahedronGeometry(0.5, detail);
   const { position } = stone.attributes;
   if (!position) return stone;
   for (let vertex = 0; vertex < position.count; vertex++) {
@@ -69,10 +72,17 @@ function rockGeometry() {
   return stone;
 }
 
-/** The site's stones and boulders, all drawn at once as copies of one stone. */
-export function Rocks({ siteName }: { siteName: string }) {
-  const rocks = useMemo(() => rocksAt(siteName), [siteName]);
-  const geometry = useMemo(() => rockGeometry(), []);
+/** Rocks drawn at once as copies of one stone. */
+function RockCopies({
+  rocks,
+  detail,
+  siteName,
+}: {
+  rocks: readonly Rock[];
+  detail: number;
+  siteName: string;
+}) {
+  const geometry = useMemo(() => rockGeometry(detail), [detail]);
   const material = useMemo(() => rockMaterial(), []);
   const mesh = useRef<InstancedMesh>(null);
   useDisposal(geometry);
@@ -111,6 +121,24 @@ export function Rocks({ siteName }: { siteName: string }) {
       ref={mesh}
       args={[geometry, material, rocks.length]}
     />
+  );
+}
+
+/** Rocks bigger than this are boulders, drawn with more faces, as they're big enough to show them. */
+const boulderSize = 0.3;
+
+/** The site's stones and boulders: one draw for all the stones and one for all the boulders. */
+export function Rocks({ siteName }: { siteName: string }) {
+  const [stones, boulders] = useMemo(() => {
+    const rocks = rocksAt(siteName);
+    const isBoulder = ({ size }: Rock) => Math.max(...size) > boulderSize;
+    return [rocks.filter((rock) => !isBoulder(rock)), rocks.filter(isBoulder)];
+  }, [siteName]);
+  return (
+    <>
+      <RockCopies rocks={stones} detail={0} siteName={siteName} />
+      <RockCopies rocks={boulders} detail={1} siteName={siteName} />
+    </>
   );
 }
 
