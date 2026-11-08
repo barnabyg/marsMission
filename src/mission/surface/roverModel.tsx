@@ -1,7 +1,15 @@
 import { memo } from "react";
 import type { Point } from "../sceneParts";
 import { Antenna, louvrePieces, SolarCells } from "./modelDetails";
-import { Box, Dish, Drum, PartSet, Rod, type SetPiece } from "./modelParts";
+import {
+  Batched,
+  Box,
+  Dish,
+  Drum,
+  PartSet,
+  Rod,
+  type SetPiece,
+} from "./modelParts";
 
 const roverTeal = "#37c9b5";
 const tealShade = "#2a9e8e";
@@ -191,7 +199,7 @@ function Mast() {
  */
 export const Rover = memo(function Rover() {
   return (
-    <group>
+    <Batched>
       {wheels.map(({ key, x, side }) => (
         <Wheel key={key} x={x} side={side} />
       ))}
@@ -277,6 +285,6 @@ export const Rover = memo(function Rover() {
         color={hubGrey}
         finish="metal"
       />
-    </group>
+    </Batched>
   );
 });

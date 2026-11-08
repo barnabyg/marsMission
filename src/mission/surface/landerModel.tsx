@@ -7,6 +7,7 @@ import {
   RoundSolarCells,
 } from "./modelDetails";
 import {
+  Batched,
   Box,
   Dish,
   Drum,
@@ -159,7 +160,7 @@ function Instruments() {
  */
 export const Lander = memo(function Lander() {
   return (
-    <group>
+    <Batched>
       <Legs />
       {/* The descent engines' nozzles, between the legs. */}
       <PartSet
@@ -258,6 +259,6 @@ export const Lander = memo(function Lander() {
         color={legGrey}
         finish="metal"
       />
-    </group>
+    </Batched>
   );
 });

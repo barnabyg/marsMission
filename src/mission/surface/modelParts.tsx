@@ -1,16 +1,27 @@
-import { useEffect, useMemo, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from "react";
 import {
   BoxGeometry,
   CylinderGeometry,
   Euler,
+  InstancedMesh,
   Matrix4,
+  Mesh,
   Quaternion,
+  ShaderMaterial,
   Vector3,
   type BufferGeometry,
+  type Group,
+  type Material,
 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import type { Point } from "../sceneParts";
-import { partMaterial, type Finish } from "./surfaceShading";
+import { partLookOf, partMaterial, type Finish } from "./surfaceShading";
 
 /**
  * The shapes the surface models are built from. They don't take the scene's lights, which would fall on the other
@@ -229,6 +240,73 @@ export function PartSet({
     [geometry],
   );
   return <mesh geometry={geometry} material={partMaterial(color, finish)} />;
+}
+
+/**
+ * Draws a still model with one draw for each of its materials, however many parts it has: once its parts are placed,
+ * those that share a part material are merged into one shape, and the parts themselves are hidden. Software rendering
+ * pays for each draw, and a detailed model has many parts in few colours. Only what's inside moves together, so a
+ * model whose parts move apart is batched part by part.
+ */
+export function Batched({ children }: { children: ReactNode }) {
+  const parts = useRef<Group>(null);
+  const merged = useRef<Group>(null);
+  useLayoutEffect(() => {
+    const root = parts.current;
+    const target = merged.current;
+    if (!root || !target) return;
+    root.updateWorldMatrix(true, true);
+    const toRoot = root.matrixWorld.clone().invert();
+    const byMaterial = new Map<
+      Material,
+      { meshes: Mesh[]; shapes: BufferGeometry[] }
+    >();
+    root.traverse((object) => {
+      if (!(object instanceof Mesh) || object instanceof InstancedMesh) return;
+      const material: unknown = object.material;
+      if (
+        !(material instanceof ShaderMaterial) ||
+        partLookOf(material) === null
+      )
+        return;
+      const shape = (object.geometry as BufferGeometry)
+        .clone()
+        .applyMatrix4(toRoot.clone().multiply(object.matrixWorld));
+      const batch = byMaterial.get(material) ?? { meshes: [], shapes: [] };
+      batch.meshes.push(object as Mesh);
+      batch.shapes.push(shape);
+      byMaterial.set(material, batch);
+    });
+    const made: Mesh[] = [];
+    for (const [material, { meshes, shapes }] of byMaterial) {
+      const indexed = shapes.every((shape) => shape.index !== null);
+      const ready = indexed
+        ? shapes
+        : shapes.map((shape) => (shape.index ? shape.toNonIndexed() : shape));
+      // It gives null, despite its type, for shapes it can't merge, which are then left as they are.
+      const geometry = mergeGeometries(ready) as BufferGeometry | null;
+      for (const shape of [...shapes, ...ready]) shape.dispose();
+      if (!geometry) continue;
+      for (const mesh of meshes) mesh.visible = false;
+      const mesh = new Mesh(geometry, material);
+      target.add(mesh);
+      made.push(mesh);
+    }
+    return () => {
+      for (const mesh of made) {
+        target.remove(mesh);
+        mesh.geometry.dispose();
+      }
+      for (const { meshes } of byMaterial.values())
+        for (const mesh of meshes) mesh.visible = true;
+    };
+  }, []);
+  return (
+    <group>
+      <group ref={parts}>{children}</group>
+      <group ref={merged} />
+    </group>
+  );
 }
 
 /** Each of four legs splayed from a body, from a foot on the ground at `footAt` out from the middle to `topAt`. */

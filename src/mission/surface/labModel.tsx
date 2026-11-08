@@ -8,7 +8,15 @@ import {
   WorkLight,
 } from "./baseParts";
 import { Antenna, deckBoxes, louvrePieces } from "./modelDetails";
-import { Box, Dish, Drum, PartSet, Rod, splayedLegs } from "./modelParts";
+import {
+  Batched,
+  Box,
+  Dish,
+  Drum,
+  PartSet,
+  Rod,
+  splayedLegs,
+} from "./modelParts";
 
 const labSilver = "#d9dde4";
 const labTeal = "#4fb7c8";
@@ -146,7 +154,7 @@ function Masts() {
  */
 export const MarsLab = memo(function MarsLab() {
   return (
-    <group>
+    <Batched>
       {legs.map(({ key, foot, top }) => (
         <group key={key}>
           <Rod from={foot} to={top} radius={0.03} color={frameGrey} />
@@ -217,6 +225,6 @@ export const MarsLab = memo(function MarsLab() {
         color={labTeal}
       />
       <Masts />
-    </group>
+    </Batched>
   );
 });

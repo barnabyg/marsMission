@@ -10,7 +10,15 @@ import {
   WorkLight,
 } from "./baseParts";
 import { Antenna, louvrePieces } from "./modelDetails";
-import { Box, Drum, PartSet, Rod, Shape, type SetPiece } from "./modelParts";
+import {
+  Batched,
+  Box,
+  Drum,
+  PartSet,
+  Rod,
+  Shape,
+  type SetPiece,
+} from "./modelParts";
 
 /**
  * Two of the Assets that make a base at a Landing Site: the fuel plant and the habitat. The Mars lab is in
@@ -96,7 +104,7 @@ function Radiator() {
  */
 export const FuelPlant = memo(function FuelPlant() {
   return (
-    <group>
+    <Batched>
       <PlatformLegs x={0.48} z={0.3} height={0.26} />
       <Box
         size={[1.12, 0.06, 0.74]}
@@ -200,7 +208,7 @@ export const FuelPlant = memo(function FuelPlant() {
         tilt={-0.45}
       />
       <Antenna base={[0.5, 0.3, -0.32]} height={0.36} />
-    </group>
+    </Batched>
   );
 });
 
@@ -259,7 +267,7 @@ function Airlock() {
  */
 export const Habitat = memo(function Habitat() {
   return (
-    <group>
+    <Batched>
       <PlatformLegs x={0.5} z={0.22} height={0.3} />
       <Box
         size={[1.2, 0.05, 0.56]}
@@ -354,6 +362,6 @@ export const Habitat = memo(function Habitat() {
         color={frameGrey}
       />
       <Antenna base={[-0.58, 1.0, 0]} height={0.3} />
-    </group>
+    </Batched>
   );
 });

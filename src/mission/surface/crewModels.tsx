@@ -2,7 +2,14 @@ import { memo } from "react";
 import { Quaternion, Vector3 } from "three";
 import type { Point } from "../sceneParts";
 import { Antenna, blanketSeams } from "./modelDetails";
-import { Box, Drum, PartSet, Shape, type SetPiece } from "./modelParts";
+import {
+  Batched,
+  Box,
+  Drum,
+  PartSet,
+  Shape,
+  type SetPiece,
+} from "./modelParts";
 
 /**
  * The Crew on the surface: the lander they come down in, what's left of it after a crash, and each Crew member in a
@@ -55,7 +62,7 @@ const ladder: SetPiece[] = [
 /** The Crew lander's descent stage: four legs, the engines between them, the stage itself and the ladder. It stays on the ground when the cabin lifts off. */
 export const CrewDescentStage = memo(function CrewDescentStage() {
   return (
-    <group>
+    <Batched>
       {crewLanderLegs.map(({ key, foot, middle, length, turn }) => (
         <group key={key}>
           <group position={middle} quaternion={turn}>
@@ -130,7 +137,7 @@ export const CrewDescentStage = memo(function CrewDescentStage() {
         color="#d7dae0"
       />
       <PartSet pieces={ladder} color={legGrey} finish="metal" />
-    </group>
+    </Batched>
   );
 });
 
@@ -168,7 +175,7 @@ function thrusterQuad(angle: number, y: number): SetPiece[] {
 /** The crew cabin, which lifts off from the descent stage through Mars ascent: windows, a hatch, thrusters and a docking ring. */
 export const CrewCabin = memo(function CrewCabin() {
   return (
-    <group>
+    <Batched>
       <Drum
         radii={[0.42, 0.46]}
         height={0.64}
@@ -261,7 +268,7 @@ export const CrewCabin = memo(function CrewCabin() {
         color={legGrey}
       />
       <Antenna base={[-0.2, 1.75, 0.1]} height={0.26} />
-    </group>
+    </Batched>
   );
 });
 
@@ -326,7 +333,7 @@ export const CrewLanderWreck = memo(function CrewLanderWreck() {
 /** A Crew member in a white spacesuit with a gold visor, a pack on their back and a lamp on their helmet. Their front is along x. */
 export const CrewFigure = memo(function CrewFigure() {
   return (
-    <group>
+    <Batched>
       <PartSet
         pieces={[-0.045, 0.045].flatMap((z): SetPiece[] => [
           { size: [0.06, 0.16, 0.06], position: [0, 0.08, z] },
@@ -378,6 +385,6 @@ export const CrewFigure = memo(function CrewFigure() {
         color="#fff4d6"
         finish="glass"
       />
-    </group>
+    </Batched>
   );
 });

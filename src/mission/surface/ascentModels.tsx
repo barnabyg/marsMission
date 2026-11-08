@@ -1,6 +1,14 @@
 import { memo } from "react";
 import { Antenna } from "./modelDetails";
-import { Box, Drum, PartSet, Rod, splayedLegs, Shape } from "./modelParts";
+import {
+  Batched,
+  Box,
+  Drum,
+  PartSet,
+  Rod,
+  splayedLegs,
+  Shape,
+} from "./modelParts";
 
 /**
  * The ascent vehicle, which lifts samples off the surface: a rocket standing on a platform, which stays behind when the
@@ -23,7 +31,7 @@ const platformLegs = splayedLegs(0.5, 0.36, 0.36);
 /** The platform the rocket stands on: a deck on four splayed legs, with a support arm on either side of the rocket. */
 export const KestrelPlatform = memo(function KestrelPlatform() {
   return (
-    <group>
+    <Batched>
       {platformLegs.map(({ key, foot, top }) => (
         <group key={key}>
           <Rod from={foot} to={top} radius={0.03} color={frameGrey} />
@@ -90,7 +98,7 @@ export const KestrelPlatform = memo(function KestrelPlatform() {
           />
         </group>
       ))}
-    </group>
+    </Batched>
   );
 });
 
@@ -100,7 +108,7 @@ export const KestrelPlatform = memo(function KestrelPlatform() {
  */
 export const KestrelRocket = memo(function KestrelRocket() {
   return (
-    <group>
+    <Batched>
       <Drum
         radii={[0.06, 0.1]}
         height={0.12}
@@ -175,7 +183,7 @@ export const KestrelRocket = memo(function KestrelRocket() {
         rotation={[-0.4, 0, 0]}
         color={shade}
       />
-    </group>
+    </Batched>
   );
 });
 
