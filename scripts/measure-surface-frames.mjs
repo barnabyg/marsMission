@@ -93,6 +93,11 @@ try {
     // Frames land on the display's refresh, so the median moves in steps of a refresh; the mean doesn't.
     const mean =
       frameTimes.reduce((sum, time) => sum + time, 0) / frameTimes.length;
+    if (run === 1) {
+      console.log(
+        `Drawn each frame: ${await page.locator("html").getAttribute("data-drawn")}`,
+      );
+    }
     frameTimes.sort((first, second) => first - second);
     const median = frameTimes[Math.floor(frameTimes.length / 2)];
     medians.push(median);

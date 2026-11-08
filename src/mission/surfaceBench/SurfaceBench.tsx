@@ -68,8 +68,11 @@ function Camera() {
     camera.lookAt(...target);
     camera.updateMatrixWorld();
   }, [camera]);
-  useFrame(() => {
+  useFrame(({ gl }) => {
     frames.current += 1;
+    // What the last frame drew, for the script to print beside the times.
+    const { calls, triangles } = gl.info.render;
+    document.documentElement.dataset.drawn = `${calls} draw calls, ${triangles} triangles`;
     if (frames.current === 5) document.documentElement.dataset.ready = "";
   });
   return null;
