@@ -293,7 +293,7 @@
 }
 
 .tutorial-change {
-  border-left: 0.3rem solid var(--accent);
+  border-left: 0.3rem solid var(--tutorial-accent);
   padding-left: 0.8rem;
 }
 
@@ -325,8 +325,4 @@
   gap: 0.6rem;
   margin: 0;
   padding-left: 1.4rem;
-}
-
-.tutorial-reason {
-  color: var(--muted);
 }

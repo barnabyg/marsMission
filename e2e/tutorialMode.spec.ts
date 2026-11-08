@@ -150,3 +150,36 @@ test("turns Tutorial mode off in Mission Mode, and it stays off in the next Plan
   await expect(panel(page)).toHaveCount(0);
   expect(problems).toEqual([]);
 });
+
+test("gives every tutorial block in Planning and Mission Mode the tutorial's own style, and leaves none once it is off", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  const styled = page.locator(".tutorial-voice");
+  await page.goto(`/?seed=${successSeed}`);
+  // Only offering it is the game asking, not the tutorial speaking.
+  await expect(offer(page)).toBeVisible();
+  await expect(styled).toHaveCount(0);
+
+  await turnOn(page);
+  await expect(panel(page)).toHaveClass(/\btutorial-voice\b/);
+  await expect(styled).toHaveCount(1);
+
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  const inMission = page.getByTestId("mission-tutorial");
+  await expect(inMission).toHaveClass(/\btutorial-voice\b/);
+  await expect(styled).toHaveCount(1);
+
+  await turnOffForGood(page);
+  await expect(styled).toHaveCount(0);
+  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page
+    .getByTestId("turn-summary")
+    .getByRole("button", { name: "Continue" })
+    .click();
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
+  await expect(styled).toHaveCount(0);
+  expect(problems).toEqual([]);
+});

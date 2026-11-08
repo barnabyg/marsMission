@@ -128,6 +128,7 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.6rem 1rem;
+  padding: 0.8rem 1rem;
 }
 
 /* Three groups: the title, date and view tabs on the left, playback in the centre and End Turn on the right, with the Turn's progress beneath. */
@@ -275,12 +276,14 @@
 
 /* Tutorial mode's suggested answer, with the choice it suggests outlined. */
 .decision-advice {
-  border-left: 0.3rem solid var(--accent);
-  padding-left: 0.8rem;
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.8rem 1.2rem;
 }
 
+/* In the tutorial's colour, tying the suggested choice to its suggestion. */
 .decision-choices > div.suggested {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--tutorial-accent);
   outline-offset: 0.6rem;
   border-radius: 0.3rem;
 }

@@ -20,6 +20,7 @@ import "../save/titleScreen.css";
 import "../mission/mission.css";
 import "../mission/eventCards.css";
 import "../ui/summaryScreen.css";
+import "../ui/tutorial.css";
 import "../ui/tooltips.css";
 
 const container = document.getElementById("root");

@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import type { TutorialEnd } from "../tutorial/tutorial";
 import { TutorialEnding } from "./TutorialEnding";
 
 /** The text a reader would see, with tags gone and spaces collapsed. */
@@ -44,5 +45,15 @@ describe("how the tutorial ends", () => {
       "Public Support is too close to the Cancellation Level.",
     );
     expect(text).toContain("The Program carries on");
+  });
+
+  it.each<TutorialEnd>([
+    { kind: "goalReached", learnt: [] },
+    { kind: "cantRecover", reason: "Money has run out." },
+  ])("speaks in the tutorial's own style ($kind)", (ending) => {
+    const html = renderToStaticMarkup(
+      <TutorialEnding ending={ending} onClose={() => undefined} />,
+    );
+    expect(html).toMatch(/<dialog[^>]*class="tutorial-voice"/);
   });
 });

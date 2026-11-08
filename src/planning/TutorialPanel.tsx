@@ -25,7 +25,7 @@ export function TutorialPanel({
   if (tutorial.kind === "on") {
     return (
       <section
-        className="panel tutorial-panel"
+        className="panel tutorial-panel tutorial-voice"
         aria-labelledby="tutorial-heading"
         data-testid="tutorial-panel"
       >

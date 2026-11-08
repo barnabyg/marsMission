@@ -54,9 +54,11 @@ describe("Tutorial mode's suggestion at a Decision Point", () => {
           advice={{ answer: second[0], reason: "It is the safer choice." }}
         />,
       );
-      expect(textOf(html)).toContain(
-        `Tutorial mode suggests: ${second[1]}. It is the safer choice.`,
+      expect(textOf(html)).toContain(`Tutorial mode suggests: ${second[1]}.`);
+      expect(html).toContain(
+        'class="tutorial-reason">It is the safer choice.</p>',
       );
+      expect(html).toMatch(/class="decision-advice tutorial-voice"/);
       expect(html).toMatch(
         new RegExp(
           `data-testid="decision-choice-${second[0]}" class="suggested"`,

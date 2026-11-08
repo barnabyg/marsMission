@@ -97,6 +97,11 @@ describe("the Tutorial mode panel", () => {
     expect(html).toContain("Turn off Tutorial mode");
   });
 
+  it("speaks in the tutorial's own style while it is on, but not while only offering it", () => {
+    expect(panel("on", false)).toContain("tutorial-voice");
+    expect(panel("off", true)).not.toContain("tutorial-voice");
+  });
+
   it("shows nothing once the tutorial has ended", () => {
     expect(
       renderToStaticMarkup(
