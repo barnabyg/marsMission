@@ -169,7 +169,7 @@ type Speed = "1x" | "5x" | "10x" | "20x";
  * late. With a speed, it also plays at that speed from the first moment it can, which is as Mission Mode opens, or at
  * once if it's open already: a quick way to an event late in the Turn, when how it plays on the way isn't the point.
  * The hold lands a frame or two after the event, so at speed it can be weeks or months late. Where that matters, slow
- * down before the event with pauseAtEventAfter.
+ * down before the event with pauseAtEventAfter, or before a real-time sequence with playFastUntilSequence.
  */
 export async function holdTurnWhenShown(
   page: Page,
