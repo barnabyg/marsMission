@@ -136,8 +136,13 @@ export function Rocks({ siteName }: { siteName: string }) {
   }, [siteName]);
   return (
     <>
-      <RockCopies rocks={stones} detail={0} siteName={siteName} />
-      <RockCopies rocks={boulders} detail={1} siteName={siteName} />
+      {/* Never an empty set of copies: its shader reads each copy's colour, which only exists once one is given. */}
+      {stones.length > 0 && (
+        <RockCopies rocks={stones} detail={0} siteName={siteName} />
+      )}
+      {boulders.length > 0 && (
+        <RockCopies rocks={boulders} detail={1} siteName={siteName} />
+      )}
     </>
   );
 }
