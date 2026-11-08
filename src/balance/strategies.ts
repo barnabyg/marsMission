@@ -2,6 +2,7 @@ import { bigProgramStrategies } from "./bigProgramStrategies";
 import { playStyle } from "./playStyle";
 import { steadyStrategies, steadySurveyOnce } from "./steadyStrategies";
 import type { Strategy } from "./strategy";
+import { tutorialStrategy } from "../tutorial/tutorial";
 import {
   landThenOrbiter,
   landingStraightAway,
@@ -135,4 +136,6 @@ export const strategies: Strategy[] = [
       assetLimit: 6,
     },
   ),
+  // The tutorial's advice, followed every Turn, with how often it reaches its goal and gives up.
+  tutorialStrategy,
 ];
