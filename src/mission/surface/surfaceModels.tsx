@@ -1,10 +1,11 @@
 import { memo } from "react";
 import type { Point } from "../sceneParts";
 import { AscentVehicle } from "./ascentModels";
-import { FuelPlant, Habitat, MarsLab } from "./baseModels";
+import { FuelPlant, Habitat } from "./baseModels";
+import { MarsLab } from "./labModel";
 import { CrewLander, CrewLanderWreck } from "./crewModels";
 import { Lander, landerGold } from "./landerModel";
-import { Box as Part, Drum } from "./modelParts";
+import { Box as Part, Drum, Shape } from "./modelParts";
 import { deckBlue, Rover, wheelDark, wheelRadius } from "./roverModel";
 import type { SurfaceModel } from "./surface";
 
@@ -56,14 +57,14 @@ const LanderWreck = memo(function LanderWreck() {
   return (
     <group>
       <Scorch />
-      <mesh
+      <Shape
         position={[0, 0.2, 0]}
         rotation={[0.3, 0.6, 1.35]}
         scale={[1, 0.8, 0.7]}
+        color="#a8822f"
       >
         <cylinderGeometry args={[0.28, 0.46, 0.5, 8]} />
-        <meshBasicMaterial color="#a8822f" toneMapped={false} />
-      </mesh>
+      </Shape>
       <Part
         size={[0.05, 0.75, 0.05]}
         position={[0.75, 0.12, 0.25]}
@@ -76,10 +77,14 @@ const LanderWreck = memo(function LanderWreck() {
         rotation={[-0.3, 0, 1.75]}
         color="#6d7078"
       />
-      <mesh position={[-0.35, 0.09, 0.65]} rotation={[1.3, 0, 0.3]}>
+      <Shape
+        position={[-0.35, 0.09, 0.65]}
+        rotation={[1.3, 0, 0.3]}
+        color="#b9b5a8"
+        double
+      >
         <coneGeometry args={[0.24, 0.12, 14, 1, true]} />
-        <meshBasicMaterial color="#b9b5a8" toneMapped={false} side={2} />
-      </mesh>
+      </Shape>
       <Part
         size={[0.3, 0.05, 0.22]}
         position={[0.5, 0.05, -0.55]}
@@ -128,14 +133,14 @@ const RoverWreck = memo(function RoverWreck() {
         color="#a9acb3"
       />
       {wheels.map((position) => (
-        <mesh
+        <Shape
           key={position.join()}
           position={position}
           rotation={[Math.PI / 2, 0, 0.4]}
+          color={wheelDark}
         >
           <cylinderGeometry args={[wheelRadius, wheelRadius, 0.09, 16]} />
-          <meshBasicMaterial color={wheelDark} toneMapped={false} />
-        </mesh>
+        </Shape>
       ))}
     </group>
   );

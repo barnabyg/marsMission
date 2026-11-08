@@ -1,94 +1,26 @@
 import { memo } from "react";
-import type { Point } from "../sceneParts";
-import { Box, Dish, Drum, Rod, splayedLegs } from "./modelParts";
+import {
+  dark,
+  FlatPanel,
+  footGrey,
+  frameGrey,
+  PlatformLegs,
+  shade,
+  white,
+  WorkLight,
+} from "./baseParts";
+import { Antenna, louvrePieces } from "./modelDetails";
+import { Box, Drum, PartSet, Rod, Shape, type SetPiece } from "./modelParts";
 
 /**
- * The Assets that make a base at a Landing Site: the fuel plant, the habitat and the Mars lab. Simple models made here
- * from three.js shapes, so they use no art file (ADR 0005). Like everything at the surface they're unlit, with their
- * light worked into their colours, and their front, towards the camera, is along -z.
+ * Two of the Assets that make a base at a Landing Site: the fuel plant and the habitat. The Mars lab is in
+ * `labModel.tsx`, and what they share in `baseParts.tsx`.
  */
-
-const white = "#eef0f4";
-const shade = "#c2c6ce";
-const frameGrey = "#a9adb6";
-const footGrey = "#8f939c";
-const dark = "#1b2433";
-const panelBlue = "#24365e";
-const panelLine = "#3d5a92";
-
-/** A flat solar panel, its cells drawn as lines across it, tilted back towards the sky. */
-function FlatPanel({
-  position,
-  size,
-  tilt,
-}: {
-  position: Point;
-  size: [width: number, depth: number];
-  tilt: number;
-}) {
-  const [width, depth] = size;
-  return (
-    <group position={position} rotation={[tilt, 0, 0]}>
-      <Box
-        size={[width + 0.04, 0.02, depth + 0.04]}
-        position={[0, -0.012, 0]}
-        color={frameGrey}
-      />
-      <Box size={[width, 0.02, depth]} position={[0, 0, 0]} color={panelBlue} />
-      {[-1, 0, 1].map((line) => (
-        <Box
-          key={line}
-          size={[width, 0.022, 0.008]}
-          position={[0, 0, (line * depth) / 4]}
-          color={panelLine}
-        />
-      ))}
-    </group>
-  );
-}
-
-/** Four short legs under a platform, with pads on the ground. */
-function PlatformLegs({
-  x,
-  z,
-  height,
-}: {
-  x: number;
-  z: number;
-  height: number;
-}) {
-  return (
-    <>
-      {[
-        [-x, -z],
-        [x, -z],
-        [-x, z],
-        [x, z],
-      ].map(([legX = 0, legZ = 0]) => (
-        <group key={`${legX},${legZ}`}>
-          <Rod
-            from={[legX, 0.03, legZ]}
-            to={[legX, height, legZ]}
-            radius={0.03}
-            color={frameGrey}
-          />
-          <Drum
-            radii={[0.07, 0.08]}
-            height={0.04}
-            position={[legX, 0.02, legZ]}
-            sides={10}
-            color={footGrey}
-          />
-        </group>
-      ))}
-    </>
-  );
-}
 
 const tankOrange = "#e0904a";
 const tankShade = "#b86e33";
 
-/** One of the fuel plant's upright propellant tanks, rounded at both ends, with a band around its middle. */
+/** One of the fuel plant's upright propellant tanks, rounded at both ends, with bands around it and a valve on top. */
 function Tank({ x, z }: { x: number; z: number }) {
   return (
     <group position={[x, 0, z]}>
@@ -96,24 +28,65 @@ function Tank({ x, z }: { x: number; z: number }) {
         radii={[0.16, 0.16]}
         height={0.42}
         position={[0, 0.55, 0]}
+        sides={20}
         color={tankOrange}
       />
       {[0.76, 0.34].map((y) => (
-        <mesh key={y} position={[0, y, 0]} scale={[1, 0.55, 1]}>
-          <sphereGeometry args={[0.16, 16, 10]} />
-          <meshBasicMaterial
-            color={y > 0.5 ? "#f0a862" : tankShade}
-            toneMapped={false}
-          />
-        </mesh>
+        <Shape
+          key={y}
+          position={[0, y, 0]}
+          scale={[1, 0.55, 1]}
+          color={y > 0.5 ? "#f0a862" : tankShade}
+        >
+          <sphereGeometry args={[0.16, 20, 10]} />
+        </Shape>
       ))}
-      <Drum
-        radii={[0.165, 0.165]}
-        height={0.04}
-        position={[0, 0.55, 0]}
+      <PartSet
+        pieces={[0.42, 0.55, 0.68].map((y) => ({
+          radii: [0.165, 0.165],
+          height: y === 0.55 ? 0.04 : 0.015,
+          sides: 20,
+          position: [0, y, 0],
+        }))}
         color={tankShade}
       />
+      <Drum
+        radii={[0.025, 0.025]}
+        height={0.06}
+        position={[0, 0.86, 0]}
+        sides={8}
+        color={footGrey}
+        finish="metal"
+      />
+      <Box size={[0.07, 0.025, 0.025]} position={[0, 0.9, 0]} color="#c0392b" />
     </group>
+  );
+}
+
+/** The fuel plant's radiator, standing at the back: a panel with the tubes that carry the heat across it. */
+function Radiator() {
+  const tubes: SetPiece[] = Array.from({ length: 7 }, (_, tube) => ({
+    radii: [0.008, 0.008],
+    height: 0.48,
+    sides: 6,
+    position: [-0.36 + tube * 0.06, 0.88, 0.345],
+  }));
+  return (
+    <>
+      <Rod
+        from={[-0.4, 0.3, 0.33]}
+        to={[-0.4, 1.05, 0.33]}
+        radius={0.02}
+        color={frameGrey}
+      />
+      <Box
+        size={[0.42, 0.5, 0.025]}
+        position={[-0.18, 0.88, 0.36]}
+        color="#dfe3ea"
+        finish="metal"
+      />
+      <PartSet pieces={tubes} color="#b9bec8" finish="metal" />
+    </>
   );
 }
 
@@ -129,8 +102,9 @@ export const FuelPlant = memo(function FuelPlant() {
         size={[1.12, 0.06, 0.74]}
         position={[0, 0.27, 0]}
         color={frameGrey}
+        finish="metal"
       />
-      {/* The processing unit, with a darker seam and a vent on its front. */}
+      {/* The processing unit, with a darker seam, a louvred vent, a panel of dials and a light on its front. */}
       <Box
         size={[0.48, 0.4, 0.5]}
         position={[-0.22, 0.5, 0.02]}
@@ -143,10 +117,32 @@ export const FuelPlant = memo(function FuelPlant() {
       />
       <Box
         size={[0.26, 0.12, 0.02]}
-        position={[-0.22, 0.44, -0.235]}
+        position={[-0.22, 0.42, -0.235]}
         color={dark}
+        finish="matte"
       />
-      {/* The intake, drawing in the thin air. */}
+      <PartSet
+        pieces={louvrePieces({
+          width: 0.24,
+          height: 0.1,
+          count: 5,
+          centre: [-0.22, 0.42, -0.25],
+        })}
+        color={shade}
+      />
+      <PartSet
+        pieces={[-0.36, -0.3, -0.24].map((x) => ({
+          radii: [0.014, 0.014],
+          height: 0.01,
+          sides: 10,
+          position: [x, 0.64, -0.236],
+          rotation: [Math.PI / 2, 0, 0],
+        }))}
+        color={dark}
+        finish="glass"
+      />
+      <WorkLight position={[-0.06, 0.65, -0.245]} />
+      {/* The intake, drawing in the thin air through a filter. */}
       <Drum
         radii={[0.09, 0.07]}
         height={0.16}
@@ -158,10 +154,18 @@ export const FuelPlant = memo(function FuelPlant() {
         height={0.03}
         position={[-0.32, 0.87, 0.05]}
         color={footGrey}
+        finish="metal"
+      />
+      <Drum
+        radii={[0.085, 0.085]}
+        height={0.012}
+        position={[-0.32, 0.89, 0.05]}
+        color="#55585f"
+        finish="matte"
       />
       <Tank x={0.28} z={-0.14} />
       <Tank x={0.28} z={0.2} />
-      {/* Pipes from the unit to each tank. */}
+      {/* Pipes from the unit to each tank, with a valve on each. */}
       <Rod
         from={[0.02, 0.58, -0.14]}
         to={[0.13, 0.58, -0.14]}
@@ -174,19 +178,16 @@ export const FuelPlant = memo(function FuelPlant() {
         radius={0.025}
         color={shade}
       />
-      {/* The radiator, standing at the back. */}
-      <Rod
-        from={[-0.4, 0.3, 0.33]}
-        to={[-0.4, 1.05, 0.33]}
-        radius={0.02}
-        color={frameGrey}
+      <PartSet
+        pieces={[
+          { size: [0.04, 0.06, 0.06], position: [0.075, 0.58, -0.14] },
+          { size: [0.04, 0.06, 0.06], position: [0.075, 0.62, 0.2] },
+        ]}
+        color={footGrey}
+        finish="metal"
       />
-      <Box
-        size={[0.42, 0.5, 0.025]}
-        position={[-0.18, 0.88, 0.36]}
-        color="#dfe3ea"
-      />
-      {/* A solar panel on a mast, facing the Sun. */}
+      <Radiator />
+      {/* A solar panel on a mast, facing the Sun, and an antenna for orders from Earth. */}
       <Rod
         from={[0.45, 0.3, 0.3]}
         to={[0.45, 1.2, 0.3]}
@@ -198,6 +199,7 @@ export const FuelPlant = memo(function FuelPlant() {
         size={[0.62, 0.42]}
         tilt={-0.45}
       />
+      <Antenna base={[0.5, 0.3, -0.32]} height={0.36} />
     </group>
   );
 });
@@ -205,52 +207,10 @@ export const FuelPlant = memo(function FuelPlant() {
 const hullWhite = "#f1f1ee";
 const ribShade = "#cfd2d4";
 
-/**
- * The habitat is a long white module lying on its side on a frame, ribbed like an inflated hull, with an airlock towards
- * the camera, a row of windows along its side and solar panels on its back.
- */
-export const Habitat = memo(function Habitat() {
+/** The habitat's airlock, towards the camera, with its hatch, the hatch's handle and a light above it. */
+function Airlock() {
   return (
-    <group>
-      <PlatformLegs x={0.5} z={0.22} height={0.3} />
-      <Box size={[1.2, 0.05, 0.56]} position={[0, 0.3, 0]} color={frameGrey} />
-      {/* The hull, lying along x. */}
-      <Drum
-        radii={[0.4, 0.4]}
-        height={1.3}
-        position={[0, 0.72, 0]}
-        rotation={[0, 0, Math.PI / 2]}
-        sides={20}
-        color={hullWhite}
-      />
-      {[-0.65, 0.65].map((x) => (
-        <mesh key={x} position={[x, 0.72, 0]} scale={[0.45, 1, 1]}>
-          <sphereGeometry args={[0.4, 20, 12]} />
-          <meshBasicMaterial color={ribShade} toneMapped={false} />
-        </mesh>
-      ))}
-      {[-0.4, -0.13, 0.13, 0.4].map((x) => (
-        <Drum
-          key={x}
-          radii={[0.41, 0.41]}
-          height={0.035}
-          position={[x, 0.72, 0]}
-          rotation={[0, 0, Math.PI / 2]}
-          sides={20}
-          color={ribShade}
-        />
-      ))}
-      {/* Windows along the side towards the camera. */}
-      {[-0.27, 0, 0.27].map((x) => (
-        <Box
-          key={x}
-          size={[0.12, 0.09, 0.02]}
-          position={[x, 0.86, -0.36]}
-          rotation={[0.45, 0, 0]}
-          color={dark}
-        />
-      ))}
-      {/* The airlock, towards the camera, with its hatch. */}
+    <>
       <Drum
         radii={[0.2, 0.2]}
         height={0.32}
@@ -259,18 +219,118 @@ export const Habitat = memo(function Habitat() {
         color={white}
       />
       <Drum
+        radii={[0.205, 0.205]}
+        height={0.02}
+        position={[0.38, 0.62, -0.56]}
+        rotation={[Math.PI / 2, 0, 0]}
+        color={footGrey}
+        finish="metal"
+      />
+      <Drum
         radii={[0.14, 0.14]}
         height={0.02}
         position={[0.38, 0.62, -0.585]}
         rotation={[Math.PI / 2, 0, 0]}
         color={shade}
       />
+      <Drum
+        radii={[0.03, 0.03]}
+        height={0.015}
+        position={[0.38, 0.66, -0.6]}
+        rotation={[Math.PI / 2, 0, 0]}
+        sides={10}
+        color="#3a3d44"
+        finish="metal"
+      />
       <Box
         size={[0.03, 0.12, 0.02]}
         position={[0.46, 0.62, -0.6]}
         color={footGrey}
+        finish="metal"
       />
-      {/* Solar panels on the back. */}
+      <WorkLight position={[0.38, 0.86, -0.5]} />
+    </>
+  );
+}
+
+/**
+ * The habitat is a long white module lying on its side on a frame, its fabric hull ribbed like an inflated one, with an
+ * airlock towards the camera, a row of windows along its side, solar panels and an antenna on its back.
+ */
+export const Habitat = memo(function Habitat() {
+  return (
+    <group>
+      <PlatformLegs x={0.5} z={0.22} height={0.3} />
+      <Box
+        size={[1.2, 0.05, 0.56]}
+        position={[0, 0.3, 0]}
+        color={frameGrey}
+        finish="metal"
+      />
+      {/* The hull, lying along x, its soft fabric quilted between the ribs. */}
+      <Drum
+        radii={[0.4, 0.4]}
+        height={1.3}
+        position={[0, 0.72, 0]}
+        rotation={[0, 0, Math.PI / 2]}
+        sides={20}
+        color={hullWhite}
+        finish="matte"
+      />
+      {[-0.65, 0.65].map((x) => (
+        <Shape
+          key={x}
+          position={[x, 0.72, 0]}
+          scale={[0.45, 1, 1]}
+          color={ribShade}
+        >
+          <sphereGeometry args={[0.4, 20, 12]} />
+        </Shape>
+      ))}
+      <PartSet
+        pieces={[-0.4, -0.13, 0.13, 0.4].map((x) => ({
+          radii: [0.41, 0.41],
+          height: 0.035,
+          sides: 20,
+          position: [x, 0.72, 0],
+          rotation: [0, 0, Math.PI / 2],
+        }))}
+        color={ribShade}
+      />
+      <PartSet
+        pieces={Array.from({ length: 10 }, (_, line) => {
+          const angle = (line / 10) * Math.PI * 2;
+          return {
+            size: [1.28, 0.006, 0.006] as [number, number, number],
+            position: [
+              0,
+              0.72 + Math.sin(angle) * 0.402,
+              Math.cos(angle) * 0.402,
+            ] as const,
+          };
+        })}
+        color="#dcdcd6"
+        finish="matte"
+      />
+      {/* Windows along the side towards the camera, each in a frame. */}
+      {[-0.27, 0, 0.27].map((x) => (
+        <group key={x} position={[x, 0.86, -0.36]} rotation={[0.45, 0, 0]}>
+          <Box
+            size={[0.15, 0.12, 0.02]}
+            position={[0, 0, 0.004]}
+            color={footGrey}
+            finish="metal"
+          />
+          <Box
+            size={[0.12, 0.09, 0.02]}
+            position={[0, 0, 0]}
+            color={dark}
+            finish="glass"
+          />
+        </group>
+      ))}
+      <Airlock />
+      {/* Solar panels on the back, and an antenna. */}
       <FlatPanel
         position={[-0.32, 1.17, 0.18]}
         size={[0.5, 0.36]}
@@ -293,97 +353,7 @@ export const Habitat = memo(function Habitat() {
         radius={0.02}
         color={frameGrey}
       />
-    </group>
-  );
-});
-
-const labSilver = "#d9dde4";
-const labTeal = "#4fb7c8";
-
-/**
- * The Mars lab is a low silver building on short legs, with a teal band, a glovebox window in its front, an arm reaching
- * out to take in samples, a roof of solar panels, an instrument mast and a dish.
- */
-export const MarsLab = memo(function MarsLab() {
-  const legs = splayedLegs(0.5, 0.42, 0.3);
-  return (
-    <group>
-      {legs.map(({ key, foot, top }) => (
-        <group key={key}>
-          <Rod from={foot} to={top} radius={0.03} color={frameGrey} />
-          <Drum
-            radii={[0.08, 0.1]}
-            height={0.05}
-            position={foot}
-            sides={10}
-            color={footGrey}
-          />
-        </group>
-      ))}
-      <Box size={[1.0, 0.44, 0.74]} position={[0, 0.52, 0]} color={labSilver} />
-      <Box size={[1.01, 0.06, 0.75]} position={[0, 0.4, 0]} color={labTeal} />
-      <Box size={[1.04, 0.04, 0.78]} position={[0, 0.75, 0]} color={shade} />
-      {/* The glovebox window and the hatch beside it. */}
-      <Box
-        size={[0.36, 0.16, 0.02]}
-        position={[-0.18, 0.58, -0.375]}
-        color="#2d4b63"
-      />
-      <Box
-        size={[0.38, 0.02, 0.025]}
-        position={[-0.18, 0.67, -0.38]}
-        color={frameGrey}
-      />
-      <Box
-        size={[0.2, 0.3, 0.02]}
-        position={[0.3, 0.55, -0.375]}
-        color={shade}
-      />
-      {/* The roof of solar panels, sloping back. */}
-      <FlatPanel position={[0, 0.86, 0.06]} size={[0.92, 0.56]} tilt={-0.3} />
-      {/* The sample arm, out in front. */}
-      <Rod
-        from={[-0.45, 0.6, -0.3]}
-        to={[-0.62, 0.78, -0.55]}
-        radius={0.022}
-        color={white}
-      />
-      <Rod
-        from={[-0.62, 0.78, -0.55]}
-        to={[-0.66, 0.4, -0.7]}
-        radius={0.02}
-        color={white}
-      />
-      <Box
-        size={[0.1, 0.06, 0.08]}
-        position={[-0.66, 0.37, -0.72]}
-        color={labTeal}
-      />
-      {/* The instrument mast and the dish. */}
-      <Rod
-        from={[0.42, 0.75, -0.25]}
-        to={[0.42, 1.25, -0.25]}
-        radius={0.02}
-        color={frameGrey}
-      />
-      <Box
-        size={[0.1, 0.1, 0.1]}
-        position={[0.42, 1.29, -0.25]}
-        color={labTeal}
-      />
-      <Rod
-        from={[-0.38, 0.75, 0.3]}
-        to={[-0.38, 1.05, 0.3]}
-        radius={0.02}
-        color={frameGrey}
-      />
-      <Dish
-        radius={0.18}
-        depth={0.06}
-        position={[-0.38, 1.09, 0.3]}
-        rotation={[-0.5, 0, 0.3]}
-        color="#f5f1e3"
-      />
+      <Antenna base={[-0.58, 1.0, 0]} height={0.3} />
     </group>
   );
 });
