@@ -33,6 +33,9 @@ test.describe("at a Decision Point", () => {
     await expect(page.getByTestId("decision-advice")).toContainText(
       "Tutorial mode suggests: Use Reserve fuel",
     );
+    await expect(page.getByTestId("decision-advice")).toHaveClass(
+      /\btutorial-voice\b/,
+    );
     await expect(page.getByTestId("decision-choice-use")).toHaveClass(
       /suggested/,
     );
