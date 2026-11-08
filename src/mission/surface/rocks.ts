@@ -1,6 +1,6 @@
 import { hashOf } from "./shaping";
 import { latticeValue } from "./siteNoise";
-import { standingSpots } from "./surface";
+import { roverPaths, standingSpots } from "./surface";
 import { groundHeight, terrainReach } from "./terrain";
 
 /** The stones and boulders lying about a Landing Site, worked out from its name alone, so they lie the same every time. */
@@ -28,9 +28,17 @@ const nearestToCamera = -3.5;
 const reach = terrainReach - 1;
 const boulderReach = 8;
 
+/** How far a rover reaches either side of the line it drives along, with a little to spare. */
+const roverHalfWidth = 0.55;
+
 function isClear(x: number, z: number, size: number): boolean {
-  return standingSpots.every(
-    (spot) => Math.hypot(x - spot.x, z - spot.z) > clearance + size,
+  return (
+    standingSpots.every(
+      (spot) => Math.hypot(x - spot.x, z - spot.z) > clearance + size,
+    ) &&
+    roverPaths.every(
+      (path) => Math.hypot(x - path.x, z - path.z) > roverHalfWidth + size / 2,
+    )
   );
 }
 

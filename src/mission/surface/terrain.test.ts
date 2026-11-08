@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { standingSpots } from "./surface";
-import { buildTerrain, groundHeight, terrainReach } from "./terrain";
+import { roverPaths, standingSpots } from "./surface";
+import { buildTerrain, cratersAt, groundHeight, terrainReach } from "./terrain";
 
 describe("a Landing Site's terrain", () => {
   it("is the same every time for the same site", () => {
@@ -131,6 +131,22 @@ describe("a Landing Site's terrain", () => {
           );
         });
         expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(0.02);
+      }
+    }
+  });
+
+  it("keeps its small craters off where rovers drive, and every crater off where Assets stand", () => {
+    for (const site of ["Jezero Crater", "Gale Crater", "Utopia Planitia"]) {
+      const craters = cratersAt(site);
+      expect(craters.length).toBeGreaterThan(20);
+      for (const { x, z, radius } of craters) {
+        for (const spot of standingSpots) {
+          expect(Math.hypot(x - spot.x, z - spot.z)).toBeGreaterThan(radius);
+        }
+        if (radius > 0.6) continue;
+        for (const path of roverPaths) {
+          expect(Math.hypot(x - path.x, z - path.z)).toBeGreaterThan(radius);
+        }
       }
     }
   });

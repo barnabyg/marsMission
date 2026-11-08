@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { rocksAt } from "./rocks";
+import { roverSpot } from "./motion";
 import { placeOf } from "./surface";
 import { groundHeight, terrainReach } from "./terrain";
 
@@ -60,5 +61,43 @@ describe("a Landing Site's rocks", () => {
     ).toBeGreaterThan(rocks.length / 2);
     const shades = rocks.map(({ shade }) => shade);
     expect(Math.max(...shades) - Math.min(...shades)).toBeGreaterThan(0.2);
+  });
+
+  it("keep clear of the loop a rover drives on a Long traverse from any place on the ground", () => {
+    const rocks = rocksAt("Jezero Crater");
+    let closest = Infinity;
+    for (
+      let place = 0;
+      Math.abs(placeOf(place).x) < terrainReach - 2;
+      place++
+    ) {
+      for (const key of [
+        "a",
+        "rover 2",
+        "Trailblazer",
+        "Pathfinder Rover",
+        "x9",
+        "Q",
+      ]) {
+        const rover = {
+          key,
+          surfaceMotion: "traverse" as const,
+          arrivedOnDay: 0,
+          fromDay: 0,
+          untilDay: null,
+        };
+        for (let day = 0; day < 500; day += 4) {
+          const { x, z } = roverSpot(rover, placeOf(place), day);
+          for (const rock of rocks) {
+            closest = Math.min(
+              closest,
+              Math.hypot(rock.x - x, rock.z - z) - Math.max(...rock.size) / 2,
+            );
+          }
+        }
+      }
+    }
+    // A rover reaches about 0.45 either side of the line it drives along.
+    expect(closest).toBeGreaterThan(0.45);
   });
 });

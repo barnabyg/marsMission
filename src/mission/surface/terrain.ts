@@ -1,6 +1,12 @@
 import { hashOf, smooth } from "./shaping";
 import { latticeValue, noise } from "./siteNoise";
-import { placeCount, placeOf, standingSpots } from "./surface";
+import {
+  landersReach,
+  placeCount,
+  placeOf,
+  roverPaths,
+  standingSpots,
+} from "./surface";
 
 /** Terrain for a Landing Site, worked out from its name alone, so that a site looks the same every time. */
 
@@ -46,13 +52,15 @@ interface Crater {
  * are deeper for their size, as young craters are.
  */
 function cratersOf(seed: number): Crater[] {
-  // Every crater keeps clear of where Assets stand, so that they stand on open, level ground.
+  // Every crater keeps clear of where Assets stand, so that they stand on open, level ground, and the small ones of
+  // where rovers drive, which the big ones are too big to fit between.
   const scatter = (
     count: number,
     firstIndex: number,
     nearest: number,
     spread: number,
     radiusOf: (share: number) => number,
+    avoidsRovers: boolean,
   ) => {
     const craters: Crater[] = [];
     for (
@@ -67,22 +75,30 @@ function cratersOf(seed: number): Crater[] {
         z: Math.sin(angle) * distance,
         radius: radiusOf(latticeValue(seed, index, 3)),
       };
-      const clear = standingSpots.every(
-        ({ x, z }) =>
-          Math.hypot(crater.x - x, crater.z - z) > crater.radius * 1.6 + 0.8,
-      );
+      const clear =
+        standingSpots.every(
+          ({ x, z }) =>
+            Math.hypot(crater.x - x, crater.z - z) > crater.radius * 1.6 + 0.8,
+        ) &&
+        (!avoidsRovers ||
+          roverPaths.every(
+            ({ x, z }) =>
+              Math.hypot(crater.x - x, crater.z - z) >
+              crater.radius * 1.3 + 0.35,
+          ));
       if (clear) craters.push(crater);
     }
     return craters;
   };
   return [
-    ...scatter(craterCount, 0, 5.5, 6, (share) => 0.7 + share * 1.4),
+    ...scatter(craterCount, 0, 5.5, 6, (share) => 0.7 + share * 1.4, false),
     ...scatter(
       smallCraterCount,
       1000,
       3.6,
       8.5,
       (share) => 0.2 + share ** 2 * 0.4,
+      true,
     ),
   ];
 }
@@ -134,8 +150,6 @@ interface Site {
 /** How far around a place its pad is level, and how far beyond that it takes to meet the ground around it. */
 const padRadius = 0.75;
 const padBlend = 0.45;
-/** How far back a pad runs, to the furthest of the Crew's landers. */
-const padLength = 2.8;
 
 function siteOf(seed: number): Site {
   const craters = cratersOf(seed);
@@ -151,7 +165,7 @@ function heightOf({ seed, craters, pads }: Site, x: number, z: number) {
   // ground still runs smoothly between them.
   return pads.reduce(
     (ground, pad) => {
-      const along = Math.min(Math.max(z - pad.z, 0), padLength);
+      const along = Math.min(Math.max(z - pad.z, 0), landersReach);
       const away = Math.hypot(x - pad.x, z - pad.z - along);
       const level = 1 - smooth((away - padRadius) / padBlend);
       return ground * (1 - level) + pad.height * level;
@@ -169,6 +183,13 @@ function knownSite(seed: number): Site {
   const site = siteOf(seed);
   sitesBySeed.set(seed, site);
   return site;
+}
+
+/** A site's craters, each where its middle is and how wide its bowl is. */
+export function cratersAt(
+  siteName: string,
+): readonly { x: number; z: number; radius: number }[] {
+  return knownSite(hashOf(siteName)).craters;
 }
 
 /** How high the ground is at a place in the shot. */
