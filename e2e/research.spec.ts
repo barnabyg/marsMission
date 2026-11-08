@@ -57,10 +57,10 @@ test("sets a research Activity, sees what it earns, and sees the Science in the 
       .getByLabel("Activity for Pathfinder Orbiter"),
   ).toHaveValue("orbital-research");
   await expect(
-    page
-      .locator(".panel", { hasText: "Operating at Mars" })
-      .getByTestId("research-earnings"),
-  ).toContainText("Orbital research earns 80 Science");
+    page.getByTestId("operating-assets").getByTestId("activity-earnings"),
+  ).toHaveText(
+    "Orbital research earns 80 Science and 6 Public Support a Turn.",
+  );
 
   // Its Service Life ends with 730 days of this Turn gone, which is all it earns for.
   await page

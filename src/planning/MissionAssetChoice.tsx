@@ -1,15 +1,19 @@
 import { useId } from "react";
 import {
   canFly,
+  formatDays,
   formatMoney,
+  onlyGrantsPay,
+  serviceLifeGain,
   formatPropellant,
   type AssetChoices,
   type PlannedAsset,
+  type PlannedServiceLife,
   type ProgramView,
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
-import { ActivitySelect } from "./ActivitySelect";
+import { ActivitySelect, chosenEarnings } from "./ActivitySelect";
 import { assetImageUrl } from "./assetImages";
 import {
   describeBenefitImpact,
@@ -33,6 +37,19 @@ interface MissionAssetChoiceProps {
   /** Opens the Asset's details, which only read the plan. */
   onShowDetails: () => void;
 }
+
+/**
+ * A Service Life as its choice names it: the shortest with its cost, and a longer one with the days it adds, roughly in
+ * Turns, and the Research Grants the chosen Activity would earn over them against its cost and their Upkeep.
+ */
+function serviceLifeLabel(option: PlannedServiceLife): string {
+  return option.extraDays > 0
+    ? `${formatDays(option.days)}: ${serviceLifeGain(option)}`
+    : `${formatDays(option.days)} (${formatMoney(option.costMillions)})`;
+}
+
+/** What each longer Service Life says it earns, on hovering its choice and under the Assets. */
+export const serviceLifePayback = `Each longer Service Life says the Research Grants the Asset's Activity would earn over the days it adds, if the Asset doesn't fail, against its cost and the Upkeep of those Turns. ${onlyGrantsPay}`;
 
 /**
  * One Asset the Mission can carry, as a card: a picture of its model, its cost, mass, Technology Readiness, Benefit and how many are at Mars,
@@ -192,11 +209,17 @@ export function MissionAssetChoice({
               onChoicesChange({ activityId });
             }}
           />
+          <span className="activity-earnings" data-testid="activity-earnings">
+            <GameText>
+              {chosenEarnings(planned.activityId, planned.activities)}
+            </GameText>
+          </span>
           <span>
             <GameText>Service Life</GameText>
           </span>
           <select
             aria-label={`Service Life for ${asset.name}`}
+            title={serviceLifePayback}
             value={planned.serviceLifeDays}
             onChange={(event) => {
               onChoicesChange({ serviceLifeDays: Number(event.target.value) });
@@ -204,7 +227,7 @@ export function MissionAssetChoice({
           >
             {planned.serviceLifeOptions.map((option) => (
               <option key={option.days} value={option.days}>
-                {option.days} days ({formatMoney(option.costMillions)})
+                {serviceLifeLabel(option)}
               </option>
             ))}
           </select>

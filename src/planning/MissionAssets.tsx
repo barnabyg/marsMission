@@ -6,7 +6,8 @@ import type {
   ProgramView,
 } from "../simulation/simulation";
 import { AssetDetails } from "./AssetDetails";
-import { MissionAssetChoice } from "./MissionAssetChoice";
+import { GameText } from "../ui/GameText";
+import { MissionAssetChoice, serviceLifePayback } from "./MissionAssetChoice";
 import type { Addition, Fit } from "./missionFit";
 import {
   isSurveying,
@@ -81,6 +82,13 @@ export function MissionAssets({
           ...crewActivities,
         ]}
       />
+      {plannedAssets.some(
+        ({ serviceLifeOptions }) => serviceLifeOptions.length > 1,
+      ) && (
+        <p data-testid="service-life-payback">
+          <GameText>{serviceLifePayback}</GameText>
+        </p>
+      )}
       {!view.somethingLeftToSurvey &&
         plannedAssets.some(({ activityId, activities }) =>
           isSurveying(activityId, activities),

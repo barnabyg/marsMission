@@ -47,20 +47,26 @@ function raisesOf({ raisedBy }: PlannedActivity) {
 /**
  * What each research Activity on offer earns and any Research Grant it pays, once each however many Assets can do it,
  * and the Benefit that raises it on the surface, if one does. Only Assets on the surface are raised, and in one panel
- * those are all raised alike.
+ * those are all raised alike. Where each choice already says what its Activity earns, as Operating at Mars does, only
+ * the Benefit is said.
  */
 export function ResearchEarnings({
   activities,
+  onlyRaises = false,
 }: {
   activities: PlannedActivity[];
+  onlyRaises?: boolean;
 }) {
   const earnings = new Set(activities.flatMap(earningsOf));
   if (earnings.size === 0) return null;
   const raises = new Set(activities.flatMap(raisesOf));
+  if (onlyRaises && raises.size === 0) return null;
   return (
     <p data-testid="research-earnings">
       <GameText>
-        {`Ongoing Research for a whole Turn: ${[...earnings, ...raises].join(" ")}`}
+        {onlyRaises
+          ? `Ongoing Research on the surface: ${[...raises].join(" ")}`
+          : `Ongoing Research for a whole Turn: ${[...earnings, ...raises].join(" ")}`}
       </GameText>
     </p>
   );
