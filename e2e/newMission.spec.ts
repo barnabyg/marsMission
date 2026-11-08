@@ -282,6 +282,7 @@ test("lists the planned Mission's Mission Events with rough risk bands, which ch
           id: "test-probe",
           name: "Flyby Probe",
           kind: "orbiter",
+          description: "A small probe that flies past Mars.",
           costMillions: 100,
           massTonnes: 1,
           serviceLifeOptions: [{ days: 900, costMillions: 0 }],
