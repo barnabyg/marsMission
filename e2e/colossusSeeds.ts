@@ -95,6 +95,26 @@ const smallestCrew: TurnPlan = {
 /** A seed where the Meridian Colossus carries the smallest Crew to Mars orbit on its first Mission, with nothing to answer. */
 export const crewSeed = colossusSeedWhere(null, smallestCrew);
 
+/**
+ * The automatic save of a Program on this seed at the start of Turn 4, with three Crew in Mars orbit flown on Turn 3
+ * with the least Supplies and Heavy shielding, as the crew test plans them in Planning Mode. It needs the game's data to
+ * give the Program colossusMoney.
+ */
+export function crewInOrbitSave(seed: number): string {
+  const there = colossusSimulation.runTurn(colossusBuilt(seed), {
+    mission: {
+      launchVehicleId: "meridian-colossus",
+      assetIds: [],
+      crew: {
+        size: 3,
+        suppliesId: "supplies-lean",
+        protectionId: "protection-heavy-shielding",
+      },
+    },
+  });
+  return JSON.stringify(colossusSimulation.saveProgram(there.program));
+}
+
 /** A seed where the Meridian Colossus's first Mission fails its launch with the smallest Crew aboard, which loses them. */
 export const crewLossSeed = colossusSeedWhere("Launch", smallestCrew);
 

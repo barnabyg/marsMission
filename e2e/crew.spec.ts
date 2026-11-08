@@ -19,6 +19,7 @@ import {
 import {
   colossusBuiltSave,
   colossusMoney,
+  crewInOrbitSave,
   crewLandingSeed,
   crewLossSeed,
   crewSeed,
@@ -37,7 +38,7 @@ function crewedMission(page: Page) {
 test("develops the Meridian Colossus, launches a Crewed Mission on it and sees its named Crew at Mars in the next Planning Mode", async ({
   page,
 }) => {
-  // Over 5 s: two Turns of Development, a Turn played at 5x to the Crew's arrival, then two more Turns.
+  // Over 5 s: two Turns of Development, then a Turn played at 5x to the Crew's arrival.
   const problems = watchForProblems(page);
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
   await page.goto(`/?seed=${crewSeed}`);
@@ -157,6 +158,22 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
     page.getByRole("combobox", { name: "Activity for the Crew in Mars orbit" }),
   ).toHaveValue("crew-research");
   expect(await termsWithoutTooltips(page)).toEqual([]);
+  expect(problems).toEqual([]);
+});
+
+test("loses Crew in Mars orbit once their Supplies run out", async ({
+  page,
+}) => {
+  // Over 5 s: plays two Turns, the second at 5x to the day the Supplies run out.
+  const problems = watchForProblems(page);
+  await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
+  // The Crew the test above launched, as the game saved them at the start of Turn 4.
+  await continueFromSave(page, crewInOrbitSave(crewSeed));
+  await expect(page.getByTestId("turn-number")).toHaveText("4");
+  const crew = page.getByTestId("crew-at-mars").getByRole("listitem");
+  await expect(crew).toHaveText([
+    /^Crew in Mars orbit: Amara Okafor \(Health 65\), Lena Petrova \(Health 65\), Kenji Sato \(Health 65\)\. Supplies for 1,303 days/,
+  ]);
 
   // Their Supplies last this Turn, and run out 523 days into the next, after which their Health falls quickly.
   await endTurnWithoutLaunching(page);
@@ -178,6 +195,7 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-supplies-out")).toContainText(
     "Supplies ran out: Crew in Mars orbit on",
   );
