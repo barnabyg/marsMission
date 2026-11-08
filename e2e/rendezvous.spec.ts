@@ -103,7 +103,7 @@ function holdEarthOrbitAt(page: Page, stage: string): Promise<void> {
 test("moves smoothly to the spacecraft view for the rendezvous, which pausing holds, and shows the Tanker docking to refuel", async ({
   page,
 }) => {
-  // Over 5 s: waits a second on purpose to show that pausing holds it, and plays the docking, which takes real time.
+  // Over 5 s: waits on purpose to show that pausing holds it, and plays the docking, which takes real time.
   const problems = watchForProblems(page);
   await launchOnColossus(page, colossusSeed, "Rendezvous");
 
