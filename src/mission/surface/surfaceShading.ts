@@ -134,7 +134,7 @@ export interface PartLook {
  * Lighter on top and on the Sun's side, darker underneath and away from it, but never far from the part's own colour,
  * which is what the models were painted to read as. The glint comes from high in the sky behind the camera. The light
  * is worked out at each corner rather than each pixel, which software rendering at 4K can't spare, and for both sides
- * of a face, for the parts seen from inside as well, such as a dish.
+ * of a face only for the parts seen from inside as well, such as a dish.
  */
 const partVertex = `
   uniform vec3 color;
@@ -159,7 +159,11 @@ const partVertex = `
     vec3 normalOut = normalize(mat3(placed) * normal);
     vec3 toCamera = normalize(cameraPosition - world.xyz);
     vFront = litFacing(normalOut, toCamera);
-    vBack = litFacing(-normalOut, toCamera);
+    #ifdef DOUBLE_SIDED
+      vBack = litFacing(-normalOut, toCamera);
+    #else
+      vBack = vFront;
+    #endif
     gl_Position = projectionMatrix * viewMatrix * world;
   }`;
 
