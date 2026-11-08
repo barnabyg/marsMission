@@ -21,7 +21,7 @@ const rockColor = [0.3, 0.12, 0.06] as const;
 /** Dark grey volcanic rock showing through the dust in patches. */
 export const basaltColor = [0.17, 0.12, 0.1] as const;
 /** Fine dust gathered in hollows, paler than the ground around it. */
-export const paleDustColor = [0.64, 0.31, 0.15] as const;
+const paleDustColor = [0.64, 0.31, 0.15] as const;
 
 /** Rolling ground plus smaller bumps, centred on 0. */
 function hills(seed: number, x: number, z: number): number {

@@ -124,7 +124,7 @@ export function Boxes({
 }
 
 /** The cells of a flat panel lying in x and z, `columns` by `rows` of them with a gap between, just above y = 0. */
-export function cellsOf(
+function cellsOf(
   width: number,
   depth: number,
   columns: number,

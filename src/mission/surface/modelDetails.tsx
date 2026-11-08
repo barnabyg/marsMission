@@ -7,7 +7,7 @@ import { Box, PartSet, Rod, Shape, type SetPiece } from "./modelParts";
  * shape, so a model gains detail without many more draws.
  */
 
-export const cellBlue = "#22345c";
+const cellBlue = "#22345c";
 const cellBacking = "#121a2c";
 const frameGrey = "#a9adb6";
 
