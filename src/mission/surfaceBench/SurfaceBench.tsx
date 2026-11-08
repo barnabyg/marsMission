@@ -74,6 +74,8 @@ function Camera() {
     const { calls, triangles } = gl.info.render;
     document.documentElement.dataset.drawn = `${calls} draw calls, ${triangles} triangles`;
     if (frames.current === 5) document.documentElement.dataset.ready = "";
+    // For the script, which takes a close-up of each.
+    document.documentElement.dataset.kinds = kinds.join(" ");
   });
   return null;
 }

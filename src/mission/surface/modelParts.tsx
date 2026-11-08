@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  type ReactNode,
-} from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import {
   BoxGeometry,
   CylinderGeometry,
@@ -20,7 +14,7 @@ import {
   type Material,
 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import type { Point } from "../sceneParts";
+import { useDisposal, type Point } from "../sceneParts";
 import { partLookOf, partMaterial, type Finish } from "./surfaceShading";
 
 /**
@@ -214,7 +208,8 @@ function pieceGeometry(piece: SetPiece): BufferGeometry {
 
 /**
  * Many small pieces of one colour and finish, such as solar cells, a wheel's grousers or the seams of a blanket,
- * merged into one shape so that they cost one draw however many there are.
+ * merged into one shape so that they cost one draw however many there are. The pieces are read once, when it's
+ * first drawn.
  */
 export function PartSet({
   pieces,
@@ -225,20 +220,14 @@ export function PartSet({
   color: string;
   finish?: Finish | undefined;
 }) {
-  // The pieces are usually written out in place, so they're compared by what they say rather than which array.
-  const key = JSON.stringify(pieces);
-  const geometry = useMemo(() => {
-    const parts = (JSON.parse(key) as SetPiece[]).map(pieceGeometry);
+  // Made once, from the pieces as they are when it's first drawn: a model's details don't change.
+  const [geometry] = useState(() => {
+    const parts = pieces.map(pieceGeometry);
     const merged = mergeGeometries(parts);
     for (const part of parts) part.dispose();
     return merged;
-  }, [key]);
-  useEffect(
-    () => () => {
-      geometry.dispose();
-    },
-    [geometry],
-  );
+  });
+  useDisposal(geometry);
   return <mesh geometry={geometry} material={partMaterial(color, finish)} />;
 }
 
@@ -247,6 +236,9 @@ export function PartSet({
  * those that share a part material are merged into one shape, and the parts themselves are hidden. Software rendering
  * pays for each draw, and a detailed model has many parts in few colours. Only what's inside moves together, so a
  * model whose parts move apart is batched part by part.
+ *
+ * The parts are merged once, when it's first drawn, and not again: a part that later moves, changes or comes and
+ * goes inside it would be drawn where it was merged, if at all. Only still models with fixed parts belong in it.
  */
 export function Batched({ children }: { children: ReactNode }) {
   const parts = useRef<Group>(null);

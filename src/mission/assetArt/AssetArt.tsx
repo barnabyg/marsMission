@@ -43,7 +43,7 @@ const viewFrom = new Vector3(0.75, 0.55, -1.3).normalize();
  * beside the ground in Mission Mode but looks flat on a card. Here each of their parts takes the light instead, in the
  * same colour, with the roughness and metalness of its finish.
  */
-function lightUnlitParts(model: Group) {
+function lightSurfaceParts(model: Group) {
   model.traverse((object) => {
     if (!(object instanceof Mesh)) return;
     const material: unknown = object.material;
@@ -80,7 +80,7 @@ function Framed({ children }: { children: ReactNode }) {
   const framesDrawn = useRef(0);
   useLayoutEffect(() => {
     if (!group.current) return;
-    lightUnlitParts(group.current);
+    lightSurfaceParts(group.current);
     const sphere = new Box3()
       .setFromObject(group.current)
       .getBoundingSphere(new Sphere());

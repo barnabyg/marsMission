@@ -1,7 +1,7 @@
-import { useEffect, useMemo, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { BoxGeometry, Euler, Matrix4, Quaternion, Vector3 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import type { Point } from "../sceneParts";
+import { useDisposal, type Point } from "../sceneParts";
 import { EarthReturnStage, ReturnOrbiter } from "./homewardModels";
 import { stackLayout } from "./spacecraft";
 
@@ -89,11 +89,9 @@ export function Boxes({
   color: string;
   lost: boolean;
 }) {
-  const key = JSON.stringify(boxes);
-  const geometry = useMemo(() => {
-    const parts = (
-      JSON.parse(key) as { size: Point; position: Point; rotation?: Point }[]
-    ).map(({ size, position, rotation = [0, 0, 0] }) =>
+  // Made once, from the boxes as they are when it's first drawn: a model's details don't change.
+  const [geometry] = useState(() => {
+    const parts = boxes.map(({ size, position, rotation = [0, 0, 0] }) =>
       new BoxGeometry(...size).applyMatrix4(
         new Matrix4().compose(
           new Vector3(...position),
@@ -105,13 +103,8 @@ export function Boxes({
     const merged = mergeGeometries(parts);
     for (const part of parts) part.dispose();
     return merged;
-  }, [key]);
-  useEffect(
-    () => () => {
-      geometry.dispose();
-    },
-    [geometry],
-  );
+  });
+  useDisposal(geometry);
   return (
     <mesh geometry={geometry}>
       <meshStandardMaterial

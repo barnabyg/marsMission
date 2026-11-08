@@ -21,15 +21,6 @@ const { values } = parseArgs({
 const runs = Number(values.runs);
 const seconds = Number(values.seconds);
 const page4K = { width: 3840, height: 2160 };
-const focuses = [
-  "lander",
-  "rover",
-  "fuel-plant",
-  "habitat",
-  "lab",
-  "ascent-vehicle",
-  "crew",
-];
 
 const server = await createServer({
   logLevel: "warn",
@@ -60,6 +51,12 @@ try {
 
   if (values.shots !== undefined) {
     mkdirSync(values.shots, { recursive: true });
+    // The page says which models it stands, each of which gets a close-up.
+    const overview = await open(bench);
+    const focuses = (
+      (await overview.locator("html").getAttribute("data-kinds")) ?? ""
+    ).split(" ");
+    await overview.close();
     for (const focus of ["", ...focuses]) {
       const page = await open(focus === "" ? bench : `${bench}?focus=${focus}`);
       const file = `${values.shots}/${focus === "" ? "surface" : focus}.png`;
