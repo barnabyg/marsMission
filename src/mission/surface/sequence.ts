@@ -4,7 +4,7 @@ import { msSinceEntry, type PlaybackState } from "../playback";
 import { crewLandersOf, modelOf, type SurfaceModel } from "./surface";
 
 /**
- * A landing or crash takes this long in real time, leaving out pauses, at every speed. At 10x a span
+ * A landing or crash takes this long in real time, leaving out pauses, at every speed. At 20x a span
  * of game days would flash by, and at 1x the same span would drag, so this is the one thing in Mission
  * Mode that doesn't go by the day. It only displays the Timeline, and it starts from the moment
  * playback reaches the landing's entry, so it can't change any results.

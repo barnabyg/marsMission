@@ -18,12 +18,12 @@ export interface RoverSpot extends Place {
 }
 
 /**
- * How long a rover stands where it landed. Long enough at 10x for the landing to have finished on
+ * How long a rover stands where it landed. Long enough at 20x for the landing to have finished on
  * screen before it moves, and a rover does take a while to get going.
  */
-const daysBeforeDrivingOff = 30;
+const daysBeforeDrivingOff = 60;
 
-/** About one lap of a Long traverse in a third of a Turn, which reads as moving at 1x and isn't frantic at 10x. */
+/** About one lap of a Long traverse in a third of a Turn, which reads as moving at 1x and isn't frantic at 20x. */
 const traverseUnitsPerDay = 0.05;
 
 /** A small circle, taking a couple of months, for working in one place. */

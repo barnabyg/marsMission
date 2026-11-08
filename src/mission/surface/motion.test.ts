@@ -69,10 +69,10 @@ describe("a rover's movement", () => {
   });
 
   it("waits a while before driving off, so that a landing can finish at any speed", () => {
-    expect(distance(roverSpot(rover(), anchor, 225), anchor)).toBeLessThan(
+    expect(distance(roverSpot(rover(), anchor, 255), anchor)).toBeLessThan(
       0.001,
     );
-    expect(distance(roverSpot(rover(), anchor, 260), anchor)).toBeGreaterThan(
+    expect(distance(roverSpot(rover(), anchor, 290), anchor)).toBeGreaterThan(
       0.5,
     );
   });

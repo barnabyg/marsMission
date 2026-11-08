@@ -161,7 +161,7 @@ export async function pauseAtEvent(
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
 }
 
-type Speed = "1x" | "5x" | "10x";
+type Speed = "1x" | "5x" | "10x" | "20x";
 
 /**
  * Holds the Turn from inside the page the moment an event with this title appears, or as soon as Mission Mode opens if
@@ -323,19 +323,22 @@ export async function chooseAssets(page: Page, names: string[]): Promise<void> {
   }
 }
 
-/** Plays out the rest of a Turn in Mission Mode at top speed, and continues past its Turn summary. */
+/**
+ * Plays out the rest of a Turn in Mission Mode at 10x, and continues past its Turn summary. Not 20x, so that tests
+ * which carry that speed into the next Turn still have time to check things as it plays.
+ */
 export async function playToNextTurn(page: Page): Promise<void> {
-  const fastest = page.getByRole("button", { name: "10x" });
+  const quick = page.getByRole("button", { name: "10x" });
   const summary = page.getByTestId("turn-summary");
-  await expect(fastest.or(summary)).toBeVisible();
+  await expect(quick.or(summary)).toBeVisible();
   // The Turn may end before the click lands, which is fine.
-  await fastest.click({ timeout: 2000 }).catch(() => undefined);
+  await quick.click({ timeout: 2000 }).catch(() => undefined);
   await summary.getByRole("button", { name: "Continue" }).click();
 }
 
 /**
  * Skips the rest of a Turn in Mission Mode with End Turn, which gives the same outcome as playing it out, and continues
- * past its Turn summary. Unlike playing it out at top speed, it leaves the next Turn at the speed this one was at.
+ * past its Turn summary. Unlike playing it out at 10x, it leaves the next Turn at the speed this one was at.
  */
 export async function endTurnAndContinue(page: Page): Promise<void> {
   await page.getByRole("button", { name: "End Turn", exact: true }).click();

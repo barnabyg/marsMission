@@ -49,10 +49,10 @@ const spinRadiansPerDay = 0.02;
 
 /**
  * A landing is shown around its day rather than ending on it, because the view may only move there
- * when the landing happens, and at 10x the camera takes several days to arrive.
+ * when the landing happens, and at 20x the camera takes about 13 days to arrive, so it still sees the last of it.
  */
-const descentDaysBefore = 5;
-const descentDaysAfter = 10;
+const descentDaysBefore = 10;
+const descentDaysAfter = 20;
 
 type Sites = Timeline["landingSites"];
 

@@ -29,7 +29,7 @@ const partsInOrder: readonly HomewardPart[] = [
 ];
 
 /**
- * How long each part plays for in real time, leaving out pauses, the same at every speed, as days would flash by at 10x.
+ * How long each part plays for in real time, leaving out pauses, the same at every speed, as days would flash by at 20x.
  * Leaving Mars orbit has nothing to play: the solar system view shows it from then on.
  */
 export const homewardPlayMs: Record<HomewardPart, number> = {

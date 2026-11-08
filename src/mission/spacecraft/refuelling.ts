@@ -61,7 +61,7 @@ export function refuellingOf(
 
 /**
  * Orbital refuelling plays for these lengths of real time, leaving out pauses, at every speed, as days in Earth orbit
- * would flash by at 10x. It starts from the moment playback reaches each entry, and only displays the Timeline, so it
+ * would flash by at 20x. It starts from the moment playback reaches each entry, and only displays the Timeline, so it
  * can't change any results.
  */
 export const tankerClimbMs = 2500;
