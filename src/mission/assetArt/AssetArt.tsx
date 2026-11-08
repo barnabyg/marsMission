@@ -5,6 +5,8 @@ import { StrictMode, useLayoutEffect, useRef, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Box3,
+  DoubleSide,
+  FrontSide,
   MathUtils,
   Mesh,
   MeshBasicMaterial,
@@ -15,6 +17,7 @@ import {
 } from "three";
 import { ReturnOrbiter } from "../spacecraft/homewardModels";
 import { Orbiter } from "../spacecraft/spacecraftModels";
+import { finishes, partLookOf } from "../surface/surfaceShading";
 import { models } from "../surface/surfaceModels";
 
 const fov = 30;
@@ -36,13 +39,25 @@ const modelsByKind: Partial<Record<string, ReactNode>> = {
 const viewFrom = new Vector3(0.75, 0.55, -1.3).normalize();
 
 /**
- * The surface models are unlit, with their light worked into their colours, which is right beside the ground in
- * Mission Mode but looks flat on a card. Here each of their parts takes the light instead, in the same colour.
+ * The surface models don't take the scene's lights, working out their own from the surface's Sun, which is right
+ * beside the ground in Mission Mode but looks flat on a card. Here each of their parts takes the light instead, in the
+ * same colour, with the roughness and metalness of its finish.
  */
-function lightUnlitParts(model: Group) {
+function lightSurfaceParts(model: Group) {
   model.traverse((object) => {
     if (!(object instanceof Mesh)) return;
     const material: unknown = object.material;
+    const look = partLookOf(material);
+    if (look) {
+      const { roughness, metalness } = finishes[look.finish];
+      object.material = new MeshStandardMaterial({
+        color: look.color,
+        side: look.double ? DoubleSide : FrontSide,
+        roughness,
+        metalness,
+      });
+      return;
+    }
     if (!(material instanceof MeshBasicMaterial) || material.transparent)
       return;
     object.material = new MeshStandardMaterial({
@@ -65,7 +80,7 @@ function Framed({ children }: { children: ReactNode }) {
   const framesDrawn = useRef(0);
   useLayoutEffect(() => {
     if (!group.current) return;
-    lightUnlitParts(group.current);
+    lightSurfaceParts(group.current);
     const sphere = new Box3()
       .setFromObject(group.current)
       .getBoundingSphere(new Sphere());

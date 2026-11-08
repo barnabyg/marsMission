@@ -1,6 +1,10 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["scripts/*.mjs", "src/mission/assetArt/AssetArt.tsx"],
+  "entry": [
+    "scripts/*.mjs",
+    "src/mission/assetArt/AssetArt.tsx",
+    "src/mission/surfaceBench/SurfaceBench.tsx"
+  ],
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts", "scripts/*.mjs"],
   "ignoreDependencies": ["@secretlint/secretlint-rule-preset-recommend"]
 }

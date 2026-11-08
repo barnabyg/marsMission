@@ -5,7 +5,12 @@ import type {
 } from "../../simulation/simulation";
 import { assetsAtMarsOn } from "../journey";
 import type { CameraPose, Point } from "../sceneParts";
-import { roverSpot, type RoverAtWork, type RoverSpot } from "./motion";
+import {
+  roverSpot,
+  traversePaths,
+  type RoverAtWork,
+  type RoverSpot,
+} from "./motion";
 
 /**
  * A patch of ground of its own, with its own sky, behind both other views' cameras. Everything is
@@ -92,6 +97,34 @@ export function placeOf(place: number): { x: number; z: number } {
   const row = Math.floor(place / 2);
   return { x: side * (1.5 + row * 1.8), z: row * 2 };
 }
+
+/**
+ * How many places, from the first, stand on the terrain, and so are kept level and clear of rocks and craters. The
+ * places after them are further out than the terrain reaches.
+ */
+export const placeCount = 12;
+
+/** How many of the Crew's landers can stand in one place, one behind another, that the ground is kept ready for. */
+const landersPerPlace = 3;
+
+/** The spots on the ground where Assets stand: each place, and the spots behind it where the Crew's later landers stand. */
+export const standingSpots: readonly { x: number; z: number }[] = Array.from(
+  { length: placeCount },
+  (_, place) =>
+    Array.from({ length: landersPerPlace }, (_, lander) =>
+      landerSpot(place, lander),
+    ),
+).flat();
+
+/** How far back from a place its last lander stands. */
+export const landersReach =
+  landerSpot(0, landersPerPlace - 1).z - landerSpot(0, 0).z;
+
+/** Where a rover on a Long traverse from any place could drive, which rocks and small craters keep clear of. */
+export const roverPaths: readonly { x: number; z: number }[] = Array.from(
+  { length: placeCount },
+  (_, place) => traversePaths(placeOf(place)),
+).flat();
 
 /** Whether a Crew member is at their place at Mars on a given day: arrived, and not yet lost. */
 export function isThere(

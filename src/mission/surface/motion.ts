@@ -57,28 +57,63 @@ function loopAt(
 }
 
 /**
- * A loop through the landing spot. It goes to the outside of the shot from the two middle places, to
- * keep clear of what's beside it, and otherwise inwards and towards the camera, to stay on the terrain.
+ * A loop through the landing spot, its size set by two shares from 0 to 1. It goes to the outside of the shot from
+ * the two middle places, to keep clear of what's beside it, and otherwise inwards and towards the camera, to stay on
+ * the terrain.
  */
-function traverse(hash: number, anchor: Place, days: number): RoverSpot {
-  const radiusX = 1.3 + shareOf(hash, 0) * 0.5;
-  const radiusZ = 2 + shareOf(hash, 1) * 0.8;
+function traverseLoop(anchor: Place, shareX: number, shareZ: number) {
+  const radiusX = 1.3 + shareX * 0.5;
+  const radiusZ = 2 + shareZ * 0.8;
   const outwards = anchor.x < 0 ? -1 : 1;
   const across = Math.abs(anchor.x) <= 3 ? outwards : -outwards;
   const along = anchor.z <= 6 ? 1 : -1;
-  const direction = shareOf(hash, 2) < 0.5 ? 1 : -1;
-  const startAngle = Math.atan2(-along, -across);
-  const radiansPerDay =
-    traverseUnitsPerDay / Math.sqrt((radiusX ** 2 + radiusZ ** 2) / 2);
-  return loopAt(
-    {
+  return {
+    middle: {
       x: anchor.x + across * radiusX * startShare,
       z: anchor.z + along * radiusZ * startShare,
     },
     radiusX,
     radiusZ,
+    startAngle: Math.atan2(-along, -across),
+  };
+}
+
+function traverse(hash: number, anchor: Place, days: number): RoverSpot {
+  const { middle, radiusX, radiusZ, startAngle } = traverseLoop(
+    anchor,
+    shareOf(hash, 0),
+    shareOf(hash, 1),
+  );
+  const direction = shareOf(hash, 2) < 0.5 ? 1 : -1;
+  const radiansPerDay =
+    traverseUnitsPerDay / Math.sqrt((radiusX ** 2 + radiusZ ** 2) / 2);
+  return loopAt(
+    middle,
+    radiusX,
+    radiusZ,
     startAngle + direction * radiansPerDay * days,
     direction,
+  );
+}
+
+/**
+ * Points along every loop a rover on a Long traverse could drive from a place, whatever its key, close enough
+ * together that what keeps clear of them all keeps out of the rover's way.
+ */
+export function traversePaths(anchor: Place): Place[] {
+  const sizes = [0, 0.25, 0.5, 0.75, 1];
+  const steps = 48;
+  return sizes.flatMap((shareX) =>
+    sizes.flatMap((shareZ) => {
+      const { middle, radiusX, radiusZ } = traverseLoop(anchor, shareX, shareZ);
+      return Array.from({ length: steps }, (_, step) => {
+        const angle = (step / steps) * Math.PI * 2;
+        return {
+          x: middle.x + Math.cos(angle) * radiusX,
+          z: middle.z + Math.sin(angle) * radiusZ,
+        };
+      });
+    }),
   );
 }
 

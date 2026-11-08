@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildTerrain, groundHeight, terrainReach } from "./terrain";
+import { roverPaths, standingSpots } from "./surface";
+import { buildTerrain, cratersAt, groundHeight, terrainReach } from "./terrain";
 
 describe("a Landing Site's terrain", () => {
   it("is the same every time for the same site", () => {
@@ -71,5 +72,88 @@ describe("a Landing Site's terrain", () => {
     const xs = positions.filter((_, index) => index % 3 === 0);
     expect(Math.max(...xs)).toBeCloseTo(terrainReach, 3);
     expect(Math.min(...xs)).toBeCloseTo(-terrainReach, 3);
+  });
+
+  it("has small-scale relief, such as small craters and wind ridges, over much of the ground beyond the middle", () => {
+    for (const site of ["Jezero Crater", "Gale Crater", "Utopia Planitia"]) {
+      let bumpy = 0;
+      let checked = 0;
+      for (let z = 2; z < 11; z += 0.5) {
+        for (let x = -10; x < 10; x += 0.5) {
+          const height = (step: number) =>
+            groundHeight(site, x + step * 0.1, z);
+          const bend = Math.abs(height(0) - 2 * height(1) + height(2));
+          checked += 1;
+          if (bend > 0.004) bumpy += 1;
+        }
+      }
+      expect(bumpy / checked).toBeGreaterThan(0.4);
+    }
+  });
+
+  it("is coloured between grey basalt and red dust, not only lit lighter and darker", () => {
+    const { colors, detail } = buildTerrain("Jezero Crater");
+    const redness: number[] = [];
+    detail.forEach((share, vertex) => {
+      if (share < 1) return;
+      redness.push((colors[vertex * 3] ?? 0) / (colors[vertex * 3 + 1] ?? 1));
+    });
+    expect(Math.max(...redness) - Math.min(...redness)).toBeGreaterThan(0.4);
+  });
+
+  it("has fine grain drawn on it near the camera, which fades out before the far edge", () => {
+    const { positions, detail } = buildTerrain("Gale Crater");
+    expect(detail.length).toBe(positions.length / 3);
+    const middle = detail.findIndex(
+      (_, vertex) =>
+        Math.hypot(positions[vertex * 3] ?? 0, positions[vertex * 3 + 2] ?? 0) <
+        0.5,
+    );
+    expect(detail[middle]).toBe(1);
+    expect(detail[0]).toBe(0);
+    expect(detail.at(-1)).toBe(0);
+  });
+
+  it("is level where Assets stand, so that their feet reach the ground", () => {
+    for (const site of [
+      "Jezero Crater",
+      "Gale Crater",
+      "Utopia Planitia",
+      "Elysium Planitia",
+    ]) {
+      for (const { x, z } of standingSpots) {
+        const heights = Array.from({ length: 16 }, (_, step) => {
+          const angle = (step / 16) * Math.PI * 2;
+          return groundHeight(
+            site,
+            x + Math.cos(angle) * 0.6,
+            z + Math.sin(angle) * 0.6,
+          );
+        });
+        expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(0.02);
+      }
+    }
+  });
+
+  it("keeps its small craters off where rovers drive, and every crater off where Assets stand", () => {
+    for (const site of ["Jezero Crater", "Gale Crater", "Utopia Planitia"]) {
+      const craters = cratersAt(site);
+      expect(craters.length).toBeGreaterThan(20);
+      // How far each crater's bowl stays from the nearest spot, which is below 0 where it reaches one.
+      const gapTo = (
+        spots: readonly { x: number; z: number }[],
+        { x, z, radius }: { x: number; z: number; radius: number },
+      ) =>
+        Math.min(...spots.map((spot) => Math.hypot(x - spot.x, z - spot.z))) -
+        radius;
+      const small = craters.filter(({ radius }) => radius <= 0.6);
+      expect(small.length).toBeGreaterThan(10);
+      expect(
+        Math.min(...craters.map((crater) => gapTo(standingSpots, crater))),
+      ).toBeGreaterThan(0);
+      expect(
+        Math.min(...small.map((crater) => gapTo(roverPaths, crater))),
+      ).toBeGreaterThan(0);
+    }
   });
 });

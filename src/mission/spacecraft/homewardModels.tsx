@@ -1,4 +1,4 @@
-import { At, Part, SolarArray } from "./spacecraftModels";
+import { At, Boxes, Part, SolarArray } from "./spacecraftModels";
 
 /**
  * The craft of a journey home, lit by the Sun as the spacecraft view's other models are: the Earth return stage that
@@ -113,6 +113,30 @@ export function ReturnOrbiter({
         </Part>
       </At>
       <Capsule lost={lost} x={0.3} size={0.13} />
+      {/* Panel lines on the bus, and a block of thrusters at each corner of its foot. */}
+      <Boxes
+        boxes={[-0.1, 0.1].map((along) => ({
+          size: [0.006, 0.3, 0.405] as const,
+          position: [along, 0, 0] as const,
+        }))}
+        color="#a9adb6"
+        lost={lost}
+      />
+      <Boxes
+        boxes={(
+          [
+            [1, 1],
+            [1, -1],
+            [-1, 1],
+            [-1, -1],
+          ] as const
+        ).map(([x, z]) => ({
+          size: [0.045, 0.045, 0.045] as const,
+          position: [x * 0.22, -0.15, z * 0.2] as const,
+        }))}
+        color="#8a8d94"
+        lost={lost}
+      />
       <At position={[-0.1, 0.3, 0]}>
         <Part color="#a9acb3" lost={lost}>
           <cylinderGeometry args={[0.02, 0.02, 0.22, 8]} />
