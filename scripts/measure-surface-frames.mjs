@@ -102,11 +102,13 @@ try {
     );
     await page.close();
   }
-  medians.sort((first, second) => first - second);
-  means.sort((first, second) => first - second);
-  console.log(
-    `Median of runs: median frame ${medians[Math.floor(medians.length / 2)].toFixed(1)} ms, mean ${means[Math.floor(means.length / 2)].toFixed(1)} ms`,
-  );
+  if (runs > 0) {
+    medians.sort((first, second) => first - second);
+    means.sort((first, second) => first - second);
+    console.log(
+      `Median of runs: median frame ${medians[Math.floor(medians.length / 2)].toFixed(1)} ms, mean ${means[Math.floor(means.length / 2)].toFixed(1)} ms`,
+    );
+  }
 } finally {
   await browser?.close();
   await server.close();

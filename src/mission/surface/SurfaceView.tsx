@@ -1,12 +1,5 @@
-import { memo, useMemo } from "react";
-import {
-  BackSide,
-  BufferAttribute,
-  BufferGeometry,
-  SphereGeometry,
-} from "three";
 import type { Timeline } from "../../simulation/simulation";
-import { useDisposal, type Point, type SceneLabel } from "../sceneParts";
+import type { Point, SceneLabel } from "../sceneParts";
 import {
   fallAt,
   hasImpacted,
@@ -30,11 +23,8 @@ import {
   type SurfaceModel,
 } from "./surface";
 import { models, Shadow, wrecks } from "./surfaceModels";
-import { buildTerrain, groundHeight, horizonColor } from "./terrain";
-
-/** Big enough to reach past the land's fade, and small enough to stay clear of the solar system's camera and the stars. */
-const skyRadius = 14.5;
-const zenithColor = [0.2, 0.09, 0.06] as const;
+import { Rocks, Sky, Terrain } from "./SurfaceGround";
+import { groundHeight } from "./terrain";
 
 /** How far above the ground each model's label sits. */
 const labelHeights: Record<SurfaceModel, number> = {
@@ -46,46 +36,6 @@ const labelHeights: Record<SurfaceModel, number> = {
   lab: 1.45,
   ascentVehicle: 1.95,
 };
-
-function Terrain({ siteName }: { siteName: string }) {
-  const geometry = useMemo(() => {
-    const { positions, colors, indices } = buildTerrain(siteName);
-    return new BufferGeometry()
-      .setAttribute("position", new BufferAttribute(positions, 3))
-      .setAttribute("color", new BufferAttribute(colors, 3))
-      .setIndex(new BufferAttribute(indices, 1));
-  }, [siteName]);
-  useDisposal(geometry);
-  return (
-    <mesh geometry={geometry}>
-      <meshBasicMaterial vertexColors toneMapped={false} />
-    </mesh>
-  );
-}
-
-const Sky = memo(function Sky() {
-  const geometry = useMemo(() => {
-    const sphere = new SphereGeometry(skyRadius, 24, 16);
-    const { position } = sphere.attributes;
-    const colors = new Float32Array((position?.count ?? 0) * 3);
-    for (let vertex = 0; vertex < colors.length / 3; vertex++) {
-      const height = Math.max((position?.getY(vertex) ?? 0) / skyRadius, 0);
-      const share = Math.min(height * 1.6, 1);
-      for (let channel = 0; channel < 3; channel++) {
-        colors[vertex * 3 + channel] =
-          (horizonColor[channel] ?? 0) * (1 - share) +
-          (zenithColor[channel] ?? 0) * share;
-      }
-    }
-    return sphere.setAttribute("color", new BufferAttribute(colors, 3));
-  }, []);
-  useDisposal(geometry);
-  return (
-    <mesh geometry={geometry}>
-      <meshBasicMaterial vertexColors side={BackSide} toneMapped={false} />
-    </mesh>
-  );
-});
 
 /** The sequence at this Landing Site, if it's here. */
 function sequenceAt(now: SequenceNow | null, siteName: string) {
@@ -205,6 +155,7 @@ export function SurfaceScene({
     <group position={surfaceCentre}>
       <Sky />
       <Terrain siteName={siteName} />
+      <Rocks siteName={siteName} />
       {surfaceAssetsAt(timeline, day, siteName).map((asset) => {
         const { model, place } = asset;
         if (model === "crewLander") {
