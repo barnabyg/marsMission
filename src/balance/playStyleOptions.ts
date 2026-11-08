@@ -26,6 +26,13 @@ export interface PlayStyle {
   developsWhile?: (view: ProgramView) => boolean;
   /** Sends a Crewed Mission, of the largest Crew it can afford, before any Asset, whenever one can fly, as this says. */
   fliesCrew?: CrewStyle;
+  /**
+   * Whether, with nothing to launch, it ends the missions of the Assets with the least Service Life left when that frees
+   * the money for a launch. It does unless it says otherwise.
+   */
+  endsMissionsToLaunch?: boolean;
+  /** Sends that Crewed Mission only while this is true. */
+  fliesCrewWhile?: (view: ProgramView) => boolean;
   /** Whether an Asset that can Survey does that first, while there is something left to Survey. */
   surveysFirst: boolean;
   /** Stops Surveying sooner than when nothing is left to Survey, once this is no longer true. */

@@ -294,9 +294,29 @@ export function fuller(
         assetIds: [...mission.assetIds, ...added.map(({ id }) => id)],
         ...(lands && site !== null ? { landingSiteId: site } : {}),
       };
-      const well = builtWell(filled, added, playStyle, tools);
-      return well === filled ? [filled] : [well, filled];
+      const reliable = reliableThroughout(filled, mission, tools);
+      const well = builtWell(reliable, added, playStyle, tools);
+      return well === reliable ? [reliable] : [well, reliable];
     });
+}
+
+/**
+ * The filled Mission with the Reliability its first Asset's Mission bought on each Mission Event also bought on those the
+ * bigger Launch Vehicle adds, or the same Mission if it bought none.
+ */
+function reliableThroughout(
+  filled: PlannedMission,
+  mission: PlannedMission,
+  tools: PlanningTools,
+): PlannedMission {
+  const level = Object.values(mission.reliability ?? {})[0];
+  if (level === undefined) return filled;
+  return {
+    ...filled,
+    reliability: Object.fromEntries(
+      tools.previewMission(filled).map(({ eventId }) => [eventId, level]),
+    ),
+  };
 }
 
 /**
