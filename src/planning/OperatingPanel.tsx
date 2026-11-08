@@ -4,7 +4,7 @@ import {
   type ProgramView,
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
-import { ActivitySelect, chosenEarnings } from "./ActivitySelect";
+import { ActivitySelect, chosenEarnings, chosenYields } from "./ActivitySelect";
 import { SamplesWaiting } from "./SamplesHomeChoice";
 import { WayHomeChoice } from "./WayHomeChoice";
 import {
@@ -90,17 +90,22 @@ export function OperatingPanel({
                       : "No Supplies left"
                   }`}
                 </GameText>
-                <span
-                  className="activity-earnings"
-                  data-testid="activity-earnings"
-                >
-                  <GameText>
-                    {chosenEarnings(
-                      chosenCrewActivities[group.key] ?? group.activityId,
-                      group.activities,
-                    )}
-                  </GameText>
-                </span>
+                {chosenYields(
+                  chosenCrewActivities[group.key] ?? group.activityId,
+                  group.activities,
+                ) && (
+                  <span
+                    className="activity-earnings"
+                    data-testid="activity-earnings"
+                  >
+                    <GameText>
+                      {chosenEarnings(
+                        chosenCrewActivities[group.key] ?? group.activityId,
+                        group.activities,
+                      )}
+                    </GameText>
+                  </span>
+                )}
               </span>
               <ActivitySelect
                 assetName={`the Crew in ${group.locationName}`}
@@ -178,7 +183,10 @@ export function OperatingPanel({
                     </GameText>
                     {!ended &&
                       asset.daysLeft > 0 &&
-                      asset.activities.length > 0 && (
+                      chosenYields(
+                        chosenActivities[asset.key] ?? asset.activityId,
+                        asset.activities,
+                      ) && (
                         <span
                           className="activity-earnings"
                           data-testid="activity-earnings"

@@ -44,6 +44,24 @@ export function chosenEarnings(
   return chosen ? `${chosen.name} ${whatActivityDoes(chosen)}.` : "";
 }
 
+/**
+ * Whether the chosen Activity earns or collects something each Turn. Operating at Mars writes out only those, as a
+ * busy Program's rows are too many to fit with a line for each Survey, whose choice already names it.
+ */
+export function chosenYields(
+  activityId: string,
+  activities: PlannedActivity[],
+): boolean {
+  const chosen = activities.find(({ id }) => id === activityId);
+  if (!chosen) return false;
+  const earns = chosen.earnsPerTurn;
+  return (
+    chosen.cachesPerTurn !== null ||
+    (earns !== null &&
+      earns.science + earns.publicSupport + earns.researchGrantMillions > 0)
+  );
+}
+
 /** The choice of what one Asset does, each other Activity with what it earns a Turn. */
 export function ActivitySelect({
   assetName,

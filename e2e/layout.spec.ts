@@ -82,10 +82,10 @@ for (const size of screenSizes) {
     }) => {
       await openBusyProgram(page);
       await chooseAssets(page, ["Pathfinder Orbiter"]);
-      // Each Asset at Mars says what its Activity earns, as does the orbiter on the Mission, with the Mission's rates.
+      // Each Asset at Mars that earns something says what, here the lander and the rover; a Survey's choice names it.
       await expect(
         page.getByTestId("operating-assets").getByTestId("activity-earnings"),
-      ).toHaveCount(8);
+      ).toHaveCount(2);
       await expect(page.getByTestId("research-earnings")).toHaveCount(1);
       expect(await whatScrolls(page)).toEqual([]);
       await expect(
