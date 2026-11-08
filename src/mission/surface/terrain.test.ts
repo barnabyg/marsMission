@@ -139,15 +139,21 @@ describe("a Landing Site's terrain", () => {
     for (const site of ["Jezero Crater", "Gale Crater", "Utopia Planitia"]) {
       const craters = cratersAt(site);
       expect(craters.length).toBeGreaterThan(20);
-      for (const { x, z, radius } of craters) {
-        for (const spot of standingSpots) {
-          expect(Math.hypot(x - spot.x, z - spot.z)).toBeGreaterThan(radius);
-        }
-        if (radius > 0.6) continue;
-        for (const path of roverPaths) {
-          expect(Math.hypot(x - path.x, z - path.z)).toBeGreaterThan(radius);
-        }
-      }
+      // How far each crater's bowl stays from the nearest spot, which is below 0 where it reaches one.
+      const gapTo = (
+        spots: readonly { x: number; z: number }[],
+        { x, z, radius }: { x: number; z: number; radius: number },
+      ) =>
+        Math.min(...spots.map((spot) => Math.hypot(x - spot.x, z - spot.z))) -
+        radius;
+      const small = craters.filter(({ radius }) => radius <= 0.6);
+      expect(small.length).toBeGreaterThan(10);
+      expect(
+        Math.min(...craters.map((crater) => gapTo(standingSpots, crater))),
+      ).toBeGreaterThan(0);
+      expect(
+        Math.min(...small.map((crater) => gapTo(roverPaths, crater))),
+      ).toBeGreaterThan(0);
     }
   });
 });
