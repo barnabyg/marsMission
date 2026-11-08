@@ -186,6 +186,9 @@ test("lets the player switch away during a landing without pulling them back, an
   await expect(page.getByTestId("surface-status")).toHaveCount(0);
   const before = await playedMs(page);
 
+  // The landing ends about a second of play before the Turn does, and the Turn's end closes Mission Mode, so this holds
+  // the Turn as soon as the landing ends rather than leaving the checks below to catch that second.
+  const finished = holdSequence(page);
   await page.getByRole("button", { name: "1x" }).click();
   await expect.poll(() => playedMs(page)).toBeGreaterThan(before + 1000);
   await expect(current).toHaveText("Solar system");
@@ -197,6 +200,7 @@ test("lets the player switch away during a landing without pulling them back, an
   await expect(current).toHaveText("Mars orbit");
 
   // Still there after the landing has finished, with nothing else to move it.
+  await finished;
   await expect(scene(page)).not.toHaveAttribute("data-sequence");
   await expect(current).toHaveText("Mars orbit");
   expect(problems).toEqual([]);
