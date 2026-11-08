@@ -8,10 +8,11 @@ const productionOutDir = "node_modules/.cache/e2e-build";
 export const productionBaseURL = `http://localhost:${productionPort}`;
 
 /**
- * How many times faster than in play a landing, a rendezvous and the like run on the development server, which halves
- * the seconds a test waits on one. Tests that wait on purpose for one to be over divide by it.
+ * How many times faster than in play a landing, a rendezvous and the like run on the development server, which cuts
+ * the seconds a test waits on one. Tests that wait on purpose for one to be over divide by it. Above 3, a test that
+ * switches views during a landing can find it already over.
  */
-export const sequenceTimeScale = 2;
+export const sequenceTimeScale = 3;
 
 export default defineConfig({
   testDir: "e2e",
