@@ -12,7 +12,9 @@ import { DevelopmentPanel } from "./DevelopmentPanel";
 import { MissionPanel } from "./MissionPanel";
 import { OperatingPanel } from "./OperatingPanel";
 import { StatusBar } from "./StatusBar";
+import { TutorialAdvice } from "./TutorialAdvice";
 import { TutorialPanel } from "./TutorialPanel";
+import { useTutorialAdvice } from "./useTutorialAdvice";
 import { useMissionPlan } from "./useMissionPlan";
 
 interface PlanningModeProps {
@@ -20,6 +22,8 @@ interface PlanningModeProps {
   program: Program;
   /** The Program at the start of the last Turn, or null on the first Turn or after a Load. */
   lastTurn: Program | null;
+  /** The plan played on the last Turn, or null whenever lastTurn is. */
+  lastPlan: TurnPlan | null;
   /** Whether the automatic save at the start of this Planning Mode worked. */
   saved: boolean;
   saveStore: SaveStore;
@@ -38,6 +42,7 @@ export function PlanningMode({
   simulation,
   program,
   lastTurn,
+  lastPlan,
   saved,
   saveStore,
   onLoad,
@@ -60,6 +65,7 @@ export function PlanningMode({
   );
   // At most one journey home flies each Turn, of Crew or of samples, so choosing one replaces any other.
   const [bringHome, setBringHome] = useState<string | null>(null);
+  const advice = useTutorialAdvice(simulation, program, lastTurn, lastPlan);
   const choices = useMissionPlan(
     simulation,
     program,
@@ -144,7 +150,9 @@ export function PlanningMode({
             tutorial={view.tutorial}
             firstSession={firstSession}
             onTutorialChange={onTutorialChange}
-          />
+          >
+            {advice && <TutorialAdvice advice={advice} />}
+          </TutorialPanel>
           <OperatingPanel
             assets={view.operatingAssets}
             crew={view.crew}

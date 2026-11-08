@@ -29,16 +29,19 @@ export function TutorialPanel({
         aria-labelledby="tutorial-heading"
         data-testid="tutorial-panel"
       >
-        <h2 id="tutorial-heading">
-          <GameText heading>Tutorial mode</GameText>
-        </h2>
+        {/* The way to turn it off comes first, so that it stays in view however long the advice is. */}
+        <div className="tutorial-heading">
+          <h2 id="tutorial-heading">
+            <GameText heading>Tutorial mode</GameText>
+          </h2>
+          <TurnOffTutorial
+            forGood={!firstSession}
+            onTurnOff={() => {
+              onTutorialChange(false);
+            }}
+          />
+        </div>
         {children}
-        <TurnOffTutorial
-          forGood={!firstSession}
-          onTurnOff={() => {
-            onTutorialChange(false);
-          }}
-        />
       </section>
     );
   }

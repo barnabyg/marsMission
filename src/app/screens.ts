@@ -21,6 +21,8 @@ export type Screen =
       lastTurn: Program | null;
       saved: boolean;
       visit: number;
+      /** The plan played on the last Turn, for the tutorial to spot a change of course, or null whenever lastTurn is. */
+      lastPlan: TurnPlan | null;
       /** Whether this is the Program's first Planning session since it started, which offers Tutorial mode. */
       firstSession: boolean;
     }
@@ -31,7 +33,12 @@ export type Screen =
       answers: DecisionAnswers;
       progress: TurnProgress;
     }
-  | { mode: "turnSummary"; result: TurnResult; lastTurn: Program }
+  | {
+      mode: "turnSummary";
+      result: TurnResult;
+      lastTurn: Program;
+      lastPlan: TurnPlan;
+    }
   | { mode: "programSummary"; program: Program };
 
 type PlanningScreen = Extract<Screen, { mode: "planning" }>;
@@ -48,12 +55,13 @@ let planningVisits = 0;
 export function planningScreen(
   { saveStore }: GameServices,
   program: Program,
-  lastTurn: Program | null = null,
+  lastTurn: { program: Program; plan: TurnPlan } | null = null,
 ): PlanningScreen {
   return {
     mode: "planning",
     program,
-    lastTurn,
+    lastTurn: lastTurn?.program ?? null,
+    lastPlan: lastTurn?.plan ?? null,
     saved: saveStore.save("automatic", program),
     // Each visit starts a fresh plan, even when a load returns to the same Program and Turn.
     visit: ++planningVisits,

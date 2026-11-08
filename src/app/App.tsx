@@ -51,6 +51,7 @@ export function App({ services, firstScreen }: AppProps) {
         simulation={simulation}
         program={program}
         lastTurn={screen.lastTurn}
+        lastPlan={screen.lastPlan}
         saved={screen.saved}
         firstSession={screen.firstSession}
         onTutorialChange={(on) => {
@@ -147,13 +148,18 @@ export function App({ services, firstScreen }: AppProps) {
           if (simulation.readProgram(result.program).status.kind !== "active") {
             saveStore.clear("automatic");
           }
-          setScreen({ mode: "turnSummary", result, lastTurn: screen.program });
+          setScreen({
+            mode: "turnSummary",
+            result,
+            lastTurn: screen.program,
+            lastPlan: screen.plan,
+          });
         }}
       />
     );
   }
 
-  const { result, lastTurn } = screen;
+  const { result, lastTurn, lastPlan } = screen;
   return (
     <TurnSummaryScreen
       summary={result.summary}
@@ -162,7 +168,10 @@ export function App({ services, firstScreen }: AppProps) {
         const active = simulation.readProgram(program).status.kind === "active";
         setScreen(
           active
-            ? planningScreen(services, program, lastTurn)
+            ? planningScreen(services, program, {
+                program: lastTurn,
+                plan: lastPlan,
+              })
             : { mode: "programSummary", program },
         );
       }}
