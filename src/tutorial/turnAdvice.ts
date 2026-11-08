@@ -1,6 +1,7 @@
 import type { PlanningTools } from "../balance/strategy";
 import {
   formatMoney,
+  formatTurns,
   type ProgramView,
   type TurnPlan,
 } from "../simulation/simulation";
@@ -57,7 +58,7 @@ function developmentItems(view: ProgramView, plan: TurnPlan): AdviceItem[] {
     })),
     ...underWay.map(({ name, turnsLeft }) => ({
       topic: "development" as const,
-      advice: `Let the Development of the ${name} run: it finishes in ${turnsLeft} Turn${turnsLeft === 1 ? "" : "s"}.`,
+      advice: `Let the Development of the ${name} run: it finishes in ${formatTurns(turnsLeft)}.`,
       reason:
         "It is paid for already. Meanwhile the rovers' Research Grants save up for the Base it will carry.",
     })),

@@ -30,7 +30,12 @@ export {
   formatMoney,
   formatTurns,
 } from "./rules";
-export { onlyGrantsPay, paysForItself, serviceLifeGain } from "./choiceText";
+export {
+  activityEarnings,
+  onlyGrantsPay,
+  paysForItself,
+  serviceLifeGain,
+} from "./choiceText";
 export { formatPropellant } from "./ascentPropellant";
 export { corruptSave, SaveError } from "./saveFormat";
 export {

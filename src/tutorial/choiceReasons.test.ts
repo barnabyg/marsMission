@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { succeeding } from "../testing/realBalance";
+import type { PlannedActivity } from "../simulation/simulation";
+import { bestActivityReason } from "./choiceReasons";
 import { followAdvice, startOf } from "./testHelpers";
 import { crewAtBase, type AdviceItem, type AdviceTopic } from "./tutorial";
 
@@ -83,5 +85,68 @@ describe("the reasons for Service Life and Activities", () => {
     for (const { reason } of items) {
       expect(reason).not.toMatch(/the most of what/);
     }
+  });
+});
+
+/** An Activity on offer that earns this much a Turn, or caches these samples. */
+const offered = (
+  name: string,
+  [science, publicSupport, researchGrantMillions]: number[] = [],
+  samples?: number,
+): PlannedActivity => ({
+  id: name,
+  name,
+  description: "",
+  surveys: false,
+  earnsPerTurn:
+    science === undefined
+      ? null
+      : {
+          science,
+          publicSupport: publicSupport ?? 0,
+          researchGrantMillions: researchGrantMillions ?? 0,
+        },
+  cachesPerTurn: samples === undefined ? null : { samples, science: 500 },
+});
+
+describe("why an Activity is the one to choose", () => {
+  const soil = offered("Soil analysis", [80, 9, 800]);
+  const traverse = offered("Long traverse", [160, 14, 0]);
+  const surface = offered("Surface research", [100, 9, 50]);
+  const caching = offered("Sample caching", undefined, 10);
+  const nothing = offered("Nothing");
+
+  it("names the Research Grant when it pays the biggest", () => {
+    expect(
+      bestActivityReason("Rover", soil, [soil, surface, caching, nothing]),
+    ).toBe(
+      "Soil analysis pays the biggest Research Grant of Rover's Activities: $800M a Turn, against $50M for Surface research.",
+    );
+  });
+
+  it("names the Science when it earns the most of that but not the biggest Research Grant", () => {
+    expect(
+      bestActivityReason("Rover", traverse, [soil, traverse, caching, nothing]),
+    ).toBe(
+      "Long traverse earns the most Science of Rover's Activities: 160 a Turn, against 80 for Soil analysis.",
+    );
+  });
+
+  it("names the Public Support when it leads only on that", () => {
+    const quiet = offered("Quiet research", [80, 6, 0]);
+    const loud = offered("Loud research", [80, 12, 0]);
+    expect(bestActivityReason("Orbiter", loud, [quiet, loud])).toBe(
+      "Loud research earns the most Public Support of Orbiter's Activities: 12 a Turn, against 6 for Quiet research.",
+    );
+  });
+
+  it("claims no most for an Activity that leads on nothing, and says what it does", () => {
+    expect(
+      bestActivityReason("Rover", caching, [soil, traverse, caching, nothing]),
+    ).toBe("Sample caching collects 10 samples a Turn.");
+    const twin = offered("Twin research", [80, 6, 0]);
+    expect(
+      bestActivityReason("Orbiter", twin, [twin, offered("Other", [80, 6, 0])]),
+    ).toBe("Twin research earns 80 Science and 6 Public Support a Turn.");
   });
 });

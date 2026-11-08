@@ -1,4 +1,7 @@
-import { formatMoney, type PlannedActivity } from "../simulation/simulation";
+import {
+  activityEarnings,
+  type PlannedActivity,
+} from "../simulation/simulation";
 import { termFor } from "../ui/tooltips";
 
 interface ActivitySelectProps {
@@ -21,23 +24,9 @@ export function describeActivity({
     : description;
 }
 
-/**
- * An Activity as its choice names it, with what it earns over a whole Turn in each of Science, Public Support and
- * Research Grant if it's research, or the samples it collects if it caches them, so that the choices can be compared.
- */
-function activityLabel({
-  name,
-  earnsPerTurn,
-  cachesPerTurn,
-}: PlannedActivity): string {
-  if (earnsPerTurn) {
-    const { science, publicSupport, researchGrantMillions } = earnsPerTurn;
-    return `${name}: ${String(science)} Science, ${String(publicSupport)} Public Support and ${formatMoney(researchGrantMillions)} Research Grant a Turn`;
-  }
-  return cachesPerTurn
-    ? `${name}: ${String(cachesPerTurn.samples)} samples a Turn`
-    : name;
-}
+/** An Activity as its choice names it, with what it earns a Turn, leaving out what it earns none of, so that the choices can be compared. */
+const activityLabel = (activity: PlannedActivity) =>
+  `${activity.name}: ${activityEarnings(activity)}`;
 
 /** The choice of what one Asset does, each Activity with what it earns a Turn. */
 export function ActivitySelect({

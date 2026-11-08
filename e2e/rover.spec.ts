@@ -63,12 +63,12 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   await expect(page.getByTestId("research-earnings")).toHaveText(
     "Ongoing Research for a whole Turn: Soil analysis earns 80 Science and 9 Public Support, and pays a $800M Research Grant. Long traverse earns 160 Science and 14 Public Support.",
   );
-  // Each Activity says what it earns a Turn, in each of Science, Public Support and Research Grant.
+  // Each Activity says what it earns a Turn, in each of Science, Public Support and Research Grant that it earns any of.
   await expect(activity.getByRole("option")).toHaveText([
-    "Soil analysis: 80 Science, 9 Public Support and $800M Research Grant a Turn",
-    "Long traverse: 160 Science, 14 Public Support and $0M Research Grant a Turn",
-    "Sample caching: 10 samples a Turn",
-    "Nothing",
+    "Soil analysis: earns 80 Science, 9 Public Support and $800M Research Grant a Turn",
+    "Long traverse: earns 160 Science and 14 Public Support a Turn",
+    "Sample caching: collects 10 samples a Turn",
+    "Nothing: earns nothing",
   ]);
   // The longer Service Life says the Research Grants its days would earn with the Activity chosen, against its cost
   // and Upkeep.
@@ -153,7 +153,7 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
       .getByRole("option")
       .first(),
   ).toHaveText(
-    "Soil analysis: 80 Science, 9 Public Support and $800M Research Grant a Turn",
+    "Soil analysis: earns 80 Science, 9 Public Support and $800M Research Grant a Turn",
   );
   await expect(page.getByTestId("milestones")).toContainText(
     "First rover on Mars",

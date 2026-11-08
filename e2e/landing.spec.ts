@@ -190,9 +190,9 @@ test("turns Surveying off, sees no Survey that Turn, keeps that through a reload
   const activity = page.getByLabel("Activity for Pathfinder Orbiter");
   await expect(activity).toHaveValue("survey");
   await expect(activity.getByRole("option")).toHaveText([
-    "Survey",
-    "Orbital research: 80 Science, 6 Public Support and $0M Research Grant a Turn",
-    "Nothing",
+    "Survey: earns nothing",
+    "Orbital research: earns 80 Science and 6 Public Support a Turn",
+    "Nothing: earns nothing",
   ]);
   await activity.selectOption("nothing");
   expect(await termsWithoutTooltips(page)).toEqual([]);

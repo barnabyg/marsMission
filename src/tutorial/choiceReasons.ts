@@ -1,4 +1,5 @@
 import {
+  activityEarnings,
   formatDays,
   formatMoney,
   formatTurns,
@@ -41,33 +42,56 @@ export function longestCosts(asset: PlannedAsset): string {
   return `${asset.name}'s longest Service Life, ${formatDays(longest.days)}, would cost ${formatMoney(longest.costMillions)}.`;
 }
 
+/** A measure of what an Activity earns a Turn, and how a reason claims the lead on it. */
+interface Measure {
+  of: (activity: PlannedActivity) => number;
+  format: (value: number) => string;
+  leads: string;
+  none: string;
+}
+
+const measures: Measure[] = [
+  {
+    of: ({ earnsPerTurn }) => earnsPerTurn?.researchGrantMillions ?? 0,
+    format: formatMoney,
+    leads: "pays the biggest Research Grant",
+    none: "pay none",
+  },
+  {
+    of: ({ earnsPerTurn }) => earnsPerTurn?.science ?? 0,
+    format: String,
+    leads: "earns the most Science",
+    none: "earn none",
+  },
+  {
+    of: ({ earnsPerTurn }) => earnsPerTurn?.publicSupport ?? 0,
+    format: String,
+    leads: "earns the most Public Support",
+    none: "earn none",
+  },
+];
+
 /**
- * Why this research Activity is the one for an Asset, in what each Activity's choice shows it earns a Turn: the biggest
- * Research Grant if it pays one, or else the most Science, against the best of the others.
+ * Why this Activity is the one for an Asset, in what each Activity's choice shows it earns a Turn: the first of
+ * Research Grant, Science and Public Support on which it earns more than any other, against the best of the others.
+ * One that leads on none of them says only what it earns or collects.
  */
 export function bestActivityReason(
   assetName: string,
   chosen: PlannedActivity,
   activities: PlannedActivity[],
 ): string {
-  const others = activities.filter(
-    ({ id, earnsPerTurn }) => id !== chosen.id && earnsPerTurn,
+  const others = activities.filter(({ id }) => id !== chosen.id);
+  const lead = measures.find(
+    ({ of }) =>
+      of(chosen) > 0 && others.every((other) => of(other) < of(chosen)),
   );
-  const grant = (activity: PlannedActivity) =>
-    activity.earnsPerTurn?.researchGrantMillions ?? 0;
-  const science = (activity: PlannedActivity) =>
-    activity.earnsPerTurn?.science ?? 0;
-  const pays = grant(chosen) > 0;
-  const measure = pays ? grant : science;
-  const [best] = others.toSorted(
-    (first, second) => measure(second) - measure(first),
-  );
-  const format = pays ? formatMoney : String;
+  if (!lead) return `${chosen.name} ${activityEarnings(chosen)}.`;
+  const { of, format, leads, none } = lead;
+  const [best] = others.toSorted((first, second) => of(second) - of(first));
   const against =
-    best && measure(best) > 0
-      ? `against ${format(measure(best))} for ${best.name}`
-      : `where the others ${pays ? "pay" : "earn"} none`;
-  return pays
-    ? `${chosen.name} pays the biggest Research Grant of ${assetName}'s Activities: ${formatMoney(grant(chosen))} a Turn, ${against}.`
-    : `${chosen.name} earns the most Science of ${assetName}'s Activities: ${String(science(chosen))} a Turn, ${against}.`;
+    best && of(best) > 0
+      ? `against ${format(of(best))} for ${best.name}`
+      : `where the others ${none}`;
+  return `${chosen.name} ${leads} of ${assetName}'s Activities: ${format(of(chosen))} a Turn, ${against}.`;
 }
