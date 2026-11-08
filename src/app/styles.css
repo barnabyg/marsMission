@@ -37,6 +37,12 @@
   --pressed: #10131d;
   --disabled: #2b2f3a;
   --disabled-text: #7d8394;
+  /* Everything Tutorial mode says (src/ui/tutorial.css): a violet "advisor" colour, unlike the accent, the focus ring
+     and the gauges' green, amber and red. */
+  --tutorial-accent: #b79cff;
+  --tutorial-tint: #282045;
+  --tutorial-reason: #c9bff0;
+  --tutorial-on-accent: #15111f;
 }
 
 * {

@@ -1,14 +1,7 @@
 /* The tutorial's own voice: everything Tutorial mode says, in Planning and Mission Mode, carries the class
    tutorial-voice, so a player can tell its advice from the game's own panels at a glance. Only what the tutorial
    renders carries it, so with Tutorial mode off none of this shows. Contrast against the tint is WCAG AA or better:
-   text 12.6:1, reasons 8.8:1, muted text 6.5:1 and the badge 8.1:1. */
-:root {
-  /* A violet "advisor" colour, unlike the game's orange accent, the blue focus ring and the gauges' green, amber and red. */
-  --tutorial-accent: #b79cff;
-  --tutorial-tint: #282045;
-  --tutorial-reason: #c9bff0;
-  --tutorial-on-accent: #15111f;
-}
+   text 12.6:1, reasons 8.8:1, muted text 6.5:1 and the badge 8.1:1. Its colours are with the others in styles.css. */
 
 .tutorial-voice {
   background: var(--tutorial-tint);
@@ -19,6 +12,8 @@
 
 /* The same badge on every block. It is only seen: each block already says in words that it is Tutorial mode. */
 .tutorial-voice::before {
+  /* The plain line is for browsers without alternative text for content, which drop the line after it. */
+  content: "Tutorial";
   content: "Tutorial" / "";
   display: block;
   width: fit-content;
