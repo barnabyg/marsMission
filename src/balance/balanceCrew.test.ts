@@ -451,28 +451,29 @@ describe("solar particle events with Crew aboard", () => {
       },
     },
   };
-  const flyingCrew = strategies.filter(({ name }) => name.includes("Crew"));
-
-  // It plays every strategy that flies Crew, which takes longer than a test usually may now that bases fly Crew too.
-  it(
-    "are a kind of Decision Point of their own, with rows of their own in the report",
-    {
-      timeout: 30_000,
-    },
-    () => {
-      const report = balanceReport(stormy, 5, flyingCrew);
-      expect(report).toMatch(
-        /Decision Points: .*solar particle event with Crew \d+\.\d/,
-      );
-      const rows = report
-        .split("\n")
-        .filter((line) => line.startsWith("solar particle event with Crew"))
-        .map((line) => line.trim().split(/\s{2,}/));
-      expect(rows.map(([kind, answer]) => [kind, answer])).toContainEqual([
-        "solar particle event with Crew",
-        "safeMode",
-      ]);
-      for (const row of rows) expect(row).toHaveLength(7);
-    },
+  // One strategy that goes into safe mode and one that carries on, rather than every strategy that flies Crew, which
+  // takes seconds.
+  const answering = strategies.filter(({ name }) =>
+    [
+      "big Program: land Crew, least Supplies",
+      "big Program: land Crew, carry on through radiation",
+    ].includes(name),
   );
+
+  it("are a kind of Decision Point of their own, with rows of their own in the report", () => {
+    expect(answering).toHaveLength(2);
+    const report = balanceReport(stormy, 5, answering);
+    expect(report).toMatch(
+      /Decision Points: .*solar particle event with Crew \d+\.\d/,
+    );
+    const rows = report
+      .split("\n")
+      .filter((line) => line.startsWith("solar particle event with Crew"))
+      .map((line) => line.trim().split(/\s{2,}/));
+    expect(rows.map(([kind, answer]) => [kind, answer])).toEqual([
+      ["solar particle event with Crew", "safeMode"],
+      ["solar particle event with Crew", "carryOn"],
+    ]);
+    for (const row of rows) expect(row).toHaveLength(7);
+  });
 });
