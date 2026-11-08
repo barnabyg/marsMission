@@ -83,6 +83,7 @@ export const tooltips = {
     "An Asset that lands at a Landing Site and houses the Crew there, on each day it operates, whatever its Activity: it slows the Health they lose to time at Mars, and holds Supplies for them, which they draw on once their own run out and which Crew landing there top up. Its Benefit tag in Planning Mode says how many more days it would give a Crew member at Mars.",
   "Mars lab":
     "An Asset that lands at a Landing Site and studies the samples that rovers and Crew there bring in, on each day it operates, whatever its Activity, raising the Research Grants their Ongoing Research pays. Their Science and Public Support stay as they are. Its Benefit tag in Planning Mode says how much money it would add over a whole Turn.",
+  Base: "Assets working together at one Landing Site, such as a fuel plant, a habitat and a Mars lab, whose Benefits help the Crew and rovers there. It is not an Asset of its own, and has nothing to do with Base funding.",
   "Sample caching":
     "An Activity for a rover: collecting samples of rock and soil at its Landing Site, which stay there from Turn to Turn until an ascent vehicle or Crew coming home take them. It earns no Science until they reach Earth, where each earns Science and the first are a Milestone.",
   "Ascent vehicle":

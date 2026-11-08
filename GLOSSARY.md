@@ -127,11 +127,15 @@ _Avoid_: Return fuel, ascent fuel
 
 **Habitat**:
 An Asset that lands at a Landing Site and houses the Crew there, on each day it operates, whatever its Activity: it slows the Health they lose to time at Mars, and holds Supplies for them, which they draw on once their own run out and which Crew landing there top up. Its Benefit tag in Planning Mode says how many more days it would give a Crew member at Mars.
-_Avoid_: Base, outpost, hab module
+_Avoid_: Outpost, hab module
 
 **Mars lab**:
 An Asset that lands at a Landing Site and studies the samples that rovers and Crew there bring in, on each day it operates, whatever its Activity, raising the Research Grants their Ongoing Research pays. Their Science and Public Support stay as they are. Its Benefit tag in Planning Mode says how much money it would add over a whole Turn.
 _Avoid_: Laboratory, research base
+
+**Base**:
+Assets working together at one Landing Site, such as a fuel plant, a habitat and a Mars lab, whose Benefits help the Crew and rovers there. It is not an Asset of its own, and has nothing to do with Base funding.
+_Avoid_: Colony, settlement
 
 **Activity**:
 What an Asset, or all the Crew in one place at Mars, is given to do for a Turn, such as soil analysis, a Survey or nothing. An Asset or Crew keep their Activity into later Turns until the player changes it.
