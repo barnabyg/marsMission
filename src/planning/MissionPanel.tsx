@@ -93,6 +93,15 @@ export function MissionPanel({
               }
               onCarriedChange={choices.setCarried}
               onChoicesChange={choices.changeAssetChoices}
+              detailsOf={(assetId) =>
+                choices.plannedAssets.find(
+                  (planned) => planned.assetId === assetId,
+                ) ??
+                simulation.previewAssets(program, {
+                  launchVehicleId: choices.launchVehicleId,
+                  assetIds: [assetId],
+                })[0]
+              }
             >
               <MissionCrew
                 crewedMission={view.crewedMission}

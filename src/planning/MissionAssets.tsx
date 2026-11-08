@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type {
   AssetChoices,
   PlannedActivity,
   PlannedAsset,
   ProgramView,
 } from "../simulation/simulation";
+import { AssetDetails } from "./AssetDetails";
 import { MissionAssetChoice } from "./MissionAssetChoice";
 import type { Addition, Fit } from "./missionFit";
 import {
@@ -24,6 +25,8 @@ interface MissionAssetsProps {
   fitOf: (addition: Addition) => Fit;
   onCarriedChange: (assetId: string, carried: boolean) => void;
   onChoicesChange: (assetId: string, choices: AssetChoices) => void;
+  /** An Asset's Service Life, Activities and Reliability, as on the Mission if it's ticked, or on its own if it isn't. */
+  detailsOf: (assetId: string) => PlannedAsset | undefined;
   /** The choice of Crew, shown after the Assets. */
   children: ReactNode;
 }
@@ -37,8 +40,12 @@ export function MissionAssets({
   fitOf,
   onCarriedChange,
   onChoicesChange,
+  detailsOf,
   children,
 }: MissionAssetsProps) {
+  const [shownId, setShownId] = useState<string | null>(null);
+  const shown = view.assets.find(({ id }) => id === shownId);
+  const shownPlan = shown && detailsOf(shown.id);
   return (
     <>
       {/* The step's heading names the Assets, so the group needs no legend of its own. */}
@@ -61,6 +68,9 @@ export function MissionAssets({
             onChoicesChange={(choices) => {
               onChoicesChange(asset.id, choices);
             }}
+            onShowDetails={() => {
+              setShownId(asset.id);
+            }}
           />
         ))}
         {children}
@@ -75,6 +85,15 @@ export function MissionAssets({
         plannedAssets.some(({ activityId, activities }) =>
           isSurveying(activityId, activities),
         ) && <NothingLeftToSurvey />}
+      {shown && shownPlan && (
+        <AssetDetails
+          asset={shown}
+          planned={shownPlan}
+          onClose={() => {
+            setShownId(null);
+          }}
+        />
+      )}
     </>
   );
 }

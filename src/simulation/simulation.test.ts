@@ -40,6 +40,19 @@ describe("starting a Program", () => {
       "test-future-orbiter",
     ]);
   });
+
+  it("describes each Asset on offer, with what keeping it at Mars costs", () => {
+    const { simulation, program } = setup();
+    const { assets } = simulation.readProgram(program);
+    expect(assets.find(({ id }) => id === "test-fuel-plant")).toMatchObject({
+      description: "A test fuel plant.",
+      upkeepMillionsPerTurn: 10,
+    });
+    // An Asset with no Upkeep in the data files costs nothing to keep.
+    expect(
+      assets.find(({ id }) => id === "test-orbiter")?.upkeepMillionsPerTurn,
+    ).toBe(0);
+  });
 });
 
 describe("validating a plan", () => {

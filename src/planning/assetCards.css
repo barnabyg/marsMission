@@ -185,3 +185,60 @@
 .panel .return-vehicle-choice label {
   min-width: 0;
 }
+
+/* The button that opens an Asset's details, in the card's top corner, clear of its name. */
+.asset-card {
+  position: relative;
+}
+
+.panel .asset-card > .asset-card-title {
+  padding-right: 1.6rem;
+}
+
+.asset-card > .asset-info {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.45rem;
+  display: grid;
+  place-items: center;
+  padding: 0.15rem;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 1.05em;
+  cursor: pointer;
+}
+
+.asset-card > .asset-info:hover,
+.asset-card > .asset-info:focus-visible {
+  color: var(--accent);
+}
+
+/* An Asset's details: what it is in words, then its figures, each name beside its value. */
+.asset-details {
+  max-width: 48rem;
+}
+
+.asset-details dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.5rem 1.2rem;
+  margin: 1rem 0 0;
+}
+
+.asset-details dl > div {
+  display: contents;
+}
+
+.asset-details dt {
+  color: var(--muted);
+}
+
+.asset-details dd {
+  margin: 0;
+}
+
+.asset-details ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.2rem;
+}

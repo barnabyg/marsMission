@@ -30,11 +30,14 @@ interface MissionAssetChoiceProps {
   fit: Fit;
   onCarriedChange: (carried: boolean) => void;
   onChoicesChange: (choices: AssetChoices) => void;
+  /** Opens the Asset's details, which only read the plan. */
+  onShowDetails: () => void;
 }
 
 /**
  * One Asset the Mission can carry, as a card: a picture of its model, its cost, mass, Technology Readiness, Benefit and how many are at Mars,
  * greyed out, with the reason on hovering, when it can't be ticked. Ticking it reveals its Activity and Service Life; its Reliability is with the Mission Events'.
+ * Its info button opens its details.
  */
 export function MissionAssetChoice({
   asset,
@@ -44,6 +47,7 @@ export function MissionAssetChoice({
   fit,
   onCarriedChange,
   onChoicesChange,
+  onShowDetails,
 }: MissionAssetChoiceProps) {
   const flies = canFly(asset);
   const reasonId = useId();
@@ -85,6 +89,16 @@ export function MissionAssetChoice({
         />
         {asset.name}
       </label>
+      {/* Outside the label, so that it never ticks the Asset, and open even when the Asset can't be ticked. */}
+      <button
+        type="button"
+        className="asset-info"
+        aria-label={`About ${asset.name}`}
+        title={`About ${asset.name}`}
+        onClick={onShowDetails}
+      >
+        <Icon name="info" />
+      </button>
       <div className="asset-card-facts">
         <span data-testid="asset-cost">
           <Icon name="coins" label="Cost" />

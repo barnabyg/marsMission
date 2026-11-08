@@ -130,8 +130,10 @@ export function programView(
       id: asset.id,
       name: asset.name,
       kind: asset.kind,
+      description: asset.description,
       costMillions: costOf(program, asset),
       massTonnes: asset.massTonnes,
+      upkeepMillionsPerTurn: asset.upkeepMillionsPerTurn ?? 0,
       landsAtSite: asset.landsAtSite === true,
       technologyReadiness: readinessOf(program, asset),
       // An Asset gives a Benefit by raising something for others, by making something at its Landing Site or by housing
