@@ -17,13 +17,22 @@ for (const speed of ["1x", "10x"]) {
   test(`plays each sound with what is on screen at ${speed}`, async ({
     page,
   }) => {
-    // Over 5 s: the 1x case watches a whole Turn on purpose, because sounds have to match the screen at both speeds.
+    // Over 5 s: the 1x case plays every sound at 1x on purpose, because sounds have to match the screen at both speeds.
     await listenForSounds(page);
     const problems = watchForProblems(page);
     await page.goto(`/?seed=${successSeed}`);
     await chooseAssets(page, ["Pathfinder Orbiter"]);
     await page.getByRole("button", { name: "Launch Mission" }).click();
     await page.getByRole("button", { name: speed }).click();
+    // Once the last sound has played, the rest of the Turn plays at 10x, which would still hear any sound after it.
+    await expect
+      .poll(async () => (await soundsHeard(page)).length, { intervals: [100] })
+      .toBeGreaterThanOrEqual(3);
+    await page.evaluate(() => {
+      [...document.querySelectorAll("button")]
+        .find((button) => button.textContent === "10x")
+        ?.click();
+    });
     await expect(page.getByTestId("turn-summary")).toBeVisible();
 
     const heard = await soundsHeard(page);
