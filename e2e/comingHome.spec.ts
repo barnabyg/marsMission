@@ -16,6 +16,7 @@ import {
   missionViewport,
   overrideProgramData,
   pauseAtEvent,
+  playFastUntil,
   soundsHeard,
   termsWithoutTooltips,
   watchForProblems,
@@ -163,9 +164,10 @@ test("shows round-trip Crew heading home from Mars orbit in the solar system, th
     "transEarthInjection",
   );
 
-  // At Earth, Mission Mode moves to the spacecraft view for Earth entry, ending in a splashdown.
+  // At Earth, Mission Mode moves to the spacecraft view for Earth entry, ending in a splashdown. Earth entry is on 24
+  // January 2036, and the Turn is slowed to 1x well before then, so there is time left in it for the whole sequence.
   const parachutes = holdSceneAt(page, "earthEntry", "descending");
-  await page.getByRole("button", { name: "1x" }).click();
+  await playFastUntil(page, "24 October 2035");
   await parachutes;
   await expect(currentView(page)).toHaveText("Spacecraft");
   await expect(page.getByTestId("spacecraft-status")).toHaveText(
