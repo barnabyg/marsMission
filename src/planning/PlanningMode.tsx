@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SaveSlots } from "../save/SaveSlots";
 import type { SaveStore } from "../save/saveStore";
+import type { TutorialEnd } from "../tutorial/tutorial";
 import {
   type Program,
   type Simulation,
@@ -13,7 +14,7 @@ import { MissionPanel } from "./MissionPanel";
 import { OperatingPanel } from "./OperatingPanel";
 import { StatusBar } from "./StatusBar";
 import { TutorialAdvice } from "./TutorialAdvice";
-import { TutorialEnding, type TutorialEnd } from "./TutorialEnding";
+import { TutorialEnding } from "./TutorialEnding";
 import { TutorialPanel } from "./TutorialPanel";
 import { useTutorialAdvice } from "./useTutorialAdvice";
 import { useMissionPlan } from "./useMissionPlan";
@@ -34,8 +35,6 @@ interface PlanningModeProps {
   onSubmit: (plan: TurnPlan) => void;
   /** Ends this Program and starts a new one straight away. */
   onRestart: () => void;
-  /** Whether this is the Program's first Planning session since it started, which offers Tutorial mode. */
-  firstSession: boolean;
   onTutorialChange: (on: boolean) => void;
 }
 
@@ -52,7 +51,6 @@ export function PlanningMode({
   onLoad,
   onSubmit,
   onRestart,
-  firstSession,
   onTutorialChange,
 }: PlanningModeProps) {
   const view = simulation.readProgram(program);
@@ -153,7 +151,7 @@ export function PlanningMode({
         <div className="planning-side">
           <TutorialPanel
             tutorial={view.tutorial}
-            firstSession={firstSession}
+            firstTurn={view.turnNumber === 1}
             onTutorialChange={onTutorialChange}
           >
             {advice && <TutorialAdvice advice={advice} />}

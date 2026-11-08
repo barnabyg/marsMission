@@ -3,12 +3,12 @@ import { Dialog } from "./Dialog";
 import { GameText } from "./GameText";
 
 interface TurnOffTutorialProps {
-  /** Whether the Program can't turn it on again, which it can only on its first Planning session. */
+  /** Whether the Program can't turn it on again, which it can only on its first Turn. */
   forGood: boolean;
   onTurnOff: () => void;
 }
 
-/** Turns tutorial mode off, asking first when that is for good. */
+/** Turns Tutorial mode off, asking first when that is for good. */
 export function TurnOffTutorial({ forGood, onTurnOff }: TurnOffTutorialProps) {
   const [asking, setAsking] = useState(false);
   return (
@@ -20,7 +20,7 @@ export function TurnOffTutorial({ forGood, onTurnOff }: TurnOffTutorialProps) {
           else onTurnOff();
         }}
       >
-        Turn off tutorial mode
+        Turn off Tutorial mode
       </button>
       {asking && (
         <Dialog

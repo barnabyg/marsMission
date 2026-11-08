@@ -13,14 +13,14 @@ const panel = (page: Page) => page.getByTestId("tutorial-panel");
 
 async function turnOn(page: Page): Promise<void> {
   await offer(page)
-    .getByRole("button", { name: "Turn on tutorial mode" })
+    .getByRole("button", { name: "Turn on Tutorial mode" })
     .click();
   await expect(panel(page)).toBeVisible();
 }
 
 /** Turns it off from where the page is, saying yes when asked whether that is for good. */
 async function turnOffForGood(page: Page): Promise<void> {
-  await page.getByRole("button", { name: "Turn off tutorial mode" }).click();
+  await page.getByRole("button", { name: "Turn off Tutorial mode" }).click();
   const dialog = page.getByRole("dialog", { name: "Turn off Tutorial mode" });
   await expect(dialog).toContainText("can't be turned on again");
   await dialog.getByRole("button", { name: "Yes, turn it off" }).click();
@@ -35,12 +35,17 @@ test("offers Tutorial mode as a Program starts, off unless chosen, and keeps the
   await expect(panel(page)).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
+  // Still offered on the first Turn after a reload, before the player has answered it.
+  await page.reload();
+  await page.getByRole("button", { name: "Continue this Program" }).click();
+  await expect(offer(page)).toBeVisible();
+
   await turnOn(page);
   await expect(offer(page)).toHaveCount(0);
 
-  // Turning it off on the first Planning session can be undone, so it doesn't ask.
+  // Turning it off on the first Turn can be undone, so it doesn't ask.
   await panel(page)
-    .getByRole("button", { name: "Turn off tutorial mode" })
+    .getByRole("button", { name: "Turn off Tutorial mode" })
     .click();
   await expect(offer(page)).toBeVisible();
   await turnOn(page);
@@ -54,7 +59,7 @@ test("offers Tutorial mode as a Program starts, off unless chosen, and keeps the
   expect(problems).toEqual([]);
 });
 
-test("offers Tutorial mode only on a new Program's first Planning session, and again after Restart Program", async ({
+test("offers Tutorial mode only on a Program's first Turn, and again after Restart Program", async ({
   page,
 }) => {
   const problems = watchForProblems(page);
@@ -73,7 +78,7 @@ test("offers Tutorial mode only on a new Program's first Planning session, and a
   expect(problems).toEqual([]);
 });
 
-test("turns Tutorial mode off for good in Planning Mode, and it stays off through a Save Slot and the automatic save", async ({
+test("turns Tutorial mode off for good in Planning Mode after the first Turn, and it stays off in the automatic save while a Save Slot keeps it on", async ({
   page,
 }) => {
   const problems = watchForProblems(page);
@@ -85,8 +90,21 @@ test("turns Tutorial mode off for good in Planning Mode, and it stays off throug
     .getByRole("button", { name: "Save here" })
     .click();
   await endTurnWithoutLaunching(page);
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
 
-  // Kept on in the slot saved on Turn 1.
+  // After the first Turn it can't be turned on again, so it asks.
+  await turnOffForGood(page);
+  await expect(panel(page)).toHaveCount(0);
+  await expect(offer(page)).toHaveCount(0);
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+
+  await page.reload();
+  await page.getByRole("button", { name: "Continue this Program" }).click();
+  await expect(page.getByTestId("turn-number")).toHaveText("2");
+  await expect(panel(page)).toHaveCount(0);
+  await expect(offer(page)).toHaveCount(0);
+
+  // Still on in the slot saved on Turn 1.
   await openLoadDialog(page);
   await page
     .getByTestId("save-slot-1")
@@ -95,17 +113,6 @@ test("turns Tutorial mode off for good in Planning Mode, and it stays off throug
   await page.getByRole("button", { name: "Yes, load it" }).click();
   await expect(page.getByTestId("turn-number")).toHaveText("1");
   await expect(panel(page)).toBeVisible();
-  // A loaded Program isn't starting, so it can't be turned on again once off.
-  await turnOffForGood(page);
-  await expect(panel(page)).toHaveCount(0);
-  await expect(offer(page)).toHaveCount(0);
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-
-  await page.reload();
-  await page.getByRole("button", { name: "Continue this Program" }).click();
-  await expect(page.getByTestId("turn-number")).toHaveText("1");
-  await expect(panel(page)).toHaveCount(0);
-  await expect(offer(page)).toHaveCount(0);
   expect(problems).toEqual([]);
 });
 
@@ -122,7 +129,7 @@ test("turns Tutorial mode off in Mission Mode, and it stays off in the next Plan
   await expect(inMission).toContainText("Tutorial mode is on");
 
   await inMission
-    .getByRole("button", { name: "Turn off tutorial mode" })
+    .getByRole("button", { name: "Turn off Tutorial mode" })
     .click();
   const dialog = page.getByRole("dialog", { name: "Turn off Tutorial mode" });
   await dialog.getByRole("button", { name: "Keep it on" }).click();

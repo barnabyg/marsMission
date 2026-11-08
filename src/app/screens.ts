@@ -1,5 +1,4 @@
-import type { TutorialEnd } from "../planning/TutorialEnding";
-import { tutorialStatus } from "../tutorial/tutorial";
+import { tutorialStatus, type TutorialEnd } from "../tutorial/tutorial";
 import {
   manualSlots,
   type LoadedSave,
@@ -25,8 +24,6 @@ export type Screen =
       visit: number;
       /** The plan played on the last Turn, for the tutorial to spot a change of course, or null whenever lastTurn is. */
       lastPlan: TurnPlan | null;
-      /** Whether this is the Program's first Planning session since it started, which offers Tutorial mode. */
-      firstSession: boolean;
       /** How the tutorial ended as this session started, shown once, or null if it didn't end now. */
       tutorialEnding: TutorialEnd | null;
     }
@@ -86,18 +83,13 @@ export function planningScreen(
     saved: saveStore.save("automatic", program),
     // Each visit starts a fresh plan, even when a load returns to the same Program and Turn.
     visit: ++planningVisits,
-    firstSession: false,
     tutorialEnding: ending,
   };
 }
 
-/** A new Program's first Planning session, which offers Tutorial mode. */
 export function newProgramScreen(services: GameServices): Screen {
   const { simulation, newSeed } = services;
-  return {
-    ...planningScreen(services, simulation.startProgram(newSeed())),
-    firstSession: true,
-  };
+  return planningScreen(services, simulation.startProgram(newSeed()));
 }
 
 /**

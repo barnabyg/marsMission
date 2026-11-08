@@ -58,3 +58,6 @@ export function tutorialStatus(view: ProgramView): TutorialStatus {
   }
   return { kind: "inProgress" };
 }
+
+/** How the tutorial ended: at its goal, or once it couldn't recover. */
+export type TutorialEnd = Exclude<TutorialStatus, { kind: "inProgress" }>;

@@ -11,7 +11,7 @@ const panel = (page: Page) => page.getByTestId("tutorial-panel");
 
 async function startTutorial(page: Page, seed: number): Promise<void> {
   await page.goto(`/?seed=${seed}`);
-  await page.getByRole("button", { name: "Turn on tutorial mode" }).click();
+  await page.getByRole("button", { name: "Turn on Tutorial mode" }).click();
   await expect(panel(page)).toBeVisible();
 }
 
@@ -38,7 +38,7 @@ test.describe("at a Decision Point", () => {
     );
     expect(await termsWithoutTooltips(page)).toEqual([]);
 
-    await page.getByRole("button", { name: "Turn off tutorial mode" }).click();
+    await page.getByRole("button", { name: "Turn off Tutorial mode" }).click();
     await page.getByRole("button", { name: "Yes, turn it off" }).click();
     await expect(decisionPoint).toBeVisible();
     await expect(page.getByTestId("decision-advice")).toHaveCount(0);

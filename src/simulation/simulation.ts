@@ -65,11 +65,11 @@ export type {
 } from "./timeline";
 
 export interface Simulation {
-  /** A new Program, with tutorial mode only if the player chose it. */
+  /** A new Program, with Tutorial mode only if the player chose it. */
   startProgram(seed: number, options?: { tutorial?: boolean }): Program;
-  /** Turns tutorial mode on or off. Throws once the tutorial has ended, as it can't be turned on again. */
+  /** Turns Tutorial mode on or off. Throws once the tutorial has ended, as it can't be turned on again. */
   setTutorial(program: Program, on: boolean): Program;
-  /** Ends tutorial mode for good, at its goal or once it couldn't recover. Throws unless it is on. */
+  /** Ends Tutorial mode for good, at its goal or once it couldn't recover. Throws unless it is on. */
   endTutorial(program: Program, outcome: TutorialOutcome): Program;
   /** A Program as data that can be kept and given to restoreProgram later. */
   saveProgram(program: Program): SavedProgram;

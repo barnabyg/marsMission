@@ -21,7 +21,11 @@ export { crewAtBase } from "./base";
 export type { LastTurn } from "./changeOfCourse";
 export { decisionAdvice, type DecisionAdvice } from "./decisions";
 export { stages, type Stage, type StageId } from "./stages";
-export { tutorialStatus, type TutorialStatus } from "./status";
+export {
+  tutorialStatus,
+  type TutorialEnd,
+  type TutorialStatus,
+} from "./status";
 
 export interface PlanningAdvice {
   stage: StageId;

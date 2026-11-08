@@ -75,26 +75,26 @@ describe("the tutorial's advice in Planning Mode", () => {
 });
 
 describe("the Tutorial mode panel", () => {
-  const panel = (kind: "off" | "on", firstSession: boolean) =>
+  const panel = (kind: "off" | "on", firstTurn: boolean) =>
     renderToStaticMarkup(
       <TutorialPanel
         tutorial={{ kind }}
-        firstSession={firstSession}
+        firstTurn={firstTurn}
         onTutorialChange={() => undefined}
       >
         <p>The advice</p>
       </TutorialPanel>,
     );
 
-  it("offers Tutorial mode only on a new Program's first Planning session", () => {
-    expect(panel("off", true)).toContain("Turn on tutorial mode");
+  it("offers Tutorial mode only on a Program's first Turn", () => {
+    expect(panel("off", true)).toContain("Turn on Tutorial mode");
     expect(panel("off", false)).toBe("");
   });
 
   it("shows the advice while it is on, with a way to turn it off", () => {
     const html = panel("on", false);
     expect(html).toContain("The advice");
-    expect(html).toContain("Turn off tutorial mode");
+    expect(html).toContain("Turn off Tutorial mode");
   });
 
   it("shows nothing once the tutorial has ended", () => {
@@ -102,7 +102,7 @@ describe("the Tutorial mode panel", () => {
       renderToStaticMarkup(
         <TutorialPanel
           tutorial={{ kind: "ended", outcome: "goalReached" }}
-          firstSession={false}
+          firstTurn={false}
           onTutorialChange={() => undefined}
         />,
       ),

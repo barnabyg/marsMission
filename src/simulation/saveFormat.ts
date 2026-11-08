@@ -238,7 +238,7 @@ const format12 = format11.extend({
 });
 
 /**
- * Adds tutorial mode: off, on, or ended for good, at its goal or once it couldn't recover. A save from before it has
+ * Adds Tutorial mode: off, on, or ended for good, at its goal or once it couldn't recover. A save from before it has
  * it off.
  */
 const format13 = format12.extend({

@@ -12,7 +12,7 @@ const advice = (page: Page) => page.getByTestId("tutorial-advice");
 
 async function startTutorial(page: Page, seed: number): Promise<void> {
   await page.goto(`/?seed=${seed}`);
-  await page.getByRole("button", { name: "Turn on tutorial mode" }).click();
+  await page.getByRole("button", { name: "Turn on Tutorial mode" }).click();
   await expect(advice(page)).toBeVisible();
 }
 
@@ -51,7 +51,7 @@ for (const size of screenSizes) {
     for (const name of [
       "Launch Mission",
       "End Turn without launching",
-      "Turn off tutorial mode",
+      "Turn off Tutorial mode",
     ]) {
       await expect(page.getByRole("button", { name })).toBeInViewport({
         ratio: 1,

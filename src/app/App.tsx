@@ -54,7 +54,6 @@ export function App({ services, firstScreen }: AppProps) {
         lastPlan={screen.lastPlan}
         tutorialEnding={screen.tutorialEnding}
         saved={screen.saved}
-        firstSession={screen.firstSession}
         onTutorialChange={(on) => {
           setScreen(withTutorial(services, screen, on));
         }}
@@ -92,13 +91,14 @@ export function App({ services, firstScreen }: AppProps) {
 
   if (screen.mode === "mission") {
     const { progress } = screen;
+    const tutorialOn =
+      simulation.readProgram(screen.program).tutorial.kind === "on";
     return (
       <MissionMode
         timeline={progress.timeline}
         decisionPoint={progress.decisionPoint}
         decisionAdvice={
-          progress.decisionPoint &&
-          simulation.readProgram(screen.program).tutorial.kind === "on"
+          progress.decisionPoint && tutorialOn
             ? decisionAdvice(
                 progress.decisionPoint,
                 simulation.readProgram(screen.program),
@@ -106,9 +106,7 @@ export function App({ services, firstScreen }: AppProps) {
               )
             : null
         }
-        tutorialOn={
-          simulation.readProgram(screen.program).tutorial.kind === "on"
-        }
+        tutorialOn={tutorialOn}
         onTutorialOff={() => {
           // The Turn as worked out stays, Timeline and all, so that playback carries on where it is.
           const off = (program: Program) =>

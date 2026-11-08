@@ -1,9 +1,6 @@
-import type { TutorialStatus } from "../tutorial/tutorial";
+import type { TutorialEnd } from "../tutorial/tutorial";
 import { Dialog } from "../ui/Dialog";
 import { GameText } from "../ui/GameText";
-
-/** How the tutorial ended: at its goal, or once it couldn't recover. */
-export type TutorialEnd = Exclude<TutorialStatus, { kind: "inProgress" }>;
 
 interface TutorialEndingProps {
   ending: TutorialEnd;
@@ -21,7 +18,7 @@ export function TutorialEnding({ ending, onClose }: TutorialEndingProps) {
       <div data-testid="tutorial-ending">
         <p>
           <GameText>
-            Crew have landed at a Base, with a fuel plant, a habitat and a Mars
+            Crew have landed at a Base, with a fuel plant, a Habitat and a Mars
             lab working beside them. That was the tutorial's goal, so Tutorial
             mode ends here and the Program carries on without advice.
           </GameText>
