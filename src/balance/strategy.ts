@@ -36,4 +36,12 @@ export interface Strategy {
     view: ProgramView,
     plan: TurnPlan,
   ): DecisionAnswer;
+  /**
+   * For a strategy with a goal, such as the tutorial's: whether a Program has reached it, and whether it can no longer,
+   * going by what the player sees. The report says how often each happens.
+   */
+  goal?: {
+    reached(view: ProgramView): boolean;
+    cantRecover(view: ProgramView): boolean;
+  };
 }
