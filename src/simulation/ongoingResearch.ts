@@ -133,6 +133,21 @@ export function earningsPerTurn(
   return { science, publicSupport, researchGrantMillions: grantMillions };
 }
 
+/**
+ * The Research Grant an Activity would pay over this many days in service, raised by this percentage, as Planning Mode
+ * shows what a longer Service Life would earn. Nothing if it isn't research or pays no Research Grant.
+ */
+export function grantOverDays(
+  catalogue: Catalogue,
+  activity: Activity,
+  days: number,
+  percent = 0,
+): number {
+  return earningsFor(catalogue, activity, [
+    { fromDay: 0, toDay: days, percent },
+  ]).grantMillions;
+}
+
 /** The parts of a stay at Mars, an Asset's or a Crew member's, that aren't spent sheltering. */
 export function daysWorking({
   fromDay,

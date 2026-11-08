@@ -1,7 +1,7 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { largestRaise, type Raise } from "./benefits";
 import { previewCrew, type PlannedCrew } from "./crewView";
-import { earningsPerTurn } from "./ongoingResearch";
+import { earningsPerTurn, grantOverDays } from "./ongoingResearch";
 import { cachesPerTurn } from "./sampleCaching";
 import { daysUntilServiceEnds, type Activity, type Rules } from "./rules";
 import { isFlightProven } from "./technologyReadiness";
@@ -9,6 +9,7 @@ import type {
   PlannedActivity,
   PlannedAsset,
   PlannedMissionEvent,
+  PlannedServiceLife,
   PlannedTrajectory,
 } from "./previews";
 import type { PlannedMission, Program } from "./types";
@@ -28,6 +29,33 @@ export const plannedActivity =
       ...(raise && earnsPerTurn ? { raisedBy: raise } : {}),
     };
   };
+
+/**
+ * The Service Lives on offer for an Asset, each with the days it adds beyond the shortest, in Turns too, and the
+ * Research Grants this Activity would pay over them, raised by this percentage.
+ */
+function plannedServiceLives(
+  catalogue: Catalogue,
+  options: { days: number; costMillions: number }[],
+  activity: Activity,
+  percent = 0,
+): PlannedServiceLife[] {
+  const shortest = Math.min(...options.map(({ days }) => days));
+  const turnDays = catalogue.program.launchWindowIntervalDays;
+  return options.map(({ days, costMillions }) => {
+    const extraDays = days - shortest;
+    return {
+      days,
+      costMillions,
+      extraDays,
+      extraTurns: Math.round((10 * extraDays) / turnDays) / 10,
+      extraGrantMillions:
+        extraDays > 0
+          ? grantOverDays(catalogue, activity, extraDays, percent)
+          : 0,
+    };
+  });
+}
 
 /** What raises surface research with these Assets at Mars, if it is raised, going by the ones operating as the Turn starts. */
 export function surfaceRaise(
@@ -125,18 +153,21 @@ export function createMissionPreviews(catalogue: Catalogue, rules: Rules) {
       );
       return carried.map((asset) => {
         const unproven = !isFlightProven(program, asset);
+        const raise = asset.landsAtSite === true ? raised : null;
         return {
           assetId: asset.id,
           name: asset.name,
           serviceLifeDays: serviceLifeFor(mission, asset).days,
-          serviceLifeOptions: asset.serviceLifeOptions,
+          serviceLifeOptions: plannedServiceLives(
+            catalogue,
+            asset.serviceLifeOptions,
+            activityFor(mission, asset),
+            raise?.percent,
+          ),
           reliabilityLevelId: assetReliabilityFor(mission, asset).id,
           activityId: activityFor(mission, asset).id,
           activities: activitiesOf(asset).map(
-            plannedActivity(
-              catalogue,
-              asset.landsAtSite === true ? raised : null,
-            ),
+            plannedActivity(catalogue, raise),
           ),
           riskBand: riskBandFor(
             inServiceFailureChance(
