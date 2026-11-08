@@ -243,6 +243,43 @@ export function playFastUntil(page: Page, slowFrom: string): Promise<void> {
 }
 
 /**
+ * Plays at 10x until the scene's data attribute, named as `dataset` names it, has a value, as it does once a landing
+ * or another real-time sequence begins, and then at 1x, all from inside the page. A sequence plays for the same real
+ * time at any speed while the Turn's days go on under it, so it wants 1x to fit in the Turn, but the days before it
+ * don't. Hold the Turn in the sequence with holdSequence or holdSceneAt first. Mission Mode must be open already.
+ * Resolves once it has slowed, or once the hold has struck first.
+ */
+export function playFastUntilSequence(
+  page: Page,
+  attribute = "sequence",
+): Promise<void> {
+  return page.evaluate(
+    (name) =>
+      new Promise<void>((resolve) => {
+        const click = (label: string) => {
+          [...document.querySelectorAll("button")]
+            .find((button) => button.textContent === label)
+            ?.click();
+        };
+        const byTestId = (testId: string) =>
+          document.querySelector<HTMLElement>(`[data-testid=${testId}]`);
+        click("10x");
+        requestAnimationFrame(function check() {
+          if (byTestId("current-speed")?.textContent !== "10x") {
+            resolve();
+          } else if (byTestId("mission-scene")?.dataset[name] !== undefined) {
+            click("1x");
+            resolve();
+          } else {
+            requestAnimationFrame(check);
+          }
+        });
+      }),
+    attribute,
+  );
+}
+
+/**
  * Holds the Turn close to the day of the event with this title, getting there at 5x until `slowFrom` and at 1x after
  * it. A frame or two at 5x can be a couple of months on a busy machine, so `slowFrom` wants to be three months or so
  * before the event. Mission Mode must be open already.
