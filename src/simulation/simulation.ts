@@ -48,7 +48,6 @@ export type {
   TurnProgress,
   TurnResult,
   TutorialMode,
-  TutorialOutcome,
 } from "./types";
 export type {
   PlannedActivity,
