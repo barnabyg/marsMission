@@ -28,12 +28,21 @@ float hazeAt(vec3 world) {
 }`;
 
 /**
- * Turns a normal by a placement that may stretch, as a rock or a squashed part is: the inverse of its transpose, so
- * that a flattened shape's sides still face the way they look.
+ * Turns a normal into the world by a placement that may stretch, as a rock or a squashed part is, so that a flattened
+ * shape's sides still face the way they look. Three.js's normalMatrix already undoes the stretch of the model and the
+ * view, and the view, which doesn't stretch, is turned back out by its transpose. A copy's own placement, which turns
+ * and stretches along its axes, is undone by dividing by its stretch squared. This costs a few multiplications at
+ * each corner rather than inverting a matrix there.
  */
 const normalTurn = `
-mat3 normalTurn(mat4 placed) {
-  return transpose(inverse(mat3(placed)));
+vec3 worldNormal(vec3 objectNormal) {
+  vec3 turned = objectNormal;
+  #ifdef USE_INSTANCING
+    mat3 copy = mat3(instanceMatrix);
+    vec3 stretch = vec3(dot(copy[0], copy[0]), dot(copy[1], copy[1]), dot(copy[2], copy[2]));
+    turned = copy * (turned / stretch);
+  #endif
+  return normalize(transpose(mat3(viewMatrix)) * (normalMatrix * turned));
 }`;
 
 const horizon = new Color(...horizonColor);
@@ -103,7 +112,7 @@ export function rockMaterial(): ShaderMaterial {
       void main() {
         mat4 placed = modelMatrix * instanceMatrix;
         vec4 world = placed * vec4(position, 1.0);
-        vec3 normalOut = normalize(normalTurn(placed) * normal);
+        vec3 normalOut = worldNormal(normal);
         float light = 0.35 + 1.05 * max(dot(normalOut, toSun), 0.0);
         vColor = mix(instanceColor * light, horizon, hazeAt(world.xyz));
         gl_Position = projectionMatrix * viewMatrix * world;
@@ -167,7 +176,7 @@ const partVertex = `
       placed = modelMatrix * instanceMatrix;
     #endif
     vec4 world = placed * vec4(position, 1.0);
-    vec3 normalOut = normalize(normalTurn(placed) * normal);
+    vec3 normalOut = worldNormal(normal);
     vec3 toCamera = normalize(cameraPosition - world.xyz);
     vFront = litFacing(normalOut, toCamera);
     #ifdef DOUBLE_SIDED
