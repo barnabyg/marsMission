@@ -59,7 +59,8 @@ export function planningAdvice(
   };
 }
 
-export const tutorialName = "tutorial: build a Base and land Crew there";
+export const tutorialName =
+  "tutorial: build a Base, land Crew there and bring them home";
 
 /** The tutorial's advice played as a strategy, for the balance runs: it always follows its own advice. */
 export const tutorialStrategy: Strategy = {
