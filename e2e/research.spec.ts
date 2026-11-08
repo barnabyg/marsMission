@@ -19,7 +19,6 @@ test.use({ viewport: missionViewport });
 test("sets a research Activity, sees what it earns, and sees the Science in the Turn summary", async ({
   page,
 }) => {
-  // Over 5 s: ends two Turns, because the Service Life only runs out in the second.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${orbiterLastsSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
@@ -32,6 +31,8 @@ test("sets a research Activity, sees what it earns, and sees the Science in the 
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
 
+  // At 5x, as at 1x it takes some seconds to arrive, and the rest of the Turn still outlasts the check and the click.
+  await page.getByRole("button", { name: "5x" }).click();
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
     "Pathfinder Orbiter: Orbital research",
   );
