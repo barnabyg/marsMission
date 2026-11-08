@@ -67,11 +67,23 @@ describe("the report", () => {
       ?.trim()
       .split(/\s+/);
 
-  // It plays every strategy twice, which takes about 2.5 s on its own, more with each strategy added, and over Vitest's
-  // 5 s default beside the rest of the tests at below-normal priority.
-  it("gives the same bytes every time", { timeout: 30_000 }, () => {
+  it("gives the same bytes every time", () => {
     expect(balanceReport(files, 3, [launchNothing])).toBe(report);
-    expect(balanceReport(files, 3)).toBe(balanceReport(files, 3));
+    // Playing every strategy twice takes seconds, so this plays those whose play varies most: Crew at a base, sample
+    // caches, Contingencies and Surveys.
+    const varied = strategies.filter(({ name }) =>
+      [
+        "big Program: build a base, land Crew there and bring them home",
+        "big Program: land Crew beside a habitat",
+        "big Program: cache samples and send them home",
+        "steady: Contingency, used",
+        "survey first",
+      ].includes(name),
+    );
+    expect(varied).toHaveLength(5);
+    expect(balanceReport(files, 3, varied)).toBe(
+      balanceReport(files, 3, varied),
+    );
   });
 
   it("explains the Turn table's share and money columns before the tables", () => {

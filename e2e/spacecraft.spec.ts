@@ -1,4 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
+import { sequenceTimeScale } from "../playwright.config";
+import {
+  lossShownMs,
+  particlesShownMs,
+} from "../src/mission/spacecraft/spacecraft";
 import {
   chooseAssets,
   holdTurnWhenShown,
@@ -119,7 +124,7 @@ for (const reachedBy of ["10x", "End Turn"] as const) {
   test(`moves to the spacecraft view for a solar particle event, reached by ${reachedBy}, and respects a later choice`, async ({
     page,
   }) => {
-    // Over 5 s: waits 7 s on purpose, to show that a Decision Point waiting for an answer holds everything.
+    // Over 5 s: waits on purpose, to show that a Decision Point waiting for an answer holds everything.
     const problems = watchForProblems(page);
     await page.goto(`/?seed=${solarParticleEventSeed}`);
     await chooseAssets(page, ["Pathfinder Orbiter"]);
@@ -142,8 +147,8 @@ for (const reachedBy of ["10x", "End Turn"] as const) {
     );
     expect(await termsWithoutTooltips(page)).toEqual([]);
 
-    // Waiting for an answer holds it all, for as long as it takes.
-    await page.waitForTimeout(7000);
+    // Waiting for an answer holds it all, for as long as it takes: here a second longer than the event shows for.
+    await page.waitForTimeout(particlesShownMs / sequenceTimeScale + 1000);
     await expect(currentView(page)).toHaveText("Spacecraft");
     await expect(scene(page)).toHaveAttribute(
       "data-solar-particle-event",
@@ -181,8 +186,8 @@ test("moves to the spacecraft view when the transfer burn fails, and then on to 
   await expect(carried(page)).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  // Pausing holds it on screen.
-  await page.waitForTimeout(5000);
+  // Pausing holds it on screen, here for a second longer than it shows for.
+  await page.waitForTimeout(lossShownMs / sequenceTimeScale + 1000);
   await expect(currentView(page)).toHaveText("Spacecraft");
 
   await page.getByRole("button", { name: "1x" }).click();

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { missionTimeScale } from "./devSettings";
+import { missionTimeScale, sequenceTimeScale } from "./devSettings";
 import {
   advancePlayback,
   changeSpeed,
@@ -14,7 +14,10 @@ import {
 /** Longest step for one frame, so that returning to a hidden tab doesn't jump the Turn forward. */
 const maxFrameMs = 250;
 
-const timeScale = missionTimeScale(import.meta.env);
+// Real time runs `sequenceScale` times faster for what plays in real time, and game days are slowed by as much to
+// keep to the mission time scale.
+const sequenceScale = sequenceTimeScale(import.meta.env);
+const timeScale = missionTimeScale(import.meta.env) / sequenceScale;
 
 interface Playback {
   state: PlaybackState;
@@ -72,7 +75,7 @@ export function usePlayback(
       previous = now;
       setStored((current) =>
         changed(current, timeline, (state) =>
-          advancePlayback(state, timeline, realMs, timeScale),
+          advancePlayback(state, timeline, realMs * sequenceScale, timeScale),
         ),
       );
       frame = requestAnimationFrame(tick);

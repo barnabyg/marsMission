@@ -7,6 +7,12 @@ const productionOutDir = "node_modules/.cache/e2e-build";
 
 export const productionBaseURL = `http://localhost:${productionPort}`;
 
+/**
+ * How many times faster than in play a landing, a rendezvous and the like run on the development server, which halves
+ * the seconds a test waits on one. Tests that wait on purpose for one to be over divide by it.
+ */
+export const sequenceTimeScale = 2;
+
 export default defineConfig({
   testDir: "e2e",
   // Every test opens its own browser context, so its saves and routes stay its own, and the workers can share the two servers.
@@ -39,7 +45,10 @@ export default defineConfig({
       reuseExistingServer: false,
       stdout: "ignore",
       // Development-only: runs a Turn in 12 s at 1x, quick enough for browser tests but slow enough to pause.
-      env: { VITE_MISSION_TIME_SCALE: "100" },
+      env: {
+        VITE_MISSION_TIME_SCALE: "100",
+        VITE_SEQUENCE_TIME_SCALE: String(sequenceTimeScale),
+      },
     },
     {
       // The same kind of build the playtest command runs.
