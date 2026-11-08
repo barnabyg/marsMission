@@ -11,7 +11,7 @@
   },
   "solarParticleEvent": {
     "name": "Solar particle event",
-    "chancePerDayInFlight": 0.0012,
+    "chancePerDayInFlight": 0.0003,
     "safeModeServiceLifeLossPercent": 15,
     "damageChance": 0.2,
     "damageServiceLifeLossPercent": 40,
