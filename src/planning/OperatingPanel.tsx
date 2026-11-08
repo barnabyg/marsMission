@@ -4,7 +4,7 @@ import {
   type ProgramView,
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
-import { ActivitySelect } from "./ActivitySelect";
+import { ActivitySelect, chosenEarnings } from "./ActivitySelect";
 import { SamplesWaiting } from "./SamplesHomeChoice";
 import { WayHomeChoice } from "./WayHomeChoice";
 import {
@@ -90,6 +90,17 @@ export function OperatingPanel({
                       : "No Supplies left"
                   }`}
                 </GameText>
+                <span
+                  className="activity-earnings"
+                  data-testid="activity-earnings"
+                >
+                  <GameText>
+                    {chosenEarnings(
+                      chosenCrewActivities[group.key] ?? group.activityId,
+                      group.activities,
+                    )}
+                  </GameText>
+                </span>
               </span>
               <ActivitySelect
                 assetName={`the Crew in ${group.locationName}`}
@@ -137,6 +148,7 @@ export function OperatingPanel({
             </GameText>
           </p>
           <ResearchEarnings
+            onlyRaises
             activities={[
               ...assets.flatMap(({ activities }) => activities),
               ...crew.flatMap(({ activities }) => activities),
@@ -164,6 +176,21 @@ export function OperatingPanel({
                             : "Service Life ends as this Turn starts"
                       }`}
                     </GameText>
+                    {!ended &&
+                      asset.daysLeft > 0 &&
+                      asset.activities.length > 0 && (
+                        <span
+                          className="activity-earnings"
+                          data-testid="activity-earnings"
+                        >
+                          <GameText>
+                            {chosenEarnings(
+                              chosenActivities[asset.key] ?? asset.activityId,
+                              asset.activities,
+                            )}
+                          </GameText>
+                        </span>
+                      )}
                   </span>
                   {asset.activities.length > 0 ? (
                     <ActivitySelect

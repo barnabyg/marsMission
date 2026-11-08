@@ -82,8 +82,11 @@ for (const size of screenSizes) {
     }) => {
       await openBusyProgram(page);
       await chooseAssets(page, ["Pathfinder Orbiter"]);
-      // One in the Operating at Mars panel, and one for the orbiter on the Mission.
-      await expect(page.getByTestId("research-earnings")).toHaveCount(2);
+      // Each Asset at Mars says what its Activity earns, as does the orbiter on the Mission, with the Mission's rates.
+      await expect(
+        page.getByTestId("operating-assets").getByTestId("activity-earnings"),
+      ).toHaveCount(8);
+      await expect(page.getByTestId("research-earnings")).toHaveCount(1);
       expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
@@ -109,10 +112,8 @@ for (const size of screenSizes) {
         .selectOption("meridian-heavy");
       await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
       await expect(
-        page
-          .locator(".panel", { hasText: "Operating at Mars" })
-          .getByTestId("research-earnings"),
-      ).toContainText("Research Grant");
+        page.getByTestId("operating-assets").getByTestId("activity-earnings"),
+      ).toContainText(["Research Grant"]);
       expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),

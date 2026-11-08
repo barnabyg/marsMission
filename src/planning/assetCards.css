@@ -99,6 +99,13 @@
   color: var(--muted);
 }
 
+/* What the chosen Activity earns, under its choice, which is too narrow to show it. */
+.asset-card-choices .activity-earnings {
+  font-size: var(--text-sm);
+  grid-column: 1 / -1;
+  color: var(--muted);
+}
+
 .panel .asset-card-choices select {
   min-width: 0;
   width: 100%;

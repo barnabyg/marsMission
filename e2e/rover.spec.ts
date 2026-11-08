@@ -70,6 +70,10 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
     "Sample caching: collects 10 samples a Turn",
     "Nothing: earns nothing",
   ]);
+  // The chosen Activity's earnings are written out under its choice, which is too narrow to show them once closed.
+  await expect(row.getByTestId("activity-earnings")).toHaveText(
+    "Soil analysis earns 80 Science, 9 Public Support and $800M Research Grant a Turn.",
+  );
   // The longer Service Life says the Research Grants its days would earn with the Activity chosen, against its cost
   // and Upkeep.
   const life = row.getByLabel("Service Life for Trailblazer Rover");
@@ -81,6 +85,9 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
     "Only Research Grants pay towards a longer Service Life and its Upkeep, as Science and Public Support aren't money.",
   );
   await activity.selectOption("long-traverse");
+  await expect(row.getByTestId("activity-earnings")).toHaveText(
+    "Long traverse earns 160 Science and 14 Public Support a Turn.",
+  );
   await expect(life.getByRole("option").last()).toHaveText(
     "2,800 days: +1,500 days (about 1.9 Turns) earn $0M in Research Grants against $300M and $30M Upkeep",
   );
@@ -145,7 +152,10 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
       .getByTestId("operating-assets")
       .getByLabel("Activity for Trailblazer Rover"),
   ).toHaveValue("long-traverse");
-  // Operating at Mars, too, each Activity says what it earns a Turn.
+  // Operating at Mars, too, each Activity says what it earns a Turn, and the chosen one's earnings are written out.
+  await expect(
+    page.getByTestId("operating-assets").getByTestId("activity-earnings"),
+  ).toHaveText("Long traverse earns 160 Science and 14 Public Support a Turn.");
   await expect(
     page
       .getByTestId("operating-assets")

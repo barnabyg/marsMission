@@ -13,7 +13,7 @@ import {
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
-import { ActivitySelect } from "./ActivitySelect";
+import { ActivitySelect, chosenEarnings } from "./ActivitySelect";
 import { assetImageUrl } from "./assetImages";
 import {
   describeBenefitImpact,
@@ -209,6 +209,11 @@ export function MissionAssetChoice({
               onChoicesChange({ activityId });
             }}
           />
+          <span className="activity-earnings" data-testid="activity-earnings">
+            <GameText>
+              {chosenEarnings(planned.activityId, planned.activities)}
+            </GameText>
+          </span>
           <span>
             <GameText>Service Life</GameText>
           </span>

@@ -28,6 +28,18 @@ export function describeActivity({
 const activityLabel = (activity: PlannedActivity) =>
   `${activity.name}: ${activityEarnings(activity)}`;
 
+/**
+ * What the chosen Activity earns a Turn, written out beside its choice, which is too narrow to show it once closed:
+ * "Soil analysis earns 80 Science, 9 Public Support and $800M Research Grant a Turn."
+ */
+export function chosenEarnings(
+  activityId: string,
+  activities: PlannedActivity[],
+): string {
+  const chosen = activities.find(({ id }) => id === activityId);
+  return chosen ? `${chosen.name} ${activityEarnings(chosen)}.` : "";
+}
+
 /** The choice of what one Asset does, each Activity with what it earns a Turn. */
 export function ActivitySelect({
   assetName,

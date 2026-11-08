@@ -145,6 +145,13 @@
   gap: 1rem;
 }
 
+/* What the chosen Activity earns, on a line of its own under the Asset or Crew it is for. */
+.operating-assets .activity-earnings {
+  font-size: var(--text-sm);
+  display: block;
+  color: var(--muted);
+}
+
 .operating-assets select {
   flex: none;
   min-width: 10rem;
