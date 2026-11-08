@@ -15,7 +15,11 @@ import type { Program, ProgramView } from "./types";
 import { upkeepOf } from "./upkeep";
 
 /** A Program as it starts, before its first Turn. */
-export function newProgram(catalogue: Catalogue, seed: number): Program {
+export function newProgram(
+  catalogue: Catalogue,
+  seed: number,
+  tutorial = false,
+): Program {
   const { firstLaunchWindow, startingMoneyMillions, startingPublicSupport } =
     catalogue.program;
   return {
@@ -42,6 +46,7 @@ export function newProgram(catalogue: Catalogue, seed: number): Program {
     ascentPropellantKg: {},
     habitatSuppliesKg: {},
     samplesAtSites: {},
+    tutorial: { kind: tutorial ? "on" : "off" },
     status: { kind: "active" },
   };
 }
@@ -61,6 +66,7 @@ export function programView(
   );
   return {
     status: program.status,
+    tutorial: program.tutorial,
     nextFundingThreshold: nextThreshold
       ? {
           ...nextThreshold,

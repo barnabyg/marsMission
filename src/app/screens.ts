@@ -21,6 +21,8 @@ export type Screen =
       lastTurn: Program | null;
       saved: boolean;
       visit: number;
+      /** Whether this is the Program's first Planning session since it started, which offers Tutorial mode. */
+      firstSession: boolean;
     }
   | {
       mode: "mission";
@@ -31,6 +33,8 @@ export type Screen =
     }
   | { mode: "turnSummary"; result: TurnResult; lastTurn: Program }
   | { mode: "programSummary"; program: Program };
+
+type PlanningScreen = Extract<Screen, { mode: "planning" }>;
 
 export interface GameServices {
   simulation: Simulation;
@@ -45,7 +49,7 @@ export function planningScreen(
   { saveStore }: GameServices,
   program: Program,
   lastTurn: Program | null = null,
-): Screen {
+): PlanningScreen {
   return {
     mode: "planning",
     program,
@@ -53,12 +57,30 @@ export function planningScreen(
     saved: saveStore.save("automatic", program),
     // Each visit starts a fresh plan, even when a load returns to the same Program and Turn.
     visit: ++planningVisits,
+    firstSession: false,
   };
 }
 
+/** A new Program's first Planning session, which offers Tutorial mode. */
 export function newProgramScreen(services: GameServices): Screen {
   const { simulation, newSeed } = services;
-  return planningScreen(services, simulation.startProgram(newSeed()));
+  return {
+    ...planningScreen(services, simulation.startProgram(newSeed())),
+    firstSession: true,
+  };
+}
+
+/**
+ * The same Planning session with Tutorial mode turned on or off, saved again so that the choice survives closing the
+ * game. The plan being made is kept.
+ */
+export function withTutorial(
+  { simulation, saveStore }: GameServices,
+  screen: PlanningScreen,
+  on: boolean,
+): PlanningScreen {
+  const program = simulation.setTutorial(screen.program, on);
+  return { ...screen, program, saved: saveStore.save("automatic", program) };
 }
 
 /** What opening the game shows: a choice if anything has been saved, and a new Program if not. */

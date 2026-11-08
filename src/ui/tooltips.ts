@@ -106,6 +106,8 @@ export const tooltips = {
     "One of three places where the player can keep a Program by hand, usable only in Planning Mode. It is separate from the automatic save made at the start of each Planning Mode.",
   "Decision Point":
     "A moment in Mission Mode when play pauses for the player to make a limited choice, such as aborting or using a Contingency.",
+  "Tutorial mode":
+    "A choice the player makes as a Program starts, which suggests what to plan in each Planning Mode and how to answer each Decision Point, with the reasons, on a route to landing Crew at a Base. The player can turn it off at any time, and it ends once Crew land at a Base or a Base can no longer be reached.",
   "Go/no-go check":
     "A Decision Point before a landing due while a dust storm is over its Landing Site: go ahead at a raised risk, or hold off until the storm has passed, at a cost in Service Life for each Asset being landed, while Crew being landed use their Supplies for each day held.",
   "Mission Event":

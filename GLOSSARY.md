@@ -209,6 +209,10 @@ _Avoid_: Save file, save game
 A moment in Mission Mode when play pauses for the player to make a limited choice, such as aborting or using a Contingency.
 _Avoid_: Prompt, intervention
 
+**Tutorial mode**:
+A choice the player makes as a Program starts, which suggests what to plan in each Planning Mode and how to answer each Decision Point, with the reasons, on a route to landing Crew at a Base. The player can turn it off at any time, and it ends once Crew land at a Base or a Base can no longer be reached.
+_Avoid_: Guide, hints, help mode
+
 ## Risk
 
 **Go/no-go check**:

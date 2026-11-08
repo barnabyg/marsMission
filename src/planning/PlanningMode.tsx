@@ -12,6 +12,7 @@ import { DevelopmentPanel } from "./DevelopmentPanel";
 import { MissionPanel } from "./MissionPanel";
 import { OperatingPanel } from "./OperatingPanel";
 import { StatusBar } from "./StatusBar";
+import { TutorialPanel } from "./TutorialPanel";
 import { useMissionPlan } from "./useMissionPlan";
 
 interface PlanningModeProps {
@@ -26,6 +27,9 @@ interface PlanningModeProps {
   onSubmit: (plan: TurnPlan) => void;
   /** Ends this Program and starts a new one straight away. */
   onRestart: () => void;
+  /** Whether this is the Program's first Planning session since it started, which offers Tutorial mode. */
+  firstSession: boolean;
+  onTutorialChange: (on: boolean) => void;
 }
 
 type PlanningDialog = "save" | "load" | "restart";
@@ -39,6 +43,8 @@ export function PlanningMode({
   onLoad,
   onSubmit,
   onRestart,
+  firstSession,
+  onTutorialChange,
 }: PlanningModeProps) {
   const view = simulation.readProgram(program);
   const [openDialog, setOpenDialog] = useState<PlanningDialog | null>(null);
@@ -134,6 +140,11 @@ export function PlanningMode({
         />
 
         <div className="planning-side">
+          <TutorialPanel
+            tutorial={view.tutorial}
+            firstSession={firstSession}
+            onTutorialChange={onTutorialChange}
+          />
           <OperatingPanel
             assets={view.operatingAssets}
             crew={view.crew}

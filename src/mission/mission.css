@@ -123,6 +123,13 @@
   padding-left: 1.2rem;
 }
 
+.mission-tutorial {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem 1rem;
+}
+
 /* Three groups: the title, date and view tabs on the left, playback in the centre and End Turn on the right, with the Turn's progress beneath. */
 .mission-bar {
   grid-row: 1;

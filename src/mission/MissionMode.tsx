@@ -8,6 +8,7 @@ import {
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { Icon, type IconName } from "../ui/Icon";
+import { TurnOffTutorial } from "../ui/TurnOffTutorial";
 import { DecisionPointPanel } from "./DecisionPointPanel";
 import { EventsColumn } from "./EventsColumn";
 import { missionViews, viewName, type MissionViewId } from "./missionViews";
@@ -68,6 +69,9 @@ interface MissionModeProps {
   initialSpeed: number;
   onSpeedChange: (speed: number) => void;
   onFinished: () => void;
+  /** Whether Tutorial mode is on, which Mission Mode can turn off. */
+  tutorialOn: boolean;
+  onTutorialOff: () => void;
 }
 
 export function MissionMode({
@@ -77,6 +81,8 @@ export function MissionMode({
   initialSpeed,
   onSpeedChange,
   onFinished,
+  tutorialOn,
+  onTutorialOff,
 }: MissionModeProps) {
   const { state, setSpeed, pause, skipToDecision } = usePlayback(
     timeline,
@@ -282,6 +288,14 @@ export function MissionMode({
             </li>
           ))}
         </ul>
+        {tutorialOn && (
+          <div className="mission-tutorial" data-testid="mission-tutorial">
+            <p>
+              <GameText>Tutorial mode is on.</GameText>
+            </p>
+            <TurnOffTutorial forGood onTurnOff={onTutorialOff} />
+          </div>
+        )}
       </aside>
       {deciding && (
         <DecisionPointPanel

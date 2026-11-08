@@ -4,10 +4,11 @@ import { TurnSummaryScreen } from "../mission/TurnSummaryScreen";
 import { PlanningMode } from "../planning/PlanningMode";
 import { ProgramSummaryScreen } from "../planning/ProgramSummaryScreen";
 import { OpeningScreen } from "../save/OpeningScreen";
-import type { TurnPlan } from "../simulation/simulation";
+import type { Program, TurnPlan } from "../simulation/simulation";
 import {
   newProgramScreen,
   planningScreen,
+  withTutorial,
   type GameServices,
   type Screen,
 } from "./screens";
@@ -50,6 +51,10 @@ export function App({ services, firstScreen }: AppProps) {
         program={program}
         lastTurn={screen.lastTurn}
         saved={screen.saved}
+        firstSession={screen.firstSession}
+        onTutorialChange={(on) => {
+          setScreen(withTutorial(services, screen, on));
+        }}
         saveStore={saveStore}
         onLoad={(loaded) => {
           setScreen(planningScreen(services, loaded));
@@ -88,6 +93,27 @@ export function App({ services, firstScreen }: AppProps) {
       <MissionMode
         timeline={progress.timeline}
         decisionPoint={progress.decisionPoint}
+        tutorialOn={
+          simulation.readProgram(screen.program).tutorial.kind === "on"
+        }
+        onTutorialOff={() => {
+          // The Turn as worked out stays, Timeline and all, so that playback carries on where it is.
+          const off = (program: Program) =>
+            simulation.setTutorial(program, false);
+          setScreen({
+            ...screen,
+            program: off(screen.program),
+            progress: progress.decisionPoint
+              ? progress
+              : {
+                  ...progress,
+                  result: {
+                    ...progress.result,
+                    program: off(progress.result.program),
+                  },
+                },
+          });
+        }}
         onAnswer={(decisionId, answer) => {
           const answers = { ...screen.answers, [decisionId]: answer };
           setScreen({
