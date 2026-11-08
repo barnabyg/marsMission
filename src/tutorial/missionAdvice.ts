@@ -8,7 +8,16 @@ import {
   type PlannedMission,
   type ViewAsset,
 } from "./adviceItems";
+import type { PlannedAsset } from "../simulation/simulation";
 import { baseKinds } from "./base";
+import {
+  bestActivityReason,
+  longestAdds,
+  longestCosts,
+  longestEarns,
+  longestWouldNotPay,
+  onlyGrantsPay,
+} from "./choiceReasons";
 import { baseSite, crewVehicleOf } from "./route";
 
 /* The advice on the Turn's Mission: each choice the tutorial's plan makes for it, and why. */
@@ -109,51 +118,52 @@ function serviceLifeItems(
   mission: PlannedMission,
   tools: PlanningTools,
 ): AdviceItem[] {
-  const planned = tools.previewAssets(mission);
+  const planned = tools
+    .previewAssets(mission)
+    .filter(({ serviceLifeOptions }) => serviceLifeOptions.length > 1);
+  const kindOf = ({ assetId }: PlannedAsset) =>
+    view.assets.find(({ id }) => id === assetId)?.kind ?? "";
+  const partOfBase = (asset: PlannedAsset) =>
+    (baseKinds as readonly string[]).includes(kindOf(asset));
   const longest = planned.filter(
     ({ serviceLifeDays, serviceLifeOptions }) =>
-      serviceLifeOptions.length > 1 &&
       serviceLifeDays ===
-        Math.max(...serviceLifeOptions.map(({ days }) => days)),
+      Math.max(...serviceLifeOptions.map(({ days }) => days)),
   );
-  const shortest = planned.filter(
-    (asset) => asset.serviceLifeOptions.length > 1 && !longest.includes(asset),
-  );
-  const items: AdviceItem[] = [];
-  if (longest.length > 0) {
-    const assets = assetsWithIds(
-      view,
-      longest.map(({ assetId }) => assetId),
-    );
-    items.push({
-      topic: "serviceLife",
-      advice: `Buy the longest Service Life for ${names(assets)}.`,
-      reason: assets.some(isBasePart)
-        ? "The Base counts only while all of it operates, so its parts must last until Crew arrive."
-        : "The longest Service Life keeps it earning for more Turns, for a little more money.",
-    });
-  }
-  const short = assetsWithIds(
-    view,
-    shortest.map(({ assetId }) => assetId),
-  );
+  const short = planned.filter((asset) => !longest.includes(asset));
   const worthLonger = short.filter(
-    (asset) => isBasePart(asset) || asset.kind === "rover",
+    (asset) => partOfBase(asset) || kindOf(asset) === "rover",
   );
   const enough = short.filter((asset) => !worthLonger.includes(asset));
+  const namesOf = (assets: PlannedAsset[]) =>
+    listOf(assets.map(({ name }) => name));
+  const sentences = (
+    assets: PlannedAsset[],
+    each: (asset: PlannedAsset) => string,
+  ) => assets.map(each).join(" ");
+  const items: AdviceItem[] = [];
+  if (longest.length > 0) {
+    const [part] = longest.filter(partOfBase);
+    items.push({
+      topic: "serviceLife",
+      advice: `Buy the longest Service Life for ${namesOf(longest)}.`,
+      reason: part
+        ? `The Base counts only while all of it operates, so its parts must last until Crew arrive: ${longestAdds(part)}.`
+        : sentences(longest, longestEarns),
+    });
+  }
   if (worthLonger.length > 0) {
     items.push({
       topic: "serviceLife",
-      advice: `Keep the shortest Service Life for ${names(worthLonger)}.`,
-      reason: "There isn't the money for a longer one as well this Turn.",
+      advice: `Keep the shortest Service Life for ${namesOf(worthLonger)}.`,
+      reason: `${sentences(worthLonger, longestCosts)} There isn't the money for a longer one as well this Turn.`,
     });
   }
   if (enough.length > 0) {
     items.push({
       topic: "serviceLife",
-      advice: `Keep the shortest Service Life for ${names(enough)}.`,
-      reason:
-        "It earns no Research Grants, so a longer Service Life wouldn't pay for itself.",
+      advice: `Keep the shortest Service Life for ${namesOf(enough)}.`,
+      reason: `${sentences(enough, longestWouldNotPay)} ${onlyGrantsPay}`,
     });
   }
   return items;
@@ -234,26 +244,21 @@ function contingencyItem(
 }
 
 function newActivityItems(
-  view: ProgramView,
   mission: PlannedMission,
   tools: PlanningTools,
 ): AdviceItem[] {
   return tools
     .previewAssets(mission)
-    .flatMap(({ assetId, name, activityId, activities }) => {
+    .flatMap(({ name, activityId, activities }) => {
       const activity = activities.find(({ id }) => id === activityId);
       if (!activity || activities.length < 2) return [];
-      const grants = activity.earnsPerTurn?.researchGrantMillions ?? 0;
-      const asset = view.assets.find(({ id }) => id === assetId);
       return [
         {
           topic: "activities" as const,
           advice: `Set ${name} to ${activity.name}.`,
           reason: activity.surveys
             ? "Surveying lowers the landing risk at Landing Sites for every later landing, and reveals new ones."
-            : grants > 0
-              ? `It pays the most Research Grant of what ${asset?.kind === "rover" ? "a rover" : "it"} can do.`
-              : "It earns the most of what it can do.",
+            : bestActivityReason(name, activity, activities),
         },
       ];
     });
@@ -333,6 +338,6 @@ export function missionItems(
     ...serviceLifeItems(view, mission, tools),
     ...reliabilityItems(view, mission, tools),
     ...contingencyItem(mission, tools),
-    ...newActivityItems(view, mission, tools),
+    ...newActivityItems(mission, tools),
   ];
 }

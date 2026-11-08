@@ -7,6 +7,7 @@ import {
 import { bigProgram } from "../balance/styleParts";
 import { listOf, type AdviceItem } from "./adviceItems";
 import { baseKinds } from "./base";
+import { bestActivityReason } from "./choiceReasons";
 import { missionItems } from "./missionAdvice";
 import {
   baseAtMillions,
@@ -78,9 +79,7 @@ function operatingActivityItems(
           advice: `Switch ${asset.name}${asset.landingSiteName ? ` at ${asset.landingSiteName}` : ""} to ${activity.name}.`,
           reason: activity.surveys
             ? "Nothing else is Surveying, and a Survey lowers the landing risk at Landing Sites for every later landing."
-            : (activity.earnsPerTurn?.researchGrantMillions ?? 0) > 0
-              ? "It pays the most Research Grant of what it can do now."
-              : "It earns the most of what it can do now.",
+            : bestActivityReason(asset.name, activity, asset.activities),
         },
       ];
     },
