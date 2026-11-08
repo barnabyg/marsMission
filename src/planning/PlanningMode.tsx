@@ -13,6 +13,7 @@ import { MissionPanel } from "./MissionPanel";
 import { OperatingPanel } from "./OperatingPanel";
 import { StatusBar } from "./StatusBar";
 import { TutorialAdvice } from "./TutorialAdvice";
+import { TutorialEnding, type TutorialEnd } from "./TutorialEnding";
 import { TutorialPanel } from "./TutorialPanel";
 import { useTutorialAdvice } from "./useTutorialAdvice";
 import { useMissionPlan } from "./useMissionPlan";
@@ -24,6 +25,8 @@ interface PlanningModeProps {
   lastTurn: Program | null;
   /** The plan played on the last Turn, or null whenever lastTurn is. */
   lastPlan: TurnPlan | null;
+  /** How the tutorial ended as this session started, shown until the player closes it, or null. */
+  tutorialEnding: TutorialEnd | null;
   /** Whether the automatic save at the start of this Planning Mode worked. */
   saved: boolean;
   saveStore: SaveStore;
@@ -43,6 +46,7 @@ export function PlanningMode({
   program,
   lastTurn,
   lastPlan,
+  tutorialEnding,
   saved,
   saveStore,
   onLoad,
@@ -65,6 +69,7 @@ export function PlanningMode({
   );
   // At most one journey home flies each Turn, of Crew or of samples, so choosing one replaces any other.
   const [bringHome, setBringHome] = useState<string | null>(null);
+  const [endingShown, setEndingShown] = useState(tutorialEnding !== null);
   const advice = useTutorialAdvice(simulation, program, lastTurn, lastPlan);
   const choices = useMissionPlan(
     simulation,
@@ -217,6 +222,14 @@ export function PlanningMode({
         </div>
       </div>
 
+      {tutorialEnding && endingShown && (
+        <TutorialEnding
+          ending={tutorialEnding}
+          onClose={() => {
+            setEndingShown(false);
+          }}
+        />
+      )}
       {openDialog === "restart" && (
         <Dialog
           title="Restart Program"

@@ -52,6 +52,7 @@ export function App({ services, firstScreen }: AppProps) {
         program={program}
         lastTurn={screen.lastTurn}
         lastPlan={screen.lastPlan}
+        tutorialEnding={screen.tutorialEnding}
         saved={screen.saved}
         firstSession={screen.firstSession}
         onTutorialChange={(on) => {

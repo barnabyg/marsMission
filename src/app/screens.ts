@@ -1,3 +1,5 @@
+import type { TutorialEnd } from "../planning/TutorialEnding";
+import { tutorialStatus } from "../tutorial/tutorial";
 import {
   manualSlots,
   type LoadedSave,
@@ -25,6 +27,8 @@ export type Screen =
       lastPlan: TurnPlan | null;
       /** Whether this is the Program's first Planning session since it started, which offers Tutorial mode. */
       firstSession: boolean;
+      /** How the tutorial ended as this session started, shown once, or null if it didn't end now. */
+      tutorialEnding: TutorialEnd | null;
     }
   | {
       mode: "mission";
@@ -51,12 +55,29 @@ export interface GameServices {
 
 let planningVisits = 0;
 
+/**
+ * The tutorial's end, if it ends as this Planning session starts: at its goal, or once it can't recover. The Program
+ * records it, so it is shown only once.
+ */
+function endingTutorial(
+  simulation: Simulation,
+  program: Program,
+): { program: Program; ending: TutorialEnd | null } {
+  const view = simulation.readProgram(program);
+  if (view.tutorial.kind !== "on") return { program, ending: null };
+  const status = tutorialStatus(view);
+  return status.kind === "inProgress"
+    ? { program, ending: null }
+    : { program: simulation.endTutorial(program, status.kind), ending: status };
+}
+
 /** Entering Planning Mode is what saves the game, so a save always holds the start of a Turn. */
 export function planningScreen(
-  { saveStore }: GameServices,
-  program: Program,
+  { simulation, saveStore }: GameServices,
+  started: Program,
   lastTurn: { program: Program; plan: TurnPlan } | null = null,
 ): PlanningScreen {
+  const { program, ending } = endingTutorial(simulation, started);
   return {
     mode: "planning",
     program,
@@ -66,6 +87,7 @@ export function planningScreen(
     // Each visit starts a fresh plan, even when a load returns to the same Program and Turn.
     visit: ++planningVisits,
     firstSession: false,
+    tutorialEnding: ending,
   };
 }
 

@@ -289,7 +289,7 @@ function decisionsIn(summary: TurnSummary): TurnRecord["decisions"] {
 }
 
 /** Works out a Turn, answering each Decision Point as the strategy would, one at a time as a player does. */
-function playTurn(
+export function playTurn(
   simulation: Simulation,
   strategy: Strategy,
   program: Program,
