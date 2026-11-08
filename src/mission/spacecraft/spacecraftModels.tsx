@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
+import { BoxGeometry, Euler, Matrix4, Quaternion, Vector3 } from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import type { Point } from "../sceneParts";
 import { EarthReturnStage, ReturnOrbiter } from "./homewardModels";
 import { stackLayout } from "./spacecraft";
@@ -74,6 +76,75 @@ export function At({
   );
 }
 
+/**
+ * Many small boxes of one colour, such as a solar array's cells or a blanket's seams, merged into one shape so that
+ * they cost one draw. Each is given as its size, where its middle is and how it's turned.
+ */
+export function Boxes({
+  boxes,
+  color,
+  lost,
+}: {
+  boxes: readonly { size: Point; position: Point; rotation?: Point }[];
+  color: string;
+  lost: boolean;
+}) {
+  const key = JSON.stringify(boxes);
+  const geometry = useMemo(() => {
+    const parts = (
+      JSON.parse(key) as { size: Point; position: Point; rotation?: Point }[]
+    ).map(({ size, position, rotation = [0, 0, 0] }) =>
+      new BoxGeometry(...size).applyMatrix4(
+        new Matrix4().compose(
+          new Vector3(...position),
+          new Quaternion().setFromEuler(new Euler(...rotation)),
+          new Vector3(1, 1, 1),
+        ),
+      ),
+    );
+    const merged = mergeGeometries(parts);
+    for (const part of parts) part.dispose();
+    return merged;
+  }, [key]);
+  useEffect(
+    () => () => {
+      geometry.dispose();
+    },
+    [geometry],
+  );
+  return (
+    <mesh geometry={geometry}>
+      <meshStandardMaterial
+        color={lost ? lostColor : color}
+        roughness={0.3}
+        metalness={0.45}
+      />
+    </mesh>
+  );
+}
+
+/** The cells of a flat panel lying in x and z, `columns` by `rows` of them with a gap between, just above y = 0. */
+export function cellsOf(
+  width: number,
+  depth: number,
+  columns: number,
+  rows: number,
+  above: number,
+): { size: Point; position: Point }[] {
+  const gap = Math.min(width / columns, depth / rows) * 0.12;
+  return Array.from({ length: columns * rows }, (_, index) => {
+    const [column, row] = [index % columns, Math.floor(index / columns)];
+    return {
+      size: [width / columns - gap, 0.004, depth / rows - gap],
+      position: [
+        ((column + 0.5) / columns - 0.5) * width,
+        above,
+        ((row + 0.5) / rows - 0.5) * depth,
+      ],
+    };
+  });
+}
+
 const foilGold = "#e0b04a";
 const deckSilver = "#c9ccd4";
 const panelBlue = "#20345e";
@@ -97,12 +168,57 @@ export function SolarArray({ side, lost }: { side: 1 | -1; lost: boolean }) {
             <boxGeometry args={[0.46, 0.012, 0.3]} />
           </Part>
           <At position={[0, 0.008, 0]}>
-            <Part color={panelBlue} lost={lost}>
+            <Part color="#121a2c" lost={lost}>
               <boxGeometry args={[0.42, 0.012, 0.26]} />
             </Part>
           </At>
+          <Boxes
+            boxes={cellsOf(0.42, 0.26, 6, 4, 0.016)}
+            color={panelBlue}
+            lost={lost}
+          />
         </At>
       ))}
+    </>
+  );
+}
+
+/**
+ * The small parts that make an orbiter read as real: seams in its gold blanket, a block of thrusters at each lower
+ * corner, a star tracker and a low-gain antenna.
+ */
+function OrbiterDetails({ lost }: { lost: boolean }) {
+  const seams = [-0.12, 0.12].flatMap((along) => [
+    { size: [0.006, 0.44, 0.465] as Point, position: [along, 0, 0] as Point },
+    { size: [0.505, 0.44, 0.006] as Point, position: [0, 0, along] as Point },
+  ]);
+  const corners = [
+    [1, 1],
+    [1, -1],
+    [-1, 1],
+    [-1, -1],
+  ] as const;
+  return (
+    <>
+      <Boxes boxes={seams} color="#b98a2e" lost={lost} />
+      <Boxes
+        boxes={corners.map(([x, z]) => ({
+          size: [0.05, 0.05, 0.05] as Point,
+          position: [x * 0.24, -0.2, z * 0.24] as Point,
+        }))}
+        color="#8a8d94"
+        lost={lost}
+      />
+      <At position={[-0.18, 0.3, -0.16]} rotation={[0.5, 0, 0.3]}>
+        <Part color="#2b2f38" lost={lost}>
+          <cylinderGeometry args={[0.03, 0.035, 0.07, 12]} />
+        </Part>
+      </At>
+      <At position={[0.2, -0.3, -0.18]}>
+        <Part color="#eef0f4" lost={lost}>
+          <cylinderGeometry args={[0.012, 0.012, 0.12, 6]} />
+        </Part>
+      </At>
     </>
   );
 }
@@ -156,6 +272,7 @@ export function Orbiter({
           <coneGeometry args={[0.1, 0.14, 20, 1, true]} />
         </Part>
       </At>
+      <OrbiterDetails lost={lost} />
       {deployed ? (
         <>
           <SolarArray side={1} lost={lost} />
