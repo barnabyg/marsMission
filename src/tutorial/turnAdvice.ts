@@ -1,12 +1,14 @@
 import type { PlanningTools } from "../balance/strategy";
 import {
   formatMoney,
+  formatTurns,
   type ProgramView,
   type TurnPlan,
 } from "../simulation/simulation";
 import { bigProgram } from "../balance/styleParts";
 import { listOf, type AdviceItem } from "./adviceItems";
 import { baseKinds } from "./base";
+import { bestActivityReason } from "./choiceReasons";
 import { missionItems } from "./missionAdvice";
 import {
   baseAtMillions,
@@ -56,7 +58,7 @@ function developmentItems(view: ProgramView, plan: TurnPlan): AdviceItem[] {
     })),
     ...underWay.map(({ name, turnsLeft }) => ({
       topic: "development" as const,
-      advice: `Let the Development of the ${name} run: it finishes in ${turnsLeft} Turn${turnsLeft === 1 ? "" : "s"}.`,
+      advice: `Let the Development of the ${name} run: it finishes in ${formatTurns(turnsLeft)}.`,
       reason:
         "It is paid for already. Meanwhile the rovers' Research Grants save up for the Base it will carry.",
     })),
@@ -78,9 +80,7 @@ function operatingActivityItems(
           advice: `Switch ${asset.name}${asset.landingSiteName ? ` at ${asset.landingSiteName}` : ""} to ${activity.name}.`,
           reason: activity.surveys
             ? "Nothing else is Surveying, and a Survey lowers the landing risk at Landing Sites for every later landing."
-            : (activity.earnsPerTurn?.researchGrantMillions ?? 0) > 0
-              ? "It pays the most Research Grant of what it can do now."
-              : "It earns the most of what it can do now.",
+            : bestActivityReason(asset.name, activity, asset.activities),
         },
       ];
     },

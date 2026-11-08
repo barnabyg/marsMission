@@ -58,6 +58,69 @@ describe("choosing a Service Life", () => {
     );
   });
 
+  it("says what each longer Service Life adds, in Turns, in the Research Grants its Activity would pay over them and in Upkeep", () => {
+    // Paid research earns 78 Science a 780-day Turn, at $0.5M a Science: $39M a Turn. The orbiter arrives on day 200,
+    // so 1000 days keep it going as Turn 2 starts, 1390 days as Turn 3 starts too, and 2560 days as Turn 4 starts too.
+    const files = testCatalogueFiles();
+    const simulation = createSimulation(
+      parseCatalogue({
+        ...files,
+        assets: files.assets.map((asset) =>
+          asset.id === "test-orbiter"
+            ? {
+                ...asset,
+                serviceLifeOptions: [
+                  { days: 1000, costMillions: 0 },
+                  { days: 1390, costMillions: 30 },
+                  { days: 2560, costMillions: 90 },
+                ],
+                activities: [...asset.activities, "test-paid-research"],
+                upkeepMillionsPerTurn: 10,
+              }
+            : asset,
+        ),
+      }),
+    );
+    const program = simulation.startProgram(1);
+    const lives = (activityId: string) =>
+      simulation.previewAssets(program, {
+        ...orbiterWithout(),
+        assetChoices: { "test-orbiter": { activityId } },
+      })[0]?.serviceLifeOptions;
+    expect(lives("test-paid-research")).toEqual([
+      {
+        days: 1000,
+        costMillions: 0,
+        extraDays: 0,
+        extraTurns: 0,
+        extraGrantMillions: 0,
+        extraUpkeepMillions: 0,
+      },
+      {
+        days: 1390,
+        costMillions: 30,
+        extraDays: 390,
+        extraTurns: 0.5,
+        extraGrantMillions: 20,
+        extraUpkeepMillions: 10,
+      },
+      {
+        days: 2560,
+        costMillions: 90,
+        extraDays: 1560,
+        extraTurns: 2,
+        extraGrantMillions: 78,
+        extraUpkeepMillions: 20,
+      },
+    ]);
+    // Research that pays no Research Grant pays nothing towards a longer Service Life, however much Science it earns.
+    expect(
+      lives("test-research")?.map(
+        ({ extraGrantMillions }) => extraGrantMillions,
+      ),
+    ).toEqual([0, 0, 0]);
+  });
+
   it("refuses a Service Life the Asset doesn't offer", () => {
     const { simulation, program } = withLives(1000, 2000);
     const { problems } = simulation.validatePlan(program, orbiterWith(1500));

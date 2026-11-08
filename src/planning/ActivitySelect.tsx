@@ -1,4 +1,7 @@
-import type { PlannedActivity } from "../simulation/simulation";
+import {
+  whatActivityDoes,
+  type PlannedActivity,
+} from "../simulation/simulation";
 import { termFor } from "../ui/tooltips";
 
 interface ActivitySelectProps {
@@ -21,7 +24,45 @@ export function describeActivity({
     : description;
 }
 
-/** The choice of what one Asset does. */
+/**
+ * An Activity as its choice names it: the chosen one by its name alone, so that the closed choice never cuts it short,
+ * as the line under the choice says what it earns, and the others with what they earn a Turn, so that the open list
+ * compares them.
+ */
+const activityLabel = (activity: PlannedActivity, chosen: boolean) =>
+  chosen ? activity.name : `${activity.name}: ${whatActivityDoes(activity)}`;
+
+/**
+ * What the chosen Activity earns a Turn, or does, written out under its choice, whose closed label is its name alone:
+ * "Soil analysis earns 80 Science, 9 Public Support and $800M Research Grant a Turn."
+ */
+export function chosenEarnings(
+  activityId: string,
+  activities: PlannedActivity[],
+): string {
+  const chosen = activities.find(({ id }) => id === activityId);
+  return chosen ? `${chosen.name} ${whatActivityDoes(chosen)}.` : "";
+}
+
+/**
+ * Whether the chosen Activity earns or collects something each Turn. Operating at Mars writes out only those, as a
+ * busy Program's rows are too many to fit with a line for each Survey, whose choice already names it.
+ */
+export function chosenYields(
+  activityId: string,
+  activities: PlannedActivity[],
+): boolean {
+  const chosen = activities.find(({ id }) => id === activityId);
+  if (!chosen) return false;
+  const earns = chosen.earnsPerTurn;
+  return (
+    chosen.cachesPerTurn !== null ||
+    (earns !== null &&
+      earns.science + earns.publicSupport + earns.researchGrantMillions > 0)
+  );
+}
+
+/** The choice of what one Asset does, each other Activity with what it earns a Turn. */
 export function ActivitySelect({
   assetName,
   activityId,
@@ -42,7 +83,7 @@ export function ActivitySelect({
     >
       {activities.map((activity) => (
         <option key={activity.id} value={activity.id}>
-          {activity.name}
+          {activityLabel(activity, activity.id === activityId)}
         </option>
       ))}
     </select>

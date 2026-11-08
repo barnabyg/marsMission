@@ -57,12 +57,33 @@ export interface PlannedTrajectory {
   chosen: boolean;
 }
 
+/**
+ * A Service Life on offer for an Asset, with what it adds beyond the shortest on offer, so that a player can see whether
+ * it pays for itself: whether its Research Grants cover its cost and Upkeep. Science and Public Support aren't money.
+ */
+export interface PlannedServiceLife {
+  days: number;
+  /** What it costs on top of the Asset. */
+  costMillions: number;
+  /** The days it adds beyond the shortest on offer, which are 0 for the shortest. */
+  extraDays: number;
+  /** Those days in Turns, to one decimal place. */
+  extraTurns: number;
+  /**
+   * The Research Grants the Asset's chosen Activity would pay over those days, at the rate Planning Mode shows for it,
+   * if the Asset doesn't fail first.
+   */
+  extraGrantMillions: number;
+  /** The Upkeep of the extra Turns it would be kept going for, as each starts, if its mission isn't ended first. */
+  extraUpkeepMillions: number;
+}
+
 /** An Asset on a planned Mission as Planning Mode shows it. */
 export interface PlannedAsset {
   assetId: string;
   name: string;
   serviceLifeDays: number;
-  serviceLifeOptions: { days: number; costMillions: number }[];
+  serviceLifeOptions: PlannedServiceLife[];
   reliabilityLevelId: string;
   activityId: string;
   activities: PlannedActivity[];

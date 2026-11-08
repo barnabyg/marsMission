@@ -63,7 +63,35 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   await expect(page.getByTestId("research-earnings")).toHaveText(
     "Ongoing Research for a whole Turn: Soil analysis earns 80 Science and 9 Public Support, and pays a $800M Research Grant. Long traverse earns 160 Science and 14 Public Support.",
   );
+  // Each other Activity says what it earns a Turn, in each of Science, Public Support and Research Grant that it earns
+  // any of, while the chosen one, closed, shows its name in full.
+  await expect(activity.getByRole("option")).toHaveText([
+    "Soil analysis",
+    "Long traverse: earns 160 Science and 14 Public Support a Turn",
+    "Sample caching: collects 10 samples a Turn",
+    "Nothing: stays in place and does no work this Turn",
+  ]);
+  // The chosen Activity's earnings are written out under its choice, which is too narrow to show them once closed.
+  await expect(row.getByTestId("activity-earnings")).toHaveText(
+    "Soil analysis earns 80 Science, 9 Public Support and $800M Research Grant a Turn.",
+  );
+  // The longer Service Life says the Research Grants its days would earn with the Activity chosen, against its cost
+  // and Upkeep.
+  const life = row.getByLabel("Service Life for Trailblazer Rover");
+  await expect(life.getByRole("option")).toHaveText([
+    "1,300 days ($0M)",
+    "2,800 days: +1,500 days (about 1.9 Turns) earn $1.54B in Research Grants against $300M and $30M Upkeep",
+  ]);
+  await expect(page.getByTestId("service-life-payback")).toContainText(
+    "Only Research Grants pay towards a longer Service Life and its Upkeep, as Science and Public Support aren't money.",
+  );
   await activity.selectOption("long-traverse");
+  await expect(row.getByTestId("activity-earnings")).toHaveText(
+    "Long traverse earns 160 Science and 14 Public Support a Turn.",
+  );
+  await expect(life.getByRole("option").last()).toHaveText(
+    "2,800 days: +1,500 days (about 1.9 Turns) earn $0M in Research Grants against $300M and $30M Upkeep",
+  );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await pauseAtEvent(
@@ -125,6 +153,19 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
       .getByTestId("operating-assets")
       .getByLabel("Activity for Trailblazer Rover"),
   ).toHaveValue("long-traverse");
+  // Operating at Mars, too, each Activity says what it earns a Turn, and the chosen one's earnings are written out.
+  await expect(
+    page.getByTestId("operating-assets").getByTestId("activity-earnings"),
+  ).toHaveText("Long traverse earns 160 Science and 14 Public Support a Turn.");
+  await expect(
+    page
+      .getByTestId("operating-assets")
+      .getByLabel("Activity for Trailblazer Rover")
+      .getByRole("option")
+      .first(),
+  ).toHaveText(
+    "Soil analysis: earns 80 Science, 9 Public Support and $800M Research Grant a Turn",
+  );
   await expect(page.getByTestId("milestones")).toContainText(
     "First rover on Mars",
   );
