@@ -4,6 +4,7 @@ import { crewProblems } from "./invalidCrew";
 import { playProgram } from "./playProgram";
 import { balanceReport } from "./report";
 import { strategies } from "./strategies";
+import { tutorialStrategy } from "../tutorial/tutorial";
 import {
   certain,
   colossusFromTheStart,
@@ -63,7 +64,10 @@ describe("strategies that fly Crew", () => {
       // brings them home.
       const { crew } = certainly.saveProgram(program).program;
       expect(crew.length).toBeGreaterThan(0);
-      const bringsHome = strategy.name.includes("bring them home");
+      // The tutorial's goal stops at Crew landing at a Base, but it plays on past it and brings them home.
+      const bringsHome =
+        strategy.name.includes("bring them home") ||
+        strategy === tutorialStrategy;
       expect(
         crew.every(
           ({ location }) =>

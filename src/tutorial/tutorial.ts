@@ -63,14 +63,13 @@ export function planningAdvice(
   };
 }
 
-export const tutorialName =
-  "tutorial: build a Base, land Crew there and bring them home";
+export const tutorialName = "tutorial: build a Base and land Crew there";
 
 /** The tutorial's advice played as a strategy, for the balance runs: it always follows its own advice. */
 export const tutorialStrategy: Strategy = {
   name: tutorialName,
   description:
-    "The tutorial's advice, followed every Turn: an orbiter to Survey, then rovers on Research Grants at surveyed Landing Sites, keeping up to six Assets, sending no landers and keeping no money back, with the best Reliability on every Mission Event it can afford and the longest Service Life for rovers. Once it has $5B it develops the Meridian Colossus, and once that is built and it has $6B, it flies the whole Base on it to the surveyed Landing Site with the most Science: a Wellspring Fuel Plant, a Haven Module and Curie Station, each with its longest Service Life and best Reliability, replacing any that stop. It then saves, keeping two rovers there, until it can land the smallest Crew there on a round trip with the best Reliability on every Mission Event, and brings them home once one has less than 45 Health or their Supplies wouldn't last another Turn. It reaches its goal when Crew are at a Landing Site where a fuel plant, a Habitat and a Mars lab operate.",
+    "The tutorial's advice, followed every Turn: an orbiter to Survey, then rovers on Research Grants at surveyed Landing Sites, keeping up to six Assets, sending no landers and keeping no money back, with the best Reliability on every Mission Event it can afford and the longest Service Life for rovers. Once it has $5B it develops the Meridian Colossus, and once that is built and it has $6B, it flies the whole Base on it to the surveyed Landing Site with the most Science: a Wellspring Fuel Plant, a Haven Module and Curie Station, each with its longest Service Life and best Reliability, replacing any that stop. It then saves, keeping two rovers there, until it can land the smallest Crew there on a round trip with the best Reliability on every Mission Event. It reaches its goal when Crew are at a Landing Site where a fuel plant, a Habitat and a Mars lab operate. After its goal it plays on, as the tutorial no longer advises the player, bringing Crew home once one has less than 45 Health or their Supplies wouldn't last another Turn.",
   plan: (view, tools) => planningAdvice(view, tools, null).plan,
   answer: (decisionPoint, view, plan) =>
     decisionAdvice(decisionPoint, view, plan).answer,

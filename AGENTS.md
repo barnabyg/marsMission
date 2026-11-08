@@ -2,7 +2,7 @@
 
 ## Start here
 
-[README.md](README.md) has the code map and what each check does. [docs/game-design.md](docs/game-design.md) opens with which rules are built and which are planned, and links to the rules for each area in `docs/design/`. Read only the area your task touches.
+[README.md](README.md) has the code map and what each check does. Its code map links to a file-by-file guide for three folders, in `docs/develop/`: read [catalogue.md](docs/develop/catalogue.md), [simulation.md](docs/develop/simulation.md) or [balance-runs.md](docs/develop/balance-runs.md) only when your task touches `src/catalogue`, `src/simulation` or `src/balance`, or changes the balance. [docs/game-design.md](docs/game-design.md) opens with which rules are built and which are planned, and links to the rules for each area in `docs/design/`. Read only the area your task touches.
 
 - Every check: `npm.cmd run verify`
 - One Vitest file: `npx.cmd vitest run src/simulation/simulation.test.ts`, adding `-t "starting a Program"` to pick tests by name
