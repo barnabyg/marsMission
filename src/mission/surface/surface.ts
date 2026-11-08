@@ -93,6 +93,18 @@ export function placeOf(place: number): { x: number; z: number } {
   return { x: side * (1.5 + row * 1.8), z: row * 2 };
 }
 
+/** How many places, from the first, the ground is kept level and clear for. */
+export const placeCount = 8;
+
+/**
+ * The spots on the ground where Assets stand: each of the first eight places, and the two spots behind each where the
+ * Crew's later landers stand. Rocks and small craters keep clear of them.
+ */
+export const standingSpots: readonly { x: number; z: number }[] = Array.from(
+  { length: placeCount },
+  (_, place) => placeOf(place),
+).flatMap(({ x, z }) => [0, 1.4, 2.8].map((back) => ({ x, z: z + back })));
+
 /** Whether a Crew member is at their place at Mars on a given day: arrived, and not yet lost. */
 export function isThere(
   { fromDay, untilDay }: CrewMember,

@@ -1,6 +1,6 @@
 import { hashOf } from "./shaping";
 import { latticeValue } from "./siteNoise";
-import { placeOf } from "./surface";
+import { standingSpots } from "./surface";
 import { groundHeight, terrainReach } from "./terrain";
 
 /** The stones and boulders lying about a Landing Site, worked out from its name alone, so they lie the same every time. */
@@ -20,10 +20,6 @@ export interface Rock {
 const stoneCount = 300;
 const boulderCount = 9;
 
-/** The places Assets stand on, and the Crew's landers behind them, which rocks keep clear of. */
-const keepClear = Array.from({ length: 8 }, (_, place) =>
-  placeOf(place),
-).flatMap(({ x, z }) => [0, 1.4, 2.8].map((back) => ({ x, z: z + back })));
 const clearance = 1.15;
 
 /** Rocks stay in front of the camera, which stands about 7.5 units back from the middle of the shot,
@@ -33,7 +29,7 @@ const reach = terrainReach - 1;
 const boulderReach = 8;
 
 function isClear(x: number, z: number, size: number): boolean {
-  return keepClear.every(
+  return standingSpots.every(
     (spot) => Math.hypot(x - spot.x, z - spot.z) > clearance + size,
   );
 }

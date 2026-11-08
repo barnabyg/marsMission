@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { standingSpots } from "./surface";
 import { buildTerrain, groundHeight, terrainReach } from "./terrain";
 
 describe("a Landing Site's terrain", () => {
@@ -111,5 +112,26 @@ describe("a Landing Site's terrain", () => {
     expect(detail[middle]).toBe(1);
     expect(detail[0]).toBe(0);
     expect(detail.at(-1)).toBe(0);
+  });
+
+  it("is level where Assets stand, so that their feet reach the ground", () => {
+    for (const site of [
+      "Jezero Crater",
+      "Gale Crater",
+      "Utopia Planitia",
+      "Elysium Planitia",
+    ]) {
+      for (const { x, z } of standingSpots) {
+        const heights = Array.from({ length: 16 }, (_, step) => {
+          const angle = (step / 16) * Math.PI * 2;
+          return groundHeight(
+            site,
+            x + Math.cos(angle) * 0.6,
+            z + Math.sin(angle) * 0.6,
+          );
+        });
+        expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(0.02);
+      }
+    }
   });
 });

@@ -1,5 +1,6 @@
 import { hashOf, smooth } from "./shaping";
 import { latticeValue, noise } from "./siteNoise";
+import { placeCount, placeOf, standingSpots } from "./surface";
 
 /** Terrain for a Landing Site, worked out from its name alone, so that a site looks the same every time. */
 
@@ -45,26 +46,45 @@ interface Crater {
  * are deeper for their size, as young craters are.
  */
 function cratersOf(seed: number): Crater[] {
-  const crater = (index: number, nearest: number, spread: number) => {
-    const angle = latticeValue(seed, index, 1) * Math.PI * 2;
-    const distance = nearest + latticeValue(seed, index, 2) * spread;
-    return {
-      x: Math.cos(angle) * distance,
-      z: Math.sin(angle) * distance,
-    };
+  // Every crater keeps clear of where Assets stand, so that they stand on open, level ground.
+  const scatter = (
+    count: number,
+    firstIndex: number,
+    nearest: number,
+    spread: number,
+    radiusOf: (share: number) => number,
+  ) => {
+    const craters: Crater[] = [];
+    for (
+      let index = firstIndex;
+      craters.length < count && index < firstIndex + count * 6;
+      index++
+    ) {
+      const angle = latticeValue(seed, index, 1) * Math.PI * 2;
+      const distance = nearest + latticeValue(seed, index, 2) * spread;
+      const crater = {
+        x: Math.cos(angle) * distance,
+        z: Math.sin(angle) * distance,
+        radius: radiusOf(latticeValue(seed, index, 3)),
+      };
+      const clear = standingSpots.every(
+        ({ x, z }) =>
+          Math.hypot(crater.x - x, crater.z - z) > crater.radius * 1.6 + 0.8,
+      );
+      if (clear) craters.push(crater);
+    }
+    return craters;
   };
-  const big = Array.from({ length: craterCount }, (_, index) => ({
-    ...crater(index, 5.5, 6),
-    radius: 0.7 + latticeValue(seed, index, 3) * 1.4,
-  }));
-  const small = Array.from({ length: smallCraterCount }, (_, count) => {
-    const index = craterCount + count;
-    return {
-      ...crater(index, 3.6, 8.5),
-      radius: 0.2 + latticeValue(seed, index, 3) ** 2 * 0.4,
-    };
-  });
-  return [...big, ...small];
+  return [
+    ...scatter(craterCount, 0, 5.5, 6, (share) => 0.7 + share * 1.4),
+    ...scatter(
+      smallCraterCount,
+      1000,
+      3.6,
+      8.5,
+      (share) => 0.2 + share ** 2 * 0.4,
+    ),
+  ];
 }
 
 /** A bowl with a raised rim. */
@@ -91,7 +111,8 @@ function ridges(seed: number, x: number, z: number): number {
   );
 }
 
-function heightOf(seed: number, craters: Crater[], x: number, z: number) {
+/** The ground before it's levelled where Assets stand. */
+function rawHeight(seed: number, craters: Crater[], x: number, z: number) {
   // Nearly level in the middle, so that the Assets stand on open ground.
   const open = 0.08 + 0.92 * smooth((Math.hypot(x, z) - 3) / 5);
   return (
@@ -100,33 +121,71 @@ function heightOf(seed: number, craters: Crater[], x: number, z: number) {
   );
 }
 
-/** Each site's craters once worked out, as the rovers ask for the height of the ground every frame. */
-const cratersBySeed = new Map<number, Crater[]>();
+/**
+ * A Landing Site's craters, and the level pad at each place Assets stand on, at the ground's height at the place's
+ * front. A pad runs back over the spots where the Crew's later landers stand, so that they stand level too.
+ */
+interface Site {
+  seed: number;
+  craters: Crater[];
+  pads: { x: number; z: number; height: number }[];
+}
 
-function knownCraters(seed: number): Crater[] {
-  const known = cratersBySeed.get(seed);
-  if (known) return known;
+/** How far around a place its pad is level, and how far beyond that it takes to meet the ground around it. */
+const padRadius = 0.75;
+const padBlend = 0.45;
+/** How far back a pad runs, to the furthest of the Crew's landers. */
+const padLength = 2.8;
+
+function siteOf(seed: number): Site {
   const craters = cratersOf(seed);
-  cratersBySeed.set(seed, craters);
-  return craters;
+  const pads = Array.from({ length: placeCount }, (_, place) => {
+    const { x, z } = placeOf(place);
+    return { x, z, height: rawHeight(seed, craters, x, z) };
+  });
+  return { seed, craters, pads };
+}
+
+function heightOf({ seed, craters, pads }: Site, x: number, z: number) {
+  // Each pad near enough draws the ground towards its own height, one after another, so that where two meet the
+  // ground still runs smoothly between them.
+  return pads.reduce(
+    (ground, pad) => {
+      const along = Math.min(Math.max(z - pad.z, 0), padLength);
+      const away = Math.hypot(x - pad.x, z - pad.z - along);
+      const level = 1 - smooth((away - padRadius) / padBlend);
+      return ground * (1 - level) + pad.height * level;
+    },
+    rawHeight(seed, craters, x, z),
+  );
+}
+
+/** Each site once worked out, as the rovers ask for the height of the ground every frame. */
+const sitesBySeed = new Map<number, Site>();
+
+function knownSite(seed: number): Site {
+  const known = sitesBySeed.get(seed);
+  if (known) return known;
+  const site = siteOf(seed);
+  sitesBySeed.set(seed, site);
+  return site;
 }
 
 /** How high the ground is at a place in the shot. */
 export function groundHeight(siteName: string, x: number, z: number): number {
-  const seed = hashOf(siteName);
-  return heightOf(seed, knownCraters(seed), x, z);
+  return heightOf(knownSite(hashOf(siteName)), x, z);
 }
 
 /** The arrays for a terrain mesh, with how strongly its fine grain shows at each vertex. Its light is worked into the colours, as a light in the shared scene would also fall on the other views. */
 export function buildTerrain(siteName: string) {
   const seed = hashOf(siteName);
-  const craters = cratersOf(seed);
+  const site = siteOf(seed);
   const across = segments + 1;
   const positions = new Float32Array(across * across * 3);
   const colors = new Float32Array(across * across * 3);
   /** How strongly the fine grain is drawn on each vertex, from 1 near the camera to 0 well before the edge. */
   const detail = new Float32Array(across * across);
-  const height = (x: number, z: number) => heightOf(seed, craters, x, z);
+  const height = (x: number, z: number) => heightOf(site, x, z);
   // Closer together towards the middle, where the camera looks.
   const spread = (share: number) =>
     terrainReach * (0.3 * share + 0.7 * share * share * share);
