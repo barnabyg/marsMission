@@ -27,6 +27,15 @@ float hazeAt(vec3 world) {
   return 0.55 * smoothstep(5.0, 19.0, distance(world, cameraPosition));
 }`;
 
+/**
+ * Turns a normal by a placement that may stretch, as a rock or a squashed part is: the inverse of its transpose, so
+ * that a flattened shape's sides still face the way they look.
+ */
+const normalTurn = `
+mat3 normalTurn(mat4 placed) {
+  return transpose(inverse(mat3(placed)));
+}`;
+
 const horizon = new Color(...horizonColor);
 
 /** The ground's fine grain, as a texture that repeats across it. */
@@ -90,10 +99,11 @@ export function rockMaterial(): ShaderMaterial {
       varying vec3 vColor;
       ${sun}
       ${haze}
+      ${normalTurn}
       void main() {
         mat4 placed = modelMatrix * instanceMatrix;
         vec4 world = placed * vec4(position, 1.0);
-        vec3 normalOut = normalize(mat3(placed) * normal);
+        vec3 normalOut = normalize(normalTurn(placed) * normal);
         float light = 0.35 + 1.05 * max(dot(normalOut, toSun), 0.0);
         vColor = mix(instanceColor * light, horizon, hazeAt(world.xyz));
         gl_Position = projectionMatrix * viewMatrix * world;
@@ -144,6 +154,7 @@ const partVertex = `
   varying vec3 vBack;
   ${sun}
   const vec3 toGlint = normalize(vec3(-0.35, 0.85, -0.4));
+  ${normalTurn}
   vec3 litFacing(vec3 normalOut, vec3 toCamera) {
     vec3 sunAcross = normalize(vec3(toSun.x, 0.0, toSun.z));
     float light = 0.9 + 0.16 * normalOut.y + 0.14 * dot(normalOut, sunAcross);
@@ -156,7 +167,7 @@ const partVertex = `
       placed = modelMatrix * instanceMatrix;
     #endif
     vec4 world = placed * vec4(position, 1.0);
-    vec3 normalOut = normalize(mat3(placed) * normal);
+    vec3 normalOut = normalize(normalTurn(placed) * normal);
     vec3 toCamera = normalize(cameraPosition - world.xyz);
     vFront = litFacing(normalOut, toCamera);
     #ifdef DOUBLE_SIDED
