@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { DecisionAnswer, DecisionPoint } from "../simulation/simulation";
-import { DecisionPointPanel } from "./DecisionPointPanel";
+import { DecisionPointAdvice, DecisionPointPanel } from "./DecisionPointPanel";
 
 /** The text a reader would see, with tags gone and spaces collapsed. */
 const textOf = (html: string) =>
@@ -47,12 +47,17 @@ describe("Tutorial mode's suggestion at a Decision Point", () => {
   it.each(kinds)(
     "at a %s Decision Point, names the suggested choice with its reason and marks it",
     (kind, first, second) => {
+      const point = decisionPoint(kind, [first, second]);
+      const advice = { answer: second[0], reason: "It is the safer choice." };
       const html = renderToStaticMarkup(
-        <DecisionPointPanel
-          decisionPoint={decisionPoint(kind, [first, second])}
-          onAnswer={() => undefined}
-          advice={{ answer: second[0], reason: "It is the safer choice." }}
-        />,
+        <>
+          <DecisionPointAdvice decisionPoint={point} advice={advice} />
+          <DecisionPointPanel
+            decisionPoint={point}
+            onAnswer={() => undefined}
+            advice={advice}
+          />
+        </>,
       );
       expect(textOf(html)).toContain(`Tutorial mode suggests: ${second[1]}.`);
       expect(html).toContain(
@@ -69,16 +74,47 @@ describe("Tutorial mode's suggestion at a Decision Point", () => {
   );
 
   it("shows no suggestion without advice, while Tutorial mode is off or has ended", () => {
+    const point = decisionPoint("dustStorm", [
+      ["shelter", "Shelter"],
+      ["carryOn", "Carry on"],
+    ]);
     const html = renderToStaticMarkup(
-      <DecisionPointPanel
-        decisionPoint={decisionPoint("dustStorm", [
-          ["shelter", "Shelter"],
-          ["carryOn", "Carry on"],
-        ])}
-        onAnswer={() => undefined}
-      />,
+      <>
+        <DecisionPointAdvice decisionPoint={point} advice={null} />
+        <DecisionPointPanel decisionPoint={point} onAnswer={() => undefined} />
+      </>,
     );
     expect(html).not.toContain("suggests");
     expect(html).not.toContain("suggested");
+  });
+});
+
+describe("the primary choice at a Decision Point", () => {
+  const storm = decisionPoint("dustStorm", [
+    ["shelter", "Shelter"],
+    ["carryOn", "Carry on"],
+  ]);
+  /** The labels of the buttons drawn as the primary button. */
+  const primaryLabels = (html: string) =>
+    [...html.matchAll(/<button[^>]*class="primary"[^>]*>([^<]*)</g)].map(
+      ([, label]) => label,
+    );
+
+  it("is the choice Tutorial mode suggests, even when it is the second", () => {
+    const html = renderToStaticMarkup(
+      <DecisionPointPanel
+        decisionPoint={storm}
+        onAnswer={() => undefined}
+        advice={{ answer: "carryOn", reason: "It earns more." }}
+      />,
+    );
+    expect(primaryLabels(html)).toEqual(["Carry on"]);
+  });
+
+  it("is neither choice without a suggestion, as neither answer is a default", () => {
+    const html = renderToStaticMarkup(
+      <DecisionPointPanel decisionPoint={storm} onAnswer={() => undefined} />,
+    );
+    expect(primaryLabels(html)).toEqual([]);
   });
 });

@@ -9,10 +9,16 @@ interface EventsColumnProps {
   timeline: Timeline;
   /** How many of the timeline's entries have happened so far. */
   entriesHappened: number;
+  /** Whether the Decision Point panel is open. It shows the Decision Point's sentence, so its card here doesn't. */
+  deciding: boolean;
 }
 
 /** Lists what has happened so far this Turn, newest at the top, each as a card with a picture of what it was. */
-export function EventsColumn({ timeline, entriesHappened }: EventsColumnProps) {
+export function EventsColumn({
+  timeline,
+  entriesHappened,
+  deciding,
+}: EventsColumnProps) {
   const happened = timeline.entries.slice(0, entriesHappened);
   return (
     <aside className="events-column" data-testid="events-column">
@@ -23,6 +29,7 @@ export function EventsColumn({ timeline, entriesHappened }: EventsColumnProps) {
           .map((entry, index) => {
             const { picture, tag, icon, failed } = eventCardFor(entry);
             const latest = index === happened.length - 1;
+            const open = deciding && latest && entry.kind === "decisionPoint";
             return (
               <li
                 key={index}
@@ -59,9 +66,11 @@ export function EventsColumn({ timeline, entriesHappened }: EventsColumnProps) {
                 <h3>
                   <GameText heading>{entry.title}</GameText>
                 </h3>
-                <p>
-                  <GameText>{entry.description}</GameText>
-                </p>
+                {!open && (
+                  <p>
+                    <GameText>{entry.description}</GameText>
+                  </p>
+                )}
               </li>
             );
           })
