@@ -29,10 +29,11 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
   // Over 5 s: plays to the landing, then on to the next Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${pinpointLandingSeed}`);
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  // Read before ticking, as the Launch Vehicle step folds to one line once something is ticked.
   await expect(page.getByTestId("launch-vehicle-readiness")).toHaveText(
     "Flight-proven",
   );
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
   // Flight-proven is the usual case, so a card says nothing about it; its details do.
   await expect(
     page.locator(".asset-choice", { hasText: "Prospector Lander" }),
