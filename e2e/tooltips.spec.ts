@@ -62,20 +62,14 @@ test("explains the terms of Doing Science in Planning Mode and on the surface pa
     page.locator(".asset-choice [data-term='Activity']").first(),
     "Activity",
   );
-  await expectTooltip(
-    page,
-    page
-      .getByTestId("research-earnings")
-      .locator("[data-term='Ongoing Research']"),
-    "Ongoing Research",
-  );
 
   await chooseAssets(page, ["Trailblazer Rover"]);
   await expectTooltip(
     page,
     page
-      .getByTestId("research-earnings")
-      .locator("[data-term='Research Grant']"),
+      .getByTestId("activity-earnings")
+      .locator("[data-term='Research Grant']")
+      .first(),
     "Research Grant",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);

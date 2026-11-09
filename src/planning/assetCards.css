@@ -156,6 +156,11 @@
   color: var(--muted);
 }
 
+/* What the Crew's chosen Activity earns, after its choice, in the Assets' style. */
+.asset-choice-row .activity-earnings {
+  font-size: var(--text-sm);
+}
+
 /* The choices keep their width, so that the words around them give way instead. */
 .asset-choice-row select {
   flex-shrink: 0;

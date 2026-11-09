@@ -13,15 +13,20 @@ interface ActivitySelectProps {
 
 /**
  * What an Activity does, as its choice says on hovering, with what Sample caching collects over a whole Turn and what
- * its samples earn once they reach Earth.
+ * its samples earn once they reach Earth, and which Benefit raises its research, if one does.
  */
 export function describeActivity({
   description,
   cachesPerTurn,
+  raisedBy,
 }: PlannedActivity): string {
-  return cachesPerTurn
-    ? `${description} Over a whole Turn it collects ${String(cachesPerTurn.samples)} samples, which earn ${String(cachesPerTurn.science)} Science once they reach Earth.`
-    : description;
+  const caches = cachesPerTurn
+    ? ` Over a whole Turn it collects ${String(cachesPerTurn.samples)} samples, which earn ${String(cachesPerTurn.science)} Science once they reach Earth.`
+    : "";
+  const raised = raisedBy
+    ? ` ${raisedBy.givenBy.join(" and ")}'s Benefit adds ${String(raisedBy.percent)}% on the surface.`
+    : "";
+  return `${description}${caches}${raised}`;
 }
 
 /**

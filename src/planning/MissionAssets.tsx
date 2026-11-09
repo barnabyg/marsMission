@@ -1,27 +1,19 @@
 import { useState, type ReactNode } from "react";
 import type {
   AssetChoices,
-  PlannedActivity,
   PlannedAsset,
   ProgramView,
 } from "../simulation/simulation";
 import { AssetDetails } from "./AssetDetails";
-import { GameText } from "../ui/GameText";
-import { MissionAssetChoice, serviceLifePayback } from "./MissionAssetChoice";
+import { MissionAssetChoice } from "./MissionAssetChoice";
 import type { Addition, Fit } from "./missionFit";
-import {
-  isSurveying,
-  NothingLeftToSurvey,
-  ResearchEarnings,
-} from "./ResearchEarnings";
+import { isSurveying, NothingLeftToSurvey } from "./NothingLeftToSurvey";
 
 interface MissionAssetsProps {
   view: ProgramView;
   /** The Assets ticked to carry. */
   assetIds: string[];
   plannedAssets: PlannedAsset[];
-  /** The Activities on offer to the Mission's Crew, if it has Crew, whose earnings show with the Assets'. */
-  crewActivities: PlannedActivity[];
   /** Whether adding this to the Mission would take it over its Launch Vehicle's capacity or the Money. */
   fitOf: (addition: Addition) => Fit;
   onCarriedChange: (assetId: string, carried: boolean) => void;
@@ -32,12 +24,11 @@ interface MissionAssetsProps {
   children: ReactNode;
 }
 
-/** The Assets the Mission can carry, as cards, the choices for each one it does, and what they would earn at Mars. */
+/** The Assets the Mission can carry, as cards, and the choices for each one it does. */
 export function MissionAssets({
   view,
   assetIds,
   plannedAssets,
-  crewActivities,
   fitOf,
   onCarriedChange,
   onChoicesChange,
@@ -76,19 +67,6 @@ export function MissionAssets({
         ))}
         {children}
       </fieldset>
-      <ResearchEarnings
-        activities={[
-          ...plannedAssets.flatMap(({ activities }) => activities),
-          ...crewActivities,
-        ]}
-      />
-      {plannedAssets.some(
-        ({ serviceLifeOptions }) => serviceLifeOptions.length > 1,
-      ) && (
-        <p data-testid="service-life-payback">
-          <GameText>{serviceLifePayback}</GameText>
-        </p>
-      )}
       {!view.somethingLeftToSurvey &&
         plannedAssets.some(({ activityId, activities }) =>
           isSurveying(activityId, activities),

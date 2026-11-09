@@ -71,9 +71,9 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   // A larger Crew weighs and costs more, and earns more.
   await page.getByRole("combobox", { name: "Crew size" }).selectOption("3");
   await expect(page.getByTestId("mission-mass")).toHaveText("13 of 8 tonnes");
-  await expect(page.getByTestId("research-earnings")).toContainText(
-    "Crew research earns 240 Science",
-  );
+  await expect(
+    page.locator(".crew-choice").getByTestId("activity-earnings"),
+  ).toContainText("Crew research earns 240 Science");
   // The same Supplies last a larger Crew fewer days.
   await expect(
     page.getByRole("combobox", { name: "Supplies" }).getByRole("option"),
@@ -113,9 +113,9 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
     "data-detail",
     "Flying: Amara Okafor, Lena Petrova, Kenji Sato, each starting at Health 100. Radiation on the way leaves them 90 as they reach Mars (with Protection: None 79, Light shielding 85, Heavy shielding 90).",
   );
-  await expect(page.getByTestId("research-earnings")).toContainText(
-    "Crew research earns 240 Science",
-  );
+  await expect(
+    page.locator(".crew-choice").getByTestId("activity-earnings"),
+  ).toContainText("Crew research earns 240 Science");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await pauseAtEvent(

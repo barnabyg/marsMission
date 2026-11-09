@@ -44,16 +44,16 @@ test("puts a relay orbiter at Mars beside a lander and sees the raised earnings"
   await expect(page.getByRole("tooltip")).toContainText(
     "nothing on the surface is doing research",
   );
+  // The lander's Activity choice says on hovering which Benefit raises it, once the relay is on the Mission too.
   await chooseAssets(page, ["Prospector Lander"]);
-  await expect(page.getByTestId("research-earnings")).not.toContainText(
-    "Benefit",
-  );
+  const landerActivity = page.getByLabel("Activity for Prospector Lander");
+  await expect(landerActivity).not.toHaveAttribute("title", /Benefit/);
 
   await chooseAssets(page, ["Prospector Lander", "Courier Relay"]);
-  await expect(page.getByTestId("research-earnings")).toContainText(
-    `Surface research earns`,
-  );
-  await expect(page.getByTestId("research-earnings")).toContainText(raised);
+  await expect(
+    page.locator(".mission-panel").getByTestId("activity-earnings").first(),
+  ).toContainText("Surface research earns");
+  await expect(landerActivity).toHaveAttribute("title", new RegExp(raised));
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
 
@@ -67,9 +67,9 @@ test("puts a relay orbiter at Mars beside a lander and sees the raised earnings"
   await page.getByRole("button", { name: "Continue" }).click();
 
   const operating = page.locator(".panel", { hasText: "Operating at Mars" });
-  await expect(operating.getByTestId("research-earnings")).toContainText(
-    raised,
-  );
+  await expect(
+    operating.getByLabel("Activity for Prospector Lander"),
+  ).toHaveAttribute("title", new RegExp(raised));
   // With one already operating, another would add nothing.
   await expect(tag).toHaveText("Benefit +0 Science");
   await tag.hover();

@@ -31,9 +31,11 @@ test("pays Upkeep for an Asset kept at Mars, shown before the Turn and in its su
     .getByTestId("operating-assets")
     .getByRole("listitem")
     .filter({ hasText: "Pathfinder Orbiter" });
-  await expect(page.getByTestId("operating-upkeep")).toHaveText(
-    "Each Asset keeps its Activity until you change it. Upkeep this Turn: $10M.",
-  );
+  await expect(page.getByTestId("upkeep-cost")).toHaveText("$10M");
+  // Operating at Mars starts with its first Asset: no standing paragraph on Upkeep, which the budget bar shows.
+  await expect(
+    page.getByTestId("operating-panel").locator("h2 + *"),
+  ).toContainText("Pathfinder Orbiter");
   await expect(row.locator(".end-mission")).toHaveAttribute(
     "title",
     "Takes it out of service as this Turn starts, saving its Upkeep of $10M a Turn.",
@@ -64,9 +66,7 @@ test("pays Upkeep for an Asset kept at Mars, shown before the Turn and in its su
     .check();
   await expect(row).toContainText("its mission ends as this Turn starts");
   await expect(page.getByTestId("turn-spend-amount")).toHaveText("$0M");
-  await expect(page.getByTestId("operating-upkeep")).toHaveText(
-    "Each Asset keeps its Activity until you change it. Upkeep this Turn: $0M.",
-  );
+  await expect(page.getByTestId("upkeep-cost")).toHaveCount(0);
   await endTurnWithoutLaunching(page);
   await expect(page.getByTestId("turn-number")).toHaveText("4");
   await expect(page.getByTestId("operating-assets")).toHaveCount(0);

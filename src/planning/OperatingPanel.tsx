@@ -7,11 +7,7 @@ import { GameText } from "../ui/GameText";
 import { ActivitySelect, chosenEarnings, chosenYields } from "./ActivitySelect";
 import { SamplesWaiting } from "./SamplesHomeChoice";
 import { WayHomeChoice } from "./WayHomeChoice";
-import {
-  isSurveying,
-  NothingLeftToSurvey,
-  ResearchEarnings,
-} from "./ResearchEarnings";
+import { isSurveying, NothingLeftToSurvey } from "./NothingLeftToSurvey";
 
 interface OperatingPanelProps {
   assets: ProgramView["operatingAssets"];
@@ -139,26 +135,7 @@ export function OperatingPanel({
         )
       ) : (
         <>
-          {/* Each row has no room for its own Upkeep, so the panel says the total; each End mission says what it saves. */}
-          <p data-testid="operating-upkeep">
-            <GameText>
-              {`Each Asset keeps its Activity until you change it. Upkeep this Turn: ${formatMoney(
-                assets
-                  .filter(({ key }) => !endedKeys.includes(key))
-                  .reduce(
-                    (total, { upkeepMillions }) => total + upkeepMillions,
-                    0,
-                  ),
-              )}.`}
-            </GameText>
-          </p>
-          <ResearchEarnings
-            onlyRaises
-            activities={[
-              ...assets.flatMap(({ activities }) => activities),
-              ...crew.flatMap(({ activities }) => activities),
-            ]}
-          />
+          {/* The budget bar says the Turn's Upkeep; each End mission says what it saves. */}
           {!somethingLeftToSurvey &&
             assets.some(({ key, activityId, activities }) =>
               isSurveying(chosenActivities[key] ?? activityId, activities),

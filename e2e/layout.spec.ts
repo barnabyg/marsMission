@@ -68,8 +68,10 @@ for (const size of screenSizes) {
         .selectOption("meridian-heavy");
       await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      await expect(page.getByTestId("research-earnings")).toContainText(
-        "Surface research earns 100 Science and 9 Public Support, and pays a $50M Research Grant.",
+      await expect(
+        page.locator(".mission-panel").getByTestId("activity-earnings").last(),
+      ).toHaveText(
+        "Surface research earns 100 Science, 9 Public Support and $50M Research Grant a Turn.",
       );
       expect(await whatScrolls(page)).toEqual([]);
       await expect(
@@ -86,7 +88,9 @@ for (const size of screenSizes) {
       await expect(
         page.getByTestId("operating-assets").getByTestId("activity-earnings"),
       ).toHaveCount(2);
-      await expect(page.getByTestId("research-earnings")).toHaveCount(1);
+      await expect(
+        page.locator(".mission-panel").getByTestId("activity-earnings"),
+      ).toHaveCount(1);
       expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
@@ -150,11 +154,12 @@ for (const size of screenSizes) {
       await openBusyProgram(page, { colossusBuilt: true });
       await chooseEveryAsset(page);
       await expect(page.getByRole("alert")).toHaveCount(0);
-      const mission = page
-        .locator(".panel", { hasText: "Launch Vehicle" })
-        .getByTestId("research-earnings");
-      await expect(mission).toContainText("Soil analysis earns");
-      await expect(mission).toContainText("Long traverse earns");
+      await expect(
+        page
+          .locator(".mission-panel")
+          .getByTestId("activity-earnings")
+          .filter({ hasText: "Soil analysis earns" }),
+      ).toHaveCount(1);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
       await expect(
         page.getByTestId("operating-assets").getByRole("listitem").last(),

@@ -48,8 +48,8 @@ function serviceLifeLabel(option: PlannedServiceLife): string {
     : `${formatDays(option.days)} (${formatMoney(option.costMillions)})`;
 }
 
-/** What each longer Service Life says it earns, on hovering its choice and under the Assets. */
-export const serviceLifePayback = `Each longer Service Life says the Research Grants the Asset's Activity would earn over the days it adds, if the Asset doesn't fail, against its cost and the Upkeep of those Turns. ${onlyGrantsPay}`;
+/** What each longer Service Life says it earns, on hovering its label and its choice. */
+const serviceLifePayback = `Each longer Service Life says the Research Grants the Asset's Activity would earn over the days it adds, if the Asset doesn't fail, against its cost and the Upkeep of those Turns. ${onlyGrantsPay}`;
 
 /**
  * One Asset the Mission can carry, as a card: a picture of its model, its cost, mass, Technology Readiness, Benefit and how many are at Mars,
@@ -214,8 +214,14 @@ export function MissionAssetChoice({
               {chosenEarnings(planned.activityId, planned.activities)}
             </GameText>
           </span>
-          <span>
-            <GameText>Service Life</GameText>
+          {/* Its tooltip says how to read each longer Service Life's choice, after what a Service Life is. */}
+          <span
+            className="term"
+            data-term="Service Life"
+            data-detail={serviceLifePayback}
+            tabIndex={0}
+          >
+            Service Life
           </span>
           <select
             aria-label={`Service Life for ${asset.name}`}

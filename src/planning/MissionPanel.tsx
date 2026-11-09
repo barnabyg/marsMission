@@ -81,7 +81,6 @@ export function MissionPanel({
               view={view}
               assetIds={choices.assetIds}
               plannedAssets={choices.plannedAssets}
-              crewActivities={choices.plannedCrew?.activities ?? []}
               fitOf={(addition) =>
                 fitOfAdding(
                   simulation,
@@ -183,7 +182,8 @@ export function MissionPanel({
           onSubmit(withoutLaunching);
         }}
       >
-        {nothingTicked && (
+        {/* A hint for a new player, which a Program's later Turns no longer need. */}
+        {nothingTicked && view.turnNumber <= 2 && (
           <p data-testid="nothing-ticked">
             <GameText>
               Tick an Asset or Crew to plan a Mission, or end the Turn without
