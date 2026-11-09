@@ -81,9 +81,16 @@ describe("the Mission Events of a Turn, for its summary", () => {
     ]);
   });
 
-  it("lists the Hazards met on the way and a Free-return's coming back, as the events column shows them", () => {
+  it("lists a solar particle event met on the way and a Free-return's coming back, but not a dust storm at Mars", () => {
     const events = turnMissionEvents(
       timeline([
+        {
+          kind: "hazard",
+          hazard: "dustStorm",
+          day: 50,
+          title: "Dust storm over Jezero Crater",
+          description: "Nothing is operating there.",
+        },
         {
           kind: "hazard",
           hazard: "solarParticleEvent",
