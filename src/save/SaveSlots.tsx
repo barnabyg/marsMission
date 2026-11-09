@@ -166,12 +166,7 @@ export function SaveSlotsDialog({
             if (selected !== null) confirm(selected);
           }}
         >
-          {confirmLabel(
-            action.kind === "save"
-              ? action
-              : { kind: "load", replacesProgram: action.replacesProgram },
-            selected === null ? null : choiceOf(selected),
-          )}
+          {confirmLabel(action, selected === null ? null : choiceOf(selected))}
         </UnavailableButton>
       }
     >
@@ -189,7 +184,7 @@ export function SaveSlotsDialog({
           const loaded = slots[index] ?? { kind: "empty" };
           const text = describeSlot(simulation, loaded, false);
           return (
-            <li key={slot} data-testid={`save-slot-${slot}`}>
+            <li key={slot} role="none" data-testid={`save-slot-${slot}`}>
               {choosable(loaded) ? (
                 <label className="save-slot-row choosable">
                   <input
