@@ -88,10 +88,15 @@
 
 /* The choices for each ticked Asset, under the cards: one row each, with its Activity and Service Life side by side
    and what the chosen Activity earns under them, so that no card changes height when ticked. */
+/* One column no wider than the step at each level, so that a choice's longest option never sets the least width its
+   row can have: with wider fonts, as on Linux, that pushed the rows out of the panel. Shrunk, a choice cuts its closed
+   label short instead. */
 .chosen-assets {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.4rem;
   width: 100%;
+  min-width: 0;
 }
 
 .chosen-assets-heading {
@@ -100,12 +105,15 @@
 
 .chosen-assets ul {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.4rem;
+  min-width: 0;
   padding: 0;
   list-style: none;
 }
 
 .chosen-asset {
+  min-width: 0;
   display: grid;
   grid-template-columns: minmax(10rem, auto) minmax(0, 1fr) minmax(0, 1fr);
   align-items: center;
@@ -125,6 +133,7 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  min-width: 0;
 }
 
 .chosen-asset-choice > span {
