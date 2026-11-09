@@ -31,14 +31,6 @@ export function describeActivity({
 }
 
 /**
- * An Activity as its choice names it: the chosen one by its name alone, so that the closed choice never cuts it short,
- * as the line under the choice says what it earns, and the others with what they earn a Turn, so that the open list
- * compares them.
- */
-const activityLabel = (activity: PlannedActivity, chosen: boolean) =>
-  chosen ? activity.name : `${activity.name}: ${whatActivityDoes(activity)}`;
-
-/**
  * What the chosen Activity earns a Turn, or does, written out under its choice, whose closed label is its name alone:
  * "Soil analysis earns 80 Science, 9 Public Support and $800M Research Grant a Turn."
  */
@@ -83,7 +75,10 @@ export function chosenYields(
   );
 }
 
-/** The choice of what one Asset does, each other Activity with what it earns a Turn. */
+/**
+ * The choice of what one Asset does, each Activity by its name alone, so that the closed choice never cuts it short.
+ * What the chosen one earns is written once, in the line beside or under the choice (`ActivityEarnings`).
+ */
 export function ActivitySelect({
   assetName,
   activityId,
@@ -104,7 +99,7 @@ export function ActivitySelect({
     >
       {activities.map((activity) => (
         <option key={activity.id} value={activity.id}>
-          {activityLabel(activity, activity.id === activityId)}
+          {activity.name}
         </option>
       ))}
     </select>

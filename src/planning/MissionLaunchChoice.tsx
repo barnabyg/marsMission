@@ -55,7 +55,9 @@ export function MissionLaunchChoice({
             >
               {option.name} ({formatMoney(option.costMillions)},{" "}
               {option.capacityTonnes} t
-              {option.technologyReadiness === "flight-proven"
+              {/* The chosen one's Technology Readiness is in the tag beside the choice, so only the others say it. */}
+              {option.technologyReadiness === "flight-proven" ||
+              option.id === launchVehicleId
                 ? ""
                 : `, ${readinessLabel(option.technologyReadiness)}`}
               )
@@ -82,6 +84,9 @@ export function MissionLaunchChoice({
       </label>
       {trajectory && (
         <p data-testid="trajectory-details">
+          <span className="choice-facts" data-testid="trajectory-facts">
+            {trajectoryFacts(trajectory)}
+          </span>{" "}
           <GameText>{trajectory.description}</GameText>
         </p>
       )}
@@ -89,17 +94,20 @@ export function MissionLaunchChoice({
   );
 }
 
-/** What a Trajectory takes and what it costs, for its place in the list. */
-function describeTrajectory({
-  name,
+/** A Trajectory as its choice names it: its name and, if it costs anything, its cost, as in "Fast ($40M)". */
+function describeTrajectory({ name, costMillions }: PlannedTrajectory): string {
+  return costMillions > 0 ? `${name} (${formatMoney(costMillions)})` : name;
+}
+
+/** What the chosen Trajectory takes, written once beside its choice: "150 days to Mars · 0.5 t less capacity". */
+function trajectoryFacts({
   transferDays,
-  costMillions,
   capacityLossTonnes,
 }: PlannedTrajectory): string {
-  const costs = [
-    `${transferDays} days`,
-    ...(costMillions > 0 ? [formatMoney(costMillions)] : []),
-    ...(capacityLossTonnes > 0 ? [`${capacityLossTonnes} t less`] : []),
-  ];
-  return `${name} (${costs.join(", ")})`;
+  return [
+    `${transferDays} days to Mars`,
+    ...(capacityLossTonnes > 0
+      ? [`${capacityLossTonnes} t less capacity`]
+      : []),
+  ].join(" · ");
 }

@@ -86,6 +86,8 @@ test("switches to the surface view and back during a Turn, at any speed and whil
   await expect(page.getByTestId("surface-status")).toContainText(
     "On its way: Prospector Lander, Trailblazer Rover",
   );
+  // The site's list names them, so the journey's line doesn't as well.
+  await expect(page.getByTestId("journey-progress")).toHaveCount(0);
   await expect(surfaceAssets(page)).toHaveCount(0);
   await expect(page.getByLabel("Landing Site to show")).toHaveCount(0);
   await expect(viewButton(page, "Surface")).not.toHaveAccessibleDescription(
@@ -250,7 +252,7 @@ test("plays a crash on the surface without showing it as operating, then moves t
     "Prospector Lander: crashed",
   );
   await expect(viewButton(page, "Surface")).toBeEnabled();
-  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
+  await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   const over = holdSequence(page);
@@ -263,7 +265,7 @@ test("plays a crash on the surface without showing it as operating, then moves t
   await expect(page.getByTestId("mars-landing")).toHaveText(
     "Prospector Lander: crashed at Jezero Crater",
   );
-  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
+  await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
   expect(problems).toEqual([]);
 });
 

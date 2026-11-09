@@ -16,7 +16,10 @@ interface MissionEventChoicesProps {
   onContingencyChange: (contingencyId: string, bought: boolean) => void;
 }
 
-/** Reliability levels as a list shows them: each one's name, cost and the Risk Band it leaves. */
+/**
+ * Reliability levels as a list shows them: each one's name and cost. The Risk Band the chosen one leaves is beside the
+ * list, so the options don't say it again.
+ */
 function ReliabilityOptions({
   levels,
 }: {
@@ -24,9 +27,31 @@ function ReliabilityOptions({
 }) {
   return levels.map((level) => (
     <option key={level.id} value={level.id}>
-      {level.name} ({formatMoney(level.costMillions)}, {level.riskBand})
+      {level.name} ({formatMoney(level.costMillions)})
     </option>
   ));
+}
+
+/** What a Contingency costs and its Risk Band if used, after its name: "Kick stage · $60M · 0.3 t · ~20% if used". */
+function contingencyLabel({
+  name,
+  costMillions,
+  massTonnes,
+  riskBand,
+}: NonNullable<PlannedMissionEvent["contingency"]>): string {
+  return [
+    name,
+    formatMoney(costMillions),
+    `${massTonnes} t`,
+    `${riskBand} if used`,
+  ].join(" · ");
+}
+
+/** Over a list of Mission Events, naming the Contingency once rather than in each one's label, if any offers one. */
+function eventsHeading(text: string, events: PlannedMissionEvent[]): string {
+  return events.some(({ contingency }) => contingency)
+    ? `${text}, with a Contingency for some`
+    : text;
 }
 
 /**
@@ -75,9 +100,10 @@ export function MissionEventChoices({
               onContingencyChange(id, change.target.checked);
             }}
           />
-          <GameText>
-            {`Contingency: ${event.contingency.name} (${formatMoney(event.contingency.costMillions)}, ${event.contingency.massTonnes} t, ${event.contingency.riskBand} if used)`}
-          </GameText>
+          {/* One flex item, so that the label's gap never falls inside its text. */}
+          <span>
+            <GameText>{contingencyLabel(event.contingency)}</GameText>
+          </span>
         </label>
       )}
     </li>
@@ -85,7 +111,7 @@ export function MissionEventChoices({
   return (
     <>
       <p className="mission-events-heading">
-        <GameText>On the way, once each</GameText>
+        <GameText>{eventsHeading("On the way, once each", onTheWay)}</GameText>
       </p>
       <ol className="mission-events plain-list" data-testid="mission-events">
         {onTheWay.map(eventItem)}
@@ -93,7 +119,9 @@ export function MissionEventChoices({
       {homeward.length > 0 && (
         <>
           <p className="mission-events-heading">
-            <GameText>Journey home, on a later Turn</GameText>
+            <GameText>
+              {eventsHeading("Journey home, on a later Turn", homeward)}
+            </GameText>
           </p>
           <ol
             className="mission-events plain-list"

@@ -46,11 +46,15 @@ test("Planning Mode shows what a Trajectory changes", async ({ page }) => {
     "Meridian Medium (4 t) · Slow (210 days)",
   );
   await openLaunchStep(page);
+  // Each choice is its name and cost, and what the chosen one takes is said once, beside it.
   await expect(trajectory(page).locator("option")).toHaveText([
-    "Slow (210 days)",
-    "Fast (150 days, $40M, 0.5 t less)",
-    "Free-return (210 days, $30M, 0.2 t less)",
+    "Slow",
+    "Fast ($40M)",
+    "Free-return ($30M)",
   ]);
+  await expect(page.getByTestId("trajectory-facts")).toHaveText(
+    "210 days to Mars",
+  );
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
   await expect(page.getByTestId("mission-mass")).toHaveText("2.5 of 4 tonnes");
   await expect(page.getByTestId("trajectory-details")).toContainText(
@@ -64,6 +68,9 @@ test("Planning Mode shows what a Trajectory changes", async ({ page }) => {
   );
   await expect(page.getByTestId("trajectory-details")).toContainText(
     "arrive sooner",
+  );
+  await expect(page.getByTestId("trajectory-facts")).toHaveText(
+    "150 days to Mars · 0.5 t less capacity",
   );
 });
 

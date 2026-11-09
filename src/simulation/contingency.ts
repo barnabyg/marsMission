@@ -46,7 +46,15 @@ export function tryContingency(
     ...onBoard.map((asset) => asset.name),
     ...cargoOnBoard,
     ...crewOnBoard,
-  ].join(", ");
+  ];
+  const named = lostNames.join(", ");
+  // A name alone takes "is lost", several "are lost"; an Asset alone is "it", and Crew or several are "they".
+  const oneNamed = lostNames.length === 1;
+  const oneAsset = oneNamed && crewOnBoard.length === 0;
+  const agree = (singular: string, plural: string) =>
+    oneNamed ? singular : plural;
+  const pronounIs = oneAsset ? "it is" : "they are";
+  const pronounSwings = oneAsset ? "it swings" : "they swing";
   const { contingencyRescueLoss } = flight.catalogue.crew.health;
   // An Asset loses Service Life to a rescue, and Crew lose Health.
   const crewCost = `${contingencyRescueLoss} less Health each`;
@@ -62,7 +70,9 @@ export function tryContingency(
   const lifeLost = (percent: number) =>
     [
       ...(onBoard.length > 0
-        ? [` ${assetNames} lost ${percent}% of their Service Life.`]
+        ? [
+            ` ${assetNames} lost ${percent}% of ${onBoard.length > 1 ? "their" : "its"} Service Life.`,
+          ]
         : []),
       ...(crewOnBoard.length > 0
         ? [
@@ -97,10 +107,10 @@ export function tryContingency(
             answer: "use",
             label: `Use ${contingency.name}`,
             riskBand: rules.riskBandFor(contingency.rescueFailureProbability),
-            description: `A second try. If it works, ${lostNames} carry on${carryOn(contingency.serviceLifeLossPercent)}. If it fails, ${
+            description: `A second try. If it works, ${named} ${agree("carries", "carry")} on${carryOn(contingency.serviceLifeLossPercent)}. If it fails, ${
               comesHomeFrom(flight, event)
-                ? `they swing back to Earth, which costs ${supportCost(lossFor(flight, event, contingency))} and refunds ${formatMoney(refundFor(flight, onBoard))}.`
-                : `they are lost and it costs ${lossFor(flight, event, contingency)} Public Support.${crewLossWarning(flight.catalogue, crewOnBoard)}`
+                ? `${pronounSwings} back to Earth, which costs ${supportCost(lossFor(flight, event, contingency))} and refunds ${formatMoney(refundFor(flight, onBoard))}.`
+                : `${pronounIs} lost and it costs ${lossFor(flight, event, contingency)} Public Support.${crewLossWarning(flight.catalogue, crewOnBoard)}`
             }`,
           },
           {
@@ -108,8 +118,8 @@ export function tryContingency(
             label: "Don't use it",
             riskBand: null,
             description: comesHomeFrom(flight, event)
-              ? `${lostNames} swing back to Earth, which costs ${supportCost(lossFor(flight, event, undefined))} and refunds ${formatMoney(refundFor(flight, onBoard))}.`
-              : `${lostNames} are lost, and it costs ${lossFor(flight, event, undefined)} Public Support.${crewLossWarning(flight.catalogue, crewOnBoard)}`,
+              ? `${named} ${agree("swings", "swing")} back to Earth, which costs ${supportCost(lossFor(flight, event, undefined))} and refunds ${formatMoney(refundFor(flight, onBoard))}.`
+              : `${named} ${agree("is", "are")} lost, and it costs ${lossFor(flight, event, undefined)} Public Support.${crewLossWarning(flight.catalogue, crewOnBoard)}`,
           },
         ],
       };

@@ -2,7 +2,7 @@ import type { Timeline } from "../../simulation/simulation";
 import { GameText } from "../../ui/GameText";
 import type { MissionViewId } from "../missionViews";
 import { ascentStatus, type AscentNow } from "./ascent";
-import { sequenceStatus, type SequenceNow } from "./sequence";
+import { landingNowOn, sequenceStatus, type SequenceNow } from "./sequence";
 import { describeSite, dustStormAt } from "./surface";
 
 /** Why the surface view's button is disabled, which the button itself tells the player. */
@@ -71,6 +71,7 @@ export function SurfaceControls({
             day,
             site,
             ascent?.sequence.siteName === site,
+            landingNowOn(sequence, site),
           ),
         ].map((line) => (
           <li key={line}>

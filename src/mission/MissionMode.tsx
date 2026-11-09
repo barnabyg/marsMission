@@ -164,6 +164,10 @@ export function MissionMode({
   const turnProgress = (state.day / timeline.durationDays) * 100;
 
   const operatingAssets = assetsOperatingOn(timeline, state.day);
+  // The surface view lists its Landing Site's Assets, so the rest of the box leaves them out, to name each once.
+  const shownSite = view === "surface" ? site : null;
+  const elsewhere = assetsOperatingOn(timeline, state.day, shownSite);
+  const journey = describeJourney(timeline, state.day, shownSite);
 
   return (
     <main className="mission">
@@ -281,9 +285,11 @@ export function MissionMode({
         />
       </header>
       <aside className="mission-side" data-testid="mission-info">
-        <p data-testid="journey-progress">
-          <GameText>{describeJourney(timeline.mission, state.day)}</GameText>
-        </p>
+        {journey !== null && (
+          <p data-testid="journey-progress">
+            <GameText>{journey}</GameText>
+          </p>
+        )}
         <SurfaceControls
           timeline={timeline}
           day={state.day}
@@ -304,15 +310,21 @@ export function MissionMode({
           marsRendezvous={marsRendezvous}
           earthEntry={earthEntry}
         />
-        <h2 className="subheading">Operating at Mars</h2>
-        <ul data-testid="operating-at-mars">
-          {operatingAssets.length === 0 && <li>Nothing</li>}
-          {operatingAssets.map((asset, index) => (
-            <li key={index}>
-              <GameText>{asset}</GameText>
-            </li>
-          ))}
-        </ul>
+        {/* Shown only while it has something to list, rather than an empty heading. */}
+        {elsewhere.length > 0 && (
+          <>
+            <h2 className="subheading">
+              {shownSite === null ? "Operating at Mars" : "Elsewhere at Mars"}
+            </h2>
+            <ul data-testid="operating-at-mars">
+              {elsewhere.map((asset, index) => (
+                <li key={index}>
+                  <GameText>{asset}</GameText>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
         {deciding && (
           <DecisionPointAdvice
             decisionPoint={decisionPoint}

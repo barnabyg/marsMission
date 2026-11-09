@@ -106,6 +106,11 @@
   min-width: min(22rem, 100%);
 }
 
+/* What the chosen Trajectory takes, which its choice leaves out so as to say it once. */
+.mission-launch .choice-facts {
+  color: var(--muted);
+}
+
 /* A fade over the foot of something that scrolls, with a word on what is below, while there is more (ScrollCue.tsx). */
 .scroll-cue {
   display: flex;
@@ -206,7 +211,7 @@
   cursor: help;
 }
 
-/* Each Activity's choice says what it earns, which is too long for its column, so the closed choice cuts it short. */
+/* Each Activity's choice names it alone, with what it earns on the row under it, so the choice fits its column. */
 .panel .operating-table select {
   width: 100%;
   min-width: 0;

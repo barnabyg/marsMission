@@ -416,6 +416,29 @@ describe("what the player reads about the Landing Site shown", () => {
     ]);
   });
 
+  it("says when an Asset's Service Life was cut, as the rest of the box no longer lists it", () => {
+    const timeline = timelineOf([
+      asset({ name: "Prospector", cutServiceLifeDays: 780 }),
+    ]);
+    expect(describeSite(timeline, 10, "Alpha Plain")).toEqual([
+      "Prospector (lander): Nothing, Service Life cut to 780 days",
+    ]);
+  });
+
+  it("leaves what is landing now to the landing's own line, which names it", () => {
+    const timeline = timelineOf([
+      asset({ name: "Old" }),
+      asset({ name: "New", key: "new", arrivedOnDay: 205, fromDay: 205 }),
+    ]);
+    expect(describeSite(timeline, 205, "Alpha Plain", false, 205)).toEqual([
+      "Old (lander): Nothing",
+    ]);
+    const alone = timelineOf([
+      asset({ name: "New", arrivedOnDay: 205, fromDay: 205 }),
+    ]);
+    expect(describeSite(alone, 205, "Alpha Plain", false, 205)).toEqual([]);
+  });
+
   it("leaves out a landing on its way to another site", () => {
     const timeline = timelineOf([asset({ name: "Old" })], [onTheWay({})]);
     expect(describeSite(timeline, 10, "Alpha Plain")).toEqual([

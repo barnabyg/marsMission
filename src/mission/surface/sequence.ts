@@ -169,6 +169,18 @@ export function sequenceKind({
   return crewed ? `crew-${what}` : what;
 }
 
+/**
+ * The day of the landing playing now at a Landing Site, whose own line names what is coming down, or null if none is,
+ * or it is a crash, which leaves nothing to name twice.
+ */
+export function landingNowOn(
+  now: SequenceNow | null,
+  siteName: string,
+): number | null {
+  if (sequenceStatus(now, siteName) === null || now === null) return null;
+  return now.sequence.crashed ? null : now.sequence.day;
+}
+
 /** What the player reads about a sequence running at a Landing Site. */
 export function sequenceStatus(
   now: SequenceNow | null,

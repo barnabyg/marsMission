@@ -57,6 +57,10 @@ test("develops the Meridian Colossus, then fills it with more than any other Lau
   await expect(page.getByTestId("launch-vehicle-readiness")).toHaveText(
     "Unproven",
   );
+  // The tag beside the choice says it, so the chosen option doesn't as well.
+  await expect(launchVehicle(page).locator("option:checked")).not.toContainText(
+    "Unproven",
+  );
   await chooseAssets(page, [
     "Pathfinder Orbiter",
     "Prospector Lander",

@@ -25,9 +25,11 @@ export function LandingSiteChoice({
             onLandingSiteChange(event.target.value);
           }}
         >
+          {/* Whether the chosen site was surveyed is said once, in the line under the choice, so only the others say it. */}
           {landingSites.map((site) => (
             <option key={site.id} value={site.id}>
-              {site.name} ({site.surveyed ? "surveyed, " : ""}
+              {site.name} (
+              {site.surveyed && site.id !== landingSite.id ? "surveyed, " : ""}
               {site.riskBand})
             </option>
           ))}

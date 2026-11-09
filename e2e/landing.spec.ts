@@ -59,12 +59,19 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
   await expect(
     eventEntries(page).getByRole("heading", { name: "First landing on Mars" }),
   ).toBeVisible();
-  await expect(page.getByTestId("journey-progress")).toHaveText(
-    "Prospector Lander: landed at Jezero Crater",
+  // The info box names the lander once, in the Landing Site's own list: by the landing's line while it comes down,
+  // then with its Activity.
+  await expect(page.getByTestId("current-view")).toHaveText("Surface");
+  await expect(page.getByTestId("surface-status")).toContainText(
+    "Prospector Lander",
   );
-  await expect(page.getByTestId("operating-at-mars")).toHaveText(
-    "Prospector Lander at Jezero Crater: Surface research",
-  );
+  await expect(page.getByTestId("journey-progress")).toHaveCount(0);
+  await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
+  expect(
+    (await page.getByTestId("mission-info").innerText()).split(
+      "Prospector Lander",
+    ),
+  ).toHaveLength(2);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await playToNextTurn(page);
@@ -125,7 +132,7 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
     "crash",
   );
   await expect(page.getByTestId("journey-progress")).toHaveText(
-    "Pathfinder Orbiter: arrived at Mars. Prospector Lander: crashed at Jezero Crater",
+    "Prospector Lander: crashed at Jezero Crater",
   );
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
     "Pathfinder Orbiter: Survey",
@@ -183,6 +190,8 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
   await expect(page.getByTestId("landing-site-details")).toContainText(
     "Surveyed.",
   );
+  // The line under the choice says the chosen site was surveyed, so its option doesn't as well.
+  await expect(sites.first()).toHaveText("Jezero Crater (~10%)");
   expect(problems).toEqual([]);
 });
 
@@ -197,8 +206,8 @@ test("turns Surveying off, sees no Survey that Turn, keeps that through a reload
   await expect(activity).toHaveValue("survey");
   await expect(activity.getByRole("option")).toHaveText([
     "Survey",
-    "Orbital research: earns 80 Science and 6 Public Support a Turn",
-    "Nothing: stays in place and does no work this Turn",
+    "Orbital research",
+    "Nothing",
   ]);
   await activity.selectOption("nothing");
   expect(await termsWithoutTooltips(page)).toEqual([]);
@@ -298,7 +307,7 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   await expect(eventEntries(page).first().getByRole("heading")).toHaveText(
     ended,
   );
-  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
+  await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
   await expect(eventEntries(page).first()).toContainText(
     "costs no Public Support",
   );
@@ -347,7 +356,7 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
   );
   await expect(failed).toHaveClass(/failed/);
   await expect(failed).toContainText("costs no Public Support");
-  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
+  await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await page.getByRole("button", { name: /^Skip to / }).click();
@@ -376,7 +385,7 @@ test("reports a failed landing as a crash at the Landing Site", async ({
   await expect(page.getByTestId("journey-progress")).toHaveText(
     "Prospector Lander: crashed at Jezero Crater",
   );
-  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
+  await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await page.getByRole("button", { name: /^Skip to / }).click();

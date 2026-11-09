@@ -142,6 +142,36 @@ describe("a Mission Event failing with a Contingency bought", () => {
     expect(decisionPoint?.choices[1].description).toContain("Test Orbiter");
   });
 
+  it("says one Asset is lost or carries on, and several are lost or carry on", () => {
+    const { simulation, program } = withFailures(["test-burn"], {
+      startingMoneyMillions: 5000,
+    });
+    const choicesFor = (mission: NonNullable<TurnPlan["mission"]>) =>
+      simulation
+        .workOutTurn(program, {
+          mission: { ...mission, contingencyIds: ["test-spare-engine"] },
+        })
+        .decisionPoint?.choices.map(({ description }) => description);
+    expect(
+      choicesFor({
+        launchVehicleId: "test-vehicle",
+        assetIds: ["test-orbiter"],
+      }),
+    ).toEqual([
+      "A second try. If it works, Test Orbiter carries on with 10% less Service Life. If it fails, it is lost and it costs 35 Public Support.",
+      "Test Orbiter is lost, and it costs 30 Public Support.",
+    ]);
+    const [use, decline] =
+      choicesFor({
+        launchVehicleId: "test-heavy",
+        assetIds: ["test-lander", "test-rover"],
+        landingSiteId: "alpha-plain",
+      }) ?? [];
+    expect(use).toContain("Test Lander, Test Rover carry on");
+    expect(use).toContain("they are lost");
+    expect(decline).toContain("Test Lander, Test Rover are lost");
+  });
+
   it("can't be run to its end without an answer", () => {
     const { simulation, program } = withFailures(["test-arrival"]);
     expect(() => simulation.runTurn(program, insured)).toThrow(
@@ -179,6 +209,8 @@ describe("a Mission Event failing with a Contingency bought", () => {
       eventId: "test-arrival",
       outcome: "success",
       day: 200,
+      description:
+        "The reserve fuel caught it. Test Orbiter lost 50% of its Service Life.",
     });
     expect(timeline.assetsAtMars[0]?.cutServiceLifeDays).toBe(25_000);
   });

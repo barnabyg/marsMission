@@ -43,6 +43,21 @@ test("Planning Mode offers Reserve fuel only for a Mission with Mars orbit inser
   const reserveFuel = page.getByRole("checkbox", { name: /Reserve fuel/ });
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
   await expect(page.getByTestId("mission-mass")).toHaveText("2.5 of 4 tonnes");
+  // The Contingency is named once, over the list, and its label says what it costs and its Risk Band if used.
+  await expect(
+    page.getByText("On the way, once each, with a Contingency for some"),
+  ).toBeVisible();
+  await expect(reserveFuel).toHaveAccessibleName(
+    /^Reserve fuel · \$80M · 0\.2 t · (~\d+%|Over \d+%) if used$/,
+  );
+  // Each Reliability is its name and cost; the Risk Band it leaves is beside the choice, and said only there.
+  const insertion = page
+    .getByTestId("mission-event")
+    .filter({ hasText: "Mars orbit insertion" });
+  await expect(insertion.getByRole("option").first()).toHaveText("None ($0M)");
+  for (const option of await insertion.getByRole("option").allTextContents()) {
+    expect(option).toMatch(/^[\w ]+ \(\$[\d.]+[MB]\)$/);
+  }
   await reserveFuel.check();
   await expect(page.getByTestId("mission-cost")).toHaveText("$1.08B");
   await expect(page.getByTestId("mission-mass")).toHaveText("2.7 of 4 tonnes");
@@ -68,6 +83,10 @@ test("using a Contingency that works saves the orbiter with a shorter Service Li
     "Over 30%",
   );
   await expect(decisionPoint(page)).toContainText("30% less Service Life");
+  // One orbiter is lost, not "are lost".
+  await expect(decisionPoint(page)).toContainText(
+    "Pathfinder Orbiter is lost, and it costs 20 Public Support.",
+  );
   await expect(decisionPoint(page)).toContainText("35 Public Support");
   await expect(decisionPoint(page)).toContainText("20 Public Support");
 
@@ -258,9 +277,20 @@ test("a rescued landing shows its Decision Point first, then plays the landing, 
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
 
   await expect(surfaceAssets(page).first()).toContainText("Prospector Lander");
-  await expect(page.getByTestId("operating-at-mars")).toContainText(
-    "Service Life cut to 780 days",
+  // Once it has landed, the Landing Site's own list says its Service Life was cut.
+  const landed = holdSequence(page);
+  await page.getByRole("button", { name: "1x" }).click();
+  await landed;
+  await expect(page.getByTestId("surface-status")).toContainText(
+    "Prospector Lander (lander): Surface research, Service Life cut to 780 days",
   );
+  // Landed at Jezero Crater, the lander is named once in the whole info box, and nothing else is at Mars.
+  expect(
+    (await page.getByTestId("mission-info").innerText()).split(
+      "Prospector Lander",
+    ),
+  ).toHaveLength(2);
+  await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
 
   await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-contingencies")).toContainText(

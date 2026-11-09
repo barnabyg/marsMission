@@ -40,7 +40,6 @@ test("pauses Mission Mode and resumes from exactly where it stopped, without car
   expect(icons).toHaveLength(5);
   expect(new Set(icons).size).toBe(5);
   const date = page.getByTestId("mission-date");
-  const journey = page.getByTestId("journey-progress");
   const turnProgress = page.getByRole("progressbar");
 
   await speed.getByRole("button", { name: "5x" }).click();
@@ -57,12 +56,10 @@ test("pauses Mission Mode and resumes from exactly where it stopped, without car
 
   const held = {
     date: await date.textContent(),
-    journey: await journey.textContent(),
     turn: await turnProgress.getAttribute("value"),
   };
   await page.waitForTimeout(500);
   expect(await date.textContent()).toBe(held.date);
-  expect(await journey.textContent()).toBe(held.journey);
   expect(await turnProgress.getAttribute("value")).toBe(held.turn);
 
   // Mute still works.
