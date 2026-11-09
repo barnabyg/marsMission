@@ -2,6 +2,7 @@ import type { Catalogue } from "../catalogue/catalogue";
 import { flyMission } from "./flyMission";
 import { missionOnTimeline, timelineUpToDecision } from "./missionReport";
 import type { PlanCheck } from "./previews";
+import { recordTurn } from "./programSummary";
 import type { Rules } from "./rules";
 import { resolveTurn } from "./turnSteps";
 import type {
@@ -76,7 +77,18 @@ export function workOutTurn(
   const stormComesFirst =
     stormDecision !== null && decisionPoint === stormDecision.decisionPoint;
   if (!decisionPoint) {
-    return { decisionPoint, timeline: result.timeline, result };
+    const after = result.program;
+    const record = recordTurn(
+      program,
+      after,
+      plan.mission !== null,
+      result.summary,
+    );
+    return {
+      decisionPoint,
+      timeline: result.timeline,
+      result: { ...result, program: { ...after, record } },
+    };
   }
   return {
     decisionPoint,

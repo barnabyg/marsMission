@@ -81,9 +81,14 @@ export function App({ services, firstScreen }: AppProps) {
   if (screen.mode === "programSummary") {
     return (
       <ProgramSummaryScreen
-        view={simulation.readProgram(screen.program)}
+        summary={simulation.summariseProgram(screen.program)}
+        simulation={simulation}
+        saveStore={saveStore}
         onStartNew={() => {
           setScreen(newProgramScreen(services));
+        }}
+        onLoad={(program) => {
+          setScreen(planningScreen(services, program));
         }}
       />
     );

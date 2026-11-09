@@ -10,6 +10,7 @@ import { crewAtMarsView, crewedMissionView } from "./crewView";
 import { needingDevelopment, plannedDevelopment } from "./development";
 import { plannedActivity, surfaceRaise } from "./missionPreviews";
 import { daysUntilServiceEnds, operatingKey, type Rules } from "./rules";
+import { newRecord } from "./programSummary";
 import { sampleReturnsOf } from "./sampleReturn";
 import { costOf, readinessOf } from "./technologyReadiness";
 import type { Program, ProgramView } from "./types";
@@ -49,6 +50,7 @@ export function newProgram(
     samplesAtSites: {},
     tutorial: { kind: tutorial ? "on" : "off" },
     status: { kind: "active" },
+    record: newRecord(1, startingPublicSupport),
   };
 }
 
