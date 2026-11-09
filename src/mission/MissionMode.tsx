@@ -10,7 +10,7 @@ import { GameText } from "../ui/GameText";
 import { Icon, type IconName } from "../ui/Icon";
 import type { DecisionAdvice } from "../tutorial/tutorial";
 import { TurnOffTutorial } from "../ui/TurnOffTutorial";
-import { DecisionPointPanel } from "./DecisionPointPanel";
+import { DecisionPointAdvice, DecisionPointPanel } from "./DecisionPointPanel";
 import { EventsColumn } from "./EventsColumn";
 import { missionViews, viewName, type MissionViewId } from "./missionViews";
 import { atDecisionPoint, speeds } from "./playback";
@@ -292,6 +292,12 @@ export function MissionMode({
             </li>
           ))}
         </ul>
+        {deciding && (
+          <DecisionPointAdvice
+            decisionPoint={decisionPoint}
+            advice={decisionAdvice}
+          />
+        )}
         {tutorialOn && (
           <div
             className="mission-tutorial tutorial-voice"
@@ -316,6 +322,7 @@ export function MissionMode({
       <EventsColumn
         timeline={timeline}
         entriesHappened={state.entriesHappened}
+        deciding={deciding}
       />
     </main>
   );
