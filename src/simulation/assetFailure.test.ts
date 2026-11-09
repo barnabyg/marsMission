@@ -271,7 +271,7 @@ describe("Reliability for an Asset in saves", () => {
   });
 });
 
-describe("the in-service failure chance in the data files", () => {
+describe("the in-service failure probability in the data files", () => {
   it("is rejected if it's not a probability", () => {
     const files = testCatalogueFiles();
     const reject = () =>
