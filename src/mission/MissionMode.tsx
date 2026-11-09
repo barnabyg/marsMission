@@ -222,7 +222,7 @@ export function MissionMode({
               type="button"
               aria-pressed={state.paused || deciding}
               aria-keyshortcuts={pauseKeyName}
-              title={`Pause, or play on. Shortcut: ${pauseKeyName}`}
+              title={`Pause. Shortcut: ${pauseKeyName}, which also plays on`}
               onClick={pause}
             >
               <Icon name="pause" />
