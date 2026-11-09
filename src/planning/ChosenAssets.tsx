@@ -8,7 +8,7 @@ import {
   type PlannedServiceLife,
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
-import { ActivitySelect, chosenEarnings } from "./ActivitySelect";
+import { ActivityEarnings, ActivitySelect } from "./ActivitySelect";
 
 interface ChosenAssetsProps {
   /** The Assets ticked for the Mission, in the order the catalogue lists them, with the choices made for each. */
@@ -93,14 +93,10 @@ export function ChosenAssets({
                   ))}
                 </select>
               </span>
-              <span
-                className="activity-earnings"
-                data-testid="activity-earnings"
-              >
-                <GameText>
-                  {chosenEarnings(planned.activityId, planned.activities)}
-                </GameText>
-              </span>
+              <ActivityEarnings
+                activityId={planned.activityId}
+                activities={planned.activities}
+              />
             </li>
           );
         })}

@@ -70,20 +70,16 @@ export function benefitTag(
   const { name, benefit, benefitImpact, grantImpact, makes, habitat } = asset;
   if (!benefit) return null;
   const detail = (why: string) => `${name}: ${benefit} ${why}`;
-  if (benefitImpact) {
-    return benefitImpact.extraScience > 0
-      ? {
-          text: `Benefit +${String(benefitImpact.extraScience)} Science`,
-          detail: detail(describeBenefitImpact(benefitImpact)),
-        }
-      : null;
-  }
-  if (grantImpact) {
-    return grantImpact.extraGrantMillions > 0
-      ? {
-          text: `Benefit +${formatMoney(grantImpact.extraGrantMillions)}`,
-          detail: detail(describeGrantImpact(grantImpact)),
-        }
+  const thisTurn = benefitThisTurn(asset);
+  if (thisTurn !== null) {
+    const added = benefitImpact
+      ? benefitImpact.extraScience > 0 &&
+        `+${String(benefitImpact.extraScience)} Science`
+      : grantImpact &&
+        grantImpact.extraGrantMillions > 0 &&
+        `+${formatMoney(grantImpact.extraGrantMillions)}`;
+    return added
+      ? { text: `Benefit ${added}`, detail: detail(thisTurn) }
       : null;
   }
   if (makes) {

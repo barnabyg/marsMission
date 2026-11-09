@@ -7,7 +7,7 @@ import {
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
-import { ActivitySelect, chosenEarnings } from "./ActivitySelect";
+import { ActivityEarnings, ActivitySelect } from "./ActivitySelect";
 import { assetImageUrl, crewImageKind } from "./assetImages";
 import { fitReason, type Fit } from "./missionFit";
 import { UnavailableReason } from "./UnavailableReason";
@@ -168,14 +168,10 @@ export function MissionCrew({
                   activities={planned.activities}
                   onChange={onActivityChange}
                 />
-                <span
-                  className="activity-earnings"
-                  data-testid="activity-earnings"
-                >
-                  <GameText>
-                    {chosenEarnings(planned.activityId, planned.activities)}
-                  </GameText>
-                </span>
+                <ActivityEarnings
+                  activityId={planned.activityId}
+                  activities={planned.activities}
+                />
               </>
             ) : (
               <span data-testid="crew-joining">

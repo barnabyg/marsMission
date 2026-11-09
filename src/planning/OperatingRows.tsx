@@ -1,6 +1,10 @@
 import { formatMoney, type ProgramView } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
-import { ActivitySelect, chosenEarnings, chosenYields } from "./ActivitySelect";
+import {
+  ActivityEarnings,
+  ActivitySelect,
+  chosenYields,
+} from "./ActivitySelect";
 import { WayHomeChoice } from "./WayHomeChoice";
 
 type OperatingAsset = ProgramView["operatingAssets"][number];
@@ -18,21 +22,34 @@ function EarningsRow({
   return (
     <tr className="operating-earnings">
       <td colSpan={4}>
-        <span className="activity-earnings" data-testid="activity-earnings">
-          <GameText>{chosenEarnings(activityId, activities)}</GameText>
-        </span>
+        <ActivityEarnings activityId={activityId} activities={activities} />
       </td>
     </tr>
   );
 }
 
-/** The heading row of a group of rows: the place the Assets are at, or the Crew in one place with their Supplies. */
-export function GroupRow({ children }: { children: string }) {
+/**
+ * The heading row of a group of rows: the place the Assets are at, across the row, or the Crew in one place with their
+ * Supplies, leaving the last columns to their choices.
+ */
+export function GroupRow({
+  children,
+  columns = 4,
+  testId,
+  choices,
+}: {
+  children: string;
+  /** How many columns the heading takes, with the rest left to `choices`. */
+  columns?: number;
+  testId?: string;
+  choices?: React.ReactNode;
+}) {
   return (
-    <tr className="operating-group">
-      <th scope="rowgroup" colSpan={4}>
+    <tr className="operating-group" data-testid={testId}>
+      <th scope="rowgroup" colSpan={columns}>
         <GameText>{children}</GameText>
       </th>
+      {choices}
     </tr>
   );
 }
@@ -147,31 +164,36 @@ export function CrewRows({
       : "No Supplies left";
   return (
     <>
-      <tr className="operating-group" data-testid="crew-group">
-        <th scope="rowgroup" colSpan={2}>
-          <GameText>{`Crew in ${group.locationName} · ${supplies}`}</GameText>
-        </th>
-        <td>
-          <ActivitySelect
-            assetName={`the Crew in ${group.locationName}`}
-            activityId={activityId}
-            activities={group.activities}
-            onChange={onActivityChange}
-          />
-        </td>
-        <td>
-          {group.waysHome.map((way) => (
-            <WayHomeChoice
-              key={way.key}
-              way={way}
-              chosen={bringHome === way.key}
-              onChange={(home) => {
-                onBringHomeChange(way.key, home);
-              }}
-            />
-          ))}
-        </td>
-      </tr>
+      <GroupRow
+        columns={2}
+        testId="crew-group"
+        choices={
+          <>
+            <td>
+              <ActivitySelect
+                assetName={`the Crew in ${group.locationName}`}
+                activityId={activityId}
+                activities={group.activities}
+                onChange={onActivityChange}
+              />
+            </td>
+            <td>
+              {group.waysHome.map((way) => (
+                <WayHomeChoice
+                  key={way.key}
+                  way={way}
+                  chosen={bringHome === way.key}
+                  onChange={(home) => {
+                    onBringHomeChange(way.key, home);
+                  }}
+                />
+              ))}
+            </td>
+          </>
+        }
+      >
+        {`Crew in ${group.locationName} · ${supplies}`}
+      </GroupRow>
       <EarningsRow activityId={activityId} activities={group.activities} />
       {group.members.map(({ name, health }) => (
         <tr key={name} data-testid="crew-member">

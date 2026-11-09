@@ -61,6 +61,7 @@ export function programView(
   const { activitiesOf, activityNameOf, knownLandingSites } = rules;
   const { landingRisk, landingSiteById, riskBandFor } = rules;
   const raised = surfaceRaise(catalogue, program);
+  const labels = labelsFor(program.operatingAssets);
   const nextThreshold = catalogue.fundingThresholds.find(
     ({ publicSupport }) =>
       !program.fundingThresholdsPaid.includes(publicSupport),
@@ -91,7 +92,7 @@ export function programView(
     operatingAssets: program.operatingAssets.map((asset, index) => ({
       ...asset,
       key: operatingKey(asset),
-      label: labelsFor(program.operatingAssets)[index] ?? asset.name,
+      label: labels[index] ?? asset.name,
       activityName: activityNameOf(asset),
       activities: catalogue.assets
         .filter(({ id }) => id === asset.assetId)

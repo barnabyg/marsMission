@@ -409,7 +409,9 @@ test.describe("at 1920×1080", () => {
         ),
       ),
     );
-    if (!inView.every(Boolean)) {
+    if (inView.every(Boolean)) {
+      await expect(cue).toBeHidden();
+    } else {
       await expect(cue).toBeVisible();
       await expect(cue).toHaveText("More steps below");
     }
@@ -422,14 +424,13 @@ test.describe("at 1920×1080", () => {
 
     // Scrolled to the last step, nothing is below, so the cue goes; the budget bar stays where it was.
     const barBefore = await page.getByTestId("budget-bar").boundingBox();
-    await headings[1]?.scrollIntoViewIfNeeded();
     await page.getByTestId("mission-steps").evaluate((steps) => {
       steps.scrollTop = steps.scrollHeight;
     });
     await expect(cue).toBeHidden();
-    await expect(headings[1] ?? page.locator("none")).toBeInViewport({
-      ratio: 1,
-    });
+    for (const heading of headings) {
+      await expect(heading).toBeInViewport({ ratio: 1 });
+    }
     expect(await page.getByTestId("budget-bar").boundingBox()).toEqual(
       barBefore,
     );

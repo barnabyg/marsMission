@@ -19,6 +19,9 @@ import { ScrollCue } from "./ScrollCue";
 import { missionSteps } from "./missionSteps";
 import type { MissionPlan } from "./useMissionPlan";
 
+/** The last Turn on which the hint to tick an Asset or Crew shows: a new player's first couple of Turns. */
+const lastHintedTurn = 2;
+
 interface MissionPanelProps {
   simulation: Simulation;
   program: Program;
@@ -188,7 +191,7 @@ export function MissionPanel({
         }}
       >
         {/* A hint for a new player, which a Program's later Turns no longer need. */}
-        {nothingTicked && view.turnNumber <= 2 && (
+        {nothingTicked && view.turnNumber <= lastHintedTurn && (
           <p data-testid="nothing-ticked">
             <GameText>
               Tick an Asset or Crew to plan a Mission, or end the Turn without

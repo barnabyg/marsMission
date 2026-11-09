@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { Fragment, useRef } from "react";
 import { formatPropellant, type ProgramView } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { isSurveying, NothingLeftToSurvey } from "./NothingLeftToSurvey";
@@ -126,7 +126,8 @@ export function OperatingPanel({
           {assets.length > 0 && (
             <tbody data-testid="operating-assets">
               {groupByPlace(assets).map(({ place, assets: there }) => (
-                <GroupRows key={place} place={place}>
+                <Fragment key={place}>
+                  <GroupRow>{place}</GroupRow>
                   {there.map((asset) => (
                     <AssetRows
                       key={asset.key}
@@ -143,7 +144,7 @@ export function OperatingPanel({
                       }}
                     />
                   ))}
-                </GroupRows>
+                </Fragment>
               ))}
             </tbody>
           )}
@@ -180,21 +181,5 @@ export function OperatingPanel({
       )}
       {!empty && <ScrollCue scroller={panel}>More below</ScrollCue>}
     </section>
-  );
-}
-
-/** The rows of the Assets at one place, under a heading row naming it. */
-function GroupRows({
-  place,
-  children,
-}: {
-  place: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <>
-      <GroupRow>{place}</GroupRow>
-      {children}
-    </>
   );
 }
