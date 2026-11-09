@@ -17,7 +17,7 @@
   align-content: start;
   gap: 0.4rem;
   /* Kept tight, so that a third row of Asset cards still fits at 1920×1080 with everything else chosen. */
-  padding: var(--pad-item);
+  padding: var(--pad-asset-card);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-sm);
   background: var(--panel);

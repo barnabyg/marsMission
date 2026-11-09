@@ -75,6 +75,9 @@
   --pad-card-compact-x: 1.2rem;
   --pad-card-compact: var(--pad-card-compact-y) var(--pad-card-compact-x);
   --pad-item: 0.4rem 0.9rem;
+  /* An Asset's card, a whole 8px above and below its content at 16px: one greyed out with opacity is drawn on whole
+     pixels, so a fractional padding makes it change height when it greys out, as Linux's Chromium shows. */
+  --pad-asset-card: 0.5rem 0.9rem;
 }
 
 * {
