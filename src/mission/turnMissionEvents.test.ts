@@ -81,6 +81,41 @@ describe("the Mission Events of a Turn, for its summary", () => {
     ]);
   });
 
+  it("lists the Hazards met on the way and a Free-return's coming back, as the events column shows them", () => {
+    const events = turnMissionEvents(
+      timeline([
+        {
+          kind: "hazard",
+          hazard: "solarParticleEvent",
+          day: 100,
+          title: "Solar particle event",
+          description: "A burst of radiation from the Sun.",
+        },
+        {
+          kind: "missionReturned",
+          day: 400,
+          title: "Back at Earth",
+          description: "The Free-return brought it home.",
+        },
+      ]),
+    );
+
+    expect(events).toEqual([
+      {
+        date: "2029-03-11",
+        title: "Solar particle event",
+        description: "A burst of radiation from the Sun.",
+        failed: false,
+      },
+      {
+        date: "2030-01-05",
+        title: "Back at Earth",
+        description: "The Free-return brought it home.",
+        failed: false,
+      },
+    ]);
+  });
+
   it("is empty for a Turn with no Mission Events", () => {
     expect(turnMissionEvents(timeline([]))).toEqual([]);
   });
