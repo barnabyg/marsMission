@@ -17,7 +17,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 - `choiceText.ts`: How Planning Mode and the tutorial word what an Activity earns and what a longer Service Life adds against its cost and Upkeep, so that the tutorial quotes what the choices show
 - `turnSummary.ts`: The Turn summary: what changed over a Turn
 - `timeline.ts`: The Timeline: what happened in a Turn, as Mission Mode plays it
-- `rules.ts`: `createRules`: looking things up in the Catalogue, such as the Trajectory or Mission Events a Mission has, the day of a Mission Event, timed from launch, departure, arrival or leaving Mars, and failure chances; plus `roll`
+- `rules.ts`: `createRules`: looking things up in the Catalogue, such as the Trajectory or Mission Events a Mission has, the day of a Mission Event, timed from launch, departure, arrival or leaving Mars, and failure probabilities; plus `roll`
 - `planCheck.ts`: What a plan costs and weighs, and what's wrong with it, if anything
 - `flyMission.ts`: The Turn's Mission: rolls its Mission Events in order, calling the modules below for each subject of the flight
 - `flight.ts`: The Mission in flight, which those modules share: what it carries, where it's going, the day of each of its Mission Events, and its outcome so far. Its `leavesMarsOn` is the day a journey home leaves Mars, which Mission Events timed from leaving Mars count from, and is null for the Mission to Mars
