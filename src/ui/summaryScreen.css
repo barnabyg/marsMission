@@ -189,8 +189,8 @@
   gap: 0.8rem;
 }
 
-.summary-card .milestone-list,
-.milestone-list {
+/* Scoped to the summaries: Planning Mode's Milestones panel has a .milestone-list of its own. */
+.summary-milestones .milestone-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
   gap: 1.5rem;
