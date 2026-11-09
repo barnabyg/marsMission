@@ -3,9 +3,10 @@ import { termFor, termPattern, type Term } from "./tooltips";
 interface GameTextProps {
   children: string;
   /**
-   * Text in a heading, whose terms aren't underlined. A small ⓘ marker after it explains every term the heading names
-   * on hover. Keyboard users still reach each term itself, so the marker is hidden from screen readers and leaves the
-   * heading's name as it reads.
+   * Text in a panel or step heading, whose terms aren't underlined. A small ⓘ marker after it explains every term the
+   * heading names on hover, shown only while the body under it doesn't underline them all (repeatedTerms.ts). Keyboard
+   * users still reach each term itself, so the marker is hidden from screen readers and leaves the heading's name as it
+   * reads. An h1 names the mode the player is already in, so it takes no marker: leave this off for one.
    */
   heading?: boolean;
 }

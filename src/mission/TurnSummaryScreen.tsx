@@ -19,7 +19,7 @@ export function TurnSummaryScreen({
   return (
     <main className="summary-screen turn-summary" data-testid="turn-summary">
       <h1>
-        <GameText heading>Turn summary</GameText>
+        <GameText>Turn summary</GameText>
       </h1>
       {summary.cancellationReason && (
         <p className="problem" role="alert">

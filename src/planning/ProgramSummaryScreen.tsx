@@ -14,7 +14,7 @@ export function ProgramSummaryScreen({
   return (
     <main className="summary-screen" data-testid="program-summary">
       <h1>
-        <GameText heading>Program summary</GameText>
+        <GameText>Program summary</GameText>
       </h1>
       {status.kind === "cancelled" ? (
         <p className="problem">

@@ -31,7 +31,7 @@ export function StatusBar({
     <header className="status-bar">
       <div className="status-title">
         <h1>
-          <GameText heading>Planning Mode</GameText>
+          <GameText>Planning Mode</GameText>
         </h1>
         {actions}
       </div>

@@ -169,7 +169,7 @@ export function MissionMode({
       <header className="mission-bar">
         <div className="mission-bar-start">
           <h1>
-            <GameText heading>Mission Mode</GameText>
+            <GameText>Mission Mode</GameText>
           </h1>
           <p data-testid="mission-date">
             {formatDate(addDays(timeline.startDate, Math.floor(state.day)))}
