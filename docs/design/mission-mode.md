@@ -25,7 +25,7 @@ Part of the [game design](../game-design.md), whose Status says which of these r
 ## Saving
 
 - The game saves automatically at the start of each Planning Mode.
-- A few manual save slots are available, usable only in Planning Mode. Saving partway through Mission Mode isn't possible, so a reload always returns to the start of a Turn. What that can and can't undo is under [Risk and Safety Margin](risk.md#risk-and-safety-margin).
+- A few manual save slots are available, usable only in Planning Mode. Saving partway through Mission Mode isn't possible, so a reload always returns to the start of a Turn. The title screen lists the slots in use, each with its own Load, as its one way to load one. In the Save and Load dialogs the player picks a slot, then one button does what it says, such as Overwrite Save Slot 1 (Turn 2) or Load Turn 3, replacing the current Program; loading asks first only when it would replace a Program in play or in the automatic save. What that can and can't undo is under [Risk and Safety Margin](risk.md#risk-and-safety-margin).
 
 ## Art, sound and onboarding
 
