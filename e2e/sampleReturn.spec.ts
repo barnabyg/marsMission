@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
   chooseAssets,
-  endTurnAndContinue,
   eventEntries,
   missionViewport,
   overrideProgramData,
@@ -9,6 +8,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { endTurnAndContinue } from "./turnHelpers";
 import { sampleReturnMoney, sampleReturnSeed } from "./sampleSeeds";
 
 test.use({ viewport: missionViewport });
@@ -99,7 +99,7 @@ test("caches samples with a rover, sends them home with an ascent vehicle and an
   }
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-samples-home")).toContainText(
     /\d+ samples from Jezero Crater, brought home by the Albatross Orbiter: \d+ Science/,

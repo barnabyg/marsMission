@@ -31,7 +31,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await expect(page.getByTestId("money")).toHaveText("$2.3B");
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
   await expect(page.getByTestId("next-funding-threshold")).toHaveText(
-    "$1B at 250 (150 away)",
+    "$1B at 250 Public Support",
   );
 
   expect(await termsWithoutTooltips(page)).toEqual([]);
@@ -117,7 +117,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   // The Funding Threshold paid back the orbiter, and base funding added $200M for Public Support of 100.
   await expect(page.getByTestId("money")).toHaveText("$2.5B");
   await expect(page.getByTestId("next-funding-threshold")).toHaveText(
-    "$1.5B at 425 (170 away)",
+    "$1.5B at 425 Public Support",
   );
   await expect(page.getByTestId("operating-assets")).toContainText(
     "Pathfinder Orbiter",
@@ -189,7 +189,7 @@ test("restarts with a new Program after asking first", async ({ page }) => {
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await page
     .getByTestId("turn-summary")
     .getByRole("button", { name: "Continue" })

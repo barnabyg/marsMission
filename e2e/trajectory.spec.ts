@@ -81,7 +81,7 @@ test("a Fast Mission arrives earlier than a Slow one, with more research", async
   // 60 days sooner, whichever month that lands in.
   expect(Date.parse(slow) - Date.parse(fast)).toBe(60 * 86_400_000);
   await viewButton(page, "Solar system").click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("turn-summary")).toContainText("Mission cost");
   expect(problems).toEqual([]);
 });

@@ -1,10 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
-import {
-  chooseAssets,
-  endTurnWithoutLaunching,
-  overrideProgramData,
-} from "./helpers";
+import { chooseAssets, overrideProgramData } from "./helpers";
+import { endTurnWithoutLaunching } from "./turnHelpers";
 import { openLaunchStep } from "./planningHelpers";
 import { openBusyProgram, realMilestones } from "./busyProgram";
 import { screenSizes, whatScrolls, unreadableText } from "./layoutHelpers";
@@ -123,6 +120,28 @@ for (const size of screenSizes) {
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
       ).toBeInViewport({ ratio: 1 });
+    });
+
+    test("the status bar keeps its values on one row, evenly spaced, with a busy Program's large figures", async ({
+      page,
+    }) => {
+      await openBusyProgram(page);
+      await chooseAssets(page, ["Pathfinder Orbiter"]);
+      await page.evaluate(() => document.fonts.ready);
+      const boxes = await page
+        .locator(".status-bar dl > div")
+        .evaluateAll((values) =>
+          values.map(
+            (value) => value.getBoundingClientRect().toJSON() as DOMRect,
+          ),
+        );
+      const tops = new Set(boxes.map(({ top }) => Math.round(top)));
+      expect(tops.size).toBe(1);
+      const gaps = boxes
+        .slice(1)
+        .map((box, index) => box.left - (boxes[index]?.right ?? 0));
+      expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThanOrEqual(1);
+      expect(Math.min(...gaps)).toBeGreaterThan(0);
     });
 
     test("Planning Mode fits on one screen with every Asset that fits ticked on a new Program", async ({

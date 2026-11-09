@@ -203,3 +203,92 @@
 .turn-summary-details h2 {
   margin-bottom: 0.4rem;
 }
+
+/* The Program summary: how it ended, its figures in a row of cards, its Milestones and its Crew and samples, packed
+   tighter than the Turn summary so that every Milestone fits on a 1920×1080 screen. */
+.summary-screen.program-summary {
+  gap: 0.75rem;
+  /* Linux's wider fonts wrap more of it, so it keeps room to spare at 1920×1080. */
+  padding: 1.25rem 4rem;
+}
+
+.program-ending,
+.program-summary .value-change,
+.program-summary .milestone-card {
+  padding: 0.8rem 1.2rem;
+}
+
+.program-ending {
+  display: grid;
+  gap: 0.3rem;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 0.5rem;
+}
+
+.program-ending h2 {
+  font-size: var(--text-xl);
+}
+
+.program-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+}
+
+.program-summary .value-change {
+  gap: 0.3rem;
+}
+
+.program-figure-detail,
+.program-summary .milestone-turn {
+  color: var(--muted);
+}
+
+.program-summary .summary-milestones ul {
+  grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
+  gap: 0.75rem;
+}
+
+.program-summary .milestone-card {
+  row-gap: 0.3rem;
+  font-size: var(--text-sm);
+}
+
+.program-summary .milestone-card h3 {
+  font-size: var(--text-md);
+}
+
+.program-summary-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* The Turn's Mission Events in order, each with the events column's rocket, or its warning when it failed. */
+.summary-mission-events ol {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  list-style: none;
+}
+
+.summary-mission-events li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem;
+  align-items: start;
+}
+
+.summary-mission-events li > .icon {
+  margin-top: 0.2em;
+  color: var(--muted);
+}
+
+.summary-mission-events li.failed > .icon,
+.summary-mission-events li.failed strong {
+  color: var(--problem);
+}
+
+.summary-mission-events time {
+  color: var(--muted);
+}

@@ -52,7 +52,7 @@ test("sends round-trip Crew to Mars orbit and brings them home on a later Turn",
     () => page.getByRole("button", { name: "Launch Mission" }).click(),
     "10x",
   );
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await page
     .getByTestId("turn-summary")
     .getByRole("button", { name: "Continue" })
@@ -92,7 +92,7 @@ test("sends round-trip Crew to Mars orbit and brings them home on a later Turn",
   ).toBeVisible();
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-crew-home")).toHaveText(
     "Crew home safe, who won't fly again: Amara Okafor, Lena Petrova. Public Support earned: 200",

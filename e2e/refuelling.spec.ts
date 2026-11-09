@@ -1,7 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
-  endTurnWithoutLaunching,
   eventEntries,
   listenForSounds,
   missionViewport,
@@ -11,6 +10,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { endTurnWithoutLaunching } from "./turnHelpers";
 import { openLaunchStep } from "./planningHelpers";
 import { colossusMoney, colossusSeed } from "./colossusSeeds";
 

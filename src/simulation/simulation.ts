@@ -4,6 +4,7 @@ import type { PlannedCrew } from "./crewView";
 import { createMissionPreviews } from "./missionPreviews";
 import { createPlanCheck } from "./planCheck";
 import { newProgram, programView } from "./programView";
+import { programSummary, type ProgramSummary } from "./programSummary";
 import { restoreProgram, saveProgram, type SavedProgram } from "./saveFormat";
 import { workOutTurn } from "./workOutTurn";
 import type {
@@ -68,6 +69,7 @@ export type {
   PlannedServiceLife,
   PlannedTrajectory,
 } from "./previews";
+export type { ProgramSummary } from "./programSummary";
 export type { TurnSummary } from "./turnSummary";
 export type {
   AssetAtMars,
@@ -89,6 +91,8 @@ export interface Simulation {
   /** The Program in a save, which plays on as if it was never saved. Throws a SaveError if it can't be continued. */
   restoreProgram(saved: unknown): Program;
   readProgram(program: Program): ProgramView;
+  /** How a Program went over all its Turns, for the summary shown once it ends. */
+  summariseProgram(program: Program): ProgramSummary;
   validatePlan(program: Program, plan: TurnPlan): PlanCheck;
   /** The Mission Events a Mission would go through, in order. Ids that aren't in the catalogue are skipped. */
   previewMission(
@@ -151,6 +155,8 @@ export function createSimulation(catalogue: Catalogue): Simulation {
     restoreProgram: (saved) => restoreProgram(saved, catalogue),
 
     readProgram: (program) => programView(catalogue, rules, program),
+
+    summariseProgram: (program) => programSummary(catalogue, program),
 
     validatePlan: checkPlan,
 

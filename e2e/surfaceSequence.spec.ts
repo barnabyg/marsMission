@@ -104,7 +104,7 @@ test("moves the view to the surface for a landing at 3840×2160, with a smooth c
   expect(problems).toEqual([]);
 });
 
-test("holds a landing when paused, carries on without a jump at a new speed, and leaves it behind on End Turn", async ({
+test("holds a landing when paused, carries on without a jump at a new speed, and leaves it behind on skipping to the Turn summary", async ({
   page,
 }) => {
   // Over 5 s: waits for the landing, and checks it stands still for a while.
@@ -149,7 +149,7 @@ test("holds a landing when paused, carries on without a jump at a new speed, and
   expect(resumed).toBeLessThan(held + 3000);
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("turn-summary")).toBeVisible();
   await expect(scene(page)).toHaveCount(0);
   await page

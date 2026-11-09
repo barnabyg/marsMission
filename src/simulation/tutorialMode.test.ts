@@ -108,6 +108,6 @@ describe("saves from before tutorial mode", () => {
     };
     const restored = simulation.restoreProgram(formatTwelve);
     expect(simulation.readProgram(restored).tutorial).toEqual({ kind: "off" });
-    expect(simulation.saveProgram(restored).formatVersion).toBe(13);
+    expect(simulation.saveProgram(restored).formatVersion).toBeGreaterThan(12);
   });
 });

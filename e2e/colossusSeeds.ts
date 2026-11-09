@@ -350,5 +350,6 @@ export function oneWayCrewSave(seed: number): string {
   delete phase7.habitatSuppliesKg;
   delete phase7.samplesAtSites;
   delete phase7.tutorial;
+  delete phase7.record;
   return JSON.stringify({ formatVersion: 8, program: phase7 });
 }

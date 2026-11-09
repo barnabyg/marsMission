@@ -73,7 +73,7 @@ test("a Program past a Science Milestone earns it in a Turn with no Mission, onc
   await expect(events).toContainText(
     `Funding Threshold reached: ${threshold?.publicSupport} Public Support`,
   );
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-funding-payouts")).toContainText(
     `${threshold?.publicSupport} Public Support`,
   );
@@ -106,7 +106,10 @@ test("the next Funding Threshold moves along the list, and then there are none l
     fundingThresholdsPaid: first === undefined ? [] : [first],
   });
   await expect(page.getByTestId("next-funding-threshold")).toContainText(
-    `at ${second} (${(second ?? 0) - 100} away)`,
+    `at ${second} Public Support`,
+  );
+  await expect(page.getByTestId("next-funding-threshold-away")).toHaveText(
+    `${(second ?? 0) - 100} away`,
   );
 
   await page.goto("about:blank");
@@ -130,6 +133,9 @@ test("a saved Program already above a level not yet paid shows it as no points a
     fundingThresholdsPaid: [],
   });
   await expect(page.getByTestId("next-funding-threshold")).toContainText(
-    `at ${first?.publicSupport} (0 away)`,
+    `at ${first?.publicSupport} Public Support`,
+  );
+  await expect(page.getByTestId("next-funding-threshold-away")).toHaveText(
+    "0 away",
   );
 });

@@ -16,7 +16,7 @@ interface SaveAction {
   onSaved: (slot: ManualSlot) => void;
 }
 
-interface LoadAction {
+export interface LoadAction {
   kind: "load";
   /** Whether loading would replace a Program in play or in the automatic save, and so needs confirming. */
   confirm: boolean;

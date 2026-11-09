@@ -36,7 +36,8 @@ amount stays whole. */
 
 .budget-gauge .gauge-track {
   width: 100%;
-  min-width: 16rem;
+  /* Narrow enough that the row, with End Turn without launching at its end, fits 1920 wide with wider fonts, as on Linux. */
+  min-width: 12rem;
   height: 0.75rem;
 }
 
@@ -57,7 +58,31 @@ amount stays whole. */
   color: var(--problem);
 }
 
-/* The buttons sit at the row's right-hand end, where the eye finishes reading the budget. */
-.budget-bar .mission-buttons {
+/* Launch Mission follows the gauges, where the eye finishes reading the budget, and stands alone as the primary action. */
+.budget-bar-row > button {
+  flex: none;
+}
+
+/* Ending the Turn without launching is a plain text button at the row's far end, so it is never pressed for Launch
+Mission by mistake. */
+.budget-bar .end-without-launching {
   margin-left: auto;
+  /* As text it needs no padding beside it, which leaves the row room for its gap at 1920 wide. */
+  padding-inline: 0;
+  background: none;
+  border-color: transparent;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.budget-bar .end-without-launching:not(:disabled):hover {
+  background: none;
+  border-color: transparent;
+  color: var(--text);
+}
+
+.budget-bar .end-without-launching:disabled {
+  background: none;
+  border-color: transparent;
 }

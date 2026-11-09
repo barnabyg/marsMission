@@ -1,9 +1,12 @@
 import { useState } from "react";
 import type { Program, Simulation } from "../simulation/simulation";
-import { Dialog } from "../ui/Dialog";
 import { GameText } from "../ui/GameText";
+import {
+  anySlotUsed as anySlotUsedIn,
+  LoadFromSlotDialog,
+} from "./LoadFromSlotDialog";
 import { SaveSlots } from "./SaveSlots";
-import { manualSlots, type LoadedSave, type SaveStore } from "./saveStore";
+import type { LoadedSave, SaveStore } from "./saveStore";
 
 interface OpeningScreenProps {
   simulation: Simulation;
@@ -23,9 +26,7 @@ export function OpeningScreen({
   onStartNew,
   onLoad,
 }: OpeningScreenProps) {
-  const [anySlotUsed] = useState(() =>
-    manualSlots.some((slot) => saveStore.load(slot).kind !== "empty"),
-  );
+  const [anySlotUsed] = useState(() => anySlotUsedIn(saveStore));
   const [loadOpen, setLoadOpen] = useState(false);
   const loadAction = {
     kind: "load",
@@ -89,19 +90,14 @@ export function OpeningScreen({
         )}
       </div>
       {loadOpen && (
-        <Dialog
-          title="Load from a Save Slot"
-          cancelLabel="Cancel"
+        <LoadFromSlotDialog
+          simulation={simulation}
+          saveStore={saveStore}
+          action={loadAction}
           onClose={() => {
             setLoadOpen(false);
           }}
-        >
-          <SaveSlots
-            simulation={simulation}
-            saveStore={saveStore}
-            action={loadAction}
-          />
-        </Dialog>
+        />
       )}
     </main>
   );

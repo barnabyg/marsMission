@@ -10,7 +10,7 @@ import { GameText } from "../ui/GameText";
 import { Icon, type IconName } from "../ui/Icon";
 import type { DecisionAdvice } from "../tutorial/tutorial";
 import { TurnOffTutorial } from "../ui/TurnOffTutorial";
-import { DecisionPointPanel } from "./DecisionPointPanel";
+import { DecisionPointAdvice, DecisionPointPanel } from "./DecisionPointPanel";
 import { EventsColumn } from "./EventsColumn";
 import { missionViews, viewName, type MissionViewId } from "./missionViews";
 import { atDecisionPoint, speeds } from "./playback";
@@ -240,18 +240,19 @@ export function MissionMode({
             <span className="visually-hidden">Mute sound</span>
           </button>
         </div>
+        {/* A secondary button named for where it goes, as watching the Turn play is the primary action. */}
         <button
           type="button"
-          className="primary end-turn"
+          className="skip-turn"
           title={
             decisionPoint
               ? "Skip to the next Decision Point, which you must answer."
-              : "Skip to the Turn summary. The rest of the Turn still happens."
+              : "Skip to the Turn summary. The rest of the Turn still happens, and the summary lists its Mission Events."
           }
           disabled={deciding}
           onClick={decisionPoint ? skipToDecision : onFinished}
         >
-          End Turn
+          {decisionPoint ? "Skip to Decision Point" : "Skip to Turn summary"}
         </button>
         <progress
           aria-label="Progress through the Turn"
@@ -292,6 +293,12 @@ export function MissionMode({
             </li>
           ))}
         </ul>
+        {deciding && (
+          <DecisionPointAdvice
+            decisionPoint={decisionPoint}
+            advice={decisionAdvice}
+          />
+        )}
         {tutorialOn && (
           <div
             className="mission-tutorial tutorial-voice"
@@ -316,6 +323,7 @@ export function MissionMode({
       <EventsColumn
         timeline={timeline}
         entriesHappened={state.entriesHappened}
+        deciding={deciding}
       />
     </main>
   );

@@ -1,10 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   continueFromSave,
-  endTurnWithoutLaunching,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { endTurnWithoutLaunching } from "./turnHelpers";
 import { cantRecoverSave, goalReachedSave } from "./tutorialSeeds";
 
 test.describe("the tutorial's end", () => {

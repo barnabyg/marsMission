@@ -1,10 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
-  endTurnWithoutLaunching,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { endTurnWithoutLaunching } from "./turnHelpers";
 import { screenSizes } from "./layoutHelpers";
 import { successSeed } from "./seeds";
 

@@ -9,7 +9,7 @@ async function flyFirstOrbiter(page: Page) {
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   return page.getByTestId("turn-summary");
 }
 

@@ -48,7 +48,7 @@ test("lands Crew beside a habitat and sees the Health it saved them in the Turn 
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("turn-summary");
   // Living in the habitat slowed the Health they lost to time at Mars.
   await expect(summary.getByTestId("summary-health-lost")).toContainText(

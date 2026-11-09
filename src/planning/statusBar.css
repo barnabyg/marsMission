@@ -21,10 +21,13 @@
 }
 
 .status-bar dl {
+  flex: 1;
   display: flex;
   align-items: flex-start;
-  /* Tight enough for every value, with the Money's caption and Save, Load and Restart Program under the heading, at
-     1920×1080 in a Program with large figures, with a little to spare for wider fonts on Linux. */
+  /* Spread across the bar, so the gaps between the values are even at every screen size. */
+  justify-content: space-between;
+  /* The least gap: tight enough for every value, with Save, Load and Restart Program under the heading, at 1920×1080
+     in a Program with large figures, with a little to spare for wider fonts on Linux. */
   gap: 1.5rem;
   margin: 0;
 }
@@ -69,18 +72,27 @@
   color: var(--problem);
 }
 
-/* Public Support and the Cancellation Level on one bar, with a mark where the Program would be cancelled. */
+/* Public Support and the Cancellation Level on one bar, with a mark where the Program would be cancelled, labelled
+   under the mark. */
 .support-gauge dd {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
+}
+
+.gauge {
+  /* Short enough to leave room for Save, Load and Restart Program under the heading at 1920×1080. */
+  --track-width: 10rem;
+  display: grid;
+  gap: 0.3rem;
+  /* Puts the track level with the middle of Public Support's figure beside it. */
+  padding-top: 0.55rem;
 }
 
 .gauge-track {
   position: relative;
   display: block;
-  /* Short enough to leave room for Save, Load and Restart Program under the heading at 1920×1080. */
-  width: 10rem;
+  width: var(--track-width);
   height: 0.6rem;
   border-radius: 0.3rem;
   background: var(--background);
@@ -98,17 +110,23 @@
   position: absolute;
   top: -0.3rem;
   bottom: -0.3rem;
+  left: calc(var(--level) * 100%);
   width: 0.2rem;
   margin-left: -0.1rem;
   background: var(--problem);
 }
 
-.gauge-caption {
+/* The Cancellation Level's label, starting at its mark, in a length rather than a share of the track so that the
+   value's width takes in the whole label and the gaps beside it stay even. */
+.gauge-label {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.3rem;
+  margin-left: calc(var(--level) * var(--track-width) - 0.1rem);
   color: var(--muted);
   font-size: var(--text-sm);
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .support-gauge.warning .gauge-fill {
@@ -116,35 +134,29 @@
 }
 
 .support-gauge.warning .status-value,
-.support-gauge.warning .gauge-caption {
+.support-gauge.warning .gauge-label {
   color: var(--warning);
 }
 
-/* What this Turn will spend, beside the Money, in the colours of the budget bar's cost gauge. */
-.turn-spend .turn-spend-left {
-  color: var(--muted);
-  font-size: var(--text-md);
-}
-
-.turn-spend.near dt .icon,
-.turn-spend.near .turn-spend-left {
-  color: var(--warning);
-}
-
-.turn-spend.over dt .icon,
-.turn-spend.over .status-value {
-  color: var(--problem);
-}
-
-.turn-spend.over .turn-spend-left {
-  color: var(--problem);
-}
-
-/* A small line under a value, such as the base funding that comes in as the Turn ends. */
+/* A small muted line under a value, such as what this Turn will spend under the Money. */
 .status-bar .status-caption {
   color: var(--muted);
   font-size: var(--text-sm);
   /* Tight, so that it adds as little as it can to the bar's height, which the panels below give up. */
   line-height: 1;
   white-space: nowrap;
+}
+
+/* What this Turn will spend, under the Money, in the colours of the budget bar's cost gauge. */
+.turn-spend .icon {
+  margin-right: 0.25em;
+  vertical-align: -0.15em;
+}
+
+.turn-spend.near {
+  color: var(--warning);
+}
+
+.turn-spend.over {
+  color: var(--problem);
 }

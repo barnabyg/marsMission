@@ -1,3 +1,7 @@
+import { formatMoney } from "../simulation/simulation";
+import { exactMoneyTooltip, formatRoundedMoney } from "../ui/format";
+import { budgetGauge, type BudgetGauge } from "./budgetGauge";
+
 /** How far above the Cancellation Level, as a share of it, Public Support has to be before the gauge stops warning. */
 const warningMargin = 0.5;
 /** The gauge runs up to at least this many times the Cancellation Level, so the level sits low on it when all is well. */
@@ -23,6 +27,51 @@ export function publicSupportGauge(
     fillPercent: (Math.max(publicSupport, 0) / top) * 100,
     levelPercent: (cancellationLevel / top) * 100,
   };
+}
+
+/** What this Turn will spend and what that leaves, as the muted line under the Money shows them. */
+export interface TurnSpend {
+  /** What the choices so far will spend, such as "−$1.4B", or "$0M" with nothing chosen. */
+  spent: string;
+  /** What that leaves, such as "$900M left", or by how much it goes over the Money, such as "$50M over". */
+  rest: string;
+  /** How close the spend is to the Money, as the budget bar's cost gauge judges it. */
+  level: BudgetGauge["level"];
+}
+
+export function turnSpend(
+  spendMillions: number,
+  moneyMillions: number,
+): TurnSpend {
+  const leftMillions = moneyMillions - spendMillions;
+  return {
+    spent:
+      spendMillions > 0
+        ? `−${formatRoundedMoney(spendMillions)}`
+        : formatRoundedMoney(0),
+    rest:
+      leftMillions < 0
+        ? `${formatRoundedMoney(-leftMillions)} over`
+        : `${formatRoundedMoney(leftMillions)} left`,
+    level: budgetGauge(spendMillions, moneyMillions).level,
+  };
+}
+
+/**
+ * What the Money's tooltip adds after what Base funding is: how much comes in as the Turn ends, and the exact Money when
+ * the status bar shows it rounded. Nothing when neither applies.
+ */
+export function moneyDetail(
+  moneyMillions: number,
+  baseFundingMillions: number,
+): string | undefined {
+  const exact = exactMoneyTooltip(moneyMillions);
+  const parts = [
+    baseFundingMillions > 0 &&
+      `+${formatMoney(baseFundingMillions)} comes in as this Turn ends.`,
+    exact && `${exact}.`,
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" ") : undefined;
 }
 
 /** The values in the status bar that can change from one Turn to the next by an amount. */

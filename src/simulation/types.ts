@@ -2,6 +2,7 @@ import type { TechnologyReadiness } from "./technologyReadiness";
 import type { Timeline } from "./timeline";
 import type { CrewAtMars } from "./crewView";
 import type { PlannedActivity, PlannedDevelopment } from "./previews";
+import type { ProgramRecord } from "./programSummary";
 import type { TurnSummary } from "./turnSummary";
 
 export interface PlannedMission {
@@ -228,6 +229,8 @@ export interface Program {
   /** Whether the player gets the tutorial's advice, which they choose as the Program starts and can turn off. */
   tutorial: TutorialMode;
   status: ProgramStatus;
+  /** What the Program has done over its Turns, for its summary. */
+  record: ProgramRecord;
 }
 
 /**

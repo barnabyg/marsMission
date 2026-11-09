@@ -21,6 +21,24 @@ export function formatDate(isoDate: string): string {
   return dayMonthYear.format(new Date(`${isoDate}T00:00:00Z`));
 }
 
+/** Money to three significant figures, as the status bar shows running totals: "$8.92B" for $8,915M. */
+export function formatRoundedMoney(millions: number): string {
+  return formatMoney(toThreeFigures(millions));
+}
+
+/** A number rounded to three significant figures: 8920 for 8915. */
+export function toThreeFigures(value: number): number {
+  return Number(value.toPrecision(3));
+}
+
+/** The exact figure behind a rounded one, for its tooltip, or nothing when rounding changed nothing. */
+export function exactMoneyTooltip(millions: number): string | undefined {
+  const exact = formatMoney(millions);
+  return exact === formatRoundedMoney(millions)
+    ? undefined
+    : `Exactly ${exact}`;
+}
+
 /** A change with its sign, such as "+155" or "−$250M", using a true minus sign. */
 export function formatChange(
   change: number,

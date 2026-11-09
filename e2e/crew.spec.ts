@@ -1,8 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   continueFromSave,
-  endTurnAndContinue,
-  endTurnWithoutLaunching,
   eventEntries,
   holdSequence,
   launchHeld,
@@ -16,6 +14,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { endTurnAndContinue, endTurnWithoutLaunching } from "./turnHelpers";
 import { openLaunchStep } from "./planningHelpers";
 import {
   colossusBuiltSave,
@@ -137,7 +136,7 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   ).toBeVisible();
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-crew")).toContainText(
     "Amara Okafor, in Mars orbit from this Turn: Health 65 of 100",
@@ -212,7 +211,7 @@ test("loses Crew in Mars orbit once their Supplies run out", async ({
     "The Crew in Mars orbit have run out of Supplies, so their Health falls quickly.",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-supplies-out")).toContainText(
     "Supplies ran out: Crew in Mars orbit on",
@@ -294,7 +293,7 @@ test("lands a Crewed Mission at a Landing Site, and sees its Crew at work there 
   await expect(surfaceAssets(page)).toHaveText(["Odyssey"]);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-ongoing-research")).toContainText(
     "Crew in Jezero Crater, Field research",

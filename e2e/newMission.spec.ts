@@ -1,11 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
-  endTurnAndContinue,
   missionViewport,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { endTurnAndContinue } from "./turnHelpers";
 import { openLaunchStep } from "./planningHelpers";
 import { successSeed } from "./seeds";
 
