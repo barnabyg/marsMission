@@ -57,7 +57,9 @@ test("using a Contingency that works saves the orbiter with a shorter Service Li
 }) => {
   const problems = watchForProblems(page);
   await launch(page, orbitInsertionRescuedSeed);
-  await page.getByRole("button", { name: "10x" }).click();
+  // Skipped there rather than played at 10x, so that play goes on at 1x once it's answered: the test build's Turns are so
+  // short that at 10x this one would end before anything could hold it, and no speed can be picked at a Decision Point.
+  await page.getByRole("button", { name: "Skip to Decision Point" }).click();
 
   await expect(decisionPoint(page)).toBeVisible();
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
@@ -161,6 +163,21 @@ test("skips to the Decision Point, then once it's answered to the Turn summary, 
   await expect(decisionPoint(page)).toBeVisible();
   await expect(page.getByTestId("turn-summary")).toHaveCount(0);
   await expect(toDecision).toBeDisabled();
+  // Only an answer moves play on, so the speeds can't be used either, and each says why, as Skip does.
+  const speeds = page.getByRole("group", { name: "Speed" });
+  for (const name of ["1x", "5x", "10x", "20x"]) {
+    const speed = speeds.getByRole("button", { name });
+    await expect(speed).toHaveAttribute("aria-disabled", "true");
+    await expect(speed).toHaveAccessibleDescription(
+      "Play is held at the Decision Point until you answer it.",
+    );
+  }
+  await expect(toDecision).toHaveAccessibleDescription(
+    "Play is held at the Decision Point until you answer it.",
+  );
+  // Nor do their keys.
+  await page.keyboard.press("2");
+  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
 
   await decisionPoint(page)
     .getByRole("button", { name: /Use Reserve fuel/ })
@@ -180,8 +197,11 @@ test("no speed gets play past a Decision Point", async ({ page }) => {
   await expect(decisionPoint(page)).toBeVisible();
   const date = await page.getByTestId("mission-date").innerText();
 
+  // The speeds say they can't be used here; forced, a click on one still changes nothing.
   for (const speed of ["1x", "5x", "10x", "20x"]) {
-    await page.getByRole("button", { name: speed, exact: true }).click();
+    await page
+      .getByRole("button", { name: speed, exact: true })
+      .click({ force: true });
     await expect(page.getByTestId("current-speed")).toHaveText("Paused");
   }
   await page.waitForTimeout(1000);
@@ -221,14 +241,14 @@ test("a rescued landing shows its Decision Point first, then plays the landing, 
   await chooseAssets(page, ["Prospector Lander"]);
   await page.getByRole("checkbox", { name: /Retro thrusters/ }).check();
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await page.getByRole("button", { name: "10x" }).click();
+  // Skipped there rather than played at 10x, so that play goes on at 1x once it's answered: the test build's Turns are so
+  // short that at 10x this one would end before anything could hold it, and no speed can be picked at a Decision Point.
+  await page.getByRole("button", { name: "Skip to Decision Point" }).click();
 
   await expect(decisionPoint(page)).toBeVisible();
   const scene = page.getByTestId("mission-scene");
   await expect(scene).not.toHaveAttribute("data-sequence", /./);
 
-  // The test build's Turns are so short that at 10x this one would end before anything could hold it.
-  await page.getByRole("button", { name: "1x", exact: true }).click();
   const held = holdSequence(page, 500);
   await decisionPoint(page)
     .getByRole("button", { name: /Use Retro thrusters/ })

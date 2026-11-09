@@ -50,6 +50,8 @@ import { marsRendezvousNow } from "./spacecraft/marsRendezvous";
 import { earthEntryNow } from "./spacecraft/splashdown";
 import { useMissionView } from "./useMissionView";
 import { usePlayback } from "./usePlayback";
+import { usePlaybackShortcuts } from "./usePlaybackShortcuts";
+import { muteKeyName, pauseKeyName, speedKey } from "./playbackShortcuts";
 import { useSounds } from "./useSounds";
 
 const MissionScene = lazy(() => import("./MissionScene"));
@@ -92,7 +94,7 @@ export function MissionMode({
   tutorialOn,
   onTutorialOff,
 }: MissionModeProps) {
-  const { state, setSpeed, pause, skipToDecision } = usePlayback(
+  const { state, setSpeed, pause, resume, skipToDecision } = usePlayback(
     timeline,
     initialSpeed,
     onSpeedChange,
@@ -149,6 +151,16 @@ export function MissionMode({
   }, [state.finished, onFinished]);
 
   const deciding = decisionPoint !== null && atDecisionPoint(state, timeline);
+  usePlaybackShortcuts({
+    paused: state.paused,
+    deciding,
+    pause,
+    resume,
+    setSpeed,
+    toggleMute: () => {
+      setMuted(!muted);
+    },
+  });
   const turnProgress = (state.day / timeline.durationDays) * 100;
 
   const operatingAssets = assetsOperatingOn(timeline, state.day);
@@ -209,31 +221,38 @@ export function MissionMode({
             <button
               type="button"
               aria-pressed={state.paused || deciding}
+              aria-keyshortcuts={pauseKeyName}
+              title={`Pause, or play on. Shortcut: ${pauseKeyName}`}
               onClick={pause}
             >
               <Icon name="pause" />
               <span className="visually-hidden">Pause</span>
             </button>
+            {/* Held at a Decision Point, a speed can't move play on, so each says so rather than seeming to work. */}
             {speeds.map((speed) => (
-              <button
+              <UnavailableButton
                 key={speed}
-                type="button"
                 aria-pressed={
                   !state.paused && !deciding && state.speed === speed
                 }
+                aria-keyshortcuts={speedKey(speed)}
+                title={`Play at ${speed}x. Shortcut: ${speedKey(speed)}`}
+                unavailable={deciding ? answerFirst : undefined}
                 onClick={() => {
                   setSpeed(speed);
                 }}
               >
                 <Icon name={speedIcons[speed]} />
                 {speed}x
-              </button>
+              </UnavailableButton>
             ))}
           </div>
           <button
             type="button"
             className="mute"
             aria-pressed={muted}
+            aria-keyshortcuts={muteKeyName}
+            title={`Mute sound. Shortcut: ${muteKeyName}`}
             onClick={() => {
               setMuted(!muted);
             }}

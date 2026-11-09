@@ -23,6 +23,8 @@ interface Playback {
   state: PlaybackState;
   setSpeed: (speed: number) => void;
   pause: () => void;
+  /** Plays on at the speed last chosen. */
+  resume: () => void;
   skipToDecision: () => void;
 }
 
@@ -93,6 +95,9 @@ export function usePlayback(
     },
     pause: () => {
       update(pausePlayback);
+    },
+    resume: () => {
+      update((current) => changeSpeed(current, current.speed));
     },
     skipToDecision: () => {
       update((current) => skipToDecisionPoint(current, timeline));
