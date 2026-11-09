@@ -190,6 +190,8 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
   await expect(page.getByTestId("landing-site-details")).toContainText(
     "Surveyed.",
   );
+  // The line under the choice says the chosen site was surveyed, so its option doesn't as well.
+  await expect(sites.first()).toHaveText("Jezero Crater (~10%)");
   expect(problems).toEqual([]);
 });
 

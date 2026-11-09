@@ -55,7 +55,9 @@ export function MissionLaunchChoice({
             >
               {option.name} ({formatMoney(option.costMillions)},{" "}
               {option.capacityTonnes} t
-              {option.technologyReadiness === "flight-proven"
+              {/* The chosen one's Technology Readiness is in the tag beside the choice, so only the others say it. */}
+              {option.technologyReadiness === "flight-proven" ||
+              option.id === launchVehicleId
                 ? ""
                 : `, ${readinessLabel(option.technologyReadiness)}`}
               )
