@@ -39,7 +39,7 @@ test("sets a research Activity, sees what it earns, and sees the Science in the 
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
     "Pathfinder Orbiter: Orbital research",
   );
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
 
   // It arrives on day 210, so 570 of the Turn's 780 days earn their share, rounded up.
   const earned = page.getByTestId("summary-ongoing-research");
@@ -70,7 +70,7 @@ test("sets a research Activity, sees what it earns, and sees the Science in the 
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(earned).toContainText(
     "Pathfinder Orbiter, Orbital research: 75 Science and 6 Public Support over 730 days",
   );
@@ -123,7 +123,7 @@ test("sees which research pays a Research Grant, then sees it paid and the money
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await expect(page.getByTestId("money")).toHaveText("$2.3B");
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
 
   // The days left after landing earn 73 Science, which pays half of that in millions.
   await expect(page.getByTestId("summary-ongoing-research")).toContainText(
@@ -298,7 +298,7 @@ test("a lander from an old save carries on with Nothing, and can then be set to 
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   // Whether it lasts the whole Turn is down to its roll, so this only checks that it earned.
   await expect(page.getByTestId("summary-ongoing-research")).toContainText(
     /Prospector Lander, Surface research: \d+ Science/,

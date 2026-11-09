@@ -203,3 +203,32 @@
 .turn-summary-details h2 {
   margin-bottom: 0.4rem;
 }
+
+/* The Turn's Mission Events in order, each with the events column's rocket, or its warning when it failed. */
+.summary-mission-events ol {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  list-style: none;
+}
+
+.summary-mission-events li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem;
+  align-items: start;
+}
+
+.summary-mission-events li > .icon {
+  margin-top: 0.2em;
+  color: var(--muted);
+}
+
+.summary-mission-events li.failed > .icon,
+.summary-mission-events li.failed strong {
+  color: var(--problem);
+}
+
+.summary-mission-events time {
+  color: var(--muted);
+}

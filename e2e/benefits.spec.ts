@@ -61,7 +61,7 @@ test("puts a relay orbiter at Mars beside a lander and sees the raised earnings"
   await page.getByRole("button", { name: "Launch Mission" }).click();
 
   // The relay orbiter arrives before the lander lands, so every day of the lander's research is raised.
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const earned = page.getByTestId("summary-ongoing-research");
   await expect(earned).toContainText(
     /Prospector Lander, Surface research: \d+ Science and \d+ Public Support over (\d+) days, raised on \1 of them by the Benefit from Courier Relay, which added \d+ Science/,

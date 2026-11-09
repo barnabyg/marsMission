@@ -122,7 +122,7 @@ test("isn't available in a Turn with no Mission", async ({ page }) => {
   expect(await termsWithoutTooltips(page)).toEqual([]);
 });
 
-for (const reachedBy of ["10x", "End Turn"] as const) {
+for (const reachedBy of ["10x", "Skip to Decision Point"] as const) {
   test(`moves to the spacecraft view for a solar particle event, reached by ${reachedBy}, and respects a later choice`, async ({
     page,
   }) => {

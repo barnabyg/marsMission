@@ -24,7 +24,7 @@ async function landAtJezero(page: Page, name: string): Promise<void> {
   ).toHaveValue("jezero-crater");
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
 }
 
 test("lands a Mars lab beside a rover and sees the Research Grant it raised in the Turn summary", async ({

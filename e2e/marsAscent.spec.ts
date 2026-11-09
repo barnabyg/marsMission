@@ -87,7 +87,7 @@ test("lands round-trip Crew beside a fuel plant and brings them home through Mar
   }
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-crew-home")).toContainText(
     "Crew home safe, who won't fly again: Amara Okafor, Lena Petrova.",

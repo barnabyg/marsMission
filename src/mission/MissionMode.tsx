@@ -240,18 +240,19 @@ export function MissionMode({
             <span className="visually-hidden">Mute sound</span>
           </button>
         </div>
+        {/* A secondary button named for where it goes, as watching the Turn play is the primary action. */}
         <button
           type="button"
-          className="primary end-turn"
+          className="skip-turn"
           title={
             decisionPoint
               ? "Skip to the next Decision Point, which you must answer."
-              : "Skip to the Turn summary. The rest of the Turn still happens."
+              : "Skip to the Turn summary. The rest of the Turn still happens, and the summary lists its Mission Events."
           }
           disabled={deciding}
           onClick={decisionPoint ? skipToDecision : onFinished}
         >
-          End Turn
+          {decisionPoint ? "Skip to Decision Point" : "Skip to Turn summary"}
         </button>
         <progress
           aria-label="Progress through the Turn"

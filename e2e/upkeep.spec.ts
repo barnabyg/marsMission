@@ -47,7 +47,7 @@ test("pays Upkeep for an Asset kept at Mars, shown before the Turn and in its su
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const spent = page.getByTestId("summary-money-spent");
   await expect(spent.getByRole("listitem")).toHaveText(["Upkeep$10M"]);
   expect(await termsWithoutTooltips(page)).toEqual([]);

@@ -132,7 +132,7 @@ test("refuses a too-heavy Mission, then launches an orbiter and a lander togethe
     "Pathfinder Orbiter: Survey",
   );
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("summary-failure");
   await expect(summary).toContainText("Assets lost: Prospector Lander");
   await expect(summary).not.toContainText("Pathfinder Orbiter");
@@ -170,7 +170,7 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
     "A new Landing Site is known: Meridiani Planum",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-survey")).toContainText(
     "Meridiani Planum",
   );
@@ -208,7 +208,7 @@ test("turns Surveying off, sees no Survey that Turn, keeps that through a reload
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
     "Pathfinder Orbiter: Nothing",
   );
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("turn-summary")).toBeVisible();
   await expect(page.getByTestId("summary-survey")).toHaveCount(0);
   await page.getByRole("button", { name: "Continue" }).click();
@@ -237,7 +237,7 @@ test("turns Surveying off, sees no Survey that Turn, keeps that through a reload
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
     "Pathfinder Orbiter: Survey",
   );
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-survey")).toContainText(
     "Meridiani Planum",
   );
@@ -314,7 +314,7 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-assets-ended")).toContainText(
     "Pathfinder Orbiter",
   );
@@ -360,7 +360,7 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
   await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-assets-failed")).toContainText(
     "Pathfinder Orbiter",
   );
@@ -389,7 +389,7 @@ test("reports a failed landing as a crash at the Landing Site", async ({
   await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-failure")).toContainText(
     "Entry/descent/landing",
   );

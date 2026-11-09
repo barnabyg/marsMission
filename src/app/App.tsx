@@ -150,6 +150,7 @@ export function App({ services, firstScreen }: AppProps) {
           setScreen({
             mode: "turnSummary",
             result,
+            timeline: progress.timeline,
             lastTurn: screen.program,
             lastPlan: screen.plan,
           });
@@ -162,6 +163,7 @@ export function App({ services, firstScreen }: AppProps) {
   return (
     <TurnSummaryScreen
       summary={result.summary}
+      timeline={screen.timeline}
       onContinue={() => {
         const { program } = result;
         const active = simulation.readProgram(program).status.kind === "active";

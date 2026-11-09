@@ -1,11 +1,11 @@
 import { expect, type Page } from "@playwright/test";
 
 /**
- * Skips the rest of a Turn in Mission Mode with End Turn, which gives the same outcome as playing it out, and continues
- * past its Turn summary. Unlike playing it out at 10x, it leaves the next Turn at the speed this one was at.
+ * Skips the rest of a Turn in Mission Mode to its Turn summary, which gives the same outcome as playing it out, and
+ * continues past it. Unlike playing it out at 10x, it leaves the next Turn at the speed this one was at.
  */
 export async function endTurnAndContinue(page: Page): Promise<void> {
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: "Skip to Turn summary" }).click();
   await page
     .getByTestId("turn-summary")
     .getByRole("button", { name: "Continue" })

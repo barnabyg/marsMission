@@ -73,7 +73,7 @@ test("a Program past a Science Milestone earns it in a Turn with no Mission, onc
   await expect(events).toContainText(
     `Funding Threshold reached: ${threshold?.publicSupport} Public Support`,
   );
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-funding-payouts")).toContainText(
     `${threshold?.publicSupport} Public Support`,
   );

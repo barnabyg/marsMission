@@ -280,7 +280,7 @@ describe("a Decision Point", () => {
     expect(advancePlayback(resumed, stopping, 1000, 1).day).toBe(210);
   });
 
-  it("is where End Turn goes, from any earlier day", () => {
+  it("is where skipping to the Decision Point goes, from any earlier day", () => {
     const state = skipToDecisionPoint(startPlayback(stopping), stopping);
     expect(state.day).toBe(210);
     expect(state.finished).toBe(false);

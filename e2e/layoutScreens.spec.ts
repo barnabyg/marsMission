@@ -82,6 +82,7 @@ for (const size of screenSizes) {
           viewButton(page, "Spacecraft"),
           speeds.first(),
           speeds.last(),
+          page.getByRole("button", { name: /^Skip to / }),
         ]),
       ).toBe(true);
       const progress = await page
@@ -89,7 +90,7 @@ for (const size of screenSizes) {
         .boundingBox();
       expect(progress?.width).toBeGreaterThan(100);
       await expect(
-        page.getByRole("button", { name: "End Turn", exact: true }),
+        page.getByRole("button", { name: /^Skip to / }),
       ).toBeInViewport({ ratio: 1 });
       expect(await whatScrolls(page)).toEqual([]);
     });

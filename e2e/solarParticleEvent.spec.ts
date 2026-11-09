@@ -15,7 +15,7 @@ function decisionPoint(page: Page) {
 }
 
 function endTurn(page: Page) {
-  return page.getByRole("button", { name: "End Turn", exact: true });
+  return page.getByRole("button", { name: /^Skip to / });
 }
 
 /** Launches the orbiter Planning Mode starts with, up to the solar particle event on its way. */

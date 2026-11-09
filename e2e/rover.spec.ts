@@ -130,7 +130,7 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   // It lands on day 215, so 565 of the Turn's 780 days earn their share, rounded up.
   await expect(page.getByTestId("summary-ongoing-research")).toContainText(
     "Trailblazer Rover, Long traverse: 116 Science and 11 Public Support over 565 days",
@@ -249,7 +249,7 @@ test("lands a rover and a lander at one site, each with its own Activity", async
   ]);
   await expectApart(landed);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const earned = page.getByTestId("summary-ongoing-research");
   await expect(earned).toContainText("Prospector Lander, Surface research");
   await expect(earned).toContainText("Trailblazer Rover, Long traverse");

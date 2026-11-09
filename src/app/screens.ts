@@ -8,6 +8,7 @@ import type {
   DecisionAnswers,
   Program,
   Simulation,
+  Timeline,
   TurnPlan,
   TurnProgress,
   TurnResult,
@@ -37,6 +38,8 @@ export type Screen =
   | {
       mode: "turnSummary";
       result: TurnResult;
+      /** The whole Turn as Mission Mode played it, so that the summary can list what a skip left unseen. */
+      timeline: Timeline;
       lastTurn: Program;
       lastPlan: TurnPlan;
     }

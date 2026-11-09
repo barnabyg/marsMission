@@ -131,7 +131,7 @@
   padding: 0.8rem 1rem;
 }
 
-/* Three groups: the title, date and view tabs on the left, playback in the centre and End Turn on the right, with the Turn's progress beneath. */
+/* Three groups: the title, date and view tabs on the left, playback in the centre and the skip button on the right, with the Turn's progress beneath. */
 .mission-bar {
   grid-row: 1;
   grid-column: 1 / -1;
@@ -192,7 +192,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  /* Narrower than other buttons, so that six of them leave room for End Turn at 1920 wide in wider fonts too. */
+  /* Narrower than other buttons, so that six of them leave room for the skip button at 1920 wide in wider fonts too. */
   padding-inline: 0.6rem;
 }
 
@@ -203,9 +203,9 @@
   color: #10121a;
 }
 
-.end-turn {
+/* A secondary button: the accent is kept for the pressed speed and the current view. */
+.skip-turn {
   justify-self: end;
-  padding: 0.5rem 1.6rem;
 }
 
 .decision-point {

@@ -99,7 +99,7 @@ test("caches samples with a rover, sends them home with an ascent vehicle and an
   }
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-samples-home")).toContainText(
     /\d+ samples from Jezero Crater, brought home by the Albatross Orbiter: \d+ Science/,

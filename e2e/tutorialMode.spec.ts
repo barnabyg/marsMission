@@ -137,7 +137,7 @@ test("turns Tutorial mode off in Mission Mode, and it stays off in the next Plan
   await turnOffForGood(page);
   await expect(inMission).toHaveCount(0);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await page
     .getByTestId("turn-summary")
     .getByRole("button", { name: "Continue" })
@@ -174,7 +174,7 @@ test("gives every tutorial block in Planning and Mission Mode the tutorial's own
 
   await turnOffForGood(page);
   await expect(styled).toHaveCount(0);
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await page
     .getByTestId("turn-summary")
     .getByRole("button", { name: "Continue" })

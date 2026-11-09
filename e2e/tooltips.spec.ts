@@ -226,7 +226,7 @@ test("explains the terms of technology in Planning Mode, Mission Mode and the Tu
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const proven = page.getByTestId("summary-flight-proven");
   await expect(proven).toHaveText("Now Flight-proven: Pinpoint Lander");
   await expectTooltip(
@@ -295,7 +295,7 @@ test("explains the terms of Crew in Planning Mode, Mission Mode and the Turn sum
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("turn-summary");
   await expectTooltip(
     page,
