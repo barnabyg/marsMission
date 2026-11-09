@@ -262,9 +262,20 @@ test("a rescued landing shows its Decision Point first, then plays the landing, 
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
 
   await expect(surfaceAssets(page).first()).toContainText("Prospector Lander");
-  await expect(page.getByTestId("operating-at-mars")).toContainText(
-    "Service Life cut to 780 days",
+  // Once it has landed, the Landing Site's own list says its Service Life was cut.
+  const landed = holdSequence(page);
+  await page.getByRole("button", { name: "1x" }).click();
+  await landed;
+  await expect(page.getByTestId("surface-status")).toContainText(
+    "Prospector Lander (lander): Surface research, Service Life cut to 780 days",
   );
+  // Landed at Jezero Crater, the lander is named once in the whole info box, and nothing else is at Mars.
+  expect(
+    (await page.getByTestId("mission-info").innerText()).split(
+      "Prospector Lander",
+    ),
+  ).toHaveLength(2);
+  await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
 
   await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-contingencies")).toContainText(

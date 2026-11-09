@@ -46,7 +46,7 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await expect(
     page.getByTestId("mission-scene").locator("canvas"),
   ).toBeVisible();
-  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
+  await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
   await expect(eventEntries(page).last()).toContainText("1 December 2028");
   await expect(eventEntries(page).last()).toContainText("carries the Mission");
   expect(await termsWithoutTooltips(page)).toEqual([]);
@@ -85,9 +85,8 @@ test("plays from a new Program through a launch to the next Turn", async ({
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Continue" })).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
-  await expect(page.getByTestId("journey-progress")).toHaveText(
-    /Pathfinder Orbiter: arrived at Mars/,
-  );
+  // Arrived, the orbiter is named once, in what is operating at Mars, rather than in the journey's line as well.
+  await expect(page.getByTestId("journey-progress")).toHaveCount(0);
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
     "Pathfinder Orbiter: Survey",
   );
@@ -161,7 +160,7 @@ for (const { missionEvent, before } of [
     await expect(page.getByTestId("journey-progress")).toHaveText(
       /lost, and will not reach Mars/,
     );
-    await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
+    await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
     await page.getByRole("button", { name: "10x" }).click();
 
     const summary = page.getByTestId("turn-summary");

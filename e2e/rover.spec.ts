@@ -114,16 +114,19 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
     ).toBeVisible();
   }
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
-  await expect(page.getByTestId("journey-progress")).toHaveText(
-    "Trailblazer Rover: landed at Jezero Crater",
+  await expect(page.getByTestId("surface-status")).toContainText(
+    "Trailblazer Rover (rover): Long traverse",
   );
-  await expect(page.getByTestId("operating-at-mars")).toHaveText(
-    "Trailblazer Rover at Jezero Crater: Long traverse",
-  );
+  await expect(page.getByTestId("journey-progress")).toHaveCount(0);
+  await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
   await page
     .getByRole("group", { name: "View" })
     .getByRole("button", { name: "Mars orbit" })
     .click();
+  // Away from the surface view, the rover is listed with its Landing Site.
+  await expect(page.getByTestId("operating-at-mars")).toHaveText(
+    "Trailblazer Rover at Jezero Crater: Long traverse",
+  );
   await page.getByRole("button", { name: "1x" }).click();
   await expect(page.getByTestId("mars-surface-asset")).toHaveText(
     "Trailblazer Rover at Jezero Crater",
@@ -298,7 +301,7 @@ test("loses a rover and a lander together in one crash", async ({ page }) => {
     "Trailblazer Rover: crashed at Jezero Crater",
   ]);
   await expectApart(crashes);
-  await expect(page.getByTestId("operating-at-mars")).toHaveText("Nothing");
+  await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
   await expect(page.getByTestId("journey-progress")).toHaveText(
     "Prospector Lander: crashed at Jezero Crater. Trailblazer Rover: crashed at Jezero Crater",
   );

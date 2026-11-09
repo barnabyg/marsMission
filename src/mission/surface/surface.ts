@@ -61,6 +61,8 @@ export interface SurfaceAsset extends RoverAtWork {
   kind: string;
   model: SurfaceModel;
   activityName: string;
+  /** The Service Life it was cut to by a Contingency used this Turn, if it was. */
+  cutServiceLifeDays?: number;
   /** Its place among the Turn's Assets at this Landing Site, which stays the same all Turn. */
   place: number;
   /** For the Crew's ship, every Crew member at the site during the Turn. */
@@ -87,6 +89,9 @@ export function surfaceAssetsAt(
     kind: asset.kind,
     model: modelOf(asset.kind),
     activityName: asset.activityName,
+    ...(asset.cutServiceLifeDays === undefined
+      ? {}
+      : { cutServiceLifeDays: asset.cutServiceLifeDays }),
     place: atSite.indexOf(asset),
     crew: asset.crew ?? [],
   }));
@@ -249,19 +254,28 @@ export function dustStormAt(
 
 /**
  * What the player reads about a Landing Site on a given day, one line each. `leftFrom` says whether something has left
- * the site this Turn, through Mars ascent, so that it isn't new.
+ * the site this Turn, through Mars ascent, so that it isn't new. `landingOnDay` is the day of the landing playing now,
+ * whose own line names what is landing, so that what arrived that day is left out here rather than named twice.
  */
 export function describeSite(
   timeline: Pick<Timeline, "assetsAtMars" | "mission">,
   day: number,
   siteName: string,
   leftFrom = false,
+  landingOnDay: number | null = null,
 ): string[] {
-  const here = surfaceAssetsAt(timeline, day, siteName).map((asset) =>
-    asset.model === "crewLander"
-      ? describeCrew(asset, day)
-      : `${asset.name} (${asset.kind}): ${asset.activityName}`,
-  );
+  const atSite = surfaceAssetsAt(timeline, day, siteName);
+  const here = atSite
+    .filter(({ arrivedOnDay }) => arrivedOnDay !== landingOnDay)
+    .map((asset) =>
+      asset.model === "crewLander"
+        ? describeCrew(asset, day)
+        : `${asset.name} (${asset.kind}): ${asset.activityName}${
+            asset.cutServiceLifeDays === undefined
+              ? ""
+              : `, Service Life cut to ${asset.cutServiceLifeDays} days`
+          }`,
+    );
   const coming = landingsOnTheirWay(timeline.mission, day)
     .filter((landing) => landing.siteName === siteName)
     .map(({ name }) => name);
@@ -277,7 +291,7 @@ export function describeSite(
       ? "Nothing operating here"
       : "Nothing here yet";
   return [
-    ...(here.length > 0 ? here : [nothing]),
+    ...(here.length > 0 || atSite.length > 0 ? here : [nothing]),
     ...(coming.length > 0 ? [`On its way: ${coming.join(", ")}`] : []),
   ];
 }

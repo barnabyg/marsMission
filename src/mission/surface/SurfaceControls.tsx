@@ -32,7 +32,13 @@ export function SurfaceControls({
   onPickSite,
 }: SurfaceControlsProps) {
   if (site === null || view !== "surface") return null;
-  const status = sequenceStatus(sequence, site) ?? ascentStatus(ascent, site);
+  const landing = sequenceStatus(sequence, site);
+  const status = landing ?? ascentStatus(ascent, site);
+  // While a landing plays, its line names what is coming down, which the list below then leaves out.
+  const landingOnDay =
+    landing !== null && sequence !== null && !sequence.sequence.crashed
+      ? sequence.sequence.day
+      : null;
   const storm = dustStormAt(timeline, day, site);
   return (
     <>
@@ -71,6 +77,7 @@ export function SurfaceControls({
             day,
             site,
             ascent?.sequence.siteName === site,
+            landingOnDay,
           ),
         ].map((line) => (
           <li key={line}>

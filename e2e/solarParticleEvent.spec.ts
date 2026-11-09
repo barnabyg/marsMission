@@ -46,7 +46,7 @@ test("a solar particle event stops play on the way to Mars, and safe mode shorte
     "Risk Band",
   );
   await expect(page.getByTestId("journey-progress")).toContainText(
-    "of the way to Mars",
+    "on its way to Mars",
   );
 
   expect(await termsWithoutTooltips(page)).toEqual([]);
