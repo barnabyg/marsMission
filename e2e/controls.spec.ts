@@ -1,4 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test";
+import { chooseAssets, missionViewport } from "./helpers";
 import { successSeed } from "./seeds";
 
 function backgroundOf(locator: Locator): Promise<string> {
@@ -83,4 +84,46 @@ test("every control in Planning Mode shows the same focus style when tabbed to",
   }
   expect(stops).toBeGreaterThan(10);
   expect([...styles]).toEqual(["solid 3px rgb(140, 200, 255)"]);
+});
+
+test("closing any dialog with Escape returns focus to the button that opened it", async ({
+  page,
+}) => {
+  await page.setViewportSize(missionViewport);
+  await page.goto(`/?seed=${successSeed}`);
+  await page
+    .getByTestId("tutorial-offer")
+    .getByRole("button", { name: "Turn on Tutorial mode" })
+    .click();
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+
+  async function escapeBackTo(opener: string, dialog: string) {
+    const button = page.getByRole("button", { name: opener, exact: true });
+    await button.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("dialog", { name: dialog })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(button, dialog).toBeFocused();
+  }
+
+  await escapeBackTo("Save", "Save to a Save Slot");
+  await escapeBackTo("Load", "Load from a Save Slot");
+  await escapeBackTo("Restart Program", "Restart Program");
+  await escapeBackTo("Glossary", "Glossary");
+  await escapeBackTo(
+    "End Turn without launching",
+    "End Turn without launching",
+  );
+
+  // Ending the Turn leaves Planning Mode, so focus has nowhere to go back to there.
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await page
+    .getByRole("dialog", { name: "End Turn without launching" })
+    .getByRole("button", { name: "End Turn", exact: true })
+    .click();
+  await expect(page.getByTestId("mission-tutorial")).toBeVisible();
+  await escapeBackTo("Turn off Tutorial mode", "Turn off Tutorial mode");
 });

@@ -1,4 +1,11 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { GameText } from "./GameText";
 
 interface DialogProps {
@@ -13,7 +20,10 @@ interface DialogProps {
   children?: ReactNode;
 }
 
-/** A modal dialog, open for as long as it's rendered. */
+/**
+ * A modal dialog, open for as long as it's rendered. Once it closes, focus goes back to whatever had it before it
+ * opened, such as the button that opened it, so that a keyboard player carries on from there.
+ */
 export function Dialog({
   title,
   cancelLabel,
@@ -25,6 +35,17 @@ export function Dialog({
   const titleId = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const cancel = useRef<HTMLButtonElement>(null);
+  // Taken as it first renders, before it moves focus to its cancel button.
+  const [opener] = useState(() => document.activeElement);
+
+  // As it closes rather than after, so that it can't take focus back from wherever the player has moved it since.
+  useLayoutEffect(
+    () => () => {
+      // Not when what opened it has gone, as when a Load or a restart brings a new screen.
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    },
+    [opener],
+  );
 
   useEffect(() => {
     // Checked because React's development double-run of effects would otherwise open it twice, which throws.
