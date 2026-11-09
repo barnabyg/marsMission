@@ -204,8 +204,8 @@ test("turns Surveying off, sees no Survey that Turn, keeps that through a reload
   await expect(activity).toHaveValue("survey");
   await expect(activity.getByRole("option")).toHaveText([
     "Survey",
-    "Orbital research: earns 80 Science and 6 Public Support a Turn",
-    "Nothing: stays in place and does no work this Turn",
+    "Orbital research",
+    "Nothing",
   ]);
   await activity.selectOption("nothing");
   expect(await termsWithoutTooltips(page)).toEqual([]);

@@ -63,13 +63,12 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   await expect(inService.getByTestId("asset-risk-band")).toBeVisible();
   const activity = page.getByLabel("Activity for Trailblazer Rover");
   await expect(activity).toHaveValue("soil-analysis");
-  // Each other Activity says what it earns a Turn, in each of Science, Public Support and Research Grant that it earns
-  // any of, while the chosen one, closed, shows its name in full.
+  // Each Activity is named alone, so the closed choice shows its name in full, and what it earns is said once, below.
   await expect(activity.getByRole("option")).toHaveText([
     "Soil analysis",
-    "Long traverse: earns 160 Science and 14 Public Support a Turn",
-    "Sample caching: collects 10 samples a Turn",
-    "Nothing: stays in place and does no work this Turn",
+    "Long traverse",
+    "Sample caching",
+    "Nothing",
   ]);
   // The chosen Activity's earnings are written out under its choice, which is too narrow to show them once closed.
   await expect(row.getByTestId("activity-earnings")).toHaveText(
@@ -168,7 +167,7 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
       .getByTestId("operating-assets")
       .getByLabel("Activity for Trailblazer Rover"),
   ).toHaveValue("long-traverse");
-  // Operating at Mars, too, each Activity says what it earns a Turn, and the chosen one's earnings are written out.
+  // Operating at Mars, too, each Activity is named alone, and the chosen one's earnings are written out.
   await expect(
     page.getByTestId("operating-assets").getByTestId("activity-earnings"),
   ).toHaveText("Long traverse earns 160 Science and 14 Public Support a Turn.");
@@ -178,9 +177,7 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
       .getByLabel("Activity for Trailblazer Rover")
       .getByRole("option")
       .first(),
-  ).toHaveText(
-    "Soil analysis: earns 80 Science, 9 Public Support and $800M Research Grant a Turn",
-  );
+  ).toHaveText("Soil analysis");
   await expect(page.getByTestId("milestones")).toContainText(
     "First rover on Mars",
   );

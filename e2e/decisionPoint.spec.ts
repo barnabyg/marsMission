@@ -43,6 +43,21 @@ test("Planning Mode offers Reserve fuel only for a Mission with Mars orbit inser
   const reserveFuel = page.getByRole("checkbox", { name: /Reserve fuel/ });
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
   await expect(page.getByTestId("mission-mass")).toHaveText("2.5 of 4 tonnes");
+  // The Contingency is named once, over the list, and its label says what it costs and its Risk Band if used.
+  await expect(
+    page.getByText("On the way, once each, with a Contingency for some"),
+  ).toBeVisible();
+  await expect(reserveFuel).toHaveAccessibleName(
+    /^Reserve fuel · \$80M · 0\.2 t · (~\d+%|Over \d+%) if used$/,
+  );
+  // Each Reliability is its name and cost; the Risk Band it leaves is beside the choice, and said only there.
+  const insertion = page
+    .getByTestId("mission-event")
+    .filter({ hasText: "Mars orbit insertion" });
+  await expect(insertion.getByRole("option").first()).toHaveText("None ($0M)");
+  for (const option of await insertion.getByRole("option").allTextContents()) {
+    expect(option).toMatch(/^[\w ]+ \(\$[\d.]+[MB]\)$/);
+  }
   await reserveFuel.check();
   await expect(page.getByTestId("mission-cost")).toHaveText("$1.08B");
   await expect(page.getByTestId("mission-mass")).toHaveText("2.7 of 4 tonnes");
