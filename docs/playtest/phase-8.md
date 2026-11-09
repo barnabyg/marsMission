@@ -33,6 +33,7 @@ Without `?seed=` in the address, each new Program gets its own seed, as in norma
 5. **Crew on a round trip.** On Turn 5, choose the Meridian Colossus and tick Crewed Mission. Leave the Crew size at 2 and tick **Round trip**, which adds the Earth return stage, $600M and 1.5 tonnes, and lists Trans-Earth injection and Earth entry under the Mission Events. Leave everything else as it is: the Mission costs $4.8B. Launch, and watch the Crew arrive in Mars orbit and earn the First Crew at Mars Milestone. The Turn summary shows money $5.685B to $3.371B, Public Support 256 to 657 and the Crew at Health 45.
 6. **Crew home safe.** On Turn 6, Operating at Mars lists the Crew in Mars orbit with their way home. Tick **Bring Amara Okafor and Lena Petrova home** and choose End Turn without launching. Their Earth return stage leaves Mars, the solar system view follows them home, and the spacecraft view shows Earth entry and the splashdown. The Turn summary lists them as Crew home safe, earning 200 Public Support and the First Crew home Milestone. Public Support goes from 657 to 985 and two Funding Thresholds take the money from $3.371B to $8.149B.
 7. **Crew lost on the way home.** Open [Crew lost on the way home](http://localhost:4280/?seed=413), choose **Start a new Program** and play steps 4 to 6 again, with the same results up to Turn 6. This time Earth entry fails: the capsule breaks up, the events column says the Crew were lost, and the Turn summary shows Public Support 657 to 415, 20 for the failure and 150 for the Crew.
+8. **The Program summary.** Before going on, choose **Save** and save to Save Slot 1. Then choose End Turn without launching on each Turn, and End Turn in Mission Mode to skip ahead, until Public Support falls below the Cancellation Level and the Program is cancelled. After the Turn summary, the Program summary says why it ended and that it was played with seed 413, with the Turns played and the years they took, the 2 Missions launched, its Science, highest Public Support and Money left, the 2 Crew who flew and were lost, and each Milestone earned with its Turn, such as First Crew at Mars on Turn 5. Choose **Load…** and load Save Slot 1: Planning Mode opens at the Turn you saved.
 
 ## Judge by eye and ear
 
@@ -42,6 +43,7 @@ The automated tests can't check these, so please look and listen on your own PC:
 - Crew coming home safe sounds and feels like a celebration, and losing them on the way home like the disaster it is.
 - The Samples step and the way home in Operating at Mars make it clear what can come home, what it would earn, and why it can't yet.
 - A fuel plant, a habitat and a Mars lab look like parts of one base when they land at the same Landing Site.
+- The Program summary reads as the story of the Program, and fits on your screen without scrolling.
 
 ## Feedback wanted
 

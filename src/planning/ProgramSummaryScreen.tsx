@@ -1,61 +1,106 @@
-import type { ProgramView } from "../simulation/simulation";
+import { useState } from "react";
+import { SummaryMilestones } from "../mission/SummaryMilestones";
+import { SaveSlots } from "../save/SaveSlots";
+import { manualSlots, type SaveStore } from "../save/saveStore";
+import type {
+  Program,
+  ProgramSummary,
+  Simulation,
+} from "../simulation/simulation";
+import { Dialog } from "../ui/Dialog";
 import { GameText } from "../ui/GameText";
+import { ProgramFigures } from "./ProgramFigures";
 
 interface ProgramSummaryScreenProps {
-  view: ProgramView;
+  summary: ProgramSummary;
+  simulation: Simulation;
+  saveStore: SaveStore;
   onStartNew: () => void;
+  onLoad: (program: Program) => void;
 }
 
+/**
+ * The story of a Program that has ended: how it ended, what it did over its Turns, its Crew and samples, the Milestones
+ * it earned and when, and the seed to play it again. A player with a Save Slot can load it from here.
+ */
 export function ProgramSummaryScreen({
-  view,
+  summary,
+  simulation,
+  saveStore,
   onStartNew,
+  onLoad,
 }: ProgramSummaryScreenProps) {
-  const { status, science, milestones } = view;
+  const { status, seed, milestones, countedFromTurn } = summary;
+  const [anySlotUsed] = useState(() =>
+    manualSlots.some((slot) => saveStore.load(slot).kind !== "empty"),
+  );
+  const [loadOpen, setLoadOpen] = useState(false);
   return (
-    <main className="summary-screen" data-testid="program-summary">
+    <main
+      className="summary-screen turn-summary program-summary"
+      data-testid="program-summary"
+    >
       <h1>
         <GameText>Program summary</GameText>
       </h1>
-      {status.kind === "cancelled" ? (
-        <p className="problem">
+      <section className="program-ending" data-testid="program-ending">
+        <h2 className={status.kind === "cancelled" ? "problem" : undefined}>
+          <GameText heading>
+            {status.kind === "cancelled"
+              ? "The Program has been cancelled."
+              : "You retired this Program."}
+          </GameText>
+        </h2>
+        {status.kind === "cancelled" && (
+          <p>
+            <GameText>{status.reason}</GameText>
+          </p>
+        )}
+        <p data-testid="program-seed">
+          {`It was played with seed ${String(seed)}. To play it again, add ?seed=${String(seed)} to the game's address.`}
+        </p>
+      </section>
+      <ProgramFigures summary={summary} />
+      <SummaryMilestones milestones={milestones} />
+      {countedFromTurn > 1 && (
+        <p className="program-counted-from" data-testid="program-counted-from">
           <GameText>
-            {`The Program has been cancelled. ${status.reason}`}
+            {`This Program was saved by an earlier version of the game, so its Missions, highest Public Support, samples and the Turns of its Milestones count from Turn ${String(countedFromTurn)}.`}
           </GameText>
         </p>
-      ) : (
-        <p>
-          <GameText>You retired this Program.</GameText>
-        </p>
       )}
-      <table>
-        <tbody>
-          <tr>
-            <th scope="row">
-              <GameText>Total Science</GameText>
-            </th>
-            <td data-testid="total-science">{science}</td>
-          </tr>
-        </tbody>
-      </table>
-      <section>
-        <h2>
-          <GameText heading>Milestones</GameText>
-        </h2>
-        {milestones.length === 0 ? (
-          <p>None achieved.</p>
-        ) : (
-          <ul>
-            {milestones.map((milestone) => (
-              <li key={milestone.id}>
-                <GameText>{milestone.name}</GameText>
-              </li>
-            ))}
-          </ul>
+      <div className="program-summary-actions">
+        <button type="button" className="primary" onClick={onStartNew}>
+          Start a new Program
+        </button>
+        {anySlotUsed && (
+          <button
+            type="button"
+            onClick={() => {
+              setLoadOpen(true);
+            }}
+          >
+            {/* The ellipsis says it opens a dialog, as on the title screen. */}
+            Load…
+          </button>
         )}
-      </section>
-      <button type="button" className="primary" onClick={onStartNew}>
-        Start a new Program
-      </button>
+      </div>
+      {loadOpen && (
+        <Dialog
+          title="Load from a Save Slot"
+          cancelLabel="Cancel"
+          onClose={() => {
+            setLoadOpen(false);
+          }}
+        >
+          <SaveSlots
+            simulation={simulation}
+            saveStore={saveStore}
+            // The automatic save was cleared as the Program ended, so loading loses nothing.
+            action={{ kind: "load", confirm: false, onLoad }}
+          />
+        </Dialog>
+      )}
     </main>
   );
 }
