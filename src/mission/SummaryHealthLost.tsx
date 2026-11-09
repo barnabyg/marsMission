@@ -1,5 +1,6 @@
 import { healthLossCauses, type TurnSummary } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
+import { SummaryPart } from "./SummaryCard";
 
 type HealthLost = TurnSummary["healthLost"][number];
 
@@ -43,10 +44,7 @@ export function SummaryHealthLost({
 }: Pick<TurnSummary, "healthLost">) {
   if (healthLost.length === 0) return null;
   return (
-    <section data-testid="summary-health-lost">
-      <h2>
-        <GameText heading>Health lost</GameText>
-      </h2>
+    <SummaryPart heading="Health lost" testId="summary-health-lost">
       <ul>
         {healthLost.map((member) => (
           <li key={member.name}>
@@ -54,6 +52,6 @@ export function SummaryHealthLost({
           </li>
         ))}
       </ul>
-    </section>
+    </SummaryPart>
   );
 }

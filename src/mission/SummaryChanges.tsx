@@ -99,11 +99,14 @@ function MoneyList({ heading, lines }: MoneyListProps) {
   );
 }
 
-/** Money, Science and Public Support before and after the Turn, with where the Money went and came from. */
+/**
+ * Money, Science and Public Support before and after the Turn, with where the Money went and came from: the first row
+ * of the Turn summary's cards.
+ */
 export function SummaryChanges({ summary }: { summary: TurnSummary }) {
   const money = turnMoney(summary);
   return (
-    <div className="summary-changes">
+    <>
       <ValueChange
         icon="coins"
         name="Money"
@@ -157,6 +160,6 @@ export function SummaryChanges({ summary }: { summary: TurnSummary }) {
           </li>
         </ul>
       </ValueChange>
-    </div>
+    </>
   );
 }
