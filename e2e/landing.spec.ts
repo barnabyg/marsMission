@@ -59,10 +59,11 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
   await expect(
     eventEntries(page).getByRole("heading", { name: "First landing on Mars" }),
   ).toBeVisible();
-  // The info box names the lander once: as it comes down, by the landing's own line, rather than also in a list.
+  // The info box names the lander once, in the Landing Site's own list: by the landing's line while it comes down,
+  // then with its Activity.
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
-  await expect(page.getByTestId("surface-status")).toHaveText(
-    "Landing: Prospector Lander",
+  await expect(page.getByTestId("surface-status")).toContainText(
+    "Prospector Lander",
   );
   await expect(page.getByTestId("journey-progress")).toHaveCount(0);
   await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);

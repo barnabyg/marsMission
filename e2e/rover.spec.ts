@@ -114,9 +114,15 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
     ).toBeVisible();
   }
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
+  // The Landing Site's own list names the rover, by the landing's line while it comes down, and nothing else does.
   await expect(page.getByTestId("surface-status")).toContainText(
-    "Trailblazer Rover (rover): Long traverse",
+    "Trailblazer Rover",
   );
+  expect(
+    (await page.getByTestId("mission-info").innerText()).split(
+      "Trailblazer Rover",
+    ),
+  ).toHaveLength(2);
   await expect(page.getByTestId("journey-progress")).toHaveCount(0);
   await expect(page.getByTestId("operating-at-mars")).toHaveCount(0);
   await page
