@@ -45,7 +45,7 @@ test("lands a fuel plant and sees its ascent propellant in the next Planning Mod
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const made = page.getByTestId("summary-ascent-propellant");
   await expect(made).toContainText(
     /Jezero Crater: Wellspring Fuel Plant made (\d+\.\d) t, so it has \1 t/,

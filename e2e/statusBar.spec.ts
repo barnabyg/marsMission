@@ -13,7 +13,7 @@ async function playTurnWithoutLaunching(page: Page): Promise<void> {
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 }
@@ -152,7 +152,7 @@ test("shows the base funding that comes in as the Turn ends, sized by Public Sup
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const received = page.getByTestId("summary-money-received");
   await expect(received.getByRole("listitem")).toHaveText([
     "Base funding$200M",

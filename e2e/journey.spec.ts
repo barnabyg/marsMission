@@ -189,7 +189,7 @@ test("restarts with a new Program after asking first", async ({ page }) => {
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await page
     .getByTestId("turn-summary")
     .getByRole("button", { name: "Continue" })

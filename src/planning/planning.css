@@ -359,11 +359,6 @@
 }
 
 /* Side by side, so that a Mission with every Asset and Mission Event still fits at 150% scaling. */
-.mission-buttons {
-  display: flex;
-  gap: 1rem;
-}
-
 .confirm {
   display: flex;
   align-items: center;

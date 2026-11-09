@@ -14,7 +14,7 @@ function decisionPoint(page: Page) {
 }
 
 function endTurn(page: Page) {
-  return page.getByRole("button", { name: "End Turn", exact: true });
+  return page.getByRole("button", { name: /^Skip to / });
 }
 
 /** Lands a lander at the first Landing Site on Turn 1, and starts Turn 2 with nothing to launch, up to the dust storm. */

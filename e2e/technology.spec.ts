@@ -9,6 +9,7 @@ import {
   watchForProblems,
 } from "./helpers";
 import { pinpointLandingSeed } from "./seeds";
+import { confirmEndWithoutLaunching } from "./turnHelpers";
 
 test.use({ viewport: missionViewport });
 
@@ -59,7 +60,7 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
   await expect(
     eventEntries(page).filter({ hasText: "Pinpoint Lander is Flight-proven" }),
   ).toContainText("From the next Turn on, it costs $900M");
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-flight-proven")).toHaveText(
     "Now Flight-proven: Pinpoint Lander",
   );
@@ -119,7 +120,8 @@ test("develops the Endurance Rover over two Turns, then chooses it for a Mission
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await confirmEndWithoutLaunching(page);
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-development-started")).toHaveText(
     "Development started: Endurance Rover",
   );
@@ -142,7 +144,7 @@ test("develops the Endurance Rover over two Turns, then chooses it for a Mission
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-development-finished")).toContainText(
     "Endurance Rover",
   );

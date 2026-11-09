@@ -22,7 +22,7 @@ function decisionPoint(page: Page) {
 }
 
 function endTurn(page: Page) {
-  return page.getByRole("button", { name: "End Turn", exact: true });
+  return page.getByRole("button", { name: /^Skip to / });
 }
 
 /** Launches the first Mission, with Reserve fuel if asked, which Planning Mode offers for the orbiter it starts with. */
@@ -69,7 +69,7 @@ test("using a Contingency that works saves the orbiter with a shorter Service Li
   await expect(decisionPoint(page)).toContainText("35 Public Support");
   await expect(decisionPoint(page)).toContainText("20 Public Support");
 
-  // At 10x the Turn can end before the checks below finish, taking End Turn with it, so it holds when the answer shows.
+  // At 10x the Turn can end before the checks below finish, taking the skip button with it, so it holds when the answer shows.
   await holdTurnWhenShown(page, "Mars orbit insertion: saved by Reserve fuel");
   await decisionPoint(page)
     .getByRole("button", { name: /Use Reserve fuel/ })
@@ -149,20 +149,29 @@ test("a failure with no Contingency bought raises no Decision Point", async ({
   await expect(decisionPoint(page)).toHaveCount(0);
 });
 
-test("End Turn stops at the Decision Point, and works again once it's answered", async ({
+test("skips to the Decision Point, then once it's answered to the Turn summary, which lists the Turn's Mission Events", async ({
   page,
 }) => {
   await launch(page, orbitInsertionRescuedSeed);
-  await endTurn(page).click();
+  const toDecision = page.getByRole("button", {
+    name: "Skip to Decision Point",
+  });
+  await expect(toDecision).toHaveAttribute("title", /which you must answer/);
+  await toDecision.click();
   await expect(decisionPoint(page)).toBeVisible();
   await expect(page.getByTestId("turn-summary")).toHaveCount(0);
-  await expect(endTurn(page)).toBeDisabled();
+  await expect(toDecision).toBeDisabled();
 
   await decisionPoint(page)
     .getByRole("button", { name: /Use Reserve fuel/ })
     .click();
-  await endTurn(page).click();
+  await page.getByRole("button", { name: "Skip to Turn summary" }).click();
   await expect(page.getByTestId("turn-summary")).toBeVisible();
+  await expect(page.getByTestId("summary-mission-event")).toHaveText([
+    /^Launch\b/,
+    /^Mars transfer burn\b/,
+    /^Mars orbit insertion: saved by Reserve fuel\b/,
+  ]);
 });
 
 test("no speed gets play past a Decision Point", async ({ page }) => {
@@ -233,7 +242,7 @@ test("a rescued landing shows its Decision Point first, then plays the landing, 
     "Service Life cut to 780 days",
   );
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("summary-contingencies")).toContainText(
     "Prospector Lander now has a Service Life of 780 days",
   );

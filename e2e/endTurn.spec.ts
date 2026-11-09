@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
   cancelledAfterOneTurn,
   chooseAssets,
@@ -8,11 +8,26 @@ import {
   watchForProblems,
 } from "./helpers";
 import { seedFailingAt, successSeed } from "./seeds";
+import {
+  confirmEndWithoutLaunching,
+  endWithoutLaunchingDialog,
+} from "./turnHelpers";
 
 test.use({ viewport: missionViewport });
 
+function skipToSummary(page: Page) {
+  return page.getByRole("button", { name: "Skip to Turn summary" });
+}
+
 function endTurn(page: Page): Promise<void> {
-  return page.getByRole("button", { name: "End Turn", exact: true }).click();
+  return skipToSummary(page).click();
+}
+
+/** The Turn summary's list of the Turn's Mission Events. */
+function summaryMissionEvents(page: Page) {
+  return page
+    .getByTestId("summary-mission-events")
+    .getByTestId("summary-mission-event");
 }
 
 /** What the Turn summary and the next Planning Mode report, to compare two ways of reaching them. */
@@ -52,12 +67,22 @@ test("ending a Turn partway gives the same outcome as playing it to the end", as
   await pauseAtEvent(page, "Launch", () =>
     page.getByRole("button", { name: "Launch Mission" }).click(),
   );
-  await expect(
-    page.getByRole("button", { name: "End Turn", exact: true }),
-  ).toHaveAttribute("title", /The rest of the Turn still happens/);
+  await expect(skipToSummary(page)).toHaveAttribute(
+    "title",
+    /The rest of the Turn still happens/,
+  );
   await endTurn(page);
 
-  await expect(page.getByTestId("turn-summary")).toBeVisible();
+  // What the events column would have gone on to show is in the Turn summary.
+  await expect(summaryMissionEvents(page)).toHaveText([
+    /^Launch\b/,
+    /^Mars transfer burn\b/,
+    /^Mars orbit insertion\b/,
+  ]);
+  await expect(summaryMissionEvents(page).first()).toHaveAttribute(
+    "data-outcome",
+    "success",
+  );
   const skipped = await readTurnOutcome(page);
   expect(skipped).toEqual(played);
   expect(skipped.planning[0]).toBe("2");
@@ -76,6 +101,73 @@ test("ending a Turn after a Mission fails still reports the failure", async ({
   await endTurn(page);
 
   await expect(page.getByTestId("summary-failure")).toContainText("Launch");
+  await expect(summaryMissionEvents(page)).toHaveText([/^Launch failed\b/]);
+  await expect(summaryMissionEvents(page)).toHaveAttribute(
+    "data-outcome",
+    "failure",
+  );
+});
+
+test("asks before ending the Turn without launching a planned Mission, and keeps the plan if asked to", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Trailblazer Rover"]);
+  const withoutLaunching = page.getByRole("button", {
+    name: "End Turn without launching",
+  });
+  const launch = page.getByRole("button", { name: "Launch Mission" });
+  // At the budget bar's far end, as plain text, well clear of Launch Mission, so the primary action stands alone.
+  const right = async (locator: Locator) =>
+    locator.evaluate((element) => element.getBoundingClientRect().right);
+  const left = async (locator: Locator) =>
+    locator.evaluate((element) => element.getBoundingClientRect().left);
+  expect(
+    (await left(withoutLaunching)) - (await right(launch)),
+  ).toBeGreaterThan(40);
+  expect(await right(withoutLaunching)).toBeCloseTo(
+    await right(page.getByTestId("budget-bar")),
+    0,
+  );
+  await expect(withoutLaunching).toHaveCSS(
+    "background-color",
+    "rgba(0, 0, 0, 0)",
+  );
+
+  await withoutLaunching.click();
+  const dialog = endWithoutLaunchingDialog(page);
+  await expect(dialog).toContainText(
+    "End the Turn without launching? The Mission you planned is dropped.",
+  );
+  await dialog.getByRole("button", { name: "Keep planning" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(
+    page
+      .locator(".asset-choice", { hasText: "Trailblazer Rover" })
+      .getByRole("checkbox"),
+  ).toBeChecked();
+  await expect(launch).toBeEnabled();
+
+  await withoutLaunching.click();
+  await confirmEndWithoutLaunching(page);
+  await expect(page.getByTestId("journey-progress")).toHaveText(
+    "No Mission this Turn",
+  );
+  expect(problems).toEqual([]);
+});
+
+test("ends the Turn without launching at once when nothing is ticked", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await expect(page.getByTestId("journey-progress")).toHaveText(
+    "No Mission this Turn",
+  );
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
 test("ending a Turn that cancels the Program means it can't be reopened", async ({

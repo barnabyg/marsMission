@@ -92,7 +92,7 @@ export function atDecisionPoint(
   return decisionDay != null && state.day >= decisionDay;
 }
 
-/** Goes straight to the Decision Point, for End Turn, which can't skip it. */
+/** Goes straight to the Decision Point, for Mission Mode's skip button, which can't skip it. */
 export function skipToDecisionPoint(
   state: PlaybackState,
   timeline: PlaybackTimeline,

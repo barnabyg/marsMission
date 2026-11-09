@@ -60,7 +60,7 @@ test("fetches one-way Crew from a Phase 7 save with a return vehicle and brings 
     "The Homeward waits in Mars orbit to bring Amara Okafor and Lena Petrova home on a later Turn.",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-return-vehicle")).toHaveText(
     "Return vehicle Homeward in Mars orbit, waiting to bring home on a later Turn: Amara Okafor, Lena Petrova",
@@ -88,7 +88,7 @@ test("fetches one-way Crew from a Phase 7 save with a return vehicle and brings 
       has: page.getByRole("heading", { name: "Crew home", exact: true }),
     }),
   ).toContainText("Amara Okafor and Lena Petrova are home safe");
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(
     page.getByTestId("turn-summary").getByTestId("summary-crew-home"),
   ).toContainText(

@@ -79,14 +79,16 @@ test("stays silent for the rest of a Turn after muting partway through", async (
   ]);
 });
 
-test("plays no sounds for what End Turn skips", async ({ page }) => {
+test("plays no sounds for what skipping to the Turn summary skips", async ({
+  page,
+}) => {
   await listenForSounds(page);
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await pauseAtEvent(page, "Launch", () =>
     page.getByRole("button", { name: "Launch Mission" }).click(),
   );
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("turn-summary")).toBeVisible();
   expect((await soundsHeard(page)).map(([file]) => file)).toEqual([
     "launch.wav",

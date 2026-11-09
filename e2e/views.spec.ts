@@ -16,6 +16,7 @@ import {
   watchForProblems,
 } from "./helpers";
 import { crashSeed, landingSeed, seedFailingAt, successSeed } from "./seeds";
+import { confirmEndWithoutLaunching } from "./turnHelpers";
 
 test.use({ viewport: missionViewport });
 
@@ -104,7 +105,7 @@ test("shows an orbiter going round Mars from the day it arrives, only in the Mar
 
   // It's still there next Turn, from the first day. Ending this Turn keeps the next one at 1x, as
   // a Turn at 10x can be over in the browser tests before the label has been checked.
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   await page
     .getByTestId("turn-summary")
     .getByRole("button", { name: "Continue" })
@@ -210,6 +211,7 @@ test("keeps the controls still as the date changes, even in a window too small f
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
+  await confirmEndWithoutLaunching(page);
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
   const places = await page.evaluate(
     () =>
@@ -236,7 +238,7 @@ test("keeps the controls still as the date changes, even in a window too small f
   expect(places).toHaveLength(1);
 });
 
-test("groups the toolbar: views on the left, playback with icons in the centre and End Turn on the right", async ({
+test("groups the toolbar: views on the left, playback with icons in the centre and the skip button on the right", async ({
   page,
 }) => {
   // Checks where things sit on screen, at the size this was laid out for.
@@ -248,7 +250,7 @@ test("groups the toolbar: views on the left, playback with icons in the centre a
     return found;
   };
   const playbackGroup = page.getByTestId("mission-playback");
-  const endTurn = page.getByRole("button", { name: "End Turn", exact: true });
+  const endTurn = page.getByRole("button", { name: /^Skip to / });
   const views = await box(page.getByRole("group", { name: "View" }));
   const playback = await box(playbackGroup);
   const end = await box(endTurn);
@@ -260,7 +262,13 @@ test("groups the toolbar: views on the left, playback with icons in the centre a
     width * 0.05,
   );
   expect(width - (end.x + end.width)).toBeLessThan(width * 0.05);
-  await expect(endTurn).toHaveCSS("background-color", "rgb(226, 112, 58)");
+  // A secondary button, as the accent is kept for the pressed speed and the current view.
+  await expect(endTurn).toHaveCSS(
+    "background-color",
+    await page
+      .getByRole("button", { name: "Mute sound" })
+      .evaluate((mute) => getComputedStyle(mute).backgroundColor),
+  );
 
   // Each playback control shows an icon and keeps the name it had.
   for (const name of ["Pause", "1x", "5x", "10x", "Mute sound"]) {

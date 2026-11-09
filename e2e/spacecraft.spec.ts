@@ -15,6 +15,7 @@ import {
   watchForProblems,
 } from "./helpers";
 import { seedFailingAt, solarParticleEventSeed, successSeed } from "./seeds";
+import { confirmEndWithoutLaunching } from "./turnHelpers";
 
 test.use({ viewport: missionViewport });
 
@@ -116,11 +117,12 @@ test("isn't available in a Turn with no Mission", async ({ page }) => {
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
+  await confirmEndWithoutLaunching(page);
   await expectSpacecraftUnavailable(page);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 });
 
-for (const reachedBy of ["10x", "End Turn"] as const) {
+for (const reachedBy of ["10x", "Skip to Decision Point"] as const) {
   test(`moves to the spacecraft view for a solar particle event, reached by ${reachedBy}, and respects a later choice`, async ({
     page,
   }) => {

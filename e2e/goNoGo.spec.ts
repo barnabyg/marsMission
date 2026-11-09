@@ -16,7 +16,7 @@ test("holding off a landing in a dust storm lands it later, with a shorter Servi
   await page.goto(`/?seed=${holdOffSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  const endTurn = page.getByRole("button", { name: "End Turn", exact: true });
+  const endTurn = page.getByRole("button", { name: /^Skip to / });
   await endTurn.click();
 
   const panel = page.getByTestId("decision-point");

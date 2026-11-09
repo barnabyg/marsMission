@@ -85,7 +85,7 @@ test("a Free-return Mission whose arrival burn fails comes back, at no Public Su
     "Pathfinder Orbiter: back at Earth",
   );
 
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("summary-failure");
   await expect(summary).toContainText("Mission came back to Earth");
   await expect(summary).toContainText("Public Support lost: 0");
@@ -108,8 +108,8 @@ test("a Contingency's Decision Point comes before the Free-return", async ({
   await trajectory(page).selectOption("free-return");
   await page.getByRole("checkbox", { name: /Reserve fuel/ }).check();
   await page.getByRole("button", { name: "Launch Mission" }).click();
-  // End Turn stops at the Decision Point.
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  // Skipping stops at the Decision Point.
+  await page.getByRole("button", { name: /^Skip to / }).click();
 
   const decision = page.getByTestId("decision-point");
   await expect(decision).toContainText("swing back to Earth");
@@ -120,7 +120,7 @@ test("a Contingency's Decision Point comes before the Free-return", async ({
   await expect(
     page.getByRole("heading", { name: "Mars orbit insertion failed" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "End Turn", exact: true }).click();
+  await page.getByRole("button", { name: /^Skip to / }).click();
   const summary = page.getByTestId("summary-failure");
   await expect(summary).toContainText("Public Support lost: 0");
   await expect(summary).toContainText("Refund: $350M");
