@@ -7,8 +7,8 @@ interface TutorialAdviceProps {
 
 /**
  * The tutorial's advice for this Planning session, as the tutorial strategy worked it out: why it changed course, if
- * it did, then where the Program is on the route, then what to plan and why. It only says: the player sets every
- * control.
+ * it did, then the stage the Program is at, with the whole route behind a disclosure, then what to plan and why. It
+ * only says: the player sets every control. The panel around it (TutorialPanel.tsx) says so.
  */
 export function TutorialAdvice({ advice }: TutorialAdviceProps) {
   const { stage, changeOfCourse, items } = advice;
@@ -30,17 +30,21 @@ export function TutorialAdvice({ advice }: TutorialAdviceProps) {
         <p>
           <GameText>{aim}</GameText>
         </p>
-        <ol className="tutorial-route" aria-label="The route">
-          {stages.map((each, index) => (
-            <li
-              key={each.id}
-              aria-current={index === current ? "step" : undefined}
-              className={index < current ? "done" : undefined}
-            >
-              <GameText>{each.name}</GameText>
-            </li>
-          ))}
-        </ol>
+        {/* The whole route only when asked for, so that this Turn's advice comes first. */}
+        <details className="tutorial-route-disclosure">
+          <summary>Show the route</summary>
+          <ol className="tutorial-route" aria-label="The route">
+            {stages.map((each, index) => (
+              <li
+                key={each.id}
+                aria-current={index === current ? "step" : undefined}
+                className={index < current ? "done" : undefined}
+              >
+                <GameText>{each.name}</GameText>
+              </li>
+            ))}
+          </ol>
+        </details>
       </div>
       <h3>
         <GameText heading>This Turn</GameText>
@@ -57,12 +61,6 @@ export function TutorialAdvice({ advice }: TutorialAdviceProps) {
           </li>
         ))}
       </ul>
-      <p className="empty-note">
-        <GameText>
-          This is only advice: you set every choice yourself, and can plan
-          something else.
-        </GameText>
-      </p>
     </div>
   );
 }

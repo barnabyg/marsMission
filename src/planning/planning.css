@@ -33,23 +33,6 @@
   align-content: start;
 }
 
-/* Tutorial mode, when it shows, comes first and takes the room its advice needs, up to a share of the column. */
-.planning-side:has(> .tutorial-panel) {
-  grid-template-rows: minmax(0, auto) minmax(0, 1fr) minmax(0, auto) minmax(
-      0,
-      auto
-    );
-}
-
-.planning-side:has(> .tutorial-panel + .panel.empty) {
-  grid-template-rows: minmax(0, auto) auto minmax(0, auto) minmax(0, auto);
-  align-content: start;
-}
-
-.planning-side .tutorial-panel {
-  max-height: 45vh;
-}
-
 /* An empty panel is one compact line: its heading and an encouraging note. */
 .planning-side .panel.empty {
   display: flex;
@@ -389,59 +372,4 @@
   color: var(--muted);
   font-size: var(--text-sm);
   line-height: 1;
-}
-
-.tutorial-heading {
-  justify-self: stretch;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.6rem 1.5rem;
-}
-
-/* Tutorial mode's advice: why it changed course, the route with this stage marked, then this Turn's suggestions. */
-.tutorial-advice {
-  display: grid;
-  gap: 0.8rem;
-}
-
-.tutorial-advice p,
-.tutorial-advice h3 {
-  margin: 0;
-}
-
-.tutorial-change {
-  border-left: 0.3rem solid var(--tutorial-accent);
-  padding-left: 0.8rem;
-}
-
-.tutorial-stage {
-  display: grid;
-  gap: 0.4rem;
-}
-
-.tutorial-route {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 1.2rem;
-  margin: 0;
-  padding-left: 1.4rem;
-  color: var(--muted);
-}
-
-.tutorial-route li.done {
-  text-decoration: line-through;
-}
-
-.tutorial-route li[aria-current="step"] {
-  color: inherit;
-  font-weight: 700;
-}
-
-.tutorial-items {
-  display: grid;
-  gap: 0.6rem;
-  margin: 0;
-  padding-left: 1.4rem;
 }

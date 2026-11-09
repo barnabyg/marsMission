@@ -12,6 +12,7 @@ import { GameText } from "../ui/GameText";
 import { DevelopmentPanel } from "./DevelopmentPanel";
 import { MissionPanel } from "./MissionPanel";
 import { OperatingPanel } from "./OperatingPanel";
+import { SideColumn } from "./SideColumn";
 import { StatusBar } from "./StatusBar";
 import { TutorialAdvice } from "./TutorialAdvice";
 import { TutorialEnding } from "./TutorialEnding";
@@ -148,7 +149,7 @@ export function PlanningMode({
           onSubmit={onSubmit}
         />
 
-        <div className="planning-side">
+        <SideColumn>
           <TutorialPanel
             tutorial={view.tutorial}
             firstTurn={view.turnNumber === 1}
@@ -217,7 +218,7 @@ export function PlanningMode({
             chosenIds={developmentIds}
             onChosenChange={setDevelopmentIds}
           />
-        </div>
+        </SideColumn>
       </div>
 
       {tutorialEnding && endingShown && (
