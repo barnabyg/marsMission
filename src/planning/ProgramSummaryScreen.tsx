@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { SummaryMilestones } from "../mission/SummaryMilestones";
-import { SaveSlots } from "../save/SaveSlots";
-import { manualSlots, type SaveStore } from "../save/saveStore";
+import {
+  anySlotUsed as anySlotUsedIn,
+  LoadFromSlotDialog,
+} from "../save/LoadFromSlotDialog";
+import type { SaveStore } from "../save/saveStore";
 import type {
   Program,
   ProgramSummary,
   Simulation,
 } from "../simulation/simulation";
-import { Dialog } from "../ui/Dialog";
 import { GameText } from "../ui/GameText";
 import { ProgramFigures } from "./ProgramFigures";
 
@@ -31,9 +33,7 @@ export function ProgramSummaryScreen({
   onLoad,
 }: ProgramSummaryScreenProps) {
   const { status, seed, milestones, countedFromTurn } = summary;
-  const [anySlotUsed] = useState(() =>
-    manualSlots.some((slot) => saveStore.load(slot).kind !== "empty"),
-  );
+  const [anySlotUsed] = useState(() => anySlotUsedIn(saveStore));
   const [loadOpen, setLoadOpen] = useState(false);
   return (
     <main
@@ -86,20 +86,15 @@ export function ProgramSummaryScreen({
         )}
       </div>
       {loadOpen && (
-        <Dialog
-          title="Load from a Save Slot"
-          cancelLabel="Cancel"
+        <LoadFromSlotDialog
+          simulation={simulation}
+          saveStore={saveStore}
+          // The automatic save was cleared as the Program ended, so loading loses nothing.
+          action={{ kind: "load", confirm: false, onLoad }}
           onClose={() => {
             setLoadOpen(false);
           }}
-        >
-          <SaveSlots
-            simulation={simulation}
-            saveStore={saveStore}
-            // The automatic save was cleared as the Program ended, so loading loses nothing.
-            action={{ kind: "load", confirm: false, onLoad }}
-          />
-        </Dialog>
+        />
       )}
     </main>
   );
