@@ -5,6 +5,7 @@ Part of the [game design](../game-design.md), whose Status says which of these r
 ## Mission Mode
 
 - A Turn takes about 20 minutes at 1x speed, with controls to speed it up to 5x, 10x or 20x, or to pause it. Pausing only affects how a Turn is shown and lasts only for that Turn, because choosing a speed is what ends it and the next Turn starts at the speed last chosen.
+- Mission Mode has keyboard shortcuts, each named in its button's tooltip: Space pauses and plays on at the speed last chosen, 1 to 4 pick 1x, 5x, 10x and 20x in order, and M mutes the sound. They do nothing while the player is typing in a field or a list, or while a dialog is open. On a focused button Space presses that button, as it always does, except on the playback controls themselves, where it pauses or plays on instead, so a key never does two things. While play is held at a Decision Point, the speed buttons and Skip can't be used, and their keys do nothing; each says why rather than seeming to work.
 - The graphics are a mix of pre-made animations (such as an asteroid strike on a base) and displays (such as orbital tracking of a journey).
 - Pre-made animations are scripted 3D sequences that run live in the game, not pre-rendered video, so they show the Assets the player actually bought at the Landing Site they actually chose.
 - The first animation goal is one success and one failure animation per kind of Mission Event, and one per Hazard. More will follow. Each Mission Event, Milestone and Funding Threshold is added to an events column beside the view when it happens, with its date, title and description, newest at the top, and stays until the Turn ends. Nothing needs dismissing and time keeps running, so the player pauses to read. A failure stands out in the failure colour and plays its sound. A successful launch, Tanker launch or Mars ascent plays the launch sound, and a Rendezvous its own. Losing Crew, whatever the cause, plays a sound of its own, and so do Crew coming home safe.
@@ -31,7 +32,9 @@ Part of the [game design](../game-design.md), whose Status says which of these r
 
 - Mars and the planets use NASA's public imagery and elevation data. Spacecraft use NASA's free 3D models where they fit, plus simple models made for the project. Plumes, dust and explosions are generated in code. Licensing rules are in [ADR 0005](../adr/0005-free-open-licensed-media-only.md).
 - The first version has simple sound effects and no music.
-- Every term has a tooltip, except in button labels.
+- Every term has a tooltip, except in button labels. Terms open their tooltip on hover and aren't tab stops, so the keyboard goes from control to control; the tooltip that shows is the term's description for a screen reader. From the keyboard, `?` opens the Glossary, a dialog listing every term on screen with what it means, as its tooltip says. Planning Mode has a small ? button for it beside Restart Program.
+- Every dialog returns focus, as it closes, to whatever had it before it opened, such as the button that opened it.
+- A button that can't be used yet, such as Launch Mission with nothing ticked, still takes keyboard focus and says why: the reason is its description for a screen reader and its tooltip on hover, and pressing it does nothing.
 - Tutorial mode is a guided tutorial the player can choose as a Program starts (see [Program, Turns and starting conditions](program.md#starting-conditions)). It leads them along one route, from a first orbiter through landing and Surveys, rovers and Research Grants, and developing the Meridian Colossus, to building a Base and landing Crew there. Coming home isn't part of it.
 
 ### Tutorial mode
