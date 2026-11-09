@@ -160,10 +160,14 @@ test("asks before a slot loaded when reopening the game replaces the automatic s
   await expect(confirmSlotButton(page)).toHaveText(
     "Load Turn 1, replacing the current Program",
   );
-  await page.getByRole("button", { name: "Cancel" }).click();
+  await page.keyboard.press("Escape");
   await expect(
     page.getByRole("button", { name: "Continue this Program" }),
   ).toBeVisible();
+  // The slot list is shown again, with focus back on the Load that asked.
+  await expect(
+    page.getByTestId("save-slot-1").getByRole("button", { name: "Load" }),
+  ).toBeFocused();
 });
 
 test("asks before overwriting a used slot", async ({ page }) => {

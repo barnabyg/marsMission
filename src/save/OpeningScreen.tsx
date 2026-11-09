@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Program, Simulation } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import {
@@ -30,6 +30,19 @@ export function OpeningScreen({
   const [anySlotUsed] = useState(() => anySlotUsedIn(saveStore));
   // The slot whose Load asked first, because loading it replaces the automatic save.
   const [confirmingSlot, setConfirmingSlot] = useState<ManualSlot | null>(null);
+  // The slot list is hidden while the dialog asks, so the Load that opened it is gone when it closes: focus goes back
+  // to that slot's Load once the list is shown again.
+  const [returnTo, setReturnTo] = useState<ManualSlot | null>(null);
+  const slotList = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (returnTo === null) return;
+    slotList.current
+      ?.querySelector<HTMLButtonElement>(
+        `[data-testid="save-slot-${String(returnTo)}"] button`,
+      )
+      ?.focus();
+    setReturnTo(null);
+  }, [returnTo]);
 
   return (
     <main className="title-screen" data-testid="opening-screen">
@@ -60,6 +73,7 @@ export function OpeningScreen({
         {/* Hidden while the dialog asks, which lists the same slots. */}
         {anySlotUsed && confirmingSlot === null && (
           <section
+            ref={slotList}
             className="title-screen-slots"
             aria-labelledby="title-screen-slots"
           >
@@ -85,6 +99,7 @@ export function OpeningScreen({
           action={{ kind: "load", replacesProgram: true, onLoad }}
           initialSlot={confirmingSlot}
           onClose={() => {
+            setReturnTo(confirmingSlot);
             setConfirmingSlot(null);
           }}
         />
