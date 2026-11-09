@@ -7,6 +7,7 @@ import {
 } from "./helpers";
 import { openLaunchStep } from "./planningHelpers";
 import { successSeed } from "./seeds";
+import { tooltips } from "../src/ui/tooltips";
 
 async function playTurnWithoutLaunching(page: Page): Promise<void> {
   await page
@@ -33,8 +34,38 @@ test("the Public Support gauge turns amber when Public Support is close to the C
     "color",
     "rgb(255, 181, 71)",
   );
-  await expect(gauge).toContainText("Close to the Cancellation Level of 70");
+  await expect(page.getByTestId("cancellation-label")).toHaveText(
+    "Cancellation Level 70",
+  );
+  await expect(page.getByTestId("cancellation-label")).toHaveCSS(
+    "color",
+    "rgb(255, 181, 71)",
+  );
   await expect(page.getByTestId("public-support")).toHaveText("100");
+});
+
+test("labels the Cancellation Level under its tick on the gauge, and gives the Next Funding Threshold in Public Support", async ({
+  page,
+}) => {
+  await page.goto("/");
+  // The heading font moves the gauge as it loads, so measure once it has.
+  await expect(page.getByTestId("public-support")).toHaveText("100");
+  await page.evaluate(() => document.fonts.ready);
+  const gauge = page.getByTestId("support-gauge");
+  const tick = await gauge.locator(".gauge-level").boundingBox();
+  const track = await gauge.locator(".gauge-track").boundingBox();
+  const label = await gauge.getByTestId("cancellation-label").boundingBox();
+  if (!tick || !track || !label) throw new Error("The gauge isn't showing");
+  // The label starts at the tick, under the gauge.
+  expect(Math.abs(label.x - tick.x)).toBeLessThanOrEqual(1);
+  expect(label.y).toBeGreaterThanOrEqual(track.y + track.height);
+
+  await expect(page.getByTestId("next-funding-threshold")).toHaveText(
+    "$1B at 250 Public Support",
+  );
+  await expect(page.getByTestId("next-funding-threshold-away")).toHaveText(
+    "150 away",
+  );
 });
 
 test("Planning Mode shows how each value changed over the last Turn, and nothing on the first", async ({
@@ -44,7 +75,9 @@ test("Planning Mode shows how each value changed over the last Turn, and nothing
   await page.goto("/");
   const gauge = page.getByTestId("support-gauge");
   await expect(gauge).not.toHaveClass(/warning/);
-  await expect(gauge).toContainText("Cancellation Level 50");
+  await expect(page.getByTestId("cancellation-label")).toHaveText(
+    "Cancellation Level 50",
+  );
   await expect(page.locator(".status-change")).toHaveCount(0);
 
   await playTurnWithoutLaunching(page);
@@ -57,7 +90,7 @@ test("Planning Mode shows how each value changed over the last Turn, and nothing
   expect(problems).toEqual([]);
 });
 
-test("shows what the Turn will spend beside the Money, and what it leaves, as choices change", async ({
+test("shows what the Turn will spend under the Money, and what it leaves, as choices change", async ({
   page,
 }) => {
   const problems = watchForProblems(page);
@@ -69,12 +102,15 @@ test("shows what the Turn will spend beside the Money, and what it leaves, as ch
   // Nothing ticked, so ending the Turn without launching spends nothing.
   await expect(amount).toHaveText("$0M");
   await expect(left).toHaveText("$2.3B left");
+  await expect(spend).toHaveText("$0M this Turn · $2.3B left");
   await expect(spend).toHaveClass(/within/);
+  // The Money and what this Turn spends show once each, with no label of their own for the spend.
+  await expect(page.getByText("Spend this Turn")).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   // The Pathfinder Orbiter and its Launch Vehicle.
   await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await expect(amount).toHaveText("$1B");
+  await expect(amount).toHaveText("−$1B");
   await expect(left).toHaveText("$1.3B left");
 
   // Within a tenth of the Money is near it, in amber, as on the budget bar.
@@ -83,7 +119,7 @@ test("shows what the Turn will spend beside the Money, and what it leaves, as ch
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-heavy");
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
-  await expect(amount).toHaveText("$2.2B");
+  await expect(amount).toHaveText("−$2.2B");
   await expect(spend).toHaveClass(/near/);
   await expect(left).toHaveCSS("color", "rgb(255, 181, 71)");
 
@@ -102,9 +138,15 @@ test("shows the base funding that comes in as the Turn ends, sized by Public Sup
 }) => {
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
-  // $2M for each of the 100 points of Public Support a new Program starts with.
-  await expect(page.getByTestId("base-funding")).toHaveText(
-    "+$200M Base funding",
+  // $2M for each of the 100 points of Public Support a new Program starts with, in the Money's tooltip rather than a
+  // line of its own.
+  await expect(page.getByText("+$200M")).toHaveCount(0);
+  await page.getByTestId("money").hover();
+  await expect(page.getByRole("tooltip")).toContainText(
+    tooltips["Base funding"],
+  );
+  await expect(page.getByTestId("tooltip-detail")).toHaveText(
+    "+$200M comes in as this Turn ends.",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page

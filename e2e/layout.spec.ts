@@ -125,6 +125,28 @@ for (const size of screenSizes) {
       ).toBeInViewport({ ratio: 1 });
     });
 
+    test("the status bar keeps its values on one row, evenly spaced, with a busy Program's large figures", async ({
+      page,
+    }) => {
+      await openBusyProgram(page);
+      await chooseAssets(page, ["Pathfinder Orbiter"]);
+      await page.evaluate(() => document.fonts.ready);
+      const boxes = await page
+        .locator(".status-bar dl > div")
+        .evaluateAll((values) =>
+          values.map(
+            (value) => value.getBoundingClientRect().toJSON() as DOMRect,
+          ),
+        );
+      const tops = new Set(boxes.map(({ top }) => Math.round(top)));
+      expect(tops.size).toBe(1);
+      const gaps = boxes
+        .slice(1)
+        .map((box, index) => box.left - (boxes[index]?.right ?? 0));
+      expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThanOrEqual(1);
+      expect(Math.min(...gaps)).toBeGreaterThan(0);
+    });
+
     test("Planning Mode fits on one screen with every Asset that fits ticked on a new Program", async ({
       page,
     }) => {

@@ -1,22 +1,34 @@
-import type { ReactNode } from "react";
-import { formatMoney, type ProgramView } from "../simulation/simulation";
-import { formatChange, formatLaunchWindow } from "../ui/format";
+import type { CSSProperties, ReactNode } from "react";
+import type { ProgramView } from "../simulation/simulation";
+import {
+  formatChange,
+  formatLaunchWindow,
+  formatRoundedMoney,
+  toThreeFigures,
+} from "../ui/format";
 import { GameText } from "../ui/GameText";
 import { Icon, type IconName } from "../ui/Icon";
-import { budgetGauge } from "./budgetGauge";
-import { changesSinceLastTurn, publicSupportGauge } from "./statusValues";
+import {
+  changesSinceLastTurn,
+  moneyDetail,
+  publicSupportGauge,
+  turnSpend,
+} from "./statusValues";
 
 interface StatusBarProps {
   view: ProgramView;
   /** What the player saw at the start of the last Turn, or null on the first Turn or after a Load, which show no changes. */
   lastTurn: ProgramView | null;
-  /** What the choices made so far would spend this Turn, which the status bar shows beside the Money. */
+  /** What the choices made so far would spend this Turn, which the status bar shows under the Money. */
   spendMillions: number;
   /** The Program's own buttons, such as Save and Load, which sit under the heading so that they take no row of their own. */
   actions?: ReactNode;
 }
 
-/** Planning Mode's header: where the Program stands, with how each value changed over the last Turn. */
+/**
+ * Planning Mode's header: where the Program stands, with how each value changed over the last Turn. Money is rounded to
+ * three significant figures, with the exact figure in its tooltip.
+ */
 export function StatusBar({
   view,
   lastTurn,
@@ -24,7 +36,6 @@ export function StatusBar({
   actions,
 }: StatusBarProps) {
   const changes = changesSinceLastTurn(lastTurn, view);
-  const gauge = publicSupportGauge(view.publicSupport, view.cancellationLevel);
   const threshold = view.nextFundingThreshold;
 
   return (
@@ -52,74 +63,40 @@ export function StatusBar({
           testId="money"
           change={changes.moneyMillions}
           unit="money"
+          detail={moneyDetail(view.moneyMillions, view.baseFundingMillions)}
           caption={
-            view.baseFundingMillions > 0 && (
-              <span data-testid="base-funding">
-                {`+${formatMoney(view.baseFundingMillions)} `}
-                <GameText>Base funding</GameText>
-              </span>
-            )
+            <TurnSpendLine
+              spendMillions={spendMillions}
+              moneyMillions={view.moneyMillions}
+            />
           }
         >
-          {formatMoney(view.moneyMillions)}
+          {formatRoundedMoney(view.moneyMillions)}
         </StatusValue>
-        <TurnSpend
-          spendMillions={spendMillions}
-          moneyMillions={view.moneyMillions}
+        <SupportGauge
+          view={view}
+          supportChange={changes.publicSupport}
+          levelChange={changes.cancellationLevel}
         />
-        <div
-          className={`support-gauge${gauge.warning ? " warning" : ""}`}
-          data-testid="support-gauge"
-        >
-          <dt>
-            <Icon name="users" />
-            <GameText>Public Support</GameText>
-          </dt>
-          <dd>
-            <span className="status-value">
-              <span data-testid="public-support">{view.publicSupport}</span>
-              <Change
-                change={changes.publicSupport}
-                testId="public-support-change"
-              />
-            </span>
-            <span className="gauge-track" aria-hidden="true">
-              <span
-                className="gauge-fill"
-                style={{ width: `${String(gauge.fillPercent)}%` }}
-              />
-              <span
-                className="gauge-level"
-                style={{ left: `${String(gauge.levelPercent)}%` }}
-              />
-            </span>
-            <span className="gauge-caption">
-              {gauge.warning && <Icon name="alert-triangle" />}
-              <span>
-                <GameText>
-                  {gauge.warning
-                    ? "Close to the Cancellation Level of"
-                    : "Cancellation Level"}
-                </GameText>{" "}
-                <span data-testid="cancellation-level">
-                  {view.cancellationLevel}
-                </span>
-              </span>
-              <Change
-                change={changes.cancellationLevel}
-                testId="cancellation-level-change"
-              />
-            </span>
-          </dd>
-        </div>
         <StatusValue
           icon="target"
           term="Next Funding Threshold"
           testId="next-funding-threshold"
+          caption={
+            threshold && (
+              <span data-testid="next-funding-threshold-away">
+                {`${String(threshold.pointsAway)} away`}
+              </span>
+            )
+          }
         >
-          {threshold
-            ? `${formatMoney(threshold.payoutMillions)} at ${String(threshold.publicSupport)} (${String(threshold.pointsAway)} away)`
-            : "None left"}
+          {threshold ? (
+            <GameText>
+              {`${formatRoundedMoney(threshold.payoutMillions)} at ${String(threshold.publicSupport)} Public Support`}
+            </GameText>
+          ) : (
+            "None left"
+          )}
         </StatusValue>
         <StatusValue
           icon="flask-conical"
@@ -134,36 +111,76 @@ export function StatusBar({
   );
 }
 
+/** Public Support on a gauge, with the Cancellation Level as a tick on it, labelled under the tick. */
+function SupportGauge({
+  view,
+  supportChange,
+  levelChange,
+}: {
+  view: ProgramView;
+  supportChange: number | undefined;
+  levelChange: number | undefined;
+}) {
+  const gauge = publicSupportGauge(view.publicSupport, view.cancellationLevel);
+  return (
+    <div
+      className={`support-gauge${gauge.warning ? " warning" : ""}`}
+      data-testid="support-gauge"
+    >
+      <dt>
+        <Icon name="users" />
+        <GameText>Public Support</GameText>
+      </dt>
+      <dd>
+        <span className="status-value">
+          <span data-testid="public-support">{view.publicSupport}</span>
+          <Change change={supportChange} testId="public-support-change" />
+        </span>
+        <span
+          className="gauge"
+          style={{ "--level": gauge.levelPercent / 100 } as CSSProperties}
+        >
+          <span className="gauge-track" aria-hidden="true">
+            <span
+              className="gauge-fill"
+              style={{ width: `${String(gauge.fillPercent)}%` }}
+            />
+            <span className="gauge-level" />
+          </span>
+          <span className="gauge-label" data-testid="cancellation-label">
+            {gauge.warning && <Icon name="alert-triangle" />}
+            <GameText>Cancellation Level</GameText>{" "}
+            <span data-testid="cancellation-level">
+              {view.cancellationLevel}
+            </span>
+            <Change change={levelChange} testId="cancellation-level-change" />
+          </span>
+        </span>
+      </dd>
+    </div>
+  );
+}
+
 /**
- * What this Turn will spend and what that leaves, beside the Money and in its style, turning amber near the Money and
+ * What this Turn will spend and what that leaves, as one muted line under the Money, turning amber near the Money and
  * red over it, as the budget bar's cost gauge does.
  */
-function TurnSpend({
+function TurnSpendLine({
   spendMillions,
   moneyMillions,
 }: {
   spendMillions: number;
   moneyMillions: number;
 }) {
-  const { level } = budgetGauge(spendMillions, moneyMillions);
-  const leftMillions = moneyMillions - spendMillions;
+  const { spent, rest, level } = turnSpend(spendMillions, moneyMillions);
   return (
-    <div className={`turn-spend ${level}`} data-testid="turn-spend">
-      <dt>
-        <Icon name={level === "within" ? "coins" : "alert-triangle"} />
-        <GameText>Spend this Turn</GameText>
-      </dt>
-      <dd className="status-value">
-        <span data-testid="turn-spend-amount">
-          {formatMoney(spendMillions)}
-        </span>
-        <span className="turn-spend-left" data-testid="turn-spend-left">
-          {leftMillions < 0
-            ? `${formatMoney(-leftMillions)} over`
-            : `${formatMoney(leftMillions)} left`}
-        </span>
-      </dd>
-    </div>
+    <span className={`turn-spend ${level}`} data-testid="turn-spend">
+      {level !== "within" && <Icon name="alert-triangle" />}
+      <span data-testid="turn-spend-amount">{spent}</span>{" "}
+      <GameText>this Turn</GameText>
+      {" · "}
+      <span data-testid="turn-spend-left">{rest}</span>
+    </span>
   );
 }
 
@@ -171,10 +188,15 @@ interface StatusValueProps {
   icon: IconName;
   term: string;
   testId: string;
-  children: string;
+  children: ReactNode;
   change?: number | undefined;
   unit?: "points" | "money";
-  /** A small line under the value, such as what will come in as the Turn ends. */
+  /**
+   * What the value's tooltip says after what Base funding is: the Money's base funding and its exact figure. Only the
+   * Money has one.
+   */
+  detail?: string | undefined;
+  /** A small line under the value, such as what this Turn will spend. */
   caption?: ReactNode;
 }
 
@@ -185,6 +207,7 @@ function StatusValue({
   children,
   change,
   unit,
+  detail,
   caption,
 }: StatusValueProps) {
   return (
@@ -194,7 +217,19 @@ function StatusValue({
         <GameText>{term}</GameText>
       </dt>
       <dd className="status-value">
-        <span data-testid={testId}>{children}</span>
+        {detail ? (
+          <span
+            className="term"
+            data-term="Base funding"
+            data-detail={detail}
+            data-testid={testId}
+            tabIndex={0}
+          >
+            {children}
+          </span>
+        ) : (
+          <span data-testid={testId}>{children}</span>
+        )}
         <Change change={change} unit={unit} testId={`${testId}-change`} />
       </dd>
       {caption && <dd className="status-caption">{caption}</dd>}
@@ -208,7 +243,7 @@ interface ChangeProps {
   testId: string;
 }
 
-/** How much a value changed over the last Turn, or nothing if it didn't. */
+/** How much a value changed over the last Turn, or nothing if it didn't, with money to three significant figures. */
 function Change({ change, unit, testId }: ChangeProps) {
   if (change === undefined) return null;
   return (
@@ -216,7 +251,7 @@ function Change({ change, unit, testId }: ChangeProps) {
       className={`status-change ${change > 0 ? "up" : "down"}`}
       data-testid={testId}
     >
-      {formatChange(change, unit)}
+      {formatChange(unit === "money" ? toThreeFigures(change) : change, unit)}
     </span>
   );
 }

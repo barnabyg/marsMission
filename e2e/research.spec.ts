@@ -144,9 +144,9 @@ test("sees which research pays a Research Grant, then sees it paid and the money
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Continue" }).click();
 
-  // $2.3B less the $1.1B Mission, plus the $1B payout and the $37M Research Grant.
+  // $2.3B less the $1.1B Mission, plus the $1B payout and the $37M Research Grant: $2.437B, shown to three figures.
   await expect(page.getByTestId("turn-number")).toHaveText("2");
-  await expect(page.getByTestId("money")).toHaveText("$2.437B");
+  await expect(page.getByTestId("money")).toHaveText("$2.44B");
   expect(problems).toEqual([]);
 });
 
