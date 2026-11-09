@@ -3,6 +3,7 @@ import {
   chooseAssets,
   eventEntries,
   launchHeld,
+  operatingRow,
   overrideProgramData,
   pauseAtEvent,
   pauseAtEventAfter,
@@ -44,7 +45,9 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   await page.goto(`/?seed=${roverSeed}`);
   await chooseAssets(page, ["Trailblazer Rover"]);
 
-  const row = page.locator(".asset-choice", { hasText: "Trailblazer Rover" });
+  const row = page
+    .getByTestId("chosen-asset")
+    .filter({ hasText: "Trailblazer Rover" });
   await expect(page.getByTestId("landing-site-details")).toContainText(
     "first landing here earns 120 Science",
   );
@@ -60,9 +63,6 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   await expect(inService.getByTestId("asset-risk-band")).toBeVisible();
   const activity = page.getByLabel("Activity for Trailblazer Rover");
   await expect(activity).toHaveValue("soil-analysis");
-  await expect(page.getByTestId("research-earnings")).toHaveText(
-    "Ongoing Research for a whole Turn: Soil analysis earns 80 Science and 9 Public Support, and pays a $800M Research Grant. Long traverse earns 160 Science and 14 Public Support.",
-  );
   // Each other Activity says what it earns a Turn, in each of Science, Public Support and Research Grant that it earns
   // any of, while the chosen one, closed, shows its name in full.
   await expect(activity.getByRole("option")).toHaveText([
@@ -82,9 +82,12 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
     "1,300 days ($0M)",
     "2,800 days: +1,500 days (about 1.9 Turns) earn $1.54B in Research Grants against $300M and $30M Upkeep",
   ]);
-  await expect(page.getByTestId("service-life-payback")).toContainText(
+  // The Service Life label's tooltip says how to read them, after what a Service Life is.
+  await row.locator("[data-term='Service Life']").hover();
+  await expect(page.getByTestId("tooltip-detail")).toContainText(
     "Only Research Grants pay towards a longer Service Life and its Upkeep, as Science and Public Support aren't money.",
   );
+  await page.mouse.move(0, 0);
   await activity.selectOption("long-traverse");
   await expect(row.getByTestId("activity-earnings")).toHaveText(
     "Long traverse earns 160 Science and 14 Public Support a Turn.",
@@ -146,7 +149,10 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   // 120 for the site, 150 and 60 for the Milestones, and the 116.
   await expect(page.getByTestId("science")).toHaveText("446");
   await expect(page.getByTestId("operating-assets")).toContainText(
-    "Trailblazer Rover at Jezero Crater: 735 days of Service Life left",
+    "Jezero Crater",
+  );
+  await expect(operatingRow(page, "Trailblazer Rover")).toContainText(
+    "735 days",
   );
   await expect(
     page

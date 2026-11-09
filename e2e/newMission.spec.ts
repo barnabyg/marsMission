@@ -2,9 +2,11 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
   endTurnAndContinue,
+  missionViewport,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { openLaunchStep } from "./planningHelpers";
 import { successSeed } from "./seeds";
 
 function launchMission(page: Page) {
@@ -102,6 +104,46 @@ test("plans a Mission in four numbered steps, opening Landing Site and Mission E
   expect(problems).toEqual([]);
 });
 
+test("folds the Launch Vehicle step to one line once something is ticked, and opens it on Change", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+  const launch = page.getByRole("region", {
+    name: "1 Launch Vehicle and Trajectory",
+  });
+  const summary = launch.getByTestId("mission-step-summary");
+  const change = page.getByRole("button", {
+    name: "Change the Launch Vehicle and Trajectory",
+  });
+  // Open with nothing ticked, so that the first thing a new player sees is the Launch Vehicle.
+  await expect(launch.getByRole("combobox")).toHaveCount(2);
+  await expect(summary).toHaveCount(0);
+
+  // Ticking something folds it to what it chose, so that the steps below come into view.
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await expect(summary).toHaveText("Meridian Medium (4 t) · Slow (210 days)");
+  await expect(launch.getByRole("combobox")).toHaveCount(0);
+  await expect(launch.getByTestId("trajectory-details")).toHaveCount(0);
+
+  // Change opens it again, and the choice shows in the line once it folds again on the next tick.
+  await change.click();
+  await expect(launch.getByRole("combobox")).toHaveCount(2);
+  await page.getByRole("combobox", { name: "Trajectory" }).selectOption("fast");
+  await expect(launch.getByTestId("trajectory-details")).toBeVisible();
+  // The rover alone fits the Fast Trajectory's 3.5 tonnes; a second Asset beside the orbiter wouldn't.
+  await chooseAssets(page, ["Trailblazer Rover"]);
+  await expect(summary).toHaveText("Meridian Medium (4 t) · Fast (150 days)");
+  await expect(change).toBeVisible();
+
+  // Unticking everything opens it, as nothing is planned.
+  await chooseAssets(page, []);
+  await expect(summary).toHaveCount(0);
+  await expect(launch.getByRole("combobox")).toHaveCount(2);
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  expect(problems).toEqual([]);
+});
+
 test("shows each Asset as a card, greys out those that wouldn't fit, and reveals an Asset's choices once ticked", async ({
   page,
 }) => {
@@ -113,9 +155,9 @@ test("shows each Asset as a card, greys out those that wouldn't fit, and reveals
   const orbiter = card("Pathfinder Orbiter");
   await expect(orbiter.getByTestId("asset-cost")).toHaveText("$700M");
   await expect(orbiter.getByTestId("asset-mass")).toHaveText("2.5 t");
-  await expect(orbiter.getByTestId("technology-readiness")).toHaveText(
-    "Flight-proven",
-  );
+  // Flight-proven is the usual case, so only the other two readiness levels are a pill on a card.
+  await expect(orbiter.getByTestId("technology-readiness")).toHaveCount(0);
+  await expect(orbiter).not.toContainText("Flight-proven");
   await expect(
     card("Pinpoint Lander").getByTestId("technology-readiness"),
   ).toHaveText("Unproven");
@@ -137,18 +179,25 @@ test("shows each Asset as a card, greys out those that wouldn't fit, and reveals
   await expect(orbiter.getByTestId("unavailable-reason")).toHaveCount(0);
   await expect(orbiter.getByRole("combobox")).toHaveCount(0);
 
+  // Ticked, its choices are in the list under the cards, so the card itself keeps its height.
+  const heightBefore = (await orbiter.boundingBox())?.height;
   await chooseAssets(page, ["Pathfinder Orbiter"]);
+  const chosen = page
+    .getByTestId("chosen-asset")
+    .filter({ hasText: "Pathfinder Orbiter" });
   await expect(
-    orbiter.getByRole("combobox", { name: "Activity for Pathfinder Orbiter" }),
+    chosen.getByRole("combobox", { name: "Activity for Pathfinder Orbiter" }),
   ).toBeVisible();
   await expect(
-    orbiter.getByRole("combobox", {
+    chosen.getByRole("combobox", {
       name: "Service Life for Pathfinder Orbiter",
     }),
   ).toBeVisible();
+  await expect(orbiter.getByRole("combobox")).toHaveCount(0);
+  expect((await orbiter.boundingBox())?.height).toBe(heightBefore);
   // Its Reliability in service is with the Mission Events', so every Reliability choice is in one step.
   await expect(
-    orbiter.getByRole("combobox", { name: /Reliability/ }),
+    chosen.getByRole("combobox", { name: /Reliability/ }),
   ).toHaveCount(0);
   const inService = page.getByTestId("asset-in-service");
   await expect(inService).toHaveCount(1);
@@ -181,12 +230,13 @@ test("shows each Asset as a card, greys out those that wouldn't fit, and reveals
     page.getByRole("checkbox", { name: /Crewed Mission/ }),
   ).toBeDisabled();
   // Something ticked can always be unticked, even once a smaller choice leaves it too heavy.
+  await openLaunchStep(page);
   await page.getByRole("combobox", { name: "Trajectory" }).selectOption("fast");
   await expect(orbiter.getByRole("checkbox")).toBeEnabled();
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await chooseAssets(page, []);
-  await expect(orbiter.getByRole("combobox")).toHaveCount(0);
+  await expect(page.getByTestId("chosen-assets")).toHaveCount(0);
   await expect(lander).not.toHaveClass(/unavailable/);
   await expect(lander).not.toHaveAttribute("title");
   await expect(lander.getByRole("checkbox")).toBeEnabled();
@@ -202,9 +252,10 @@ test("opens an Asset's details from its card, and closes them without changing t
     page.locator(".asset-choice", { hasText: name });
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   const orbiter = card("Pathfinder Orbiter");
-  await orbiter
-    .getByRole("combobox", { name: "Activity for Pathfinder Orbiter" })
-    .selectOption("orbital-research");
+  const activity = page.getByRole("combobox", {
+    name: "Activity for Pathfinder Orbiter",
+  });
+  await activity.selectOption("orbital-research");
   const spend = await page.getByTestId("budget-bar").textContent();
 
   // From the keyboard, on an Asset that isn't ticked.
@@ -262,9 +313,7 @@ test("opens an Asset's details from its card, and closes them without changing t
   await expect(
     card("Prospector Lander").getByRole("checkbox"),
   ).not.toBeChecked();
-  await expect(
-    orbiter.getByRole("combobox", { name: "Activity for Pathfinder Orbiter" }),
-  ).toHaveValue("orbital-research");
+  await expect(activity).toHaveValue("orbital-research");
   await expect(page.getByTestId("budget-bar")).toHaveText(spend ?? "");
   expect(problems).toEqual([]);
 });
@@ -348,4 +397,94 @@ test("buys Reliability, sees the risk band and cost change, and launches", async
   await expect(page.getByTestId("mission-cost")).toHaveText(costBefore ?? "");
   await expect(insertion.getByRole("combobox")).toHaveValue("none");
   expect(problems).toEqual([]);
+});
+
+test.describe("at 1920×1080", () => {
+  test.use({ viewport: missionViewport });
+
+  test("shows quiet Asset cards on Turn 1, which keep their height as others are ticked", async ({
+    page,
+  }) => {
+    await page.goto(`/?seed=${successSeed}`);
+    const cards = page.locator(".asset-choice");
+    await expect(cards.first()).toBeVisible();
+    // Flight-proven is the usual case, and a Benefit that would add nothing says nothing, so neither is tagged.
+    await expect(page.getByTestId("technology-readiness")).not.toHaveText([
+      /Flight-proven/,
+    ]);
+    for (const tag of await page.getByTestId("benefit-tag").allTextContents()) {
+      expect(tag).not.toMatch(/\+0 |\+\$0M/);
+    }
+    const heights = async () =>
+      Promise.all(
+        (await cards.all()).map(
+          async (card) => (await card.boundingBox())?.height,
+        ),
+      );
+    // Within a pixel: on Linux a card greyed out as too heavy measures a pixel taller once it is.
+    const expectUnchanged = async (before: (number | undefined)[]) => {
+      const after = await heights();
+      expect(after.length).toBe(before.length);
+      for (const [index, height] of after.entries()) {
+        expect(
+          Math.abs((height ?? 0) - (before[index] ?? 0)),
+        ).toBeLessThanOrEqual(1);
+      }
+    };
+    const before = await heights();
+    await chooseAssets(page, ["Pathfinder Orbiter"]);
+    await expect(page.getByTestId("chosen-asset")).toHaveCount(1);
+    await expectUnchanged(before);
+    await chooseAssets(page, []);
+    await expectUnchanged(before);
+  });
+
+  test("says that more steps are below while they are, with the budget bar pinned", async ({
+    page,
+  }) => {
+    await page.goto(`/?seed=${successSeed}`);
+    await chooseAssets(page, ["Trailblazer Rover"]);
+    const panel = page.locator(".mission-panel");
+    const cue = panel.getByTestId("more-below");
+    const headings = [3, 4].map((step) =>
+      page
+        .getByTestId("mission-step")
+        .nth(step - 1)
+        .getByRole("heading"),
+    );
+    // Either the Landing Site and Mission Events headings are in view, or a cue says more steps are below.
+    const inView = await Promise.all(
+      headings.map((heading) =>
+        heading.evaluate(
+          (element) =>
+            element.getBoundingClientRect().bottom <= window.innerHeight,
+        ),
+      ),
+    );
+    if (inView.every(Boolean)) {
+      await expect(cue).toBeHidden();
+    } else {
+      await expect(cue).toBeVisible();
+      await expect(cue).toHaveText("More steps below");
+    }
+    for (const name of ["Launch Mission", "End Turn without launching"]) {
+      await expect(page.getByRole("button", { name })).toBeInViewport({
+        ratio: 1,
+      });
+    }
+    await expect(page.getByTestId("budget-bar")).toBeInViewport({ ratio: 1 });
+
+    // Scrolled to the last step, nothing is below, so the cue goes; the budget bar stays where it was.
+    const barBefore = await page.getByTestId("budget-bar").boundingBox();
+    await page.getByTestId("mission-steps").evaluate((steps) => {
+      steps.scrollTop = steps.scrollHeight;
+    });
+    await expect(cue).toBeHidden();
+    for (const heading of headings) {
+      await expect(heading).toBeInViewport({ ratio: 1 });
+    }
+    expect(await page.getByTestId("budget-bar").boundingBox()).toEqual(
+      barBefore,
+    );
+  });
 });

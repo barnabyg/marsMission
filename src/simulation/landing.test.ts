@@ -152,6 +152,7 @@ describe("a successful landing", () => {
         activityId: "test-nothing",
         flewUnproven: false,
         key: "test-lander:2029-06-24",
+        label: "Test Lander",
         activityName: "Nothing",
         activities: [
           {
@@ -184,6 +185,7 @@ describe("a successful landing", () => {
       {
         key: expect.stringMatching(/^test-lander:/) as string,
         name: "Test Lander",
+        label: "Test Lander",
         kind: "lander",
         landingSiteName: "Alpha Plain",
         activityName: "Nothing",

@@ -86,32 +86,74 @@
   gap: 0.3rem;
 }
 
-/* A ticked Asset's choices, each named on its left, with its Risk Band under them. */
-.asset-card-choices {
+/* The choices for each ticked Asset, under the cards: one row each, with its Activity and Service Life side by side
+   and what the chosen Activity earns under them, so that no card changes height when ticked. */
+/* One column no wider than the step at each level, so that a choice's longest option never sets the least width its
+   row can have: with wider fonts, as on Linux, that pushed the rows out of the panel. Shrunk, a choice cuts its closed
+   label short instead. */
+.chosen-assets {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 0.3rem 0.6rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.4rem;
   width: 100%;
-}
-
-.asset-card-choices > span {
-  color: var(--muted);
-}
-
-/* What the chosen Activity earns, under its choice, which is too narrow to show it. */
-.asset-card-choices .activity-earnings {
-  font-size: var(--text-sm);
-  grid-column: 1 / -1;
-  color: var(--muted);
-}
-
-.panel .asset-card-choices select {
   min-width: 0;
-  width: 100%;
 }
 
-/* Technology Readiness as a badge on each card; elsewhere it is a plain word. */
+.chosen-assets-heading {
+  color: var(--muted);
+}
+
+.chosen-assets ul {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chosen-asset {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(10rem, auto) minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 0.2rem 1rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.4rem;
+  background: var(--panel);
+}
+
+.chosen-asset-name {
+  font-weight: 600;
+}
+
+/* Each choice is named on its left, and takes the rest of its share of the row. */
+.chosen-asset-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.chosen-asset-choice > span {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.panel .chosen-asset-choice select {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* What the chosen Activity earns, on a line under the choices, which are too narrow to show it. */
+.chosen-asset .activity-earnings {
+  grid-column: 1 / -1;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+/* Technology Readiness as a badge on a card that isn't Flight-proven; elsewhere it is a plain word. */
 .technology-readiness {
   color: var(--muted);
 }
@@ -127,17 +169,15 @@
   font-size: var(--text-sm);
 }
 
-.asset-card .technology-readiness.flight-proven {
-  color: var(--good);
-}
-
 .asset-card .technology-readiness.needs-development {
   color: var(--problem);
 }
 
+/* Facts in plain text, as against a status pill, each with a tooltip saying more. */
 .benefit-tag,
 .operating-tag {
   color: var(--muted);
+  cursor: help;
 }
 
 /* The Crewed Mission's choices take two lines, the second lined up after the tick box's label above it. */
@@ -154,6 +194,11 @@
 
 .asset-choice-row > span {
   color: var(--muted);
+}
+
+/* What the Crew's chosen Activity earns, after its choice, in the Assets' style. */
+.asset-choice-row .activity-earnings {
+  font-size: var(--text-sm);
 }
 
 /* The choices keep their width, so that the words around them give way instead. */

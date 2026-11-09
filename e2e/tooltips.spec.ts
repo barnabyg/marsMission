@@ -59,23 +59,17 @@ test("explains the terms of Doing Science in Planning Mode and on the surface pa
   );
   await expectTooltip(
     page,
-    page.locator(".asset-choice [data-term='Activity']").first(),
+    page.locator("[data-testid=chosen-asset] [data-term='Activity']").first(),
     "Activity",
-  );
-  await expectTooltip(
-    page,
-    page
-      .getByTestId("research-earnings")
-      .locator("[data-term='Ongoing Research']"),
-    "Ongoing Research",
   );
 
   await chooseAssets(page, ["Trailblazer Rover"]);
   await expectTooltip(
     page,
     page
-      .getByTestId("research-earnings")
-      .locator("[data-term='Research Grant']"),
+      .getByTestId("activity-earnings")
+      .locator("[data-term='Research Grant']")
+      .first(),
     "Research Grant",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
@@ -170,6 +164,10 @@ test("explains each research Activity wherever Mission Mode names it", async ({
     .click();
 
   const operating = page.getByTestId("operating-at-mars");
+  // Two of a kind are numbered in the order they arrived, so that they can be told apart.
+  await expect(operating).toContainText("Trailblazer Rover 1 at Jezero Crater");
+  await expect(operating).toContainText("Trailblazer Rover 2 at Jezero Crater");
+  await expect(operating).not.toContainText("Prospector Lander 1");
   for (const term of [
     "Orbital research",
     "Surface research",
@@ -395,25 +393,20 @@ test("opens the Planning Mode heading's tooltip clear of Save, Load and Restart 
 }) => {
   await page.goto(`/?seed=${successSeed}`);
   const heading = page.getByRole("heading", { name: "Planning Mode" });
-  // Both the heading's term and its ⓘ marker open a tooltip.
-  for (const target of [
-    heading.locator("[data-term]"),
-    heading.locator(".term-marker"),
-  ]) {
-    await page.mouse.move(0, 0);
-    await expect(page.getByRole("tooltip")).toHaveCount(0);
-    await target.hover();
-    const tooltip = page.getByRole("tooltip");
-    await expect(tooltip).toBeVisible();
-    const shown = await tooltip.boundingBox();
-    if (!shown) throw new Error("The tooltip isn't on screen");
-    for (const name of ["Save", "Load", "Restart Program"]) {
-      const button = await page
-        .getByRole("button", { name, exact: true })
-        .boundingBox();
-      if (!button) throw new Error(`${name} isn't on screen`);
-      expect(overlap(shown, button), name).toBe(false);
-    }
+  // An h1 explains the mode the player is already in, so it has no ⓘ marker: only its term opens a tooltip.
+  await expect(heading.locator(".term-marker")).toHaveCount(0);
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+  await heading.locator("[data-term]").hover();
+  const tooltip = page.getByRole("tooltip");
+  await expect(tooltip).toBeVisible();
+  const shown = await tooltip.boundingBox();
+  if (!shown) throw new Error("The tooltip isn't on screen");
+  for (const name of ["Save", "Load", "Restart Program"]) {
+    const button = await page
+      .getByRole("button", { name, exact: true })
+      .boundingBox();
+    if (!button) throw new Error(`${name} isn't on screen`);
+    expect(overlap(shown, button), name).toBe(false);
   }
 });
 
@@ -426,60 +419,4 @@ test("keeps a tooltip near the window's edge fully on screen", async ({
   const tooltip = page.getByRole("tooltip");
   await expect(tooltip).toBeVisible();
   await expect(tooltip).toBeInViewport({ ratio: 1 });
-});
-
-/** The terms under the locator that show an underline, each as often as it shows one. */
-function underlinedTerms(scope: Locator): Promise<string[]> {
-  return scope
-    .locator(".term")
-    .evaluateAll((terms) =>
-      terms
-        .filter((term) => getComputedStyle(term).borderBottomStyle !== "none")
-        .map((term) => term.getAttribute("data-term") ?? ""),
-    );
-}
-
-test("underlines each game term once in the New Mission panel, and none in a heading", async ({
-  page,
-}) => {
-  await page.goto(`/?seed=${successSeed}`);
-  await page
-    .getByRole("combobox", { name: "Launch Vehicle" })
-    .selectOption("meridian-heavy");
-  await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
-  const panel = page.locator(".mission-panel");
-  await expect(panel.getByTestId("landing-site-details")).toBeVisible();
-  const underlined = await underlinedTerms(panel);
-  expect(underlined.length).toBeGreaterThan(5);
-  expect(underlined).toEqual([...new Set(underlined)]);
-  // Later appearances keep their tooltips and help cursor.
-  const missions = panel.locator(".term[data-term='Mission']");
-  expect(await missions.count()).toBeGreaterThan(1);
-  await expect(missions.last()).toHaveCSS("cursor", "help");
-  await expectTooltip(page, missions.last(), "Mission");
-
-  expect(await underlinedTerms(page.locator("h1, h2, h3, h4"))).toEqual([]);
-  expect(await termsWithoutTooltips(page)).toEqual([]);
-});
-
-test("explains a heading's terms from its ⓘ marker", async ({ page }) => {
-  await page.goto(`/?seed=${successSeed}`);
-  await chooseAssets(page, ["Pathfinder Orbiter"]);
-  const heading = page.getByRole("heading", {
-    name: "Mission Events, Reliability and Contingency",
-  });
-  await expect(heading).toHaveText(
-    "4Mission Events, Reliability and Contingency",
-  );
-  await heading.locator(".term-marker").hover();
-  const tooltip = page.getByRole("tooltip");
-  for (const term of ["Mission Event", "Reliability", "Contingency"] as const) {
-    await expect(tooltip).toContainText(tooltips[term]);
-  }
-  // Headings without game terms have no marker.
-  await expect(
-    page
-      .getByRole("heading", { name: "Operating at Mars" })
-      .locator(".term-marker"),
-  ).toHaveCount(0);
 });

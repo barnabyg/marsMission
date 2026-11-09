@@ -11,6 +11,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { openLaunchStep } from "./planningHelpers";
 import { colossusMoney, colossusSeed } from "./colossusSeeds";
 
 test.use({ viewport: missionViewport });
@@ -34,6 +35,7 @@ test("develops the Meridian Colossus, then fills it with more than any other Lau
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
   await page.goto(`/?seed=${colossusSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await openLaunchStep(page);
   await expect(
     launchVehicle(page).locator("option", { hasText: "Meridian Colossus" }),
   ).toHaveJSProperty("disabled", true);

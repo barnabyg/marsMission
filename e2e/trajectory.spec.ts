@@ -7,6 +7,7 @@ import {
   viewButton,
   watchForProblems,
 } from "./helpers";
+import { openLaunchStep } from "./planningHelpers";
 import { successSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });
@@ -19,6 +20,7 @@ function trajectory(page: Page) {
 async function arrivalDate(page: Page, id: "slow" | "fast"): Promise<string> {
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await openLaunchStep(page);
   await trajectory(page).selectOption(id);
   await pauseAtEvent(
     page,
@@ -39,6 +41,11 @@ async function arrivalDate(page: Page, id: "slow" | "fast"): Promise<string> {
 test("Planning Mode shows what a Trajectory changes", async ({ page }) => {
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
+  // Ticked, the step has folded to one line, which says what was chosen until Change opens it.
+  await expect(page.getByTestId("mission-step-summary")).toHaveText(
+    "Meridian Medium (4 t) · Slow (210 days)",
+  );
+  await openLaunchStep(page);
   await expect(trajectory(page).locator("option")).toHaveText([
     "Slow (210 days)",
     "Fast (150 days, $40M, 0.5 t less)",
@@ -87,6 +94,7 @@ test("a Trajectory too heavy for the Launch Vehicle is refused", async ({
   await page.getByRole("checkbox", { name: /Pathfinder Orbiter/ }).uncheck();
   await page.getByRole("checkbox", { name: /Trailblazer Rover/ }).check();
   await page.getByRole("checkbox", { name: /Retro thrusters/ }).check();
+  await openLaunchStep(page);
   await trajectory(page).selectOption("fast");
   await expect(page.getByRole("alert").first()).toContainText("3.5 tonnes");
   await expect(

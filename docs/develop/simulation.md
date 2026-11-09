@@ -31,6 +31,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 - `turnSteps.ts`: The steps of a Turn after the Mission, in order (above), and the next Program, Timeline and Turn summary
 - `arrivals.ts`: What the Turn's Mission earns by arriving: Milestones for the first of each kind of Asset, a first landing and the first Crew at Mars and on the surface, and first-landing Science
 - `assetsInService.ts`: Which Assets operate for which days of the Turn, their failures and end of Service Life, Surveys, and how the Assets at Mars show in Mission Mode
+- `assetLabels.ts`: how Assets at Mars are named on screen: several of one kind numbered in the order they arrived, "Pathfinder Orbiter 2", for Planning Mode's Operating at Mars and Mission Mode's labels alike
 - `upkeep.ts`: Upkeep: what each Asset at Mars costs for a Turn, and the Assets whose missions a plan ends
 - `baseFunding.ts`: Base funding: what the Program's backers pay as a Turn ends, for its Public Support
 - `fundingThresholds.ts`: Funding Thresholds paid as a Turn ends, and the fading of Public Support

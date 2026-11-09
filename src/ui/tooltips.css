@@ -3,9 +3,12 @@
   cursor: help;
 }
 
-/* Underlined only the first time in a panel (repeatedTerms.ts), and never in a heading, which has an ⓘ marker instead. */
+/* Underlined only the first time in a panel (repeatedTerms.ts), and never in a heading: a panel or step heading has an
+   ⓘ marker instead while its body doesn't explain its terms, and an h1 names the mode the player is already in. Nor in
+   the status bar, whose icons and place already set its labels apart. */
 .term[data-repeat],
-:is(h1, h2, h3, h4) .term {
+:is(h1, h2, h3, h4) .term,
+.status-bar .term {
   border-bottom: none;
 }
 
@@ -21,6 +24,11 @@
 
 .term-marker::after {
   content: "ⓘ";
+}
+
+/* Hidden while the body of the heading's panel or step underlines every term it names (repeatedTerms.ts). */
+.term-marker[data-repeat] {
+  display: none;
 }
 
 .term-marker:hover {

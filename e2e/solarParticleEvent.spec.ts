@@ -63,9 +63,7 @@ test("a solar particle event stops play on the way to Mars, and safe mode shorte
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Continue" }).click();
   // The shortest Service Life, 1300 days, less 15%, from arriving 210 days into a 780-day Turn.
-  await expect(page.getByTestId("operating-assets")).toContainText(
-    "535 days of Service Life left",
-  );
+  await expect(page.getByTestId("operating-asset")).toContainText("535 days");
   expect(problems).toEqual([]);
 });
 

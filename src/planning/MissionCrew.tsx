@@ -7,7 +7,7 @@ import {
 } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
-import { ActivitySelect } from "./ActivitySelect";
+import { ActivityEarnings, ActivitySelect } from "./ActivitySelect";
 import { assetImageUrl, crewImageKind } from "./assetImages";
 import { fitReason, type Fit } from "./missionFit";
 import { UnavailableReason } from "./UnavailableReason";
@@ -161,12 +161,18 @@ export function MissionCrew({
               <GameText>Activity</GameText>
             </span>
             {planned.joining === null ? (
-              <ActivitySelect
-                assetName="the Crew"
-                activityId={planned.activityId}
-                activities={planned.activities}
-                onChange={onActivityChange}
-              />
+              <>
+                <ActivitySelect
+                  assetName="the Crew"
+                  activityId={planned.activityId}
+                  activities={planned.activities}
+                  onChange={onActivityChange}
+                />
+                <ActivityEarnings
+                  activityId={planned.activityId}
+                  activities={planned.activities}
+                />
+              </>
             ) : (
               <span data-testid="crew-joining">
                 <GameText>{`as the Crew in ${planned.joining}`}</GameText>

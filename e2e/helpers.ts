@@ -343,6 +343,11 @@ export function holdSequence(page: Page, atMs?: number): Promise<void> {
   );
 }
 
+/** The row of Operating at Mars for the Asset with this label, such as "Pathfinder Orbiter 2". */
+export function operatingRow(page: Page, label: string): Locator {
+  return page.getByTestId("operating-asset").filter({ hasText: label });
+}
+
 /**
  * Ticks exactly these Assets for the planned Mission. It unticks the others first, because an Asset can't be ticked
  * while one that is ticked leaves it no room.

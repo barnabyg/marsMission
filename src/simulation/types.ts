@@ -261,6 +261,8 @@ export interface ProgramView {
   operatingAssets: (OperatingAsset & {
     /** How a plan names this Asset to change its Activity. */
     key: string;
+    /** How the screen names it: its name, numbered in arrival order when several of its kind are at Mars (assetLabels.ts). */
+    label: string;
     activityName: string;
     /** The Activities it can do, which is none if it has left the catalogue. */
     activities: PlannedActivity[];

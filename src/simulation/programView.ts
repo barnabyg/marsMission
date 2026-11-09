@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import { labelsFor } from "./assetLabels";
 import { baseFundingFor } from "./baseFunding";
 import { describeMakes, makesPerTurn } from "./ascentPropellant";
 import { describeHabitat, habitatBenefit } from "./habitats";
@@ -60,6 +61,7 @@ export function programView(
   const { activitiesOf, activityNameOf, knownLandingSites } = rules;
   const { landingRisk, landingSiteById, riskBandFor } = rules;
   const raised = surfaceRaise(catalogue, program);
+  const labels = labelsFor(program.operatingAssets);
   const nextThreshold = catalogue.fundingThresholds.find(
     ({ publicSupport }) =>
       !program.fundingThresholdsPaid.includes(publicSupport),
@@ -87,9 +89,10 @@ export function programView(
     milestones: catalogue.milestones
       .filter(({ id }) => program.milestoneIds.includes(id))
       .map(({ id, name }) => ({ id, name })),
-    operatingAssets: program.operatingAssets.map((asset) => ({
+    operatingAssets: program.operatingAssets.map((asset, index) => ({
       ...asset,
       key: operatingKey(asset),
+      label: labels[index] ?? asset.name,
       activityName: activityNameOf(asset),
       activities: catalogue.assets
         .filter(({ id }) => id === asset.assetId)

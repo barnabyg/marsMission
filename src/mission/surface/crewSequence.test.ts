@@ -30,6 +30,7 @@ const member = (name: string, arrivedOnDay: number) => ({
 const crewAtSite = (crew: AssetAtMars["crew"] = []): AssetAtMars => ({
   key: "crew:landing-site:alpha-plain",
   name: "Odyssey",
+  label: "Odyssey",
   kind: "crew",
   landingSiteName: "Alpha Plain",
   activityName: "Field research",
@@ -43,6 +44,7 @@ const crewAtSite = (crew: AssetAtMars["crew"] = []): AssetAtMars => ({
 const lander: AssetAtMars = {
   key: "prospector:2030",
   name: "Prospector",
+  label: "Prospector",
   kind: "lander",
   landingSiteName: "Alpha Plain",
   activityName: "Nothing",

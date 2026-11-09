@@ -5,6 +5,7 @@ import {
   endTurnWithoutLaunching,
   overrideProgramData,
 } from "./helpers";
+import { openLaunchStep } from "./planningHelpers";
 import { openBusyProgram, realMilestones } from "./busyProgram";
 import { screenSizes, whatScrolls, unreadableText } from "./layoutHelpers";
 import { successSeed } from "./seeds";
@@ -68,8 +69,10 @@ for (const size of screenSizes) {
         .selectOption("meridian-heavy");
       await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      await expect(page.getByTestId("research-earnings")).toContainText(
-        "Surface research earns 100 Science and 9 Public Support, and pays a $50M Research Grant.",
+      await expect(
+        page.locator(".mission-panel").getByTestId("activity-earnings").last(),
+      ).toHaveText(
+        "Surface research earns 100 Science, 9 Public Support and $50M Research Grant a Turn.",
       );
       expect(await whatScrolls(page)).toEqual([]);
       await expect(
@@ -86,13 +89,15 @@ for (const size of screenSizes) {
       await expect(
         page.getByTestId("operating-assets").getByTestId("activity-earnings"),
       ).toHaveCount(2);
-      await expect(page.getByTestId("research-earnings")).toHaveCount(1);
+      await expect(
+        page.locator(".mission-panel").getByTestId("activity-earnings"),
+      ).toHaveCount(1);
       expect(await whatScrolls(page)).toEqual([]);
       await expect(
         page.getByRole("button", { name: "Launch Mission" }),
       ).toBeInViewport({ ratio: 1 });
       const milestones = page.getByTestId("milestones").getByRole("listitem");
-      const assets = page.getByTestId("operating-assets").getByRole("listitem");
+      const assets = page.getByTestId("operating-asset");
       await expect(milestones).toHaveCount(realMilestones.length);
       await expect(assets).toHaveCount(8);
       // At 1920×1080 the panels beside the New Mission may scroll, so each is scrolled to its end first.
@@ -150,15 +155,16 @@ for (const size of screenSizes) {
       await openBusyProgram(page, { colossusBuilt: true });
       await chooseEveryAsset(page);
       await expect(page.getByRole("alert")).toHaveCount(0);
-      const mission = page
-        .locator(".panel", { hasText: "Launch Vehicle" })
-        .getByTestId("research-earnings");
-      await expect(mission).toContainText("Soil analysis earns");
-      await expect(mission).toContainText("Long traverse earns");
-      await expect(page.getByTestId("landing-site-details")).toBeVisible();
       await expect(
-        page.getByTestId("operating-assets").getByRole("listitem").last(),
-      ).toContainText("Trailblazer Rover at Jezero Crater");
+        page
+          .locator(".mission-panel")
+          .getByTestId("activity-earnings")
+          .filter({ hasText: "Soil analysis earns" }),
+      ).toHaveCount(1);
+      await expect(page.getByTestId("landing-site-details")).toBeVisible();
+      await expect(page.getByTestId("operating-asset").last()).toContainText(
+        "Trailblazer Rover",
+      );
       expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({
@@ -179,6 +185,7 @@ for (const size of screenSizes) {
       for (const contingency of await contingencies.all()) {
         await contingency.check();
       }
+      await openLaunchStep(page);
       await page
         .getByRole("combobox", { name: "Trajectory" })
         .selectOption("free-return");
@@ -219,6 +226,7 @@ for (const size of screenSizes) {
         .all()) {
         await development.check();
       }
+      await openLaunchStep(page);
       await page
         .getByRole("combobox", { name: "Trajectory" })
         .selectOption("free-return");

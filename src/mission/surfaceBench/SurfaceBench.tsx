@@ -27,6 +27,7 @@ const kinds = [
 const assetsAtMars: AssetAtMars[] = kinds.map((kind) => ({
   key: `bench-${kind}`,
   name: kind,
+  label: kind,
   kind,
   landingSiteName: siteName,
   activityName: "Working",

@@ -20,9 +20,13 @@ import { groundHeight } from "./terrain";
 type Mission = NonNullable<Timeline["mission"]>;
 type MissionAsset = Mission["assets"][number];
 
-const asset = (overrides: Partial<AssetAtMars>): AssetAtMars => ({
+const asset = ({
+  name = "Lander",
+  ...overrides
+}: Partial<AssetAtMars>): AssetAtMars => ({
   key: "lander",
-  name: "Lander",
+  name,
+  label: name,
   kind: "lander",
   landingSiteName: "Alpha Plain",
   activityName: "Nothing",

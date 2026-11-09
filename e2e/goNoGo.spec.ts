@@ -58,8 +58,8 @@ test("holding off a landing in a dust storm lands it later, with a shorter Servi
   await page.getByRole("button", { name: "Continue" }).click();
   // The shortest Service Life is 1300 days, less what waiting cost, counted from the later landing.
   const left = 1300 - Number(lifeLost) - (780 - 215 - Number(daysHeld));
-  await expect(page.getByTestId("operating-assets")).toContainText(
-    `${left} days of Service Life left`,
+  await expect(page.getByTestId("operating-asset")).toContainText(
+    `${left.toLocaleString("en")} days`,
   );
   expect(problems).toEqual([]);
 });

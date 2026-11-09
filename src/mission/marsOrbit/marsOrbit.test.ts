@@ -13,9 +13,13 @@ import {
 type Mission = NonNullable<Timeline["mission"]>;
 type MissionAsset = Mission["assets"][number];
 
-const asset = (overrides: Partial<AssetAtMars>): AssetAtMars => ({
+const asset = ({
+  name = "Orbiter",
+  ...overrides
+}: Partial<AssetAtMars>): AssetAtMars => ({
   key: "orbiter",
-  name: "Orbiter",
+  name,
+  label: name,
   kind: "orbiter",
   landingSiteName: null,
   activityName: "Survey",

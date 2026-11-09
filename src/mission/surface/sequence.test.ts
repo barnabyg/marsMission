@@ -43,9 +43,13 @@ const crashed = (overrides: Partial<MissionAsset> = {}) =>
     ...overrides,
   });
 
-const atMars = (overrides: Partial<AssetAtMars>): AssetAtMars => ({
+const atMars = ({
+  name = "Prospector",
+  ...overrides
+}: Partial<AssetAtMars>): AssetAtMars => ({
   key: "prospector:2030",
-  name: "Prospector",
+  name,
+  label: name,
   kind: "lander",
   landingSiteName: "Alpha Plain",
   activityName: "Nothing",

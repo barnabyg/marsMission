@@ -82,7 +82,8 @@ export function surfaceAssetsAt(
     arrivedOnDay: asset.arrivedOnDay,
     fromDay: asset.fromDay,
     untilDay: asset.untilDay,
-    name: asset.name,
+    // As the screen names it, numbered when several of its kind are at Mars.
+    name: asset.label,
     kind: asset.kind,
     model: modelOf(asset.kind),
     activityName: asset.activityName,

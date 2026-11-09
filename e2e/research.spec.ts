@@ -25,8 +25,11 @@ test("sets a research Activity, sees what it earns, and sees the Science in the 
   const activity = page.getByLabel("Activity for Pathfinder Orbiter");
   await expect(activity).toHaveValue("survey");
   await activity.selectOption("orbital-research");
-  await expect(page.getByTestId("research-earnings")).toHaveText(
-    "Ongoing Research for a whole Turn: Orbital research earns 80 Science and 6 Public Support.",
+  // The chosen Activity's earnings are written out beside its choice; the other choices each say their own.
+  await expect(
+    page.locator(".mission-panel").getByTestId("activity-earnings"),
+  ).toHaveText(
+    "Orbital research earns 80 Science and 6 Public Support a Turn.",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Launch Mission" }).click();
@@ -87,10 +90,9 @@ test("a lander starts on research, shown beside an orbiter's choices when both a
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-heavy");
   await chooseAssets(page, ["Pathfinder Orbiter"]);
-  const orbiterBox = page.locator(".asset-choice", {
-    hasText: "Pathfinder Orbiter",
-  });
-  await expect(orbiterBox.getByRole("combobox").first()).toHaveValue("survey");
+  await expect(page.getByLabel("Activity for Pathfinder Orbiter")).toHaveValue(
+    "survey",
+  );
   await page
     .locator(".asset-choice", { hasText: "Prospector Lander" })
     .getByRole("checkbox")
@@ -98,9 +100,12 @@ test("a lander starts on research, shown beside an orbiter's choices when both a
   await expect(page.getByLabel("Activity for Prospector Lander")).toHaveValue(
     "surface-research",
   );
-  await expect(page.getByTestId("research-earnings")).toHaveText(
-    "Ongoing Research for a whole Turn: Orbital research earns 80 Science and 6 Public Support. Surface research earns 100 Science and 9 Public Support, and pays a $50M Research Grant.",
-  );
+  await expect(
+    page.locator(".mission-panel").getByTestId("activity-earnings"),
+  ).toHaveText([
+    "Survey lowers the landing risk of later landings.",
+    "Surface research earns 100 Science, 9 Public Support and $50M Research Grant a Turn.",
+  ]);
   expect(problems).toEqual([]);
 });
 
@@ -110,8 +115,10 @@ test("sees which research pays a Research Grant, then sees it paid and the money
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${landingSeed}`);
   await chooseAssets(page, ["Prospector Lander"]);
-  await expect(page.getByTestId("research-earnings")).toHaveText(
-    "Ongoing Research for a whole Turn: Surface research earns 100 Science and 9 Public Support, and pays a $50M Research Grant.",
+  await expect(
+    page.locator(".mission-panel").getByTestId("activity-earnings"),
+  ).toHaveText(
+    "Surface research earns 100 Science, 9 Public Support and $50M Research Grant a Turn.",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await expect(page.getByTestId("money")).toHaveText("$2.3B");

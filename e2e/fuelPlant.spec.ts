@@ -35,7 +35,7 @@ test("lands a fuel plant and sees its ascent propellant in the next Planning Mod
   );
   await chooseAssets(page, ["Wellspring Fuel Plant"]);
   await expect(
-    card.getByRole("combobox", { name: "Activity for Wellspring Fuel Plant" }),
+    page.getByRole("combobox", { name: "Activity for Wellspring Fuel Plant" }),
   ).toHaveValue("propellant-production");
   // Nothing has made any yet, so no Landing Site has propellant to show.
   await expect(page.getByTestId("ascent-propellant")).toHaveCount(0);

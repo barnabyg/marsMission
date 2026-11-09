@@ -27,7 +27,7 @@ export function orbitersOn(
   return assetsAtMarsOn(timeline, day)
     .filter((asset) => asset.landingSiteName === null)
     .map((asset) => ({
-      name: asset.name,
+      name: asset.label,
       kind: asset.kind,
       slot: timeline.assetsAtMars.indexOf(asset),
     }));
@@ -108,11 +108,11 @@ export function landedOn(
   day: number,
 ): { name: string; kind: string; siteName: string }[] {
   return assetsAtMarsOn(timeline, day).flatMap(
-    ({ name, kind, landingSiteName, fromDay }) =>
+    ({ label, kind, landingSiteName, fromDay }) =>
       landingSiteName === null ||
       (fromDay > 0 && day < fromDay + descentDaysAfter)
         ? []
-        : [{ name, kind, siteName: landingSiteName }],
+        : [{ name: label, kind, siteName: landingSiteName }],
   );
 }
 

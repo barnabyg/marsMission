@@ -2,6 +2,7 @@ import {
   whatActivityDoes,
   type PlannedActivity,
 } from "../simulation/simulation";
+import { GameText } from "../ui/GameText";
 import { termFor } from "../ui/tooltips";
 
 interface ActivitySelectProps {
@@ -13,15 +14,20 @@ interface ActivitySelectProps {
 
 /**
  * What an Activity does, as its choice says on hovering, with what Sample caching collects over a whole Turn and what
- * its samples earn once they reach Earth.
+ * its samples earn once they reach Earth, and which Benefit raises its research, if one does.
  */
 export function describeActivity({
   description,
   cachesPerTurn,
+  raisedBy,
 }: PlannedActivity): string {
-  return cachesPerTurn
-    ? `${description} Over a whole Turn it collects ${String(cachesPerTurn.samples)} samples, which earn ${String(cachesPerTurn.science)} Science once they reach Earth.`
-    : description;
+  const caches = cachesPerTurn
+    ? ` Over a whole Turn it collects ${String(cachesPerTurn.samples)} samples, which earn ${String(cachesPerTurn.science)} Science once they reach Earth.`
+    : "";
+  const raised = raisedBy
+    ? ` ${raisedBy.givenBy.join(" and ")}'s Benefit adds ${String(raisedBy.percent)}% on the surface.`
+    : "";
+  return `${description}${caches}${raised}`;
 }
 
 /**
@@ -36,12 +42,27 @@ const activityLabel = (activity: PlannedActivity, chosen: boolean) =>
  * What the chosen Activity earns a Turn, or does, written out under its choice, whose closed label is its name alone:
  * "Soil analysis earns 80 Science, 9 Public Support and $800M Research Grant a Turn."
  */
-export function chosenEarnings(
+function chosenEarnings(
   activityId: string,
   activities: PlannedActivity[],
 ): string {
   const chosen = activities.find(({ id }) => id === activityId);
   return chosen ? `${chosen.name} ${whatActivityDoes(chosen)}.` : "";
+}
+
+/** What the chosen Activity earns a Turn, or does, as a muted line by its choice, whose closed label is its name alone. */
+export function ActivityEarnings({
+  activityId,
+  activities,
+}: {
+  activityId: string;
+  activities: PlannedActivity[];
+}) {
+  return (
+    <span className="activity-earnings" data-testid="activity-earnings">
+      <GameText>{chosenEarnings(activityId, activities)}</GameText>
+    </span>
+  );
 }
 
 /**

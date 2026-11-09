@@ -5,6 +5,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { openLaunchStep } from "./planningHelpers";
 import { successSeed } from "./seeds";
 
 test("shows a Mission within its limits on the budget bar, ready to launch", async ({
@@ -42,6 +43,7 @@ test("turns the mass bar red and disables Launch Mission, saying why, when an As
   const vehicle = page.getByRole("combobox", { name: "Launch Vehicle" });
   await vehicle.selectOption("meridian-heavy");
   await chooseAssets(page, ["Pathfinder Orbiter", "Prospector Lander"]);
+  await openLaunchStep(page);
   await vehicle.selectOption("meridian-medium");
 
   const mass = page.getByTestId("mass-gauge");
@@ -72,6 +74,7 @@ test("turns the mass bar red and disables Launch Mission, saying why, when an As
   }
 
   // A larger Launch Vehicle brings it back within its limits.
+  await openLaunchStep(page);
   await vehicle.selectOption("meridian-heavy");
   await expect(mass).not.toHaveAttribute("data-level", "over");
   await expect(launch).toBeEnabled();
@@ -100,6 +103,7 @@ test("shows why a plan the player can't afford is rejected", async ({
   await page.goto("/");
   // Affordable when ticked, until a dearer Launch Vehicle takes it over the Money.
   await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await openLaunchStep(page);
   await page
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-heavy");
