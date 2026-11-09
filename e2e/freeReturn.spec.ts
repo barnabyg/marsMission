@@ -112,7 +112,9 @@ test("a Contingency's Decision Point comes before the Free-return", async ({
   await page.getByRole("button", { name: /^Skip to / }).click();
 
   const decision = page.getByTestId("decision-point");
-  await expect(decision).toContainText("swing back to Earth");
+  await expect(decision).toContainText(
+    "Pathfinder Orbiter swings back to Earth",
+  );
   await expect(decision).toContainText("no Public Support");
   await expect(page.getByTestId("returning-spacecraft")).toHaveCount(0);
   await decision.getByRole("button", { name: "Don't use it" }).click();

@@ -68,6 +68,10 @@ test("using a Contingency that works saves the orbiter with a shorter Service Li
     "Over 30%",
   );
   await expect(decisionPoint(page)).toContainText("30% less Service Life");
+  // One orbiter is lost, not "are lost".
+  await expect(decisionPoint(page)).toContainText(
+    "Pathfinder Orbiter is lost, and it costs 20 Public Support.",
+  );
   await expect(decisionPoint(page)).toContainText("35 Public Support");
   await expect(decisionPoint(page)).toContainText("20 Public Support");
 
