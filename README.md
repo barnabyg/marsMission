@@ -18,7 +18,7 @@ To try the latest phase, follow the [Phase 8 playtest guide](docs/playtest/phase
 
 The Simulation holds all the rules and knows nothing about the browser. Everything else loads its data, saves its state or displays what it produces.
 
-- `src/app`: The App component that moves between screens and connects them to the Simulation, start-up, the base styles, the type scale every font size comes from and the hover, press and focus styles of every control (`styles.css`), the bundled heading font (`fonts`, with its source and licence in `fonts/SOURCES.md`), and the order every style file loads in (`main.tsx`)
+- `src/app`: The App component that moves between screens and connects them to the Simulation, start-up, the base styles (`styles.css`): the type scale every font size comes from, the tokens for colours, corners, padding and surfaces that every other style file uses rather than writing a value out, which `styleTokens.test.ts` checks, the shared classes for a muted sub-heading, an unstyled list, a small or large button and the two shapes of tag (a pill for a status, an uppercase label for a category), and the hover, press and focus styles of every control, the bundled heading font (`fonts`, with its source and licence in `fonts/SOURCES.md`), and the order every style file loads in (`main.tsx`)
 - `src/balance`: Balance runs: strategies that play whole Programs through the Simulation, the checks for invalid states and the report (see [Balance runs](docs/develop/balance-runs.md))
 - `src/catalogue`: The Catalogue: parses and validates the data files in `public/data`, which `src/app` fetches. Also the tests of the tuned balance and of the current playtest guide's known seeds (see [The Catalogue's files](docs/develop/catalogue.md))
 - `src/mission`: Mission Mode and the Turn summary:
@@ -62,7 +62,7 @@ A balance change starts in `public/data` and is judged by comparing `npm.cmd run
 | `npm.cmd run verify`   | Runs every check (the canonical verification)                  |
 | `npm.cmd run balance`  | Plays thousands of Programs and prints a report on the balance |
 
-No source, test, script or style file is over 500 lines, so that each can be read whole. ESLint's `max-lines` rule enforces this for TypeScript and scripts, and CSS files keep to it by hand. It doesn't cover `package-lock.json`, the data files in `public/data`, the generated art and sounds in `public`, or Markdown. When a file nears the limit, split it at a natural seam, such as by subject for tests or by screen for styles. A new style file is imported from `src/app/main.tsx`, in cascade order.
+No source, test, script or style file is over 500 lines, so that each can be read whole. ESLint's `max-lines` rule enforces this for TypeScript and scripts, and `src/app/styleTokens.test.ts` for CSS. It doesn't cover `package-lock.json`, the data files in `public/data`, the generated art and sounds in `public`, or Markdown. When a file nears the limit, split it at a natural seam, such as by subject for tests or by screen for styles. A new style file is imported from `src/app/main.tsx`, in cascade order.
 
 The browser tests need Chromium, once per machine: `npx.cmd playwright install chromium`. They run at 3840×2160, except the tests of how Mission Mode plays, which use `missionViewport` from `e2e/helpers.ts`, 1920×1080, because software rendering at 4K about doubles their time. A test of the layout, or of something only 4K shows, stays at 3840×2160.
 
