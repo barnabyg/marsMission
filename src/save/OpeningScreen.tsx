@@ -32,17 +32,17 @@ export function OpeningScreen({
   const [confirmingSlot, setConfirmingSlot] = useState<ManualSlot | null>(null);
   // The slot list is hidden while the dialog asks, so the Load that opened it is gone when it closes: focus goes back
   // to that slot's Load once the list is shown again.
-  const [returnTo, setReturnTo] = useState<ManualSlot | null>(null);
+  const returnTo = useRef<ManualSlot | null>(null);
   const slotList = useRef<HTMLElement>(null);
   useEffect(() => {
-    if (returnTo === null) return;
+    if (confirmingSlot !== null || returnTo.current === null) return;
     slotList.current
       ?.querySelector<HTMLButtonElement>(
-        `[data-testid="save-slot-${String(returnTo)}"] button`,
+        `[data-testid="save-slot-${String(returnTo.current)}"] button`,
       )
       ?.focus();
-    setReturnTo(null);
-  }, [returnTo]);
+    returnTo.current = null;
+  }, [confirmingSlot]);
 
   return (
     <main className="title-screen" data-testid="opening-screen">
@@ -99,7 +99,7 @@ export function OpeningScreen({
           action={{ kind: "load", replacesProgram: true, onLoad }}
           initialSlot={confirmingSlot}
           onClose={() => {
-            setReturnTo(confirmingSlot);
+            returnTo.current = confirmingSlot;
             setConfirmingSlot(null);
           }}
         />
