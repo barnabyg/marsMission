@@ -114,7 +114,8 @@
   gap: 0.3rem;
 }
 
-.summary-card ul {
+/* A list of points, unlike the plain lists of figures, Milestones and Mission Events. */
+.summary-card ul:not(.plain-list) {
   display: grid;
   gap: 0.3rem;
   padding-left: 1.2rem;
@@ -161,8 +162,6 @@
 .value-change-parts {
   display: grid;
   gap: 0.3rem;
-  padding: 0;
-  list-style: none;
 }
 
 .money-lines h3 {
@@ -194,8 +193,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
   gap: 1.5rem;
-  padding: 0;
-  list-style: none;
 }
 
 /* On the Turn summary, the Milestones share one card, which is edged as each Milestone is on the Program summary. */
@@ -302,9 +299,6 @@
 .summary-mission-events ol {
   display: grid;
   gap: 0.6rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 .summary-mission-events li {

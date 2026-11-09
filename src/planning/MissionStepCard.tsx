@@ -50,7 +50,7 @@ export function MissionStepCard({
             </p>
             <button
               type="button"
-              className="mission-step-change"
+              className="mission-step-change small"
               aria-label={`Change the ${step.title}`}
               onClick={onChange}
             >

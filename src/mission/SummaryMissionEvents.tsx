@@ -19,7 +19,7 @@ export function missionEventsCards(
       className: "summary-mission-events",
       testId: "summary-mission-events",
       content: (
-        <ol>
+        <ol className="plain-list">
           {events.map(({ date, title, description, failed }, index) => (
             <li
               key={index}

@@ -87,7 +87,7 @@ export function MissionEventChoices({
       <p className="mission-events-heading">
         <GameText>On the way, once each</GameText>
       </p>
-      <ol className="mission-events" data-testid="mission-events">
+      <ol className="mission-events plain-list" data-testid="mission-events">
         {onTheWay.map(eventItem)}
       </ol>
       {homeward.length > 0 && (
@@ -95,7 +95,10 @@ export function MissionEventChoices({
           <p className="mission-events-heading">
             <GameText>Journey home, on a later Turn</GameText>
           </p>
-          <ol className="mission-events" data-testid="homeward-events">
+          <ol
+            className="mission-events plain-list"
+            data-testid="homeward-events"
+          >
             {homeward.map(eventItem)}
           </ol>
         </>
@@ -105,7 +108,10 @@ export function MissionEventChoices({
           <p className="mission-events-heading">
             <GameText>In service at Mars, each Turn after arriving</GameText>
           </p>
-          <ul className="mission-events" data-testid="assets-in-service">
+          <ul
+            className="mission-events plain-list"
+            data-testid="assets-in-service"
+          >
             {plannedAssets.map((asset) => (
               <li key={asset.assetId} data-testid="asset-in-service">
                 <span className="mission-event-name">

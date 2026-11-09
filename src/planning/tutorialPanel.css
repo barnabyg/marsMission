@@ -83,8 +83,6 @@
 
 .tutorial-footer button {
   flex: none;
-  padding: 0.2rem 0.7rem;
-  font-size: var(--text-sm);
 }
 
 /* Tutorial mode's advice: why it changed course, the stage with the route behind it, then this Turn's suggestions. */

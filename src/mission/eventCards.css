@@ -82,14 +82,12 @@
   font-size: var(--text-sm);
 }
 
+/* What kind of event it was, as a category label (styles.css), in the accent, or the problem colour for a failure. */
 .event-tag {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   color: var(--accent);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .event-entry.failed .event-tag {

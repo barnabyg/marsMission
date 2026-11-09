@@ -74,7 +74,7 @@ export function UsedSaveSlots({
 }) {
   const slots = useSlots(saveStore);
   return (
-    <ul className="save-slots compact">
+    <ul className="save-slots compact plain-list">
       {manualSlots.map((slot, index) => {
         const loaded = slots[index] ?? { kind: "empty" };
         if (loaded.kind === "empty") return null;
@@ -180,7 +180,11 @@ export function SaveSlotsDialog({
           The browser wouldn't store that save.
         </p>
       )}
-      <ul className="save-slots" role="radiogroup" aria-label="Save Slots">
+      <ul
+        className="save-slots plain-list"
+        role="radiogroup"
+        aria-label="Save Slots"
+      >
         {manualSlots.map((slot, index) => {
           const loaded = slots[index] ?? { kind: "empty" };
           const text = describeSlot(simulation, loaded, false);

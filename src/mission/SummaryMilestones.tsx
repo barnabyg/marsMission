@@ -14,7 +14,7 @@ const headingFor = (milestones: Milestone[]) =>
  */
 function MilestoneList({ milestones }: { milestones: Milestone[] }) {
   return (
-    <ul className="milestone-list">
+    <ul className="milestone-list plain-list">
       {milestones.map(({ name, description, science, publicSupport, turn }) => (
         <li
           key={name}

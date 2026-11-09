@@ -103,6 +103,7 @@ export function MissionAssetChoice({
           <ReadinessTag
             readiness={asset.technologyReadiness}
             testId="technology-readiness"
+            pill
           />
         )}
         {benefit && (

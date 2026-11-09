@@ -84,7 +84,7 @@ function MoneyList({ heading, lines }: MoneyListProps) {
           </>
         )}
       </h3>
-      <ul>
+      <ul className="plain-list">
         {lines.length === 0 && <li>Nothing</li>}
         {lines.map(({ name, millions }) => (
           <li key={name}>
@@ -137,7 +137,7 @@ export function SummaryChanges({ summary }: { summary: TurnSummary }) {
         change={summary.publicSupportEnd - summary.publicSupportStart}
         testId="summary-public-support"
       >
-        <ul className="value-change-parts">
+        <ul className="value-change-parts plain-list">
           <li>
             <span>
               <GameText>Gained from Milestones and Ongoing Research</GameText>

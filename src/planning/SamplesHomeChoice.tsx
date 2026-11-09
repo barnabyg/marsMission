@@ -23,7 +23,7 @@ export function SamplesWaiting({
 }) {
   if (samples.length === 0) return null;
   return (
-    <ul className="operating-assets" data-testid="samples-waiting">
+    <ul className="operating-assets plain-list" data-testid="samples-waiting">
       {samples.map((way) => (
         <li key={way.key}>
           <span>

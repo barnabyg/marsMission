@@ -181,6 +181,18 @@ button.primary:not(:disabled, [aria-disabled="true"]):active {
   filter: brightness(0.88);
 }
 
+/* Two sizes besides the usual: small for a button that sits beside the text it acts on, such as Save, Load and Restart
+   Program or a step's Change, and large for the title screen's choices. */
+button.small {
+  padding: 0.15rem 0.5rem;
+  font-size: var(--text-sm);
+}
+
+button.large {
+  padding: 0.9rem 1.5rem;
+  font-size: var(--text-lg);
+}
+
 /* A disabled control is a flat neutral grey, unlike both an ordinary control and a primary one. One that can't be used
    for a reason stays reachable by keyboard, marked aria-disabled, and says why (src/ui/UnavailableButton.tsx). */
 button:disabled,
@@ -211,4 +223,35 @@ select:disabled,
 .load-error pre {
   white-space: pre-wrap;
   color: var(--problem);
+}
+
+/* A heading over a small panel's parts, quieter than the panel's content, such as Events beside Mission Mode's scene. */
+.subheading {
+  font-size: var(--text-md);
+  color: var(--muted);
+}
+
+/* A list laid out by its own rules, with no bullets or indent. */
+.plain-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The two shapes of tag. A status, such as a technology's readiness, is a pill in the colour of what it says. */
+.tag-pill {
+  padding: 0 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+}
+
+/* A category, such as a Mission Event's kind or the Tutorial badge (src/ui/tutorial.css), is an uppercase label. */
+.tag-label,
+.tutorial-voice::before {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }

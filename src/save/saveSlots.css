@@ -1,9 +1,6 @@
 .save-slots {
   display: grid;
   gap: 0.8rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 .save-slot-row {

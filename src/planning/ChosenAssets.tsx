@@ -47,7 +47,7 @@ export function ChosenAssets({
       <p className="chosen-assets-heading">
         <GameText>Chosen for this Mission</GameText>
       </p>
-      <ul>
+      <ul className="plain-list">
         {plannedAssets.map((planned) => {
           const name = nameOf(planned.assetId);
           return (

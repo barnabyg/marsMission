@@ -45,7 +45,7 @@ export function OpeningScreen({
           {automaticSave.kind === "program" && (
             <button
               type="button"
-              className="primary"
+              className="primary large"
               onClick={() => {
                 onContinue(automaticSave.program);
               }}
@@ -53,7 +53,7 @@ export function OpeningScreen({
               Continue this Program
             </button>
           )}
-          <button type="button" onClick={onStartNew}>
+          <button type="button" className="large" onClick={onStartNew}>
             Start a new Program
           </button>
         </div>
@@ -63,7 +63,7 @@ export function OpeningScreen({
             className="title-screen-slots"
             aria-labelledby="title-screen-slots"
           >
-            <h2 id="title-screen-slots">
+            <h2 id="title-screen-slots" className="subheading">
               <GameText heading>Save Slots</GameText>
             </h2>
             <UsedSaveSlots

@@ -40,24 +40,14 @@
   width: min(100%, 24rem);
 }
 
-.title-screen-actions button {
-  font-size: var(--text-lg);
-  padding: 0.9rem 1.5rem;
-}
-
 .title-screen-slots {
   display: grid;
   gap: 0.8rem;
   width: 100%;
   background: rgb(var(--panel-rgb) / 85%);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
-  padding: 1.2rem 1.5rem;
-}
-
-.title-screen-slots h2 {
-  font-size: var(--text-md);
-  color: var(--muted);
+  border-radius: var(--radius);
+  padding: var(--pad-card);
 }
 
 .save-slots.compact .save-slot-row {

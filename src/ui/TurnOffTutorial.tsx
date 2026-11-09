@@ -15,6 +15,7 @@ export function TurnOffTutorial({ forGood, onTurnOff }: TurnOffTutorialProps) {
     <>
       <button
         type="button"
+        className="small"
         onClick={() => {
           if (forGood) setAsking(true);
           else onTurnOff();

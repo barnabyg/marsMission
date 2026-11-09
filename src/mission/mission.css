@@ -102,13 +102,8 @@
   gap: 0.6rem;
   background: rgb(var(--panel-rgb) / 80%);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
-  padding: 1rem 1.5rem;
-}
-
-.mission-side h2 {
-  font-size: var(--text-md);
-  color: var(--muted);
+  border-radius: var(--radius);
+  padding: var(--pad-card);
 }
 
 .mission-side p,
@@ -256,11 +251,6 @@
   padding: 1.5rem;
 }
 
-.events-column h2 {
-  font-size: var(--text-md);
-  color: var(--muted);
-}
-
 .events-column p {
   margin: 0;
 }
@@ -272,9 +262,6 @@
   display: grid;
   align-content: start;
   gap: 1.2rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 /* Tutorial mode's suggestion at a Decision Point, beside the scene rather than in the panel, which it would make tall

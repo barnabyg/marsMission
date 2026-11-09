@@ -101,6 +101,7 @@ export function PlanningMode({
           <div className="program-actions">
             <button
               type="button"
+              className="small"
               onClick={() => {
                 open("save");
               }}
@@ -109,6 +110,7 @@ export function PlanningMode({
             </button>
             <button
               type="button"
+              className="small"
               onClick={() => {
                 open("load");
               }}
@@ -117,6 +119,7 @@ export function PlanningMode({
             </button>
             <button
               type="button"
+              className="small"
               onClick={() => {
                 open("restart");
               }}
@@ -126,6 +129,7 @@ export function PlanningMode({
             {/* Only its key, which is also its shortcut, as Save, Load and Restart Program leave little room beside them. */}
             <button
               type="button"
+              className="small"
               aria-label="Glossary"
               aria-keyshortcuts={glossaryKey}
               title={`Glossary: every game term on screen, explained. Shortcut: ${glossaryKey}`}

@@ -304,7 +304,7 @@ export function MissionMode({
           marsRendezvous={marsRendezvous}
           earthEntry={earthEntry}
         />
-        <h2>Operating at Mars</h2>
+        <h2 className="subheading">Operating at Mars</h2>
         <ul data-testid="operating-at-mars">
           {operatingAssets.length === 0 && <li>Nothing</li>}
           {operatingAssets.map((asset, index) => (

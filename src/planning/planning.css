@@ -244,8 +244,6 @@
   display: grid;
   gap: 0.25rem;
   width: 100%;
-  padding: 0;
-  list-style: none;
 }
 
 .operating-assets li {
@@ -283,8 +281,6 @@
   display: grid;
   gap: 0.4rem;
   width: 100%;
-  padding: 0;
-  list-style: none;
 }
 
 .developments li {
@@ -306,9 +302,6 @@
   display: grid;
   /* Tight enough for the six Mission Events of a refuelled Mission with a landing to fit at 150% scaling. */
   gap: 0.3rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 /* Each row wraps, so that where there isn't room a Contingency sits under its Mission Event rather than squeezing beside it. */
@@ -352,17 +345,12 @@
   color: var(--problem);
 }
 
-/* Save, Load and Restart Program, small and under the heading, so that they take no row of their own. */
+/* Save, Load and Restart Program, small buttons under the heading, so that they take no row of their own. */
 .program-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.3rem 0.4rem;
-}
-
-.program-actions button {
-  padding: 0.15rem 0.5rem;
-  font-size: var(--text-sm);
 }
 
 /* "Saved to Save Slot 1." goes under the buttons rather than widening the heading's column. */
