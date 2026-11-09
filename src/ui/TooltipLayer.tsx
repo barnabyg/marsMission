@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { watchRepeatedTerms } from "./repeatedTerms";
 import { placeTooltip, type Box } from "./tooltipPlacement";
 import { tooltips, type Term } from "./tooltips";
@@ -31,9 +31,13 @@ function controlsAround(anchor: Element): Box[] {
     .filter(({ width, height }) => width > 0 && height > 0);
 }
 
-/** Shows the tooltip for whichever game term is under the pointer or has keyboard focus. */
+/**
+ * Shows the tooltip for whichever game term is under the pointer, or control with a term, such as an Activity's choice,
+ * that has keyboard focus. The term is described by the tooltip while it shows, for a screen reader.
+ */
 export function TooltipLayer() {
   const [shown, setShown] = useState<ShownTooltip | null>(null);
+  const tooltipId = useId();
 
   useEffect(() => {
     const show = (event: Event) => {
@@ -80,6 +84,21 @@ export function TooltipLayer() {
     };
   }, [shown]);
 
+  // Added to whatever describes the term already, and put back as it was once the tooltip goes.
+  useEffect(() => {
+    if (!shown) return;
+    const { anchor } = shown;
+    const before = anchor.getAttribute("aria-describedby");
+    anchor.setAttribute(
+      "aria-describedby",
+      before ? `${before} ${tooltipId}` : tooltipId,
+    );
+    return () => {
+      if (before === null) anchor.removeAttribute("aria-describedby");
+      else anchor.setAttribute("aria-describedby", before);
+    };
+  }, [shown, tooltipId]);
+
   const tooltip = useRef<HTMLDivElement>(null);
   /** Where the tooltip goes, and which one it was worked out for, so that a new one is first measured unplaced. */
   const [position, setPosition] = useState<{
@@ -111,6 +130,7 @@ export function TooltipLayer() {
   return (
     <div
       ref={tooltip}
+      id={tooltipId}
       popover="manual"
       role="tooltip"
       className="tooltip"

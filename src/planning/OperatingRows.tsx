@@ -91,7 +91,6 @@ export function AssetRows({
               className="operating-days"
               data-term="Service Life"
               data-detail={`${asset.label}: ${asset.daysLeft.toLocaleString("en")} days of Service Life left.`}
-              tabIndex={0}
             >
               {asset.daysLeft.toLocaleString("en")} days
             </span>

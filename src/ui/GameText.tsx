@@ -4,14 +4,18 @@ interface GameTextProps {
   children: string;
   /**
    * Text in a panel or step heading, whose terms aren't underlined. A small ⓘ marker after it explains every term the
-   * heading names on hover, shown only while the body under it doesn't underline them all (repeatedTerms.ts). Keyboard
-   * users still reach each term itself, so the marker is hidden from screen readers and leaves the heading's name as it
-   * reads. An h1 names the mode the player is already in, so it takes no marker: leave this off for one.
+   * heading names on hover, shown only while the body under it doesn't underline them all (repeatedTerms.ts). It's
+   * hidden from screen readers, leaving the heading's name as it reads: the glossary (Glossary.tsx) explains every term
+   * on screen from the keyboard. An h1 names the mode the player is already in, so it takes no marker: leave this off for one.
    */
   heading?: boolean;
 }
 
-/** Shows text with a tooltip on every game term in it. All text on screen should go through this, except button labels, which are plain. */
+/**
+ * Shows text with a tooltip on every game term in it. All text on screen should go through this, except button labels,
+ * which are plain. Terms open their tooltip on hover but aren't tab stops, which would put dozens before each control:
+ * the glossary lists them for the keyboard instead.
+ */
 export function GameText({ children, heading = false }: GameTextProps) {
   const parts: React.ReactNode[] = [];
   const terms: Term[] = [];
@@ -22,7 +26,7 @@ export function GameText({ children, heading = false }: GameTextProps) {
     if (!terms.includes(term)) terms.push(term);
     parts.push(children.slice(position, match.index));
     parts.push(
-      <span key={match.index} className="term" data-term={term} tabIndex={0}>
+      <span key={match.index} className="term" data-term={term}>
         {match[0]}
       </span>,
     );

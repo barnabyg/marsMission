@@ -23,3 +23,25 @@ dialog p {
   gap: 1rem;
   margin-top: 1.5rem;
 }
+
+/* The glossary: each term over what it means, in a column narrow enough to read, scrolling within the dialog. */
+.glossary {
+  max-width: 48rem;
+}
+
+.glossary dl {
+  margin: 0;
+}
+
+.glossary dl > div + div {
+  margin-top: 0.8rem;
+}
+
+.glossary dt {
+  font-weight: 600;
+}
+
+.glossary dd {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+}

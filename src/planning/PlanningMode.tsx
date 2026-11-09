@@ -9,6 +9,7 @@ import {
 } from "../simulation/simulation";
 import { Dialog } from "../ui/Dialog";
 import { GameText } from "../ui/GameText";
+import { glossaryKey, openGlossary } from "../ui/Glossary";
 import { DevelopmentPanel } from "./DevelopmentPanel";
 import { MissionPanel } from "./MissionPanel";
 import { OperatingPanel } from "./OperatingPanel";
@@ -121,6 +122,16 @@ export function PlanningMode({
               }}
             >
               Restart Program
+            </button>
+            {/* Only its key, which is also its shortcut, as Save, Load and Restart Program leave little room beside them. */}
+            <button
+              type="button"
+              aria-label="Glossary"
+              aria-keyshortcuts={glossaryKey}
+              title={`Glossary: every game term on screen, explained. Shortcut: ${glossaryKey}`}
+              onClick={openGlossary}
+            >
+              {glossaryKey}
             </button>
             {savedToSlot !== null && (
               <p role="status">

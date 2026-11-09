@@ -29,7 +29,6 @@ export function ReadinessTag({
       }
       data-term="Technology Readiness"
       data-testid={testId}
-      tabIndex={0}
     >
       {readinessLabel(readiness)}
     </span>

@@ -110,7 +110,6 @@ export function MissionCrew({
               data-term="Health"
               data-detail={`Flying: ${planned.names.join(", ")}, each starting at Health ${maxHealth}. Radiation on the way leaves them ${planned.arrivalHealth} as they reach Mars${protectionDetail(planned)}.`}
               data-testid="crew-names"
-              tabIndex={0}
             >
               Health {maxHealth} each
             </span>

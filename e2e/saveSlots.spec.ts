@@ -317,8 +317,8 @@ test("picks a slot and saves to it with the keyboard alone", async ({
   // Back from Cancel, past the confirm button while it can't be used, to the slots.
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Space");
-  await expect(confirm).toHaveText("Save to Save Slot 3");
-  await page.keyboard.press("ArrowUp");
+  await expect(confirm).toHaveText("Save to Save Slot 1");
+  await page.keyboard.press("ArrowDown");
   await expect(
     page.getByTestId("save-slot-2").getByRole("radio"),
   ).toBeChecked();

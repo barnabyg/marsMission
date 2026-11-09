@@ -72,7 +72,6 @@ export function ChosenAssets({
                   className="term"
                   data-term="Service Life"
                   data-detail={serviceLifePayback}
-                  tabIndex={0}
                 >
                   Service Life
                 </span>
