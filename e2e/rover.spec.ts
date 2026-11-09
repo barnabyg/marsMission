@@ -44,7 +44,9 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   await page.goto(`/?seed=${roverSeed}`);
   await chooseAssets(page, ["Trailblazer Rover"]);
 
-  const row = page.locator(".asset-choice", { hasText: "Trailblazer Rover" });
+  const row = page
+    .getByTestId("chosen-asset")
+    .filter({ hasText: "Trailblazer Rover" });
   await expect(page.getByTestId("landing-site-details")).toContainText(
     "first landing here earns 120 Science",
   );

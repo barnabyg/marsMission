@@ -32,17 +32,22 @@ test("lands a Mars lab beside a rover and sees the Research Grant it raised in t
   await overrideProgramData(page, { startingMoneyMillions: 4000 });
   await page.goto(`/?seed=${String(labSeed)}`);
 
-  // With nothing on the surface yet, the lab's Benefit tag says it would add nothing, and why.
+  // With nothing on the surface yet, the lab would add nothing: it has no "+$0M" tag, and its details say why.
   const lab = page.locator(".asset-choice", { hasText: "Curie Station" });
   const tag = lab.getByTestId("benefit-tag");
-  await expect(tag).toHaveText("Benefit +$0M");
-  await tag.hover();
-  await expect(page.getByRole("tooltip")).toContainText(
-    "Curie Station: Raises the Research Grants of the rovers and Crew at its Landing Site",
+  await expect(lab.getByTestId("asset-mass")).toBeVisible();
+  await expect(tag).toHaveCount(0);
+  await lab.getByRole("button", { name: "About Curie Station" }).click();
+  const benefitDetail = page
+    .getByRole("dialog", { name: "Curie Station" })
+    .getByTestId("detail-Benefit");
+  await expect(benefitDetail).toContainText(
+    "Raises the Research Grants of the rovers and Crew at its Landing Site",
   );
-  await expect(page.getByRole("tooltip")).toContainText(
+  await expect(benefitDetail).toContainText(
     "It adds nothing this Turn, as nothing it raises at a Landing Site is earning a Research Grant.",
   );
+  await page.getByRole("button", { name: "Close" }).click();
   await landAtJezero(page, "Trailblazer Rover");
   await page
     .getByTestId("turn-summary")
@@ -57,7 +62,7 @@ test("lands a Mars lab beside a rover and sees the Research Grant it raised in t
   );
   await chooseAssets(page, ["Curie Station"]);
   await expect(
-    lab.getByRole("combobox", { name: "Activity for Curie Station" }),
+    page.getByRole("combobox", { name: "Activity for Curie Station" }),
   ).toHaveValue("sample-analysis");
   await landAtJezero(page, "Curie Station");
 

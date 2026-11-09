@@ -42,7 +42,7 @@ test("lands Crew beside a habitat and sees the Health it saved them in the Turn 
   );
   await chooseAssets(page, ["Haven Module"]);
   await expect(
-    card.getByRole("combobox", { name: "Activity for Haven Module" }),
+    page.getByRole("combobox", { name: "Activity for Haven Module" }),
   ).toHaveValue("habitation");
   await expect(page.getByRole("alert")).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);

@@ -33,9 +33,10 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
   await expect(page.getByTestId("launch-vehicle-readiness")).toHaveText(
     "Flight-proven",
   );
+  // Flight-proven is the usual case, so a card says nothing about it; its details do.
   await expect(
     page.locator(".asset-choice", { hasText: "Prospector Lander" }),
-  ).toContainText("Flight-proven");
+  ).not.toContainText("Flight-proven");
   await expect(pinpointRow(page).getByTestId("asset-cost")).toHaveText("$1.1B");
   await expect(
     pinpointRow(page).getByTestId("technology-readiness"),
@@ -70,7 +71,14 @@ test("flies the unproven Pinpoint Lander, sees it become Flight-proven, and plan
   await expect(pinpointRow(page).getByTestId("asset-cost")).toHaveText("$900M");
   await expect(
     pinpointRow(page).getByTestId("technology-readiness"),
-  ).toHaveText("Flight-proven");
+  ).toHaveCount(0);
+  await pinpointRow(page)
+    .getByRole("button", { name: "About Pinpoint Lander" })
+    .click();
+  await expect(page.getByTestId("detail-readiness")).toHaveText(
+    "Flight-proven",
+  );
+  await page.getByRole("button", { name: "Close" }).click();
   await chooseAssets(page, ["Pinpoint Lander"]);
   await expect(page.getByTestId("mission-cost")).toHaveText("$1.2B");
   await expect(landingRiskBand(page)).toHaveText("~20%");

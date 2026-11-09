@@ -90,10 +90,9 @@ test("a lander starts on research, shown beside an orbiter's choices when both a
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-heavy");
   await chooseAssets(page, ["Pathfinder Orbiter"]);
-  const orbiterBox = page.locator(".asset-choice", {
-    hasText: "Pathfinder Orbiter",
-  });
-  await expect(orbiterBox.getByRole("combobox").first()).toHaveValue("survey");
+  await expect(page.getByLabel("Activity for Pathfinder Orbiter")).toHaveValue(
+    "survey",
+  );
   await page
     .locator(".asset-choice", { hasText: "Prospector Lander" })
     .getByRole("checkbox")

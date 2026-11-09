@@ -130,7 +130,7 @@ An Asset that lands at a Landing Site and houses the Crew there, on each day it 
 _Avoid_: Outpost, hab module
 
 **Mars lab**:
-An Asset that lands at a Landing Site and studies the samples that rovers and Crew there bring in, on each day it operates, whatever its Activity, raising the Research Grants their Ongoing Research pays. Their Science and Public Support stay as they are. Its Benefit tag in Planning Mode says how much money it would add over a whole Turn.
+An Asset that lands at a Landing Site and studies the samples that rovers and Crew there bring in, on each day it operates, whatever its Activity, raising the Research Grants their Ongoing Research pays. Their Science and Public Support stay as they are. Its Benefit tag in Planning Mode says how much money it would add over a whole Turn, while it would add any.
 _Avoid_: Laboratory, research base
 
 **Base**:

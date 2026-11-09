@@ -5,6 +5,7 @@ import type {
   ProgramView,
 } from "../simulation/simulation";
 import { AssetDetails } from "./AssetDetails";
+import { ChosenAssets } from "./ChosenAssets";
 import { MissionAssetChoice } from "./MissionAssetChoice";
 import type { Addition, Fit } from "./missionFit";
 import { isSurveying, NothingLeftToSurvey } from "./NothingLeftToSurvey";
@@ -24,7 +25,7 @@ interface MissionAssetsProps {
   children: ReactNode;
 }
 
-/** The Assets the Mission can carry, as cards, and the choices for each one it does. */
+/** The Assets the Mission can carry, as cards, and under them the choices for each one it does. */
 export function MissionAssets({
   view,
   assetIds,
@@ -46,7 +47,6 @@ export function MissionAssets({
           <MissionAssetChoice
             key={asset.id}
             asset={asset}
-            planned={plannedAssets.find(({ assetId }) => assetId === asset.id)}
             operatingCount={
               view.operatingAssets.filter(
                 ({ assetId, daysLeft }) => assetId === asset.id && daysLeft > 0,
@@ -57,9 +57,6 @@ export function MissionAssets({
             onCarriedChange={(carried) => {
               onCarriedChange(asset.id, carried);
             }}
-            onChoicesChange={(choices) => {
-              onChoicesChange(asset.id, choices);
-            }}
             onShowDetails={() => {
               setShownId(asset.id);
             }}
@@ -67,6 +64,13 @@ export function MissionAssets({
         ))}
         {children}
       </fieldset>
+      <ChosenAssets
+        plannedAssets={plannedAssets}
+        nameOf={(assetId) =>
+          view.assets.find(({ id }) => id === assetId)?.name ?? assetId
+        }
+        onChoicesChange={onChoicesChange}
+      />
       {!view.somethingLeftToSurvey &&
         plannedAssets.some(({ activityId, activities }) =>
           isSurveying(activityId, activities),

@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
   endTurnAndContinue,
+  missionViewport,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -113,9 +114,9 @@ test("shows each Asset as a card, greys out those that wouldn't fit, and reveals
   const orbiter = card("Pathfinder Orbiter");
   await expect(orbiter.getByTestId("asset-cost")).toHaveText("$700M");
   await expect(orbiter.getByTestId("asset-mass")).toHaveText("2.5 t");
-  await expect(orbiter.getByTestId("technology-readiness")).toHaveText(
-    "Flight-proven",
-  );
+  // Flight-proven is the usual case, so only the other two readiness levels are a pill on a card.
+  await expect(orbiter.getByTestId("technology-readiness")).toHaveCount(0);
+  await expect(orbiter).not.toContainText("Flight-proven");
   await expect(
     card("Pinpoint Lander").getByTestId("technology-readiness"),
   ).toHaveText("Unproven");
@@ -137,18 +138,25 @@ test("shows each Asset as a card, greys out those that wouldn't fit, and reveals
   await expect(orbiter.getByTestId("unavailable-reason")).toHaveCount(0);
   await expect(orbiter.getByRole("combobox")).toHaveCount(0);
 
+  // Ticked, its choices are in the list under the cards, so the card itself keeps its height.
+  const heightBefore = (await orbiter.boundingBox())?.height;
   await chooseAssets(page, ["Pathfinder Orbiter"]);
+  const chosen = page
+    .getByTestId("chosen-asset")
+    .filter({ hasText: "Pathfinder Orbiter" });
   await expect(
-    orbiter.getByRole("combobox", { name: "Activity for Pathfinder Orbiter" }),
+    chosen.getByRole("combobox", { name: "Activity for Pathfinder Orbiter" }),
   ).toBeVisible();
   await expect(
-    orbiter.getByRole("combobox", {
+    chosen.getByRole("combobox", {
       name: "Service Life for Pathfinder Orbiter",
     }),
   ).toBeVisible();
+  await expect(orbiter.getByRole("combobox")).toHaveCount(0);
+  expect((await orbiter.boundingBox())?.height).toBe(heightBefore);
   // Its Reliability in service is with the Mission Events', so every Reliability choice is in one step.
   await expect(
-    orbiter.getByRole("combobox", { name: /Reliability/ }),
+    chosen.getByRole("combobox", { name: /Reliability/ }),
   ).toHaveCount(0);
   const inService = page.getByTestId("asset-in-service");
   await expect(inService).toHaveCount(1);
@@ -186,7 +194,7 @@ test("shows each Asset as a card, greys out those that wouldn't fit, and reveals
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
   await chooseAssets(page, []);
-  await expect(orbiter.getByRole("combobox")).toHaveCount(0);
+  await expect(page.getByTestId("chosen-assets")).toHaveCount(0);
   await expect(lander).not.toHaveClass(/unavailable/);
   await expect(lander).not.toHaveAttribute("title");
   await expect(lander.getByRole("checkbox")).toBeEnabled();
@@ -202,9 +210,10 @@ test("opens an Asset's details from its card, and closes them without changing t
     page.locator(".asset-choice", { hasText: name });
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   const orbiter = card("Pathfinder Orbiter");
-  await orbiter
-    .getByRole("combobox", { name: "Activity for Pathfinder Orbiter" })
-    .selectOption("orbital-research");
+  const activity = page.getByRole("combobox", {
+    name: "Activity for Pathfinder Orbiter",
+  });
+  await activity.selectOption("orbital-research");
   const spend = await page.getByTestId("budget-bar").textContent();
 
   // From the keyboard, on an Asset that isn't ticked.
@@ -262,9 +271,7 @@ test("opens an Asset's details from its card, and closes them without changing t
   await expect(
     card("Prospector Lander").getByRole("checkbox"),
   ).not.toBeChecked();
-  await expect(
-    orbiter.getByRole("combobox", { name: "Activity for Pathfinder Orbiter" }),
-  ).toHaveValue("orbital-research");
+  await expect(activity).toHaveValue("orbital-research");
   await expect(page.getByTestId("budget-bar")).toHaveText(spend ?? "");
   expect(problems).toEqual([]);
 });
@@ -348,4 +355,35 @@ test("buys Reliability, sees the risk band and cost change, and launches", async
   await expect(page.getByTestId("mission-cost")).toHaveText(costBefore ?? "");
   await expect(insertion.getByRole("combobox")).toHaveValue("none");
   expect(problems).toEqual([]);
+});
+
+test.describe("at 1920×1080", () => {
+  test.use({ viewport: missionViewport });
+
+  test("shows quiet Asset cards on Turn 1, which keep their height as others are ticked", async ({
+    page,
+  }) => {
+    await page.goto(`/?seed=${successSeed}`);
+    const cards = page.locator(".asset-choice");
+    await expect(cards.first()).toBeVisible();
+    // Flight-proven is the usual case, and a Benefit that would add nothing says nothing, so neither is tagged.
+    await expect(page.getByTestId("technology-readiness")).not.toHaveText([
+      /Flight-proven/,
+    ]);
+    for (const tag of await page.getByTestId("benefit-tag").allTextContents()) {
+      expect(tag).not.toMatch(/\+0 |\+\$0M/);
+    }
+    const heights = async () =>
+      Promise.all(
+        (await cards.all()).map(
+          async (card) => (await card.boundingBox())?.height,
+        ),
+      );
+    const before = await heights();
+    await chooseAssets(page, ["Pathfinder Orbiter"]);
+    await expect(page.getByTestId("chosen-asset")).toHaveCount(1);
+    expect(await heights()).toEqual(before);
+    await chooseAssets(page, []);
+    expect(await heights()).toEqual(before);
+  });
 });

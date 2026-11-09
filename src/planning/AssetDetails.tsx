@@ -8,6 +8,7 @@ import {
 import { Dialog } from "../ui/Dialog";
 import { GameText } from "../ui/GameText";
 import { describeActivity } from "./ActivitySelect";
+import { benefitThisTurn } from "./benefitImpactText";
 import { ReadinessTag } from "./ReadinessTag";
 
 interface AssetDetailsProps {
@@ -108,8 +109,13 @@ export function AssetDetails({ asset, planned, onClose }: AssetDetailsProps) {
             </ul>
           </Fact>
           {asset.benefit && (
+            // With what it would add this Turn, or why nothing, which the card's tag then leaves out.
             <Fact name="Benefit">
-              <GameText>{asset.benefit}</GameText>
+              <GameText>
+                {[asset.benefit, benefitThisTurn(asset)]
+                  .filter((part) => part !== null)
+                  .join(" ")}
+              </GameText>
             </Fact>
           )}
         </dl>

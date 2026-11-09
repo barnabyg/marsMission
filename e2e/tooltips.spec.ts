@@ -59,7 +59,7 @@ test("explains the terms of Doing Science in Planning Mode and on the surface pa
   );
   await expectTooltip(
     page,
-    page.locator(".asset-choice [data-term='Activity']").first(),
+    page.locator("[data-testid=chosen-asset] [data-term='Activity']").first(),
     "Activity",
   );
 

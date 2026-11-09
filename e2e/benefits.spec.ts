@@ -28,22 +28,25 @@ test("puts a relay orbiter at Mars beside a lander and sees the raised earnings"
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-heavy");
   await chooseAssets(page, ["Pathfinder Orbiter"]);
-  const tag = page
-    .locator(".asset-choice", { hasText: "Courier Relay" })
-    .getByTestId("benefit-tag");
-  // Nothing is on the surface yet, so it would add nothing this Turn.
-  await expect(tag).toHaveText("Benefit +0 Science");
-  // Only the relay raises research; the fuel plant's tag is for the propellant it makes.
+  const relayCard = page.locator(".asset-choice", { hasText: "Courier Relay" });
+  const tag = relayCard.getByTestId("benefit-tag");
+  // Nothing is on the surface yet, so it would add nothing this Turn: no "+0" tag, and its details say why.
+  await expect(relayCard.getByTestId("asset-mass")).toBeVisible();
+  await expect(tag).toHaveCount(0);
   await expect(
     page.getByTestId("benefit-tag").filter({ hasText: "Science" }),
-  ).toHaveCount(1);
-  await tag.hover();
-  await expect(page.getByRole("tooltip")).toContainText(
-    "Courier Relay: Raises the Ongoing Research of every Asset and Crew on the surface",
+  ).toHaveCount(0);
+  await relayCard.getByRole("button", { name: "About Courier Relay" }).click();
+  const benefitDetail = page
+    .getByRole("dialog", { name: "Courier Relay" })
+    .getByTestId("detail-Benefit");
+  await expect(benefitDetail).toContainText(
+    "Raises the Ongoing Research of every Asset and Crew on the surface",
   );
-  await expect(page.getByRole("tooltip")).toContainText(
+  await expect(benefitDetail).toContainText(
     "nothing on the surface is doing research",
   );
+  await page.getByRole("button", { name: "Close" }).click();
   // The lander's Activity choice says on hovering which Benefit raises it, once the relay is on the Mission too.
   await chooseAssets(page, ["Prospector Lander"]);
   const landerActivity = page.getByLabel("Activity for Prospector Lander");
@@ -70,11 +73,13 @@ test("puts a relay orbiter at Mars beside a lander and sees the raised earnings"
   await expect(
     operating.getByLabel("Activity for Prospector Lander"),
   ).toHaveAttribute("title", new RegExp(raised));
-  // With one already operating, another would add nothing.
-  await expect(tag).toHaveText("Benefit +0 Science");
-  await tag.hover();
-  await expect(page.getByRole("tooltip")).toContainText(
+  // With one already operating, another would add nothing, which its details say.
+  await expect(relayCard.getByTestId("operating-tag")).toHaveText("1 at Mars");
+  await expect(tag).toHaveCount(0);
+  await relayCard.getByRole("button", { name: "About Courier Relay" }).click();
+  await expect(benefitDetail).toContainText(
     "Courier Relay at Mars already gives this Benefit",
   );
+  await page.getByRole("button", { name: "Close" }).click();
   expect(problems).toEqual([]);
 });
