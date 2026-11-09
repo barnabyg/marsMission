@@ -1,7 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   chooseAssets,
-  endTurnAndContinue,
   eventEntries,
   holdTurnWhenShown,
   missionViewport,
@@ -14,6 +13,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { confirmEndWithoutLaunching, endTurnAndContinue } from "./turnHelpers";
 import { openLaunchStep } from "./planningHelpers";
 import {
   crashSeed,
@@ -233,6 +233,7 @@ test("turns Surveying off, sees no Survey that Turn, keeps that through a reload
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
+  await confirmEndWithoutLaunching(page);
   await expect(page.getByTestId("operating-at-mars")).toHaveText(
     "Pathfinder Orbiter: Survey",
   );

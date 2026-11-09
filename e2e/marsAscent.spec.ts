@@ -6,7 +6,6 @@ import {
 } from "./colossusSeeds";
 import {
   continueFromSave,
-  endTurnAndContinue,
   eventEntries,
   missionViewport,
   overrideProgramData,
@@ -14,6 +13,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { endTurnAndContinue } from "./turnHelpers";
 
 test.use({ viewport: missionViewport });
 

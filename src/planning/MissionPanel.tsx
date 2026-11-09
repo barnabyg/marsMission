@@ -5,6 +5,7 @@ import {
   type Simulation,
   type TurnPlan,
 } from "../simulation/simulation";
+import { Dialog } from "../ui/Dialog";
 import { GameText } from "../ui/GameText";
 import { BudgetBar } from "./BudgetBar";
 import { LandingSiteChoice } from "./LandingSiteChoice";
@@ -66,6 +67,7 @@ export function MissionPanel({
     choices.returnVehicleFor ?? "",
   ].join("|");
   const [changingFor, setChangingFor] = useState<string | null>(null);
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
   const [launchStep, assetsStep, landingStep, eventsStep] = missionSteps({
     nothingTicked,
     landsOnMars: choices.landsOnMars,
@@ -207,7 +209,9 @@ export function MissionPanel({
           onSubmit(plan);
         }}
         onEndWithoutLaunching={() => {
-          onSubmit(withoutLaunching);
+          // A planned Mission would be dropped, which a mis-click shouldn't do unasked.
+          if (nothingTicked) onSubmit(withoutLaunching);
+          else setConfirmingEnd(true);
         }}
       >
         {/* A hint for a new player, which a Program's later Turns no longer need. */}
@@ -228,6 +232,33 @@ export function MissionPanel({
           ),
         )}
       </BudgetBar>
+      {confirmingEnd && (
+        <Dialog
+          title="End Turn without launching"
+          cancelLabel="Keep planning"
+          onClose={() => {
+            setConfirmingEnd(false);
+          }}
+          actions={
+            <button
+              type="button"
+              className="primary"
+              onClick={() => {
+                onSubmit(withoutLaunching);
+              }}
+            >
+              End Turn
+            </button>
+          }
+        >
+          <p>
+            <GameText>
+              End the Turn without launching? The Mission you planned is
+              dropped.
+            </GameText>
+          </p>
+        </Dialog>
+      )}
     </section>
   );
 }

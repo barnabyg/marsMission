@@ -3,7 +3,6 @@ import { storageKeyFor } from "../src/save/saveStore";
 import { tooltips } from "../src/ui/tooltips";
 import {
   chooseAssets,
-  endTurnAndContinue,
   missionViewport,
   openLoadDialog,
   openSaveDialog,
@@ -11,6 +10,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { endTurnAndContinue } from "./turnHelpers";
 import { orbiterAndLanderSeed, successSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });

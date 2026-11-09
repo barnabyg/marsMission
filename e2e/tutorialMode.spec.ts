@@ -1,11 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
-  endTurnWithoutLaunching,
   openLoadDialog,
   openSaveDialog,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { endTurnWithoutLaunching } from "./turnHelpers";
 import { successSeed } from "./seeds";
 
 const offer = (page: Page) => page.getByTestId("tutorial-offer");

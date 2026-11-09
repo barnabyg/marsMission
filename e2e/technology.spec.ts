@@ -9,6 +9,7 @@ import {
   watchForProblems,
 } from "./helpers";
 import { pinpointLandingSeed } from "./seeds";
+import { confirmEndWithoutLaunching } from "./turnHelpers";
 
 test.use({ viewport: missionViewport });
 
@@ -119,6 +120,7 @@ test("develops the Endurance Rover over two Turns, then chooses it for a Mission
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
+  await confirmEndWithoutLaunching(page);
   await page.getByRole("button", { name: "End Turn", exact: true }).click();
   await expect(page.getByTestId("summary-development-started")).toHaveText(
     "Development started: Endurance Rover",

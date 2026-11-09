@@ -16,6 +16,7 @@ import {
   watchForProblems,
 } from "./helpers";
 import { crashSeed, landingSeed, seedFailingAt, successSeed } from "./seeds";
+import { confirmEndWithoutLaunching } from "./turnHelpers";
 
 test.use({ viewport: missionViewport });
 
@@ -210,6 +211,7 @@ test("keeps the controls still as the date changes, even in a window too small f
   await page
     .getByRole("button", { name: "End Turn without launching" })
     .click();
+  await confirmEndWithoutLaunching(page);
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
   const places = await page.evaluate(
     () =>

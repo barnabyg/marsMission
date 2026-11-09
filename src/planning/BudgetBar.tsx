@@ -25,8 +25,8 @@ interface BudgetBarProps {
 
 /**
  * The foot of the New Mission panel, always in view: the Mission's cost against the Money and its mass against the
- * Launch Vehicle's capacity, each as a filling bar that turns amber near its limit and red over it, and the buttons
- * that end the Turn.
+ * Launch Vehicle's capacity, each as a filling bar that turns amber near its limit and red over it, then Launch
+ * Mission, and at the far end the plain button that ends the Turn without launching.
  */
 export function BudgetBar({
   costMillions,
@@ -89,26 +89,26 @@ export function BudgetBar({
             {massTonnes} of {capacityTonnes} tonnes
           </strong>
         </BudgetGauge>
-        <div className="mission-buttons">
-          <button
-            type="button"
-            className="primary"
-            disabled={launchProblems.length > 0}
-            // A disabled button says why on hover, as Mission Mode's End Turn says what it does.
-            title={launchProblems.join(" ") || undefined}
-            onClick={onLaunch}
-          >
-            Launch Mission
-          </button>
-          <button
-            type="button"
-            disabled={withoutLaunchingProblems.length > 0}
-            title={withoutLaunchingProblems.join(" ") || undefined}
-            onClick={onEndWithoutLaunching}
-          >
-            End Turn without launching
-          </button>
-        </div>
+        <button
+          type="button"
+          className="primary"
+          disabled={launchProblems.length > 0}
+          // A disabled button says why on hover, as Mission Mode's skip button says what it does.
+          title={launchProblems.join(" ") || undefined}
+          onClick={onLaunch}
+        >
+          Launch Mission
+        </button>
+        {/* Plain, and at the far end, away from Launch Mission, so that the primary action stands alone. */}
+        <button
+          type="button"
+          className="end-without-launching"
+          disabled={withoutLaunchingProblems.length > 0}
+          title={withoutLaunchingProblems.join(" ") || undefined}
+          onClick={onEndWithoutLaunching}
+        >
+          End Turn without launching
+        </button>
       </div>
     </div>
   );

@@ -4,7 +4,6 @@ import { tooltips, type Term } from "../src/ui/tooltips";
 import {
   chooseAssets,
   continueFromSave,
-  endTurnAndContinue,
   eventEntries,
   holdTurnWhenShown,
   overrideProgramData,
@@ -12,6 +11,7 @@ import {
   termsInButtons,
   termsWithoutTooltips,
 } from "./helpers";
+import { endTurnAndContinue } from "./turnHelpers";
 import { colossusBuiltSave, colossusMoney, crewSeed } from "./colossusSeeds";
 import { landingSeed, pinpointLandingSeed, successSeed } from "./seeds";
 

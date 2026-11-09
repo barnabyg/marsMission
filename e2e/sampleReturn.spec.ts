@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 import {
   chooseAssets,
-  endTurnAndContinue,
   eventEntries,
   missionViewport,
   overrideProgramData,
@@ -9,6 +8,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { endTurnAndContinue } from "./turnHelpers";
 import { sampleReturnMoney, sampleReturnSeed } from "./sampleSeeds";
 
 test.use({ viewport: missionViewport });

@@ -1,9 +1,6 @@
 import { expect, test } from "@playwright/test";
-import {
-  chooseAssets,
-  endTurnAndContinue,
-  termsWithoutTooltips,
-} from "./helpers";
+import { chooseAssets, termsWithoutTooltips } from "./helpers";
+import { endTurnAndContinue } from "./turnHelpers";
 import { successSeed } from "./seeds";
 
 test("empty Planning Mode panels shrink to a line, and grow once an Asset is operating and a Milestone earned", async ({
