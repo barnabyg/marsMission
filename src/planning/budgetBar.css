@@ -36,7 +36,8 @@ amount stays whole. */
 
 .budget-gauge .gauge-track {
   width: 100%;
-  min-width: 16rem;
+  /* Narrow enough that the row, with End Turn without launching at its end, fits 1920 wide with wider fonts, as on Linux. */
+  min-width: 12rem;
   height: 0.75rem;
 }
 
