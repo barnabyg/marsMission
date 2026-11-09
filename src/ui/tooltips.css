@@ -12,6 +12,13 @@
   border-bottom: none;
 }
 
+/* A status pill (src/app/styles.css) is set apart by its own border, which it keeps whether or not its term repeats, so
+   that a card doesn't change height as the panel's first use of a term moves. */
+.term.tag-pill,
+.term.tag-pill[data-repeat] {
+  border-bottom: 1px solid currentColor;
+}
+
 .term-marker {
   margin-left: 0.35em;
   font-family: var(--font-body);
@@ -40,10 +47,10 @@
   inset: auto;
   margin: 0;
   width: 30rem;
-  background: #0f1320;
+  background: var(--tooltip-bg);
   border: 1px solid var(--accent);
-  border-radius: 0.4rem;
-  padding: 0.8rem 1.1rem;
+  border-radius: var(--radius-sm);
+  padding: var(--pad-card-compact);
   font-weight: 400;
   color: var(--text);
   pointer-events: none;

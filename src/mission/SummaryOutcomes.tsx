@@ -3,201 +3,244 @@ import {
   formatPropellant,
   type TurnSummary,
 } from "../simulation/simulation";
-import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
-import { SummaryHealthLost } from "./SummaryHealthLost";
+import { SummaryPart, type SummaryCardContent } from "./SummaryCard";
+import { SummarySamplesHome } from "./SummarySamples";
 
-/**
- * Where the Program stands after the Turn: its Crew, technology, research, ascent propellant, Assets, Survey and the
- * Money it earned.
- */
-export function SummaryOutcomes({ summary }: { summary: TurnSummary }) {
-  return (
-    <>
-      {summary.crew.length > 0 && (
-        <section data-testid="summary-crew">
-          <h2>
-            <GameText heading>Crew at Mars</GameText>
-          </h2>
-          <ul>
-            {summary.crew.map(
-              ({ name, locationName, health, maxHealth, arrived }) => (
-                <li key={name}>
-                  <GameText>
-                    {`${name}, in ${locationName}${arrived ? " from this Turn" : ""}: Health ${health} of ${maxHealth}`}
-                  </GameText>
-                </li>
-              ),
-            )}
-          </ul>
-        </section>
-      )}
-      {summary.suppliesRanOut.length > 0 && (
-        <p className="problem" data-testid="summary-supplies-out">
-          <GameText>
-            {`Supplies ran out: ${summary.suppliesRanOut
-              .map(({ crew, on }) => `${crew} on ${formatDate(on)}`)
-              .join(", ")}`}
-          </GameText>
-        </p>
-      )}
-      <SummaryHealthLost healthLost={summary.healthLost} />
-      {summary.firstLanding && (
-        <p data-testid="summary-first-landing">
-          <GameText>
-            {`First landing at ${summary.firstLanding.siteName}: ${summary.firstLanding.science} Science`}
-          </GameText>
-        </p>
-      )}
-      {summary.technologiesProven.length > 0 && (
-        <p data-testid="summary-flight-proven">
-          <GameText>
-            {`Now Flight-proven: ${summary.technologiesProven.join(", ")}`}
-          </GameText>
-        </p>
-      )}
-      {summary.developmentsStarted.length > 0 && (
-        <p data-testid="summary-development-started">
-          <GameText>
-            {`Development started: ${summary.developmentsStarted.join(", ")}`}
-          </GameText>
-        </p>
-      )}
-      {summary.developmentsFinished.length > 0 && (
-        <p data-testid="summary-development-finished">
-          <GameText>
-            {`Development finished, so it can be chosen for a Mission from the next Turn: ${summary.developmentsFinished.join(", ")}`}
-          </GameText>
-        </p>
-      )}
-      {summary.ongoingResearch.length > 0 && (
-        <section data-testid="summary-ongoing-research">
-          <h2>
-            <GameText heading>Ongoing Research</GameText>
-          </h2>
-          <ul>
-            {summary.ongoingResearch.map(
-              (
-                {
-                  assetName,
-                  activityName,
-                  science,
-                  publicSupport,
-                  days,
-                  benefit,
-                },
-                index,
-              ) => (
-                // Two copies of an Asset can each earn the same amount, so the position tells them apart.
-                <li key={`${assetName}-${index}`}>
-                  <GameText>
-                    {`${assetName}, ${activityName}: ${science} Science and ${publicSupport} Public Support over ${days} ${days === 1 ? "day" : "days"}${
-                      benefit
-                        ? `, raised on ${benefit.days} of them by the Benefit from ${benefit.givenBy.join(" and ")}, which added ${benefit.science} Science and ${benefit.publicSupport} Public Support`
-                        : ""
-                    }`}
-                  </GameText>
-                </li>
-              ),
-            )}
-          </ul>
-        </section>
-      )}
-      {(summary.ascentPropellant.length > 0 ||
-        summary.ascentPropellantUsed.length > 0) && (
-        <section data-testid="summary-ascent-propellant">
-          <h2>
-            <GameText heading>Ascent propellant</GameText>
-          </h2>
-          <ul>
-            {propellantBySite(summary).map((line) => (
-              <li key={line}>
-                <GameText>{line}</GameText>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {summary.assetsFailed.length > 0 && (
-        <p className="problem" data-testid="summary-assets-failed">
-          <GameText>
-            {`Failed in service: ${summary.assetsFailed.join(", ")}`}
-          </GameText>
-        </p>
-      )}
-      {summary.assetsEnded.length > 0 && (
-        <p data-testid="summary-assets-ended">
-          <GameText>
-            {`Service Life ended: ${summary.assetsEnded.join(", ")}`}
-          </GameText>
-        </p>
-      )}
-      {summary.survey && (
-        <section data-testid="summary-survey">
-          <h2>
-            <GameText heading>Survey</GameText>
-          </h2>
-          <ul>
-            {summary.survey.siteNamesSurveyed.length > 0 && (
-              <li>
-                <GameText>
-                  {`Lower landing risk: ${summary.survey.siteNamesSurveyed.join(", ")}`}
-                </GameText>
-              </li>
-            )}
-            {summary.survey.siteNameRevealed && (
-              <li>
-                <GameText>
-                  {`New Landing Site: ${summary.survey.siteNameRevealed}`}
-                </GameText>
-              </li>
-            )}
-          </ul>
-        </section>
-      )}
-      {summary.fundingPayouts.length > 0 && (
-        <section data-testid="summary-funding-payouts">
-          <h2>
-            <GameText heading>Funding Thresholds reached</GameText>
-          </h2>
-          <ul>
-            {summary.fundingPayouts.map(({ publicSupport, payoutMillions }) => (
-              <li key={publicSupport}>
-                <GameText>
-                  {`${publicSupport} Public Support: ${formatMoney(payoutMillions)}`}
-                </GameText>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {summary.researchGrants.length > 0 && (
-        <section data-testid="summary-research-grants">
-          <h2>
-            <GameText heading>
-              {`Research Grants for this Turn: ${formatMoney(summary.researchGrantMillions)}`}
-            </GameText>
-          </h2>
-          <ul>
-            {summary.researchGrants.map(
-              ({ name, millions, benefit }, index) => (
-                // Two copies of an Asset can each be paid the same amount, so the position tells them apart.
-                <li key={`${name}-${index}`}>
-                  <GameText>
-                    {`${name}: ${formatMoney(millions)}${
-                      benefit
-                        ? `, raised on ${benefit.days} ${benefit.days === 1 ? "day" : "days"} by the Benefit from ${benefit.givenBy.join(" and ")}, which added ${formatMoney(benefit.millions)}`
-                        : ""
-                    }`}
-                  </GameText>
-                </li>
-              ),
-            )}
-          </ul>
-        </section>
-      )}
-    </>
-  );
+/** The card of the Science the Turn earned beyond its Milestones: a first landing, Ongoing Research and samples home. */
+function scienceCards(summary: TurnSummary): SummaryCardContent[] {
+  const { firstLanding, ongoingResearch, samplesHome } = summary;
+  if (!firstLanding && ongoingResearch.length === 0 && samplesHome.length === 0)
+    return [];
+  return [
+    {
+      key: "science",
+      heading: "Science earned",
+      testId: "summary-science-earned",
+      content: (
+        <>
+          {firstLanding && (
+            <p data-testid="summary-first-landing">
+              <GameText>
+                {`First landing at ${firstLanding.siteName}: ${firstLanding.science} Science`}
+              </GameText>
+            </p>
+          )}
+          {ongoingResearch.length > 0 && (
+            <SummaryPart
+              heading="Ongoing Research"
+              testId="summary-ongoing-research"
+            >
+              <ul>
+                {ongoingResearch.map(
+                  (
+                    {
+                      assetName,
+                      activityName,
+                      science,
+                      publicSupport,
+                      days,
+                      benefit,
+                    },
+                    index,
+                  ) => (
+                    // Two copies of an Asset can each earn the same amount, so the position tells them apart.
+                    <li key={`${assetName}-${index}`}>
+                      <GameText>
+                        {`${assetName}, ${activityName}: ${science} Science and ${publicSupport} Public Support over ${days} ${days === 1 ? "day" : "days"}${
+                          benefit
+                            ? `, raised on ${benefit.days} of them by the Benefit from ${benefit.givenBy.join(" and ")}, which added ${benefit.science} Science and ${benefit.publicSupport} Public Support`
+                            : ""
+                        }`}
+                      </GameText>
+                    </li>
+                  ),
+                )}
+              </ul>
+            </SummaryPart>
+          )}
+          <SummarySamplesHome samplesHome={samplesHome} />
+        </>
+      ),
+    },
+  ];
+}
+
+/** The card of where the Money received came from, beyond base funding: Funding Thresholds and Research Grants. */
+function moneyCards(summary: TurnSummary): SummaryCardContent[] {
+  const { fundingPayouts, researchGrants } = summary;
+  if (fundingPayouts.length === 0 && researchGrants.length === 0) return [];
+  return [
+    {
+      key: "money",
+      heading: "Money earned",
+      testId: "summary-money-earned",
+      content: (
+        <>
+          {fundingPayouts.length > 0 && (
+            <SummaryPart
+              heading="Funding Thresholds reached"
+              testId="summary-funding-payouts"
+            >
+              <ul>
+                {fundingPayouts.map(({ publicSupport, payoutMillions }) => (
+                  <li key={publicSupport}>
+                    <GameText>
+                      {`${publicSupport} Public Support: ${formatMoney(payoutMillions)}`}
+                    </GameText>
+                  </li>
+                ))}
+              </ul>
+            </SummaryPart>
+          )}
+          {researchGrants.length > 0 && (
+            <SummaryPart
+              heading={`Research Grants for this Turn: ${formatMoney(summary.researchGrantMillions)}`}
+              testId="summary-research-grants"
+            >
+              <ul>
+                {researchGrants.map(({ name, millions, benefit }, index) => (
+                  // Two copies of an Asset can each be paid the same amount, so the position tells them apart.
+                  <li key={`${name}-${index}`}>
+                    <GameText>
+                      {`${name}: ${formatMoney(millions)}${
+                        benefit
+                          ? `, raised on ${benefit.days} ${benefit.days === 1 ? "day" : "days"} by the Benefit from ${benefit.givenBy.join(" and ")}, which added ${formatMoney(benefit.millions)}`
+                          : ""
+                      }`}
+                    </GameText>
+                  </li>
+                ))}
+              </ul>
+            </SummaryPart>
+          )}
+        </>
+      ),
+    },
+  ];
+}
+
+/** The cards of what the Turn earned beyond its Milestones: Science, then Money. */
+export function earningCards(summary: TurnSummary): SummaryCardContent[] {
+  return [...scienceCards(summary), ...moneyCards(summary)];
+}
+
+/** The card of the Program's technology: what became Flight-proven, and Development started and finished. */
+export function technologyCards({
+  technologiesProven,
+  developmentsStarted,
+  developmentsFinished,
+}: TurnSummary): SummaryCardContent[] {
+  if (
+    technologiesProven.length === 0 &&
+    developmentsStarted.length === 0 &&
+    developmentsFinished.length === 0
+  ) {
+    return [];
+  }
+  return [
+    {
+      key: "technology",
+      heading: "Technology",
+      content: (
+        <>
+          {technologiesProven.length > 0 && (
+            <p data-testid="summary-flight-proven">
+              <GameText>
+                {`Now Flight-proven: ${technologiesProven.join(", ")}`}
+              </GameText>
+            </p>
+          )}
+          {developmentsStarted.length > 0 && (
+            <p data-testid="summary-development-started">
+              <GameText>
+                {`Development started: ${developmentsStarted.join(", ")}`}
+              </GameText>
+            </p>
+          )}
+          {developmentsFinished.length > 0 && (
+            <p data-testid="summary-development-finished">
+              <GameText>
+                {`Development finished, so it can be chosen for a Mission from the next Turn: ${developmentsFinished.join(", ")}`}
+              </GameText>
+            </p>
+          )}
+        </>
+      ),
+    },
+  ];
+}
+
+/** The card of the Assets at Mars and their Landing Sites: Assets that stopped, the Survey and ascent propellant. */
+export function marsCards(summary: TurnSummary): SummaryCardContent[] {
+  const { assetsFailed, assetsEnded, survey } = summary;
+  const propellant = propellantBySite(summary);
+  if (
+    assetsFailed.length === 0 &&
+    assetsEnded.length === 0 &&
+    !survey &&
+    propellant.length === 0
+  ) {
+    return [];
+  }
+  return [
+    {
+      key: "mars",
+      heading: "Assets and Landing Sites",
+      content: (
+        <>
+          {assetsFailed.length > 0 && (
+            <p className="problem" data-testid="summary-assets-failed">
+              <GameText>
+                {`Failed in service: ${assetsFailed.join(", ")}`}
+              </GameText>
+            </p>
+          )}
+          {assetsEnded.length > 0 && (
+            <p data-testid="summary-assets-ended">
+              <GameText>
+                {`Service Life ended: ${assetsEnded.join(", ")}`}
+              </GameText>
+            </p>
+          )}
+          {survey && (
+            <SummaryPart heading="Survey" testId="summary-survey">
+              <ul>
+                {survey.siteNamesSurveyed.length > 0 && (
+                  <li>
+                    <GameText>
+                      {`Lower landing risk: ${survey.siteNamesSurveyed.join(", ")}`}
+                    </GameText>
+                  </li>
+                )}
+                {survey.siteNameRevealed && (
+                  <li>
+                    <GameText>
+                      {`New Landing Site: ${survey.siteNameRevealed}`}
+                    </GameText>
+                  </li>
+                )}
+              </ul>
+            </SummaryPart>
+          )}
+          {propellant.length > 0 && (
+            <SummaryPart
+              heading="Ascent propellant"
+              testId="summary-ascent-propellant"
+            >
+              <ul>
+                {propellant.map((line) => (
+                  <li key={line}>
+                    <GameText>{line}</GameText>
+                  </li>
+                ))}
+              </ul>
+            </SummaryPart>
+          )}
+        </>
+      ),
+    },
+  ];
 }
 
 /**

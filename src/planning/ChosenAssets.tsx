@@ -47,7 +47,7 @@ export function ChosenAssets({
       <p className="chosen-assets-heading">
         <GameText>Chosen for this Mission</GameText>
       </p>
-      <ul>
+      <ul className="plain-list">
         {plannedAssets.map((planned) => {
           const name = nameOf(planned.assetId);
           return (
@@ -72,7 +72,6 @@ export function ChosenAssets({
                   className="term"
                   data-term="Service Life"
                   data-detail={serviceLifePayback}
-                  tabIndex={0}
                 >
                   Service Life
                 </span>

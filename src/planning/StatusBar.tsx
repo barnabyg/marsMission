@@ -223,7 +223,6 @@ function StatusValue({
             data-term="Base funding"
             data-detail={detail}
             data-testid={testId}
-            tabIndex={0}
           >
             {children}
           </span>

@@ -15,7 +15,7 @@ import { endTurnAndContinue } from "./turnHelpers";
 import { colossusBuiltSave, colossusMoney, crewSeed } from "./colossusSeeds";
 import { landingSeed, pinpointLandingSeed, successSeed } from "./seeds";
 
-test("explains a game term on hover and on keyboard focus", async ({
+test("explains a game term on hover, as the term's description, and in the glossary from the keyboard", async ({
   page,
 }) => {
   await page.goto("/");
@@ -26,15 +26,71 @@ test("explains a game term on hover and on keyboard focus", async ({
 
   await term.hover();
   await expect(tooltip).toContainText(tooltips["Public Support"]);
+  // A screen reader hears the tooltip as the term's description while it shows.
+  await expect(term).toHaveAccessibleDescription(
+    new RegExp(tooltips["Public Support"].slice(0, 40)),
+  );
 
   await page.getByRole("heading", { name: "New Mission", exact: true }).hover();
   await page.mouse.move(0, 0);
   await expect(tooltip).toHaveCount(0);
+  await expect(term).not.toHaveAttribute("aria-describedby");
 
-  await term.focus();
-  await expect(tooltip).toContainText(tooltips["Public Support"]);
-  await term.blur();
-  await expect(tooltip).toHaveCount(0);
+  // Terms aren't tab stops: the glossary key lists every term on screen instead.
+  await page.keyboard.press("?");
+  const glossary = page.getByRole("dialog", { name: "Glossary" });
+  await expect(glossary).toBeVisible();
+  const entry = glossary
+    .getByTestId("glossary")
+    .locator("div")
+    .filter({ has: page.locator("dt", { hasText: /^Public Support$/ }) });
+  await expect(entry.locator("dd")).toHaveText(tooltips["Public Support"]);
+  await expect(glossary.locator("dt", { hasText: /^Mission$/ })).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await expect(glossary).toHaveCount(0);
+
+  // The button beside Save says which key opens it.
+  const button = page.getByRole("button", { name: "Glossary" });
+  await expect(button).toHaveAttribute("aria-keyshortcuts", "?");
+  await button.click();
+  await expect(glossary).toBeVisible();
+  // Typing a "?" while the glossary is open doesn't open a second one.
+  await page.keyboard.press("?");
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+});
+
+test("tabbing from the top of Planning Mode reaches Launch Mission in under 30 stops on a new Program", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  await expect(
+    page.getByRole("heading", { name: "Planning Mode" }),
+  ).toBeVisible();
+  let stops = 0;
+  while (stops < 30) {
+    await page.keyboard.press("Tab");
+    stops++;
+    const name = await page.evaluate(() => document.activeElement?.textContent);
+    if (name === "Launch Mission") break;
+  }
+  expect(stops).toBeLessThan(30);
+});
+
+test("game terms and their tags aren't tab stops", async ({ page }) => {
+  await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  const focusableTerms = await page
+    .locator("[data-term], [data-terms]")
+    .evaluateAll(
+      (elements) =>
+        elements.filter(
+          (element) =>
+            element instanceof HTMLElement &&
+            element.tabIndex >= 0 &&
+            !element.matches("select, input, button"),
+        ).length,
+    );
+  expect(focusableTerms).toBe(0);
 });
 
 async function expectTooltip(page: Page, term: Locator, name: Term) {

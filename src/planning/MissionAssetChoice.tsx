@@ -103,6 +103,7 @@ export function MissionAssetChoice({
           <ReadinessTag
             readiness={asset.technologyReadiness}
             testId="technology-readiness"
+            pill
           />
         )}
         {benefit && (
@@ -113,7 +114,6 @@ export function MissionAssetChoice({
             data-term="Benefit"
             data-detail={benefit.detail}
             data-testid="benefit-tag"
-            tabIndex={0}
           >
             {benefit.text}
           </span>
@@ -125,7 +125,6 @@ export function MissionAssetChoice({
             data-term="Asset"
             data-detail={`${asset.name} operating at Mars: ${operatingCount}. Each keeps working without being launched again, so ticking this launches another.`}
             data-testid="operating-tag"
-            tabIndex={0}
           >
             {operatingCount} at Mars
           </span>

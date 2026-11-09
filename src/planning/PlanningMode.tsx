@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SaveSlots } from "../save/SaveSlots";
+import { SaveSlotsDialog } from "../save/SaveSlots";
 import type { SaveStore } from "../save/saveStore";
 import type { TutorialEnd } from "../tutorial/tutorial";
 import {
@@ -9,9 +9,11 @@ import {
 } from "../simulation/simulation";
 import { Dialog } from "../ui/Dialog";
 import { GameText } from "../ui/GameText";
+import { glossaryKey, openGlossary } from "../ui/Glossary";
 import { DevelopmentPanel } from "./DevelopmentPanel";
 import { MissionPanel } from "./MissionPanel";
 import { OperatingPanel } from "./OperatingPanel";
+import { SideColumn } from "./SideColumn";
 import { StatusBar } from "./StatusBar";
 import { TutorialAdvice } from "./TutorialAdvice";
 import { TutorialEnding } from "./TutorialEnding";
@@ -99,6 +101,7 @@ export function PlanningMode({
           <div className="program-actions">
             <button
               type="button"
+              className="small"
               onClick={() => {
                 open("save");
               }}
@@ -107,6 +110,7 @@ export function PlanningMode({
             </button>
             <button
               type="button"
+              className="small"
               onClick={() => {
                 open("load");
               }}
@@ -115,11 +119,23 @@ export function PlanningMode({
             </button>
             <button
               type="button"
+              className="small"
               onClick={() => {
                 open("restart");
               }}
             >
               Restart Program
+            </button>
+            {/* Only its key, which is also its shortcut, as Save, Load and Restart Program leave little room beside them. */}
+            <button
+              type="button"
+              className="small"
+              aria-label="Glossary"
+              aria-keyshortcuts={glossaryKey}
+              title={`Glossary: every game term on screen, explained. Shortcut: ${glossaryKey}`}
+              onClick={openGlossary}
+            >
+              {glossaryKey}
             </button>
             {savedToSlot !== null && (
               <p role="status">
@@ -148,7 +164,7 @@ export function PlanningMode({
           onSubmit={onSubmit}
         />
 
-        <div className="planning-side">
+        <SideColumn>
           <TutorialPanel
             tutorial={view.tutorial}
             firstTurn={view.turnNumber === 1}
@@ -217,7 +233,7 @@ export function PlanningMode({
             chosenIds={developmentIds}
             onChosenChange={setDevelopmentIds}
           />
-        </div>
+        </SideColumn>
       </div>
 
       {tutorialEnding && endingShown && (
@@ -248,37 +264,27 @@ export function PlanningMode({
         </Dialog>
       )}
       {openDialog === "save" && (
-        <Dialog
-          title="Save to a Save Slot"
-          cancelLabel="Cancel"
+        <SaveSlotsDialog
+          simulation={simulation}
+          saveStore={saveStore}
+          action={{
+            kind: "save",
+            program,
+            onSaved: (slot) => {
+              setSavedToSlot(slot);
+              close();
+            },
+          }}
           onClose={close}
-        >
-          <SaveSlots
-            simulation={simulation}
-            saveStore={saveStore}
-            action={{
-              kind: "save",
-              program,
-              onSaved: (slot) => {
-                setSavedToSlot(slot);
-                close();
-              },
-            }}
-          />
-        </Dialog>
+        />
       )}
       {openDialog === "load" && (
-        <Dialog
-          title="Load from a Save Slot"
-          cancelLabel="Cancel"
+        <SaveSlotsDialog
+          simulation={simulation}
+          saveStore={saveStore}
+          action={{ kind: "load", replacesProgram: true, onLoad }}
           onClose={close}
-        >
-          <SaveSlots
-            simulation={simulation}
-            saveStore={saveStore}
-            action={{ kind: "load", confirm: true, onLoad }}
-          />
-        </Dialog>
+        />
       )}
     </main>
   );

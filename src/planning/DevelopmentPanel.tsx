@@ -29,7 +29,7 @@ export function DevelopmentPanel({
       {developments.length === 0 ? (
         <p>Nothing needs it.</p>
       ) : (
-        <ul className="developments" data-testid="developments">
+        <ul className="developments plain-list" data-testid="developments">
           {developments.map((development) => {
             const { id, name, costMillions, status, turnsLeft } = development;
             const chosen = chosenIds.includes(id);

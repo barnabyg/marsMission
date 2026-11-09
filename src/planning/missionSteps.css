@@ -41,9 +41,9 @@
   grid-template-columns: minmax(0, 1fr);
   justify-items: start;
   gap: 0.6rem;
-  padding: 0.75rem 1.25rem;
+  padding: var(--pad-card-compact);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
+  border-radius: var(--radius);
   background: var(--background);
 }
 
@@ -69,7 +69,7 @@
   height: 1.6em;
   border-radius: 50%;
   background: var(--accent);
-  color: var(--background);
+  color: var(--on-accent);
   font-size: var(--text-sm);
   font-weight: 700;
 }
@@ -82,18 +82,14 @@
   color: var(--muted);
 }
 
-/* A step that has folded, done and moved on from, is its heading, what it chose and a small Change button. */
+/* A step that has folded, done and moved on from, is its heading, what it chose and a small Change button
+   (MissionStepCard.tsx). */
 .mission-step.folded .mission-step-number {
   background: var(--good);
 }
 
 .mission-step-summary {
   color: var(--text);
-}
-
-.mission-step-change {
-  padding: 0.15rem 0.5rem;
-  font-size: var(--text-sm);
 }
 
 /* A step that doesn't apply yet is only its heading and why, and steps back. */

@@ -22,12 +22,19 @@
   --font-display: "Barlow Condensed", "Segoe UI", system-ui, sans-serif;
   font-family: var(--font-body);
   color-scheme: dark;
-  --background: #0b0d14;
-  --panel: #171b28;
+  /* The two surfaces as channels too, so that a translucent one keeps the same colour: rgb(var(--panel-rgb) / 80%). */
+  --background-rgb: 11 13 20;
+  --background: rgb(var(--background-rgb));
+  --panel-rgb: 23 27 40;
+  --panel: rgb(var(--panel-rgb));
+  /* A tooltip's own dark, between the background and a panel, so that it stands off whatever it covers. */
+  --tooltip-bg: #0f1320;
   --panel-border: #2d3448;
   --text: #e8eaf0;
   --muted: #a3aabd;
   --accent: #e2703a;
+  /* Text and marks on an accent fill, such as a primary button or a step's number. */
+  --on-accent: #10121a;
   --problem: #ff8f7a;
   --warning: #ffb547;
   --good: #7fd18b;
@@ -43,6 +50,31 @@
   --tutorial-tint: #282045;
   --tutorial-reason: #c9bff0;
   --tutorial-on-accent: #15111f;
+  /* Mission Mode's labels in the scene (src/mission/mission.css), one colour for each kind of thing, bright enough to
+     read over space and Mars. A crash is labelled in --problem. */
+  --scene-spacecraft: #ffd9bd;
+  --scene-surface: #ffe08a;
+  --scene-lander: #ffd46b;
+  --scene-rover: #6fe6d4;
+  --scene-fuel-plant: #ffb37a;
+  --scene-habitat: #f4efe4;
+  --scene-lab: #7fdcea;
+  --scene-crew: #9effa0;
+
+  /* Corners: --radius for panels, dialogs and cards on their own, --radius-sm for controls, tags and cards packed in a
+     list. Only a circle (50%) is written out, and nothing is rounded in px. */
+  --radius-sm: 0.3rem;
+  --radius: 0.5rem;
+  /* Wider than half a one-line tag's height, so that its ends are round. */
+  --radius-pill: 1rem;
+  /* Padding, from the roomiest to the tightest: a panel or dialog, a card on its own, a card packed with others or over
+     the scene, and a card in a list. A screen that needs a tighter fit picks a tighter one rather than a new value. */
+  --pad-panel: 1.5rem 2rem;
+  --pad-card: 1.2rem 1.5rem;
+  --pad-card-compact-y: 0.8rem;
+  --pad-card-compact-x: 1.2rem;
+  --pad-card-compact: var(--pad-card-compact-y) var(--pad-card-compact-x);
+  --pad-item: 0.4rem 0.9rem;
 }
 
 * {
@@ -107,7 +139,7 @@ select {
   color: inherit;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 0.3rem;
+  border-radius: var(--radius-sm);
   padding: 0.4rem 0.9rem;
 }
 
@@ -120,13 +152,13 @@ select {
     filter 120ms ease-out;
 }
 
-button:not(:disabled):hover,
+button:not(:disabled, [aria-disabled="true"]):hover,
 select:not(:disabled):hover {
   background-color: var(--hover);
   border-color: var(--muted);
 }
 
-button:not(:disabled):active,
+button:not(:disabled, [aria-disabled="true"]):active,
 select:not(:disabled):active {
   background-color: var(--pressed);
 }
@@ -134,26 +166,42 @@ select:not(:disabled):active {
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #10121a;
+  color: var(--on-accent);
   font-weight: 600;
 }
 
-button.primary:not(:disabled):hover {
+button.primary:not(:disabled, [aria-disabled="true"]):hover {
   background-color: var(--accent);
   border-color: var(--text);
   filter: brightness(1.12);
 }
 
-button.primary:not(:disabled):active {
+button.primary:not(:disabled, [aria-disabled="true"]):active {
   background-color: var(--accent);
   filter: brightness(0.88);
 }
 
-/* A disabled control is a flat neutral grey, unlike both an ordinary control and a primary one, and says why on hover through its title. */
+/* Two sizes besides the usual: small for a button that sits beside the text it acts on, such as Save, Load and Restart
+   Program or a step's Change, and large for the title screen's choices. */
+button.small {
+  padding: 0.15rem 0.5rem;
+  font-size: var(--text-sm);
+}
+
+button.large {
+  padding: 0.9rem 1.5rem;
+  font-size: var(--text-lg);
+}
+
+/* A disabled control is a flat neutral grey, unlike both an ordinary control and a primary one. One that can't be used
+   for a reason stays reachable by keyboard, marked aria-disabled, and says why (src/ui/UnavailableButton.tsx). */
 button:disabled,
+button[aria-disabled="true"],
 button.primary:disabled,
+button.primary[aria-disabled="true"],
 select:disabled,
-.mission-tabs button:disabled {
+.mission-tabs button:disabled,
+.mission-tabs button[aria-disabled="true"] {
   cursor: not-allowed;
   background: var(--disabled);
   border-color: var(--disabled);
@@ -175,4 +223,35 @@ select:disabled,
 .load-error pre {
   white-space: pre-wrap;
   color: var(--problem);
+}
+
+/* A heading over a small panel's parts, quieter than the panel's content, such as Events beside Mission Mode's scene. */
+.subheading {
+  font-size: var(--text-md);
+  color: var(--muted);
+}
+
+/* A list laid out by its own rules, with no bullets or indent. */
+.plain-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The two shapes of tag. A status, such as a technology's readiness, is a pill in the colour of what it says. */
+.tag-pill {
+  padding: 0 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+}
+
+/* A category, such as a Mission Event's kind or the Tutorial badge (src/ui/tutorial.css), is an uppercase label. */
+.tag-label,
+.tutorial-voice::before {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }

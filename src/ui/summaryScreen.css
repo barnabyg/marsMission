@@ -31,19 +31,24 @@
   width: 100%;
 }
 
-/* The Turn summary uses the screen's width: the changes and Milestones across the top, the rest in columns below. */
+/* The Turn summary uses the screen's width: Money, Science and Public Support across the top, and every other part in
+   headed cards in the same three columns under them. */
 .summary-screen.turn-summary {
   max-width: none;
   justify-items: stretch;
   padding: 3rem 4rem;
 }
 
-.turn-summary > h1 {
+.turn-summary-header h1 {
   font-size: var(--text-2xl);
 }
 
-.turn-summary > button {
-  justify-self: start;
+/* Continue at the top right, beside the heading, in the same place however many cards there are. */
+.turn-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
 }
 
 .turn-summary h2 {
@@ -55,21 +60,31 @@
   font-size: var(--text-md);
 }
 
-.summary-changes {
+.summary-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.5rem;
 }
 
+/* A card fills what its row leaves, so that no row has a gap (summaryGrid.ts). */
+.summary-card.span-2 {
+  grid-column: span 2;
+}
+
+.summary-card.span-3 {
+  grid-column: 1 / -1;
+}
+
 .value-change,
+.summary-card,
 .milestone-card {
   display: grid;
   align-content: start;
   gap: 0.8rem;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
-  padding: 1.2rem 1.5rem;
+  border-radius: var(--radius);
+  padding: var(--pad-card);
 }
 
 .value-change h2,
@@ -79,8 +94,30 @@
   gap: 0.5rem;
 }
 
-.value-change h2 {
+.value-change h2,
+.summary-card h2 {
   color: var(--muted);
+}
+
+.summary-card h2.problem {
+  color: var(--problem);
+}
+
+.summary-card.problem-card {
+  border-color: var(--problem);
+}
+
+/* A part of a card with a heading of its own, such as Ongoing Research under Science earned. */
+.summary-part {
+  display: grid;
+  gap: 0.3rem;
+}
+
+/* A list of points, unlike the plain lists of figures, Milestones and Mission Events. */
+.summary-card ul:not(.plain-list) {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 1.2rem;
 }
 
 .value-change-values {
@@ -124,8 +161,6 @@
 .value-change-parts {
   display: grid;
   gap: 0.3rem;
-  padding: 0;
-  list-style: none;
 }
 
 .money-lines h3 {
@@ -152,12 +187,22 @@
   gap: 0.8rem;
 }
 
-.summary-milestones ul {
+/* Scoped to the summaries: Planning Mode's Milestones panel has a .milestone-list of its own. */
+.summary-milestones .milestone-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(24rem, 1fr));
   gap: 1.5rem;
+}
+
+/* On the Turn summary, the Milestones share one card, which is edged as each Milestone is on the Program summary. */
+.summary-card.summary-milestones {
+  border-color: var(--accent);
+}
+
+.summary-card .milestone-card {
   padding: 0;
-  list-style: none;
+  background: none;
+  border: 0;
 }
 
 .milestone-card {
@@ -189,21 +234,6 @@
   color: var(--good);
 }
 
-/* Everything else flows down columns, each part kept whole. */
-.turn-summary-details {
-  columns: 3 28rem;
-  column-gap: 3rem;
-}
-
-.turn-summary .turn-summary-details > * {
-  break-inside: avoid;
-  margin: 0 0 1.5rem;
-}
-
-.turn-summary-details h2 {
-  margin-bottom: 0.4rem;
-}
-
 /* The Program summary: how it ended, its figures in a row of cards, its Milestones and its Crew and samples, packed
    tighter than the Turn summary so that every Milestone fits on a 1920×1080 screen. */
 .summary-screen.program-summary {
@@ -215,7 +245,7 @@
 .program-ending,
 .program-summary .value-change,
 .program-summary .milestone-card {
-  padding: 0.8rem 1.2rem;
+  padding: var(--pad-card-compact);
 }
 
 .program-ending {
@@ -223,7 +253,7 @@
   gap: 0.3rem;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
+  border-radius: var(--radius);
 }
 
 .program-ending h2 {
@@ -245,7 +275,7 @@
   color: var(--muted);
 }
 
-.program-summary .summary-milestones ul {
+.program-summary .milestone-list {
   grid-template-columns: repeat(auto-fill, minmax(22rem, 1fr));
   gap: 0.75rem;
 }
@@ -268,8 +298,6 @@
 .summary-mission-events ol {
   display: grid;
   gap: 0.6rem;
-  padding: 0;
-  list-style: none;
 }
 
 .summary-mission-events li {

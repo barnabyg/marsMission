@@ -12,10 +12,13 @@ async function expectTooltip(page: Page, term: Locator, name: Term) {
   await expect(page.getByRole("tooltip")).toHaveCount(0);
 }
 
-/** The terms under the locator that show an underline, each as often as it shows one. */
+/**
+ * The terms under the locator that show an underline, each as often as it shows one. A status pill's outline, which
+ * includes its bottom edge, isn't an underline.
+ */
 function underlinedTerms(scope: Locator): Promise<string[]> {
   return scope
-    .locator(".term")
+    .locator(".term:not(.tag-pill)")
     .evaluateAll((terms) =>
       terms
         .filter((term) => getComputedStyle(term).borderBottomStyle !== "none")

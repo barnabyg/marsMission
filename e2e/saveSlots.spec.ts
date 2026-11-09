@@ -10,6 +10,12 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import {
+  chooseSlotAndConfirm,
+  confirmSlotButton,
+  loadFromSlot,
+  saveToSlot,
+} from "./saveHelpers";
 import { endTurnAndContinue } from "./turnHelpers";
 import { orbiterAndLanderSeed, successSeed } from "./seeds";
 
@@ -29,7 +35,8 @@ test("saves to a slot, moves on a Turn, loads the slot and sees the earlier stat
   await expect(page.getByTestId("save-slot-2")).toContainText("Empty");
   await expect(page.getByTestId("save-slot-3")).toContainText("Empty");
   expect(await termsWithoutTooltips(page)).toEqual([]);
-  await slot.getByRole("button", { name: "Save here" }).click();
+  await slot.getByRole("radio").check();
+  await confirmSlotButton(page).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("status")).toContainText("Saved to Save Slot 1");
 
@@ -55,10 +62,13 @@ test("saves to a slot, moves on a Turn, loads the slot and sees the earlier stat
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 
   await openLoadDialog(page);
-  await slot.getByRole("button", { name: "Load" }).click();
-  const confirmLoad = page.getByRole("group", { name: "Confirm loading" });
+  await slot.getByRole("radio").check();
+  const confirmLoad = confirmSlotButton(page);
+  await expect(confirmLoad).toHaveText(
+    "Load Turn 1, replacing the current Program",
+  );
   expect(await termsWithoutTooltips(page)).toEqual([]);
-  await confirmLoad.getByRole("button", { name: "Yes, load it" }).click();
+  await confirmLoad.click();
   await expect(page.getByTestId("turn-number")).toHaveText("1");
   await expect(page.getByTestId("public-support")).toHaveText("100");
   await expect(page.getByTestId("science")).toHaveText("0");
@@ -83,17 +93,13 @@ test("keeps Survey progress, sites landed at and time left through saving to a s
   await endTurnAndContinue(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 
-  await openSaveDialog(page);
-  await page
-    .getByTestId("save-slot-1")
-    .getByRole("button", { name: "Save here" })
-    .click();
+  await saveToSlot(page, 1);
   await page.reload();
   await page
     .getByTestId("save-slot-1")
     .getByRole("button", { name: "Load" })
     .click();
-  await page.getByRole("button", { name: "Yes, load it" }).click();
+  await confirmSlotButton(page).click();
 
   await expect(page.getByTestId("turn-number")).toHaveText("2");
   await expect(operatingRow(page, "Pathfinder Orbiter")).toContainText(
@@ -121,9 +127,7 @@ test("resets the plan when loading a slot of the same Program and Turn", async (
   page,
 }) => {
   await page.goto(`/?seed=${successSeed}`);
-  const slot = page.getByTestId("save-slot-1");
-  await openSaveDialog(page);
-  await slot.getByRole("button", { name: "Save here" }).click();
+  await saveToSlot(page, 1);
 
   // The Mission Events show once something is ticked.
   await chooseAssets(page, ["Pathfinder Orbiter"]);
@@ -133,9 +137,7 @@ test("resets the plan when loading a slot of the same Program and Turn", async (
     .getByRole("combobox");
   await launchReliability.selectOption("redundant");
 
-  await openLoadDialog(page);
-  await slot.getByRole("button", { name: "Load" }).click();
-  await page.getByRole("button", { name: "Yes, load it" }).click();
+  await loadFromSlot(page, 1);
   await expect(
     page.getByRole("checkbox", { name: /Pathfinder Orbiter/ }),
   ).not.toBeChecked();
@@ -147,11 +149,7 @@ test("asks before a slot loaded when reopening the game replaces the automatic s
   page,
 }) => {
   await page.goto(`/?seed=${successSeed}`);
-  await openSaveDialog(page);
-  await page
-    .getByTestId("save-slot-1")
-    .getByRole("button", { name: "Save here" })
-    .click();
+  await saveToSlot(page, 1);
   await page.reload();
 
   await page
@@ -159,17 +157,23 @@ test("asks before a slot loaded when reopening the game replaces the automatic s
     .getByRole("button", { name: "Load" })
     .click();
   await expect(page.getByTestId("opening-screen")).toBeVisible();
-  await page.getByRole("button", { name: "Keep playing" }).click();
+  await expect(confirmSlotButton(page)).toHaveText(
+    "Load Turn 1, replacing the current Program",
+  );
+  await page.keyboard.press("Escape");
   await expect(
     page.getByRole("button", { name: "Continue this Program" }),
   ).toBeVisible();
+  // The slot list is shown again, with focus back on the Load that asked.
+  await expect(
+    page.getByTestId("save-slot-1").getByRole("button", { name: "Load" }),
+  ).toBeFocused();
 });
 
 test("asks before overwriting a used slot", async ({ page }) => {
   await page.goto(`/?seed=${successSeed}`);
   const slot = page.getByTestId("save-slot-1");
-  await openSaveDialog(page);
-  await slot.getByRole("button", { name: "Save here" }).click();
+  await saveToSlot(page, 1);
 
   await page
     .getByRole("button", { name: "End Turn without launching" })
@@ -178,16 +182,17 @@ test("asks before overwriting a used slot", async ({ page }) => {
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 
   await openSaveDialog(page);
-  await slot.getByRole("button", { name: "Save here" }).click();
-  const confirm = page.getByRole("group", { name: "Confirm overwriting" });
-  await expect(confirm).toBeVisible();
+  await slot.getByRole("radio").check();
+  const confirm = confirmSlotButton(page);
+  await expect(confirm).toHaveText("Overwrite Save Slot 1 (Turn 1)");
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await expect(slot).toContainText("Turn 1");
-  await confirm.getByRole("button", { name: "Keep it" }).click();
+  await page.getByRole("button", { name: "Cancel" }).click();
+  await openSaveDialog(page);
   await expect(slot).toContainText("Turn 1");
 
-  await slot.getByRole("button", { name: "Save here" }).click();
-  await confirm.getByRole("button", { name: "Yes, overwrite it" }).click();
+  await slot.getByRole("radio").check();
+  await confirm.click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await openSaveDialog(page);
   await expect(slot).toContainText("Turn 2");
@@ -197,11 +202,7 @@ test("reaches the slots when reopening the game, even with no automatic save", a
   page,
 }) => {
   await page.goto(`/?seed=${successSeed}`);
-  await openSaveDialog(page);
-  await page
-    .getByTestId("save-slot-2")
-    .getByRole("button", { name: "Save here" })
-    .click();
+  await saveToSlot(page, 2);
   // With no automatic save, as after a Program that was cancelled.
   await page.evaluate((key) => {
     localStorage.removeItem(key);
@@ -224,11 +225,7 @@ test("gives a clear message for a corrupt slot, without affecting the others", a
   page,
 }) => {
   await page.goto(`/?seed=${successSeed}`);
-  await openSaveDialog(page);
-  await page
-    .getByTestId("save-slot-1")
-    .getByRole("button", { name: "Save here" })
-    .click();
+  await saveToSlot(page, 1);
   await page.evaluate(
     ([key]) => {
       localStorage.setItem(key, "{not json");
@@ -247,13 +244,13 @@ test("gives a clear message for a corrupt slot, without affecting the others", a
   // Planning Mode's dialog says the same, and the game carries on.
   await openLoadDialog(page);
   await expect(corrupt).toContainText("corrupt");
-  await expect(corrupt.getByRole("button", { name: "Load" })).toHaveCount(0);
+  await expect(corrupt.getByRole("radio")).toHaveCount(0);
   await expect(
-    page.getByTestId("save-slot-1").getByRole("button", { name: "Load" }),
+    page.getByTestId("save-slot-1").getByRole("radio"),
   ).toBeVisible();
-  await expect(
-    page.getByTestId("save-slot-3").getByRole("button", { name: "Load" }),
-  ).toHaveCount(0);
+  await expect(page.getByTestId("save-slot-3").getByRole("radio")).toHaveCount(
+    0,
+  );
   await page.getByRole("button", { name: "Cancel" }).click();
   await expect(page.getByTestId("turn-number")).toHaveText("1");
 });
@@ -278,8 +275,7 @@ test("closes the Save and Load dialogs with Escape or Cancel, changing nothing",
   page,
 }) => {
   await page.goto(`/?seed=${successSeed}`);
-  await openSaveDialog(page);
-  await page.getByTestId("save-slot-1").getByRole("button").click();
+  await saveToSlot(page, 1);
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   for (const open of [openSaveDialog, openLoadDialog]) {
@@ -296,18 +292,51 @@ test("closes the Save and Load dialogs with Escape or Cancel, changing nothing",
   await openSaveDialog(page);
   const slot = page.getByTestId("save-slot-1");
   const before = await slot.locator(".save-slot-text").textContent();
-  await slot.getByRole("button", { name: "Save here" }).click();
+  await slot.getByRole("radio").check();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await openLoadDialog(page);
-  await slot.getByRole("button", { name: "Load" }).click();
+  await slot.getByRole("radio").check();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByTestId("turn-number")).toHaveText("1");
 
   await openLoadDialog(page);
   await expect(slot.locator(".save-slot-text")).toHaveText(before ?? "");
+});
+
+test("picks a slot and saves to it with the keyboard alone", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  await openSaveDialog(page);
+  const confirm = confirmSlotButton(page);
+  await expect(page.getByRole("dialog").getByRole("radiogroup")).toBeVisible();
+  const choose = page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Choose a Save Slot" });
+  await expect(choose).toBeDisabled();
+  // Back from Cancel to the confirm button, which says why it can't be used yet, and on to the slots.
+  await page.keyboard.press("Shift+Tab");
+  await expect(choose).toBeFocused();
+  await expect(choose).toHaveAccessibleDescription(
+    "No Save Slot is picked yet.",
+  );
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Space");
+  await expect(confirm).toHaveText("Save to Save Slot 1");
+  await page.keyboard.press("ArrowDown");
+  await expect(
+    page.getByTestId("save-slot-2").getByRole("radio"),
+  ).toBeChecked();
+  await expect(confirm).toHaveText("Save to Save Slot 2");
+  await page.keyboard.press("Tab");
+  await expect(confirm).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status")).toContainText("Saved to Save Slot 2");
 });
 
 test("explains game terms inside a dialog, above the dialog itself", async ({
@@ -339,7 +368,7 @@ test("says so in the dialog if the browser won't store a save", async ({
   });
   await openSaveDialog(page);
   const slot = page.getByTestId("save-slot-1");
-  await slot.getByRole("button", { name: "Save here" }).click();
+  await chooseSlotAndConfirm(page, 1);
   await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
     "wouldn't store",
   );
@@ -384,12 +413,7 @@ test("loads a save made before the Save and Load dialogs existed", async ({
       }),
     ] as const,
   );
-  await openLoadDialog(page);
-  await page
-    .getByTestId("save-slot-1")
-    .getByRole("button", { name: "Load" })
-    .click();
-  await page.getByRole("button", { name: "Yes, load it" }).click();
+  await loadFromSlot(page, 1);
   await expect(page.getByTestId("turn-number")).toHaveText("3");
   await expect(page.getByTestId("public-support")).toHaveText("227");
   // The upgrade gives it the shortest Service Life, counted from its arrival.

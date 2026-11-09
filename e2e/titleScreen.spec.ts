@@ -1,10 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
-import {
-  openSaveDialog,
-  termsWithoutTooltips,
-  watchForProblems,
-} from "./helpers";
+import { termsWithoutTooltips, watchForProblems } from "./helpers";
+import { saveToSlot } from "./saveHelpers";
 import { successSeed } from "./seeds";
 
 test("shows the game's name over Mars, with Continue first and no Save Slots when none is used", async ({
@@ -46,11 +43,7 @@ test("lists only the used Save Slots, with Turn, Launch Window and Money, and lo
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   const money = (await page.getByTestId("money").textContent()) ?? "";
-  await openSaveDialog(page);
-  await page
-    .getByTestId("save-slot-2")
-    .getByRole("button", { name: "Save here" })
-    .click();
+  await saveToSlot(page, 2);
   // With no automatic save, as after a Program that was cancelled.
   await page.evaluate((key) => {
     localStorage.removeItem(key);
@@ -73,15 +66,11 @@ test("lists only the used Save Slots, with Turn, Launch Window and Money, and lo
   await expect(screen.getByTestId("save-slot-3")).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  // Load opens the Load dialog, which shows every slot, empty ones too.
-  await screen.getByRole("button", { name: "Load…" }).click();
-  const dialog = page.getByRole("dialog", { name: "Load from a Save Slot" });
-  await expect(dialog.getByTestId("save-slot-1")).toContainText("Empty");
-  await expect(dialog.getByTestId("save-slot-2")).toContainText("Turn 1");
-  await dialog.getByRole("button", { name: "Cancel" }).click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-
+  // Each slot's own Load is the one way to load: no Load… beside Start a new Program.
+  await expect(screen.getByRole("button", { name: "Load…" })).toHaveCount(0);
+  // With no automatic save to lose, it loads straight away.
   await slot.getByRole("button", { name: "Load" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByTestId("turn-number")).toHaveText("1");
   expect(problems).toEqual([]);
 });

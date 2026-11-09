@@ -22,9 +22,9 @@ export function EventsColumn({
   const happened = timeline.entries.slice(0, entriesHappened);
   return (
     <aside className="events-column" data-testid="events-column">
-      <h2>Events</h2>
+      <h2 className="subheading">Events</h2>
       {happened.length === 0 && <p>Nothing yet</p>}
-      <ol data-testid="event-entries">
+      <ol className="plain-list" data-testid="event-entries">
         {happened
           .map((entry, index) => {
             const { picture, tag, icon, failed } = eventCardFor(entry);
@@ -55,7 +55,7 @@ export function EventsColumn({
                   )}
                 </div>
                 <div className="event-meta">
-                  <span className="event-tag">
+                  <span className="event-tag tag-label">
                     <Icon name={icon} />
                     <GameText>{tag}</GameText>
                   </span>

@@ -7,10 +7,11 @@
   background: var(--tutorial-tint);
   border: 1px solid var(--tutorial-accent);
   border-left: 0.4rem solid var(--tutorial-accent);
-  border-radius: 0.5rem;
+  border-radius: var(--radius);
 }
 
-/* The same badge on every block. It is only seen: each block already says in words that it is Tutorial mode. */
+/* The same badge on every block, a category label (styles.css) filled in the tutorial's colour. It is only seen: each
+   block already says in words that it is Tutorial mode. */
 .tutorial-voice::before {
   /* The plain line is for browsers without alternative text for content, which drop the line after it. */
   content: "Tutorial";
@@ -18,14 +19,9 @@
   display: block;
   width: fit-content;
   padding: 0.1rem 0.6rem;
-  border-radius: 0.25rem;
+  border-radius: var(--radius-sm);
   background: var(--tutorial-accent);
   color: var(--tutorial-on-accent);
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 dialog.tutorial-voice::before {

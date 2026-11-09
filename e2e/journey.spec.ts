@@ -203,6 +203,7 @@ test("restarts with a new Program after asking first", async ({ page }) => {
     "Save",
     "Load",
     "Restart Program",
+    "?",
   ]);
 
   const restart = page.getByRole("button", { name: "Restart Program" });

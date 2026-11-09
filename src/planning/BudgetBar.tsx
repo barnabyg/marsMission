@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { formatMoney } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { Icon, type IconName } from "../ui/Icon";
+import { UnavailableButton } from "../ui/UnavailableButton";
 import { budgetGauge } from "./budgetGauge";
 
 interface BudgetBarProps {
@@ -13,7 +14,7 @@ interface BudgetBarProps {
   moneyMillions: number;
   massTonnes: number;
   capacityTonnes: number;
-  /** What stops the Mission launching, which disables Launch Mission and shows on hovering over it. */
+  /** What stops the Mission launching, which disables Launch Mission and describes it. */
   launchProblems: string[];
   /** What stops the Turn ending without launching, likewise. */
   withoutLaunchingProblems: string[];
@@ -89,26 +90,22 @@ export function BudgetBar({
             {massTonnes} of {capacityTonnes} tonnes
           </strong>
         </BudgetGauge>
-        <button
-          type="button"
+        {/* Reachable by keyboard even when it can't be used, described by why, as is the button at the far end. */}
+        <UnavailableButton
           className="primary"
-          disabled={launchProblems.length > 0}
-          // A disabled button says why on hover, as Mission Mode's skip button says what it does.
-          title={launchProblems.join(" ") || undefined}
+          unavailable={launchProblems.join(" ") || undefined}
           onClick={onLaunch}
         >
           Launch Mission
-        </button>
+        </UnavailableButton>
         {/* Plain, and at the far end, away from Launch Mission, so that the primary action stands alone. */}
-        <button
-          type="button"
+        <UnavailableButton
           className="end-without-launching"
-          disabled={withoutLaunchingProblems.length > 0}
-          title={withoutLaunchingProblems.join(" ") || undefined}
+          unavailable={withoutLaunchingProblems.join(" ") || undefined}
           onClick={onEndWithoutLaunching}
         >
           End Turn without launching
-        </button>
+        </UnavailableButton>
       </div>
     </div>
   );

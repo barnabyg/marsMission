@@ -2,8 +2,8 @@ dialog {
   color: var(--text);
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
-  padding: 1.5rem 2rem;
+  border-radius: var(--radius);
+  padding: var(--pad-panel);
 }
 
 dialog::backdrop {
@@ -22,4 +22,26 @@ dialog p {
   display: flex;
   gap: 1rem;
   margin-top: 1.5rem;
+}
+
+/* The glossary: each term over what it means, in a column narrow enough to read, scrolling within the dialog. */
+.glossary {
+  max-width: 48rem;
+}
+
+.glossary dl {
+  margin: 0;
+}
+
+.glossary dl > div + div {
+  margin-top: 0.8rem;
+}
+
+.glossary dt {
+  font-weight: 600;
+}
+
+.glossary dd {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
 }

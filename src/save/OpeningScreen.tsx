@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Program, Simulation } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import {
   anySlotUsed as anySlotUsedIn,
-  LoadFromSlotDialog,
-} from "./LoadFromSlotDialog";
-import { SaveSlots } from "./SaveSlots";
+  SaveSlotsDialog,
+  UsedSaveSlots,
+} from "./SaveSlots";
 import type { LoadedSave, SaveStore } from "./saveStore";
+import type { ManualSlot } from "./slotChoice";
 
 interface OpeningScreenProps {
   simulation: Simulation;
@@ -27,13 +28,21 @@ export function OpeningScreen({
   onLoad,
 }: OpeningScreenProps) {
   const [anySlotUsed] = useState(() => anySlotUsedIn(saveStore));
-  const [loadOpen, setLoadOpen] = useState(false);
-  const loadAction = {
-    kind: "load",
-    // Loading replaces the automatic save, so it asks first when there's one to lose.
-    confirm: automaticSave.kind === "program",
-    onLoad,
-  } as const;
+  // The slot whose Load asked first, because loading it replaces the automatic save.
+  const [confirmingSlot, setConfirmingSlot] = useState<ManualSlot | null>(null);
+  // The slot list is hidden while the dialog asks, so the Load that opened it is gone when it closes: focus goes back
+  // to that slot's Load once the list is shown again.
+  const returnTo = useRef<ManualSlot | null>(null);
+  const slotList = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (confirmingSlot !== null || returnTo.current === null) return;
+    slotList.current
+      ?.querySelector<HTMLButtonElement>(
+        `[data-testid="save-slot-${String(returnTo.current)}"] button`,
+      )
+      ?.focus();
+    returnTo.current = null;
+  }, [confirmingSlot]);
 
   return (
     <main className="title-screen" data-testid="opening-screen">
@@ -49,7 +58,7 @@ export function OpeningScreen({
           {automaticSave.kind === "program" && (
             <button
               type="button"
-              className="primary"
+              className="primary large"
               onClick={() => {
                 onContinue(automaticSave.program);
               }}
@@ -57,45 +66,41 @@ export function OpeningScreen({
               Continue this Program
             </button>
           )}
-          <button type="button" onClick={onStartNew}>
+          <button type="button" className="large" onClick={onStartNew}>
             Start a new Program
           </button>
-          {anySlotUsed && (
-            <button
-              type="button"
-              onClick={() => {
-                setLoadOpen(true);
-              }}
-            >
-              {/* The ellipsis says it opens a dialog, and tells it apart from each slot's own Load. */}
-              Load…
-            </button>
-          )}
         </div>
-        {anySlotUsed && !loadOpen && (
+        {/* Hidden while the dialog asks, which lists the same slots. */}
+        {anySlotUsed && confirmingSlot === null && (
           <section
+            ref={slotList}
             className="title-screen-slots"
             aria-labelledby="title-screen-slots"
           >
-            <h2 id="title-screen-slots">
+            <h2 id="title-screen-slots" className="subheading">
               <GameText heading>Save Slots</GameText>
             </h2>
-            <SaveSlots
+            <UsedSaveSlots
               simulation={simulation}
               saveStore={saveStore}
-              action={loadAction}
-              compact
+              onChoose={(slot, program) => {
+                // Loading replaces the automatic save, so it asks first when there's one to lose.
+                if (automaticSave.kind === "program") setConfirmingSlot(slot);
+                else onLoad(program);
+              }}
             />
           </section>
         )}
       </div>
-      {loadOpen && (
-        <LoadFromSlotDialog
+      {confirmingSlot !== null && (
+        <SaveSlotsDialog
           simulation={simulation}
           saveStore={saveStore}
-          action={loadAction}
+          action={{ kind: "load", replacesProgram: true, onLoad }}
+          initialSlot={confirmingSlot}
           onClose={() => {
-            setLoadOpen(false);
+            returnTo.current = confirmingSlot;
+            setConfirmingSlot(null);
           }}
         />
       )}

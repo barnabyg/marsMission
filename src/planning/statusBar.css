@@ -94,7 +94,7 @@
   display: block;
   width: var(--track-width);
   height: 0.6rem;
-  border-radius: 0.3rem;
+  border-radius: var(--radius-sm);
   background: var(--background);
   border: 1px solid var(--panel-border);
 }

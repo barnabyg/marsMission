@@ -84,7 +84,7 @@ function MoneyList({ heading, lines }: MoneyListProps) {
           </>
         )}
       </h3>
-      <ul>
+      <ul className="plain-list">
         {lines.length === 0 && <li>Nothing</li>}
         {lines.map(({ name, millions }) => (
           <li key={name}>
@@ -99,11 +99,14 @@ function MoneyList({ heading, lines }: MoneyListProps) {
   );
 }
 
-/** Money, Science and Public Support before and after the Turn, with where the Money went and came from. */
+/**
+ * Money, Science and Public Support before and after the Turn, with where the Money went and came from: the first row
+ * of the Turn summary's cards.
+ */
 export function SummaryChanges({ summary }: { summary: TurnSummary }) {
   const money = turnMoney(summary);
   return (
-    <div className="summary-changes">
+    <>
       <ValueChange
         icon="coins"
         name="Money"
@@ -134,7 +137,7 @@ export function SummaryChanges({ summary }: { summary: TurnSummary }) {
         change={summary.publicSupportEnd - summary.publicSupportStart}
         testId="summary-public-support"
       >
-        <ul className="value-change-parts">
+        <ul className="value-change-parts plain-list">
           <li>
             <span>
               <GameText>Gained from Milestones and Ongoing Research</GameText>
@@ -157,6 +160,6 @@ export function SummaryChanges({ summary }: { summary: TurnSummary }) {
           </li>
         </ul>
       </ValueChange>
-    </div>
+    </>
   );
 }

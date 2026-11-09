@@ -1,9 +1,6 @@
 .save-slots {
   display: grid;
   gap: 0.8rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 .save-slot-row {
@@ -16,6 +13,34 @@
   min-width: 34rem;
 }
 
-.save-slots .confirm {
-  margin-top: 0.6rem;
+/* In the Save and Load dialogs the whole row picks the slot, and the picked one stands out. */
+.save-slot-row.choosable {
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: var(--pad-item);
+  /* Out by its padding, so that the slots' text lines up with the rest of the dialog. */
+  margin: -0.4rem -0.9rem;
+}
+
+.save-slot-row.choosable:hover {
+  background: var(--hover);
+  border-color: var(--panel-border);
+}
+
+.save-slot-row.choosable:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--hover);
+}
+
+.save-slot-row input[type="radio"],
+.save-slot-no-choice {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+}
+
+.save-slots-warning {
+  margin-top: 1rem;
 }

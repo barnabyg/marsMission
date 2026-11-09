@@ -6,13 +6,13 @@
   background: var(--background);
   border: 1px solid var(--panel-border);
   border-left: 3px solid var(--panel-border);
-  border-radius: 6px;
-  padding: 0 0.9rem 0.8rem;
+  border-radius: var(--radius-sm);
+  padding: 0 var(--pad-card-compact-x) var(--pad-card-compact-y);
 }
 
 .event-entry.latest {
   border-color: var(--accent);
-  box-shadow: 0 0 1.2rem rgb(226 112 58 / 25%);
+  box-shadow: 0 0 1.2rem color-mix(in srgb, var(--accent) 25%, transparent);
   animation: event-arrives 0.45s ease-out;
 }
 
@@ -22,17 +22,17 @@
 
 .event-entry.failed.latest {
   border-color: var(--problem);
-  box-shadow: 0 0 1.2rem rgb(255 143 122 / 25%);
+  box-shadow: 0 0 1.2rem color-mix(in srgb, var(--problem) 25%, transparent);
 }
 
 .event-picture {
   position: relative;
   /* Out to the card's edges, past its padding. */
-  margin: 0 -0.9rem 0.2rem;
+  margin: 0 calc(-1 * var(--pad-card-compact-x)) 0.2rem;
   height: 4.5rem;
   /* Clipped here rather than on the card, which the scrolling list would then be free to squash. */
   overflow: hidden;
-  border-radius: 0 5px 0 0;
+  border-radius: 0 var(--radius-sm) 0 0;
   border-bottom: 1px solid var(--panel-border);
   transition: height 0.3s ease-out;
 }
@@ -53,8 +53,8 @@
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgb(255 80 60 / 10%),
-    rgb(255 80 60 / 35%)
+    color-mix(in srgb, var(--problem) 10%, transparent),
+    color-mix(in srgb, var(--problem) 35%, transparent)
   );
   pointer-events: none;
 }
@@ -69,7 +69,7 @@
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
-  background: rgb(11 13 20 / 80%);
+  background: rgb(var(--background-rgb) / 80%);
   color: var(--problem);
 }
 
@@ -82,14 +82,12 @@
   font-size: var(--text-sm);
 }
 
+/* What kind of event it was, as a category label (styles.css), in the accent, or the problem colour for a failure. */
 .event-tag {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   color: var(--accent);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .event-entry.failed .event-tag {

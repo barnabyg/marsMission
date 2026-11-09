@@ -33,30 +33,13 @@
   align-content: start;
 }
 
-/* Tutorial mode, when it shows, comes first and takes the room its advice needs, up to a share of the column. */
-.planning-side:has(> .tutorial-panel) {
-  grid-template-rows: minmax(0, auto) minmax(0, 1fr) minmax(0, auto) minmax(
-      0,
-      auto
-    );
-}
-
-.planning-side:has(> .tutorial-panel + .panel.empty) {
-  grid-template-rows: minmax(0, auto) auto minmax(0, auto) minmax(0, auto);
-  align-content: start;
-}
-
-.planning-side .tutorial-panel {
-  max-height: 45vh;
-}
-
 /* An empty panel is one compact line: its heading and an encouraging note. */
 .planning-side .panel.empty {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.4rem 1.5rem;
-  padding: 1rem 2rem;
+  padding-block: 1rem;
 }
 
 .empty-note {
@@ -78,8 +61,8 @@
   justify-items: start;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
-  padding: 1.5rem 2rem;
+  border-radius: var(--radius);
+  padding: var(--pad-panel);
 }
 
 .panel label {
@@ -261,8 +244,6 @@
   display: grid;
   gap: 0.25rem;
   width: 100%;
-  padding: 0;
-  list-style: none;
 }
 
 .operating-assets li {
@@ -300,8 +281,6 @@
   display: grid;
   gap: 0.4rem;
   width: 100%;
-  padding: 0;
-  list-style: none;
 }
 
 .developments li {
@@ -323,9 +302,6 @@
   display: grid;
   /* Tight enough for the six Mission Events of a refuelled Mission with a landing to fit at 150% scaling. */
   gap: 0.3rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 /* Each row wraps, so that where there isn't room a Contingency sits under its Mission Event rather than squeezing beside it. */
@@ -369,17 +345,12 @@
   color: var(--problem);
 }
 
-/* Save, Load and Restart Program, small and under the heading, so that they take no row of their own. */
+/* Save, Load and Restart Program, small buttons under the heading, so that they take no row of their own. */
 .program-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.3rem 0.4rem;
-}
-
-.program-actions button {
-  padding: 0.15rem 0.5rem;
-  font-size: var(--text-sm);
 }
 
 /* "Saved to Save Slot 1." goes under the buttons rather than widening the heading's column. */
@@ -389,59 +360,4 @@
   color: var(--muted);
   font-size: var(--text-sm);
   line-height: 1;
-}
-
-.tutorial-heading {
-  justify-self: stretch;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.6rem 1.5rem;
-}
-
-/* Tutorial mode's advice: why it changed course, the route with this stage marked, then this Turn's suggestions. */
-.tutorial-advice {
-  display: grid;
-  gap: 0.8rem;
-}
-
-.tutorial-advice p,
-.tutorial-advice h3 {
-  margin: 0;
-}
-
-.tutorial-change {
-  border-left: 0.3rem solid var(--tutorial-accent);
-  padding-left: 0.8rem;
-}
-
-.tutorial-stage {
-  display: grid;
-  gap: 0.4rem;
-}
-
-.tutorial-route {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 1.2rem;
-  margin: 0;
-  padding-left: 1.4rem;
-  color: var(--muted);
-}
-
-.tutorial-route li.done {
-  text-decoration: line-through;
-}
-
-.tutorial-route li[aria-current="step"] {
-  color: inherit;
-  font-weight: 700;
-}
-
-.tutorial-items {
-  display: grid;
-  gap: 0.6rem;
-  margin: 0;
-  padding-left: 1.4rem;
 }

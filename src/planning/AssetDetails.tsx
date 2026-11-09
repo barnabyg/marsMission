@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   formatMoney,
   type PlannedActivity,
@@ -48,14 +48,6 @@ function activityDetails(activity: PlannedActivity): string {
  * matters when choosing it. It only reads the plan, so closing it leaves the Mission as it was.
  */
 export function AssetDetails({ asset, planned, onClose }: AssetDetailsProps) {
-  // What opened it, taken before the dialog moves focus to its Close button, so that focus goes back there afterwards.
-  const [opener] = useState(() => document.activeElement);
-  useEffect(
-    () => () => {
-      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
-    },
-    [opener],
-  );
   return (
     <Dialog title={asset.name} cancelLabel="Close" onClose={onClose}>
       <div className="asset-details">

@@ -6,10 +6,12 @@ import { knownSeed } from "./knownSeed";
 import { openingScreen, type GameServices } from "./screens";
 import { createSaveStore } from "../save/saveStore";
 import { createSimulation } from "../simulation/simulation";
+import { GlossaryLayer } from "../ui/Glossary";
 import { TooltipLayer } from "../ui/TooltipLayer";
 // In cascade order: where two rules are equally specific, the one in a later file wins.
 import "./styles.css";
 import "../planning/planning.css";
+import "../planning/tutorialPanel.css";
 import "../planning/missionSteps.css";
 import "../planning/assetCards.css";
 import "../planning/statusBar.css";
@@ -50,6 +52,7 @@ try {
     <StrictMode>
       <App services={services} firstScreen={openingScreen(services)} />
       <TooltipLayer />
+      <GlossaryLayer />
     </StrictMode>,
   );
 } catch (error) {
