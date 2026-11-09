@@ -6,12 +6,15 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { openLaunchStep } from "./planningHelpers";
 import { labSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });
 
 /** Lands this Asset alone at Jezero Crater on the Meridian Medium, as the seed search plays it, and ends the Turn. */
 async function landAtJezero(page: Page, name: string): Promise<void> {
+  // Once something is ticked, the Launch Vehicle step has folded, so Change opens it first.
+  await openLaunchStep(page);
   await page
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-medium");
