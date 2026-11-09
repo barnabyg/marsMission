@@ -3,10 +3,11 @@ import type { Program, Simulation } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import {
   anySlotUsed as anySlotUsedIn,
-  LoadFromSlotDialog,
-} from "./LoadFromSlotDialog";
-import { SaveSlots } from "./SaveSlots";
+  SaveSlotsDialog,
+  UsedSaveSlots,
+} from "./SaveSlots";
 import type { LoadedSave, SaveStore } from "./saveStore";
+import type { ManualSlot } from "./slotChoice";
 
 interface OpeningScreenProps {
   simulation: Simulation;
@@ -27,13 +28,8 @@ export function OpeningScreen({
   onLoad,
 }: OpeningScreenProps) {
   const [anySlotUsed] = useState(() => anySlotUsedIn(saveStore));
-  const [loadOpen, setLoadOpen] = useState(false);
-  const loadAction = {
-    kind: "load",
-    // Loading replaces the automatic save, so it asks first when there's one to lose.
-    confirm: automaticSave.kind === "program",
-    onLoad,
-  } as const;
+  // The slot whose Load asked first, because loading it replaces the automatic save.
+  const [confirmingSlot, setConfirmingSlot] = useState<ManualSlot | null>(null);
 
   return (
     <main className="title-screen" data-testid="opening-screen">
@@ -60,19 +56,9 @@ export function OpeningScreen({
           <button type="button" onClick={onStartNew}>
             Start a new Program
           </button>
-          {anySlotUsed && (
-            <button
-              type="button"
-              onClick={() => {
-                setLoadOpen(true);
-              }}
-            >
-              {/* The ellipsis says it opens a dialog, and tells it apart from each slot's own Load. */}
-              Load…
-            </button>
-          )}
         </div>
-        {anySlotUsed && !loadOpen && (
+        {/* Hidden while the dialog asks, which lists the same slots. */}
+        {anySlotUsed && confirmingSlot === null && (
           <section
             className="title-screen-slots"
             aria-labelledby="title-screen-slots"
@@ -80,22 +66,26 @@ export function OpeningScreen({
             <h2 id="title-screen-slots">
               <GameText heading>Save Slots</GameText>
             </h2>
-            <SaveSlots
+            <UsedSaveSlots
               simulation={simulation}
               saveStore={saveStore}
-              action={loadAction}
-              compact
+              onChoose={(slot, program) => {
+                // Loading replaces the automatic save, so it asks first when there's one to lose.
+                if (automaticSave.kind === "program") setConfirmingSlot(slot);
+                else onLoad(program);
+              }}
             />
           </section>
         )}
       </div>
-      {loadOpen && (
-        <LoadFromSlotDialog
+      {confirmingSlot !== null && (
+        <SaveSlotsDialog
           simulation={simulation}
           saveStore={saveStore}
-          action={loadAction}
+          action={{ kind: "load", replacesProgram: true, onLoad }}
+          initialSlot={confirmingSlot}
           onClose={() => {
-            setLoadOpen(false);
+            setConfirmingSlot(null);
           }}
         />
       )}

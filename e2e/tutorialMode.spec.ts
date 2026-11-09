@@ -1,10 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import {
-  openLoadDialog,
-  openSaveDialog,
-  termsWithoutTooltips,
-  watchForProblems,
-} from "./helpers";
+import { termsWithoutTooltips, watchForProblems } from "./helpers";
+import { loadFromSlot, saveToSlot } from "./saveHelpers";
 import { endTurnWithoutLaunching } from "./turnHelpers";
 import { successSeed } from "./seeds";
 
@@ -84,11 +80,7 @@ test("turns Tutorial mode off for good in Planning Mode after the first Turn, an
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${successSeed}`);
   await turnOn(page);
-  await openSaveDialog(page);
-  await page
-    .getByTestId("save-slot-1")
-    .getByRole("button", { name: "Save here" })
-    .click();
+  await saveToSlot(page, 1);
   await endTurnWithoutLaunching(page);
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 
@@ -105,12 +97,7 @@ test("turns Tutorial mode off for good in Planning Mode after the first Turn, an
   await expect(offer(page)).toHaveCount(0);
 
   // Still on in the slot saved on Turn 1.
-  await openLoadDialog(page);
-  await page
-    .getByTestId("save-slot-1")
-    .getByRole("button", { name: "Load" })
-    .click();
-  await page.getByRole("button", { name: "Yes, load it" }).click();
+  await loadFromSlot(page, 1);
   await expect(page.getByTestId("turn-number")).toHaveText("1");
   await expect(panel(page)).toBeVisible();
   expect(problems).toEqual([]);

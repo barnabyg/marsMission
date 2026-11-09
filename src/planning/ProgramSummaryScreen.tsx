@@ -2,8 +2,8 @@ import { useState } from "react";
 import { SummaryMilestones } from "../mission/SummaryMilestones";
 import {
   anySlotUsed as anySlotUsedIn,
-  LoadFromSlotDialog,
-} from "../save/LoadFromSlotDialog";
+  SaveSlotsDialog,
+} from "../save/SaveSlots";
 import type { SaveStore } from "../save/saveStore";
 import type {
   Program,
@@ -80,17 +80,17 @@ export function ProgramSummaryScreen({
               setLoadOpen(true);
             }}
           >
-            {/* The ellipsis says it opens a dialog, as on the title screen. */}
+            {/* The ellipsis says it opens a dialog. */}
             Load…
           </button>
         )}
       </div>
       {loadOpen && (
-        <LoadFromSlotDialog
+        <SaveSlotsDialog
           simulation={simulation}
           saveStore={saveStore}
           // The automatic save was cleared as the Program ended, so loading loses nothing.
-          action={{ kind: "load", confirm: false, onLoad }}
+          action={{ kind: "load", replacesProgram: false, onLoad }}
           onClose={() => {
             setLoadOpen(false);
           }}

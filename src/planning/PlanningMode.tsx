@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SaveSlots } from "../save/SaveSlots";
+import { SaveSlotsDialog } from "../save/SaveSlots";
 import type { SaveStore } from "../save/saveStore";
 import type { TutorialEnd } from "../tutorial/tutorial";
 import {
@@ -248,37 +248,27 @@ export function PlanningMode({
         </Dialog>
       )}
       {openDialog === "save" && (
-        <Dialog
-          title="Save to a Save Slot"
-          cancelLabel="Cancel"
+        <SaveSlotsDialog
+          simulation={simulation}
+          saveStore={saveStore}
+          action={{
+            kind: "save",
+            program,
+            onSaved: (slot) => {
+              setSavedToSlot(slot);
+              close();
+            },
+          }}
           onClose={close}
-        >
-          <SaveSlots
-            simulation={simulation}
-            saveStore={saveStore}
-            action={{
-              kind: "save",
-              program,
-              onSaved: (slot) => {
-                setSavedToSlot(slot);
-                close();
-              },
-            }}
-          />
-        </Dialog>
+        />
       )}
       {openDialog === "load" && (
-        <Dialog
-          title="Load from a Save Slot"
-          cancelLabel="Cancel"
+        <SaveSlotsDialog
+          simulation={simulation}
+          saveStore={saveStore}
+          action={{ kind: "load", replacesProgram: true, onLoad }}
           onClose={close}
-        >
-          <SaveSlots
-            simulation={simulation}
-            saveStore={saveStore}
-            action={{ kind: "load", confirm: true, onLoad }}
-          />
-        </Dialog>
+        />
       )}
     </main>
   );

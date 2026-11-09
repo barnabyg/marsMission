@@ -4,8 +4,6 @@ import {
   eventEntries,
   holdTurnWhenShown,
   missionViewport,
-  openLoadDialog,
-  openSaveDialog,
   operatingRow,
   pauseAtEvent,
   playFastUntil,
@@ -13,6 +11,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { loadFromSlot, saveToSlot } from "./saveHelpers";
 import { confirmEndWithoutLaunching, endTurnAndContinue } from "./turnHelpers";
 import { openLaunchStep } from "./planningHelpers";
 import {
@@ -253,22 +252,13 @@ test("forgets an Activity chosen but not yet carried out when a save is loaded",
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await endTurnAndContinue(page);
 
-  await openSaveDialog(page);
-  await page
-    .getByTestId("save-slot-1")
-    .getByRole("button", { name: "Save here" })
-    .click();
+  await saveToSlot(page, 1);
   const activity = page
     .getByTestId("operating-assets")
     .getByLabel("Activity for Pathfinder Orbiter");
   await activity.selectOption("nothing");
 
-  await openLoadDialog(page);
-  await page
-    .getByTestId("save-slot-1")
-    .getByRole("button", { name: "Load" })
-    .click();
-  await page.getByRole("button", { name: "Yes, load it" }).click();
+  await loadFromSlot(page, 1);
   await expect(activity).toHaveValue("survey");
   expect(problems).toEqual([]);
 });

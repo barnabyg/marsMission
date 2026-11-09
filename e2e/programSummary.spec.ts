@@ -2,11 +2,11 @@ import { expect, test } from "@playwright/test";
 import {
   chooseAssets,
   missionViewport,
-  openSaveDialog,
   overrideProgramData,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { confirmSlotButton, saveToSlot } from "./saveHelpers";
 import { successSeed } from "./seeds";
 import { endTurnAndContinue, endTurnWithoutLaunching } from "./turnHelpers";
 
@@ -59,11 +59,7 @@ test("offers Load… beside Start a new Program, which loads a Save Slot into Pl
   const problems = watchForProblems(page);
   await overrideProgramData(page, { cancellationLevel: 1000 });
   await page.goto(`/?seed=${successSeed}`);
-  await openSaveDialog(page);
-  await page
-    .getByTestId("save-slot-2")
-    .getByRole("button", { name: "Save here" })
-    .click();
+  await saveToSlot(page, 2);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await endTurnWithoutLaunching(page);
 
@@ -74,10 +70,10 @@ test("offers Load… beside Start a new Program, which loads a Save Slot into Pl
   ]);
   await summary.getByRole("button", { name: "Load…" }).click();
   const dialog = page.getByRole("dialog", { name: "Load from a Save Slot" });
-  await dialog
-    .getByTestId("save-slot-2")
-    .getByRole("button", { name: "Load" })
-    .click();
+  await dialog.getByTestId("save-slot-2").getByRole("radio").check();
+  // The automatic save was cleared as the Program ended, so there's nothing to replace.
+  await expect(confirmSlotButton(page)).toHaveText("Load Turn 1");
+  await confirmSlotButton(page).click();
   await expect(
     page.getByRole("heading", { name: "Planning Mode" }),
   ).toBeVisible();

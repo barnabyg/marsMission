@@ -5,6 +5,7 @@ import {
   openSaveDialog,
   viewButton,
 } from "./helpers";
+import { confirmSlotButton, saveToSlot } from "./saveHelpers";
 import { onOneLine, screenSizes, whatScrolls } from "./layoutHelpers";
 import { successSeed } from "./seeds";
 
@@ -19,20 +20,15 @@ for (const size of screenSizes) {
       page,
     }) => {
       await page.goto(`/?seed=${successSeed}`);
-      await openSaveDialog(page);
-      await page
-        .getByTestId("save-slot-1")
-        .getByRole("button", { name: "Save here" })
-        .click();
+      await saveToSlot(page, 1);
       await page.reload();
       const screen = page.getByTestId("opening-screen");
       await expect(screen.getByTestId("save-slot-1")).toBeVisible();
       expect(await whatScrolls(page)).toEqual([]);
-      for (const name of [
-        "Continue this Program",
-        "Start a new Program",
-        "Load…",
-      ]) {
+      await expect(
+        screen.getByTestId("save-slot-1").getByRole("button", { name: "Load" }),
+      ).toBeInViewport({ ratio: 1 });
+      for (const name of ["Continue this Program", "Start a new Program"]) {
         await expect(screen.getByRole("button", { name })).toBeInViewport({
           ratio: 1,
         });
@@ -47,18 +43,22 @@ for (const size of screenSizes) {
       const save = page.getByRole("dialog", { name: "Save to a Save Slot" });
       await expect(save).toBeInViewport({ ratio: 1 });
       expect(await whatScrolls(page)).toEqual([]);
-      await save
-        .getByTestId("save-slot-1")
-        .getByRole("button", { name: "Save here" })
-        .click();
+      await save.getByTestId("save-slot-1").getByRole("radio").check();
+      await confirmSlotButton(page).click();
 
       await openLoadDialog(page);
       const load = page.getByRole("dialog", { name: "Load from a Save Slot" });
+      // With a slot chosen, as the confirm button and its warning are at their longest.
+      await load.getByTestId("save-slot-1").getByRole("radio").check();
       await expect(load).toBeInViewport({ ratio: 1 });
       expect(await whatScrolls(page)).toEqual([]);
 
+      // The opening screen's, which asks before replacing the automatic save.
       await page.reload();
-      await page.getByRole("button", { name: "Load…" }).click();
+      await page
+        .getByTestId("save-slot-1")
+        .getByRole("button", { name: "Load" })
+        .click();
       await expect(load).toBeInViewport({ ratio: 1 });
       expect(await whatScrolls(page)).toEqual([]);
     });
