@@ -10,6 +10,7 @@ import { GameText } from "../ui/GameText";
 import { Icon, type IconName } from "../ui/Icon";
 import type { DecisionAdvice } from "../tutorial/tutorial";
 import { TurnOffTutorial } from "../ui/TurnOffTutorial";
+import { UnavailableButton } from "../ui/UnavailableButton";
 import { DecisionPointAdvice, DecisionPointPanel } from "./DecisionPointPanel";
 import { EventsColumn } from "./EventsColumn";
 import { missionViews, viewName, type MissionViewId } from "./missionViews";
@@ -60,6 +61,9 @@ const speedIcons: Record<(typeof speeds)[number], IconName> = {
   10: "chevrons-right",
   20: "zap",
 };
+
+/** Why the controls that move the Turn on can't be used while it is held at a Decision Point. */
+const answerFirst = "Play is held at the Decision Point until you answer it.";
 
 interface MissionModeProps {
   timeline: Timeline;
@@ -134,7 +138,7 @@ export function MissionMode({
       homewardQuiet(homeward, state, entryIndex),
     homeward?.siteName ?? null,
   );
-  /** Why each view's button is disabled, while its view has nothing to show. */
+  /** Why each view's button can't be used, while its view has nothing to show. */
   const unavailable: Partial<Record<MissionViewId, string>> = {
     ...(site === null ? { surface: surfaceUnavailableReason } : {}),
     ...(spacecraftAvailable ? {} : { spacecraft: spacecraftUnavailableReason }),
@@ -180,18 +184,16 @@ export function MissionMode({
               View: <strong data-testid="current-view">{viewName(view)}</strong>
             </span>
             {missionViews.map(({ id, name }) => (
-              <button
+              <UnavailableButton
                 key={id}
-                type="button"
                 aria-pressed={view === id}
-                disabled={unavailable[id] !== undefined}
-                title={unavailable[id]}
+                unavailable={unavailable[id]}
                 onClick={() => {
                   chooseView(id);
                 }}
               >
                 {name}
-              </button>
+              </UnavailableButton>
             ))}
           </div>
         </div>
@@ -241,19 +243,18 @@ export function MissionMode({
           </button>
         </div>
         {/* A secondary button named for where it goes, as watching the Turn play is the primary action. */}
-        <button
-          type="button"
+        <UnavailableButton
           className="skip-turn"
           title={
             decisionPoint
               ? "Skip to the next Decision Point, which you must answer."
               : "Skip to the Turn summary. The rest of the Turn still happens, and the summary lists its Mission Events."
           }
-          disabled={deciding}
+          unavailable={deciding ? answerFirst : undefined}
           onClick={decisionPoint ? skipToDecision : onFinished}
         >
           {decisionPoint ? "Skip to Decision Point" : "Skip to Turn summary"}
-        </button>
+        </UnavailableButton>
         <progress
           aria-label="Progress through the Turn"
           max={100}

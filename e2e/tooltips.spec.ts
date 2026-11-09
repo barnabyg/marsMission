@@ -59,6 +59,23 @@ test("explains a game term on hover, as the term's description, and in the gloss
   await expect(page.getByRole("dialog")).toHaveCount(1);
 });
 
+test("tabbing from the top of Planning Mode reaches Launch Mission in under 30 stops on a new Program", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  await expect(
+    page.getByRole("heading", { name: "Planning Mode" }),
+  ).toBeVisible();
+  let stops = 0;
+  while (stops < 30) {
+    await page.keyboard.press("Tab");
+    stops++;
+    const name = await page.evaluate(() => document.activeElement?.textContent);
+    if (name === "Launch Mission") break;
+  }
+  expect(stops).toBeLessThan(30);
+});
+
 test("game terms and their tags aren't tab stops", async ({ page }) => {
   await page.goto(`/?seed=${successSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);

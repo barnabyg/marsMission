@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { chooseAssets, missionViewport } from "./helpers";
+import { chooseAssets, missionViewport, viewButton } from "./helpers";
 import { successSeed } from "./seeds";
 
 function backgroundOf(locator: Locator): Promise<string> {
@@ -126,4 +126,42 @@ test("closing any dialog with Escape returns focus to the button that opened it"
     .click();
   await expect(page.getByTestId("mission-tutorial")).toBeVisible();
   await escapeBackTo("Turn off Tutorial mode", "Turn off Tutorial mode");
+});
+
+test("every button that can't be used is still reached by keyboard and says why, in the accessibility tree", async ({
+  page,
+}) => {
+  await page.setViewportSize(missionViewport);
+  /** Each button that can't be used here: none is natively disabled, and each is described by its reason. */
+  async function expectReasons(least: number) {
+    await expect(page.locator("button:disabled")).toHaveCount(0);
+    const unavailable = page.locator("button[aria-disabled='true']");
+    expect(await unavailable.count()).toBeGreaterThanOrEqual(least);
+    for (const button of await unavailable.all()) {
+      await expect(button).toHaveAccessibleDescription(/\w/);
+    }
+  }
+
+  // Nothing is ticked on a new Program, so Launch Mission can't be used, and says so.
+  await page.goto(`/?seed=${successSeed}`);
+  const launch = page.getByRole("button", { name: "Launch Mission" });
+  await expect(launch).toHaveAttribute("aria-disabled", "true");
+  await expect(launch).toHaveAccessibleDescription(/\w/);
+  await expectReasons(1);
+  // Pressing it does nothing.
+  await launch.focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("heading", { name: "Planning Mode" }),
+  ).toBeVisible();
+
+  // An orbiter alone lands nothing, so the Surface view's button says it has nothing to show.
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await expect(launch).not.toHaveAttribute("aria-disabled");
+  await launch.click();
+  await expect(viewButton(page, "Surface")).toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
+  await expectReasons(1);
 });

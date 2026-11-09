@@ -7,6 +7,7 @@ import {
 import { Dialog } from "../ui/Dialog";
 import { formatLaunchWindow } from "../ui/format";
 import { GameText } from "../ui/GameText";
+import { UnavailableButton } from "../ui/UnavailableButton";
 import { manualSlots, type LoadedSave, type SaveStore } from "./saveStore";
 import { confirmLabel, type ManualSlot, type SlotChoice } from "./slotChoice";
 
@@ -156,10 +157,11 @@ export function SaveSlotsDialog({
       cancelLabel="Cancel"
       onClose={onClose}
       actions={
-        <button
-          type="button"
+        <UnavailableButton
           className="primary"
-          disabled={selected === null}
+          unavailable={
+            selected === null ? "No Save Slot is picked yet." : undefined
+          }
           onClick={() => {
             if (selected !== null) confirm(selected);
           }}
@@ -170,7 +172,7 @@ export function SaveSlotsDialog({
               : { kind: "load", replacesProgram: action.replacesProgram },
             selected === null ? null : choiceOf(selected),
           )}
-        </button>
+        </UnavailableButton>
       }
     >
       {saveFailed && (

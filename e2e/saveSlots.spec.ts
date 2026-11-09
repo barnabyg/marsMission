@@ -309,12 +309,18 @@ test("picks a slot and saves to it with the keyboard alone", async ({
   await openSaveDialog(page);
   const confirm = confirmSlotButton(page);
   await expect(page.getByRole("dialog").getByRole("radiogroup")).toBeVisible();
-  await expect(
-    page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Choose a Save Slot" }),
-  ).toBeDisabled();
-  // Back from Cancel, past the confirm button while it can't be used, to the slots.
+  const choose = page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Choose a Save Slot" });
+  await expect(choose).toBeDisabled();
+  // Back from Cancel to the confirm button, which says why it can't be used yet, and on to the slots.
+  await page.keyboard.press("Shift+Tab");
+  await expect(choose).toBeFocused();
+  await expect(choose).toHaveAccessibleDescription(
+    "No Save Slot is picked yet.",
+  );
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Space");
   await expect(confirm).toHaveText("Save to Save Slot 1");

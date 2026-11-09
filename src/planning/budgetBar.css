@@ -76,13 +76,15 @@ Mission by mistake. */
   text-underline-offset: 0.2em;
 }
 
-.budget-bar .end-without-launching:not(:disabled):hover {
+.budget-bar
+  .end-without-launching:not(:disabled, [aria-disabled="true"]):hover {
   background: none;
   border-color: transparent;
   color: var(--text);
 }
 
-.budget-bar .end-without-launching:disabled {
+.budget-bar .end-without-launching:disabled,
+.budget-bar .end-without-launching[aria-disabled="true"] {
   background: none;
   border-color: transparent;
 }
