@@ -209,6 +209,8 @@ describe("a Mission Event failing with a Contingency bought", () => {
       eventId: "test-arrival",
       outcome: "success",
       day: 200,
+      description:
+        "The reserve fuel caught it. Test Orbiter lost 50% of its Service Life.",
     });
     expect(timeline.assetsAtMars[0]?.cutServiceLifeDays).toBe(25_000);
   });
