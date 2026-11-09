@@ -1,4 +1,5 @@
 import { deliveryDayOf, type MissionOutcome } from "./flight";
+import { labelsFor } from "./assetLabels";
 import type { Catalogue } from "../catalogue/catalogue";
 import {
   addDays,
@@ -253,12 +254,14 @@ export function assetsAtMarsOnTimeline(
   const cutServiceLife = new Map(
     [...flown.cutServiceLife].map(([asset, days]) => [asset.id, days]),
   );
-  return inService.map(({ asset, fromDay, untilDay }): AssetAtMars => {
+  const labels = labelsFor(inService.map(({ asset }) => asset));
+  return inService.map(({ asset, fromDay, untilDay }, index): AssetAtMars => {
     const cutServiceLifeDays =
       fromDay > 0 ? cutServiceLife.get(asset.assetId) : undefined;
     return {
       key: operatingKey(asset),
       name: asset.name,
+      label: labels[index] ?? asset.name,
       kind: asset.kind,
       landingSiteName: rules.landingSiteById(asset.landingSiteId)?.name ?? null,
       activityName: rules.activityNameOf(asset),

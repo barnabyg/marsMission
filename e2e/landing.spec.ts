@@ -7,6 +7,7 @@ import {
   missionViewport,
   openLoadDialog,
   openSaveDialog,
+  operatingRow,
   pauseAtEvent,
   playFastUntil,
   playToNextTurn,
@@ -71,7 +72,10 @@ test("plans a landing, plays it through and reaches the next Turn", async ({
   // 150 for the Milestone, 120 for the site, and what Surface research earned in the days left.
   await expect(page.getByTestId("science")).toHaveText("343");
   await expect(page.getByTestId("operating-assets")).toContainText(
-    "Prospector Lander at Jezero Crater: 735 days of Service Life left",
+    "Jezero Crater",
+  );
+  await expect(operatingRow(page, "Prospector Lander")).toContainText(
+    "735 days",
   );
   await chooseAssets(page, ["Prospector Lander"]);
   await expect(page.getByTestId("landing-site-details")).toContainText(
@@ -281,8 +285,8 @@ test("offers a Service Life for each chosen Asset, which changes the cost, and s
 
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await endTurnAndContinue(page);
-  await expect(page.getByTestId("operating-assets")).toContainText(
-    "Pathfinder Orbiter: 730 days of Service Life left",
+  await expect(operatingRow(page, "Pathfinder Orbiter")).toContainText(
+    "730 days",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
 

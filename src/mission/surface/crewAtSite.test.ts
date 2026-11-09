@@ -35,6 +35,7 @@ function shipWith(
   return {
     key: "crew:landing-site:alpha-plain",
     name: "Odyssey",
+    label: "Odyssey",
     kind: "crew",
     landingSiteName: "Alpha Plain",
     activityName: "Field research",

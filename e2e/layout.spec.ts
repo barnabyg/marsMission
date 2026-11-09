@@ -96,7 +96,7 @@ for (const size of screenSizes) {
         page.getByRole("button", { name: "Launch Mission" }),
       ).toBeInViewport({ ratio: 1 });
       const milestones = page.getByTestId("milestones").getByRole("listitem");
-      const assets = page.getByTestId("operating-assets").getByRole("listitem");
+      const assets = page.getByTestId("operating-asset");
       await expect(milestones).toHaveCount(realMilestones.length);
       await expect(assets).toHaveCount(8);
       // At 1920×1080 the panels beside the New Mission may scroll, so each is scrolled to its end first.
@@ -161,9 +161,9 @@ for (const size of screenSizes) {
           .filter({ hasText: "Soil analysis earns" }),
       ).toHaveCount(1);
       await expect(page.getByTestId("landing-site-details")).toBeVisible();
-      await expect(
-        page.getByTestId("operating-assets").getByRole("listitem").last(),
-      ).toContainText("Trailblazer Rover at Jezero Crater");
+      await expect(page.getByTestId("operating-asset").last()).toContainText(
+        "Trailblazer Rover",
+      );
       expect(await whatScrolls(page)).toEqual([]);
       for (const name of ["Launch Mission", "End Turn without launching"]) {
         await expect(page.getByRole("button", { name })).toBeInViewport({

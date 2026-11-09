@@ -94,8 +94,8 @@ test("using a Contingency that works saves the orbiter with a shorter Service Li
   );
   await expect(page.getByTestId("summary-failure")).toHaveCount(0);
   await page.getByRole("button", { name: "Continue" }).click();
-  await expect(page.getByTestId("operating-assets")).toContainText(
-    "days of Service Life left",
+  await expect(page.getByTestId("operating-asset").first()).toContainText(
+    /\d days/,
   );
   expect(problems).toEqual([]);
 });
@@ -240,7 +240,10 @@ test("a rescued landing shows its Decision Point first, then plays the landing, 
   await expect(page.getByTestId("summary-first-landing")).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByTestId("operating-assets")).toContainText(
-    "Prospector Lander at Jezero Crater",
+    "Jezero Crater",
+  );
+  await expect(page.getByTestId("operating-asset")).toContainText(
+    "Prospector Lander",
   );
   expect(problems).toEqual([]);
 });

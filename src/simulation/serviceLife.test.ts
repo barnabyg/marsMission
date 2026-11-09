@@ -157,6 +157,7 @@ describe("a Service Life running out", () => {
     expect(second.timeline.assetsAtMars).toEqual([
       {
         key: "test-orbiter:2029-06-19",
+        label: "Test Orbiter",
         name: "Test Orbiter",
         kind: "orbiter",
         landingSiteName: null,

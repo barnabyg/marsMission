@@ -149,10 +149,15 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await summary.getByRole("button", { name: "Continue" }).click();
 
   await expect(page.getByTestId("turn-number")).toHaveText("4");
-  const crew = page.getByTestId("crew-at-mars").getByRole("listitem");
+  const crew = page.getByTestId("crew-at-mars");
   // 2,500 kg, less 1.2 kg a day for the 780 days since launch.
-  await expect(crew).toHaveText([
-    /^Crew in Mars orbit: Amara Okafor \(Health 65\), Lena Petrova \(Health 65\), Kenji Sato \(Health 65\)\. Supplies for 1,303 days/,
+  await expect(crew.getByTestId("crew-group")).toContainText(
+    "Crew in Mars orbit · Supplies for 1,303 days",
+  );
+  await expect(crew.getByTestId("crew-member")).toHaveText([
+    /^Amara OkaforHealth 65/,
+    /^Lena PetrovaHealth 65/,
+    /^Kenji SatoHealth 65/,
   ]);
   await expect(
     page.getByRole("combobox", { name: "Activity for the Crew in Mars orbit" }),
@@ -170,16 +175,26 @@ test("loses Crew in Mars orbit once their Supplies run out", async ({
   // The Crew the test above launched, as the game saved them at the start of Turn 4.
   await continueFromSave(page, crewInOrbitSave(crewSeed));
   await expect(page.getByTestId("turn-number")).toHaveText("4");
-  const crew = page.getByTestId("crew-at-mars").getByRole("listitem");
-  await expect(crew).toHaveText([
-    /^Crew in Mars orbit: Amara Okafor \(Health 65\), Lena Petrova \(Health 65\), Kenji Sato \(Health 65\)\. Supplies for 1,303 days/,
+  const crew = page.getByTestId("crew-at-mars");
+  await expect(crew.getByTestId("crew-group")).toContainText(
+    "Crew in Mars orbit · Supplies for 1,303 days",
+  );
+  await expect(crew.getByTestId("crew-member")).toHaveText([
+    /^Amara OkaforHealth 65/,
+    /^Lena PetrovaHealth 65/,
+    /^Kenji SatoHealth 65/,
   ]);
 
   // Their Supplies last this Turn, and run out 523 days into the next, after which their Health falls quickly.
   await endTurnWithoutLaunching(page);
   await expect(page.getByTestId("turn-number")).toHaveText("5");
-  await expect(crew).toHaveText([
-    /^Crew in Mars orbit: Amara Okafor \(Health 31\), Lena Petrova \(Health 31\), Kenji Sato \(Health 31\)\. Supplies for 523 days/,
+  await expect(crew.getByTestId("crew-group")).toContainText(
+    "Crew in Mars orbit · Supplies for 523 days",
+  );
+  await expect(crew.getByTestId("crew-member")).toHaveText([
+    /^Amara OkaforHealth 31/,
+    /^Lena PetrovaHealth 31/,
+    /^Kenji SatoHealth 31/,
   ]);
   await pauseAtEvent(
     page,
@@ -289,10 +304,11 @@ test("lands a Crewed Mission at a Landing Site, and sees its Crew at work there 
 
   await expect(page.getByTestId("turn-number")).toHaveText("4");
   await expect(
-    page.getByTestId("crew-at-mars").getByRole("listitem"),
-  ).toHaveText([
-    /Crew in Jezero Crater: Amara Okafor \(Health \d+\), Lena Petrova \(Health \d+\)/,
-  ]);
+    page.getByTestId("crew-at-mars").getByTestId("crew-group"),
+  ).toContainText("Crew in Jezero Crater");
+  await expect(
+    page.getByTestId("crew-at-mars").getByTestId("crew-member"),
+  ).toHaveText([/^Amara OkaforHealth \d+/, /^Lena PetrovaHealth \d+/]);
   await expect(
     page.getByRole("combobox", {
       name: "Activity for the Crew in Jezero Crater",
@@ -313,9 +329,9 @@ test("keeps the Crew at Mars through saving and loading", async ({ page }) => {
   // The automatic save at the start of this Planning Mode holds the Crew.
   await page.reload();
   await page.getByRole("button", { name: "Continue this Program" }).click();
-  await expect(page.getByTestId("crew-at-mars")).toContainText(
-    "Amara Okafor (Health 45), Lena Petrova (Health 45)",
-  );
+  await expect(
+    page.getByTestId("crew-at-mars").getByTestId("crew-member"),
+  ).toHaveText([/^Amara OkaforHealth 45/, /^Lena PetrovaHealth 45/]);
 });
 
 test("loses the Crew in a failed launch, and sees the drop in Public Support in the Turn summary", async ({

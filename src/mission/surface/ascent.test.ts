@@ -31,9 +31,13 @@ const member = (
   untilDay,
 });
 
-const atAlpha = (overrides: Partial<AssetAtMars>): AssetAtMars => ({
+const atAlpha = ({
+  name = "Wellspring Fuel Plant",
+  ...overrides
+}: Partial<AssetAtMars>): AssetAtMars => ({
   key: "lander",
-  name: "Wellspring Fuel Plant",
+  name,
+  label: name,
   kind: "fuel-plant",
   landingSiteName: "Alpha Plain",
   activityName: "Propellant production",

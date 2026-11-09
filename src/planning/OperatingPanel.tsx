@@ -1,13 +1,11 @@
-import {
-  formatMoney,
-  formatPropellant,
-  type ProgramView,
-} from "../simulation/simulation";
+import { useRef } from "react";
+import { formatPropellant, type ProgramView } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
-import { ActivitySelect, chosenEarnings, chosenYields } from "./ActivitySelect";
-import { SamplesWaiting } from "./SamplesHomeChoice";
-import { WayHomeChoice } from "./WayHomeChoice";
 import { isSurveying, NothingLeftToSurvey } from "./NothingLeftToSurvey";
+import { groupByPlace } from "./operatingGroups";
+import { AssetRows, CrewRows, GroupRow } from "./OperatingRows";
+import { SamplesWaiting } from "./SamplesHomeChoice";
+import { ScrollCue } from "./ScrollCue";
 
 interface OperatingPanelProps {
   assets: ProgramView["operatingAssets"];
@@ -32,12 +30,14 @@ interface OperatingPanelProps {
 }
 
 /**
- * The Assets already at Mars, each with what is left of its Service Life, its Upkeep, the choice of its Activity and
- * the choice to end its mission, and the Crew there, with their Health, the choice of the Activity they share in each
- * place and, for round-trip Crew, the choice to bring them home this Turn, greyed out with the reason when they can't. Below them are the samples
- * waiting at each Landing Site, with the choice to send them home, then the ascent propellant at each
- * Landing Site that has any, which stays there whether or not anything is still operating, and the Supplies held in
- * Habitats at each Landing Site.
+ * Everything already at Mars, as a table: the Crew in each place, with their Supplies, the choice of the Activity they
+ * share and, for round-trip Crew, the choice to bring them home this Turn, greyed out with the reason when they can't,
+ * and a row for each Crew member with their Health; then the Assets, grouped by where they are, each with what is left
+ * of its Service Life, the choice of its Activity and the choice to end its mission, which stops its Upkeep. Several
+ * Assets of one kind are numbered in the order they arrived. The heading says how many Assets and Crew are there, and a
+ * cue over the panel's foot says when more rows are below. Under the table are the samples waiting at each Landing
+ * Site, with the choice to send them home, then the ascent propellant at each Landing Site that has any, which stays
+ * there whether or not anything is still operating, and the Supplies held in Habitats at each Landing Site.
  */
 export function OperatingPanel({
   assets,
@@ -54,165 +54,100 @@ export function OperatingPanel({
   endedKeys,
   onEndedChange,
 }: OperatingPanelProps) {
+  const panel = useRef<HTMLElement>(null);
   const stocked = landingSites.filter(
     ({ ascentPropellantKg }) => ascentPropellantKg > 0,
   );
   const held = landingSites.filter(
     ({ habitatSuppliesKg }) => habitatSuppliesKg > 0,
   );
+  const count =
+    assets.length +
+    crew.reduce((total, { members }) => total + members.length, 0);
   const empty =
-    assets.length === 0 &&
-    crew.length === 0 &&
+    count === 0 &&
     stocked.length === 0 &&
     held.length === 0 &&
     sampleReturns.length === 0;
   return (
     <section
-      className={empty ? "panel empty" : "panel"}
+      ref={panel}
+      className={
+        empty ? "panel operating-panel empty" : "panel operating-panel"
+      }
       data-testid="operating-panel"
     >
-      <h2>Operating at Mars</h2>
-      {crew.length > 0 && (
-        <ul className="operating-assets" data-testid="crew-at-mars">
-          {crew.map((group) => (
-            <li key={group.key}>
-              <span>
-                <GameText>
-                  {`Crew in ${group.locationName}: ${group.members
-                    .map(({ name, health }) => `${name} (Health ${health})`)
-                    .join(", ")}. ${
-                    group.suppliesDaysLeft > 0
-                      ? `Supplies for ${group.suppliesDaysLeft.toLocaleString("en")} days`
-                      : "No Supplies left"
-                  }`}
-                </GameText>
-                {chosenYields(
-                  chosenCrewActivities[group.key] ?? group.activityId,
-                  group.activities,
-                ) && (
-                  <span
-                    className="activity-earnings"
-                    data-testid="activity-earnings"
-                  >
-                    <GameText>
-                      {chosenEarnings(
-                        chosenCrewActivities[group.key] ?? group.activityId,
-                        group.activities,
-                      )}
-                    </GameText>
-                  </span>
-                )}
-              </span>
-              <ActivitySelect
-                assetName={`the Crew in ${group.locationName}`}
-                activityId={chosenCrewActivities[group.key] ?? group.activityId}
-                activities={group.activities}
-                onChange={(activityId) => {
-                  onCrewActivityChange(group.key, activityId);
-                }}
-              />
-              {group.waysHome.map((way) => (
-                <WayHomeChoice
-                  key={way.key}
-                  way={way}
-                  chosen={bringHome === way.key}
-                  onChange={(home) => {
-                    onBringHomeChange(way.key, home);
+      <h2>
+        Operating at Mars
+        {count > 0 && (
+          // How many rows there are, as the panel may hold more than it shows.
+          <span className="operating-count" data-testid="operating-count">
+            {` · ${String(count)}`}
+          </span>
+        )}
+      </h2>
+      {empty && (
+        <p className="empty-note">
+          <GameText>
+            Nothing at Mars yet. Your first orbiter will appear here.
+          </GameText>
+        </p>
+      )}
+      {!somethingLeftToSurvey &&
+        assets.some(({ key, activityId, activities }) =>
+          isSurveying(chosenActivities[key] ?? activityId, activities),
+        ) && <NothingLeftToSurvey />}
+      {count > 0 && (
+        <table className="operating-table">
+          <colgroup>
+            <col className="operating-col-name" />
+            <col className="operating-col-left" />
+            <col className="operating-col-activity" />
+            <col className="operating-col-action" />
+          </colgroup>
+          {crew.length > 0 && (
+            <tbody data-testid="crew-at-mars">
+              {crew.map((group) => (
+                <CrewRows
+                  key={group.key}
+                  group={group}
+                  activityId={
+                    chosenCrewActivities[group.key] ?? group.activityId
+                  }
+                  bringHome={bringHome}
+                  onActivityChange={(activityId) => {
+                    onCrewActivityChange(group.key, activityId);
                   }}
+                  onBringHomeChange={onBringHomeChange}
                 />
               ))}
-            </li>
-          ))}
-        </ul>
-      )}
-      {assets.length === 0 ? (
-        empty && (
-          <p className="empty-note">
-            <GameText>
-              Nothing at Mars yet. Your first orbiter will appear here.
-            </GameText>
-          </p>
-        )
-      ) : (
-        <>
-          {/* The budget bar says the Turn's Upkeep; each End mission says what it saves. */}
-          {!somethingLeftToSurvey &&
-            assets.some(({ key, activityId, activities }) =>
-              isSurveying(chosenActivities[key] ?? activityId, activities),
-            ) && <NothingLeftToSurvey />}
-          <ul className="operating-assets" data-testid="operating-assets">
-            {assets.map((asset) => {
-              const ended = endedKeys.includes(asset.key);
-              const where = asset.landingSiteName
-                ? `${asset.name} at ${asset.landingSiteName}`
-                : asset.name;
-              return (
-                <li key={asset.key} className={ended ? "ended" : undefined}>
-                  <span>
-                    <GameText>
-                      {`${where}: ${
-                        ended
-                          ? "its mission ends as this Turn starts"
-                          : asset.daysLeft > 0
-                            ? `${asset.daysLeft} days of Service Life left`
-                            : "Service Life ends as this Turn starts"
-                      }`}
-                    </GameText>
-                    {!ended &&
-                      asset.daysLeft > 0 &&
-                      chosenYields(
-                        chosenActivities[asset.key] ?? asset.activityId,
-                        asset.activities,
-                      ) && (
-                        <span
-                          className="activity-earnings"
-                          data-testid="activity-earnings"
-                        >
-                          <GameText>
-                            {chosenEarnings(
-                              chosenActivities[asset.key] ?? asset.activityId,
-                              asset.activities,
-                            )}
-                          </GameText>
-                        </span>
-                      )}
-                  </span>
-                  {asset.activities.length > 0 ? (
-                    <ActivitySelect
-                      assetName={asset.name}
+            </tbody>
+          )}
+          {assets.length > 0 && (
+            <tbody data-testid="operating-assets">
+              {groupByPlace(assets).map(({ place, assets: there }) => (
+                <GroupRows key={place} place={place}>
+                  {there.map((asset) => (
+                    <AssetRows
+                      key={asset.key}
+                      asset={asset}
                       activityId={
                         chosenActivities[asset.key] ?? asset.activityId
                       }
-                      activities={asset.activities}
-                      onChange={(activityId) => {
+                      ended={endedKeys.includes(asset.key)}
+                      onActivityChange={(activityId) => {
                         onActivityChange(asset.key, activityId);
                       }}
+                      onEndedChange={(ended) => {
+                        onEndedChange(asset.key, ended);
+                      }}
                     />
-                  ) : (
-                    <GameText>{asset.activityName}</GameText>
-                  )}
-                  {/* Only one with Service Life left costs Upkeep, so only that one's mission is worth ending. */}
-                  {asset.daysLeft > 0 && (
-                    <label
-                      className="end-mission"
-                      title={`Takes it out of service as this Turn starts, saving its Upkeep of ${formatMoney(asset.upkeepMillions)} a Turn.`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={ended}
-                        aria-label={`End the mission of ${where}`}
-                        onChange={(event) => {
-                          onEndedChange(asset.key, event.target.checked);
-                        }}
-                      />
-                      End mission
-                    </label>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </>
+                  ))}
+                </GroupRows>
+              ))}
+            </tbody>
+          )}
+        </table>
       )}
       <SamplesWaiting
         samples={sampleReturns}
@@ -243,6 +178,23 @@ export function OperatingPanel({
           </GameText>
         </p>
       )}
+      {!empty && <ScrollCue scroller={panel}>More below</ScrollCue>}
     </section>
+  );
+}
+
+/** The rows of the Assets at one place, under a heading row naming it. */
+function GroupRows({
+  place,
+  children,
+}: {
+  place: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <GroupRow>{place}</GroupRow>
+      {children}
+    </>
   );
 }

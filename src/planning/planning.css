@@ -130,7 +130,7 @@
   justify-content: center;
   height: 3.5rem;
   padding-bottom: 0.2rem;
-  background: linear-gradient(to bottom, transparent, var(--panel) 75%);
+  background: linear-gradient(to bottom, transparent, var(--panel) 60%);
   color: var(--muted);
   font-size: var(--text-sm);
   pointer-events: none;
@@ -153,9 +153,112 @@
   column-gap: 3rem;
 }
 
+/* How many Assets and Crew are at Mars, after the heading, as the panel may hold more rows than it shows. */
+.operating-count {
+  color: var(--muted);
+  font-size: var(--text-lg);
+}
+
+/* Everything at Mars as a table: a heading row for the Crew in each place and for each place Assets are at, then one
+   row each, with its name, what is left, its Activity and its action in fixed columns, so that a busy Program's rows
+   line up and each stays on a line or two at 1920×1080. */
+.operating-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Set so that at 1920×1080 "3,733 days", a choice showing "Surface research" and "End mission" each fit their column,
+   and a long name such as "Pathfinder Orbiter 6" wraps to two lines, no taller than the choice beside it. */
+.operating-col-name {
+  width: 30%;
+}
+
+.operating-col-left {
+  width: 19%;
+}
+
+.operating-col-activity {
+  width: 29%;
+}
+
+.operating-col-action {
+  width: 22%;
+}
+
+.operating-table th,
+.operating-table td {
+  padding: 0.1rem 0.2rem;
+  text-align: left;
+  vertical-align: middle;
+  line-height: 1.25;
+}
+
+.operating-table th:first-child,
+.operating-table td:first-child {
+  padding-left: 0;
+}
+
+.operating-table th:last-child,
+.operating-table td:last-child {
+  padding-right: 0;
+}
+
+/* The heading row of a group: where its rows are, or whose Crew they are, a little apart from the group before. */
+.operating-group th {
+  padding-top: 0.4rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.operating-table tbody:first-of-type .operating-group:first-child th {
+  padding-top: 0;
+}
+
+.operating-name {
+  font-weight: 600;
+}
+
+.operating-days {
+  cursor: help;
+}
+
+/* Each Activity's choice says what it earns, which is too long for its column, so the closed choice cuts it short. */
+.panel .operating-table select {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  padding-right: 0.3rem;
+  padding-left: 0.4rem;
+}
+
+/* What the chosen Activity earns, on a row of its own under the Asset or Crew it is for. */
+.operating-earnings td {
+  padding-top: 0;
+  padding-bottom: 0.15rem;
+}
+
+.operating-table .activity-earnings {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+/* Beside each Asset's Activity, ending its mission so that it costs no more Upkeep, and beside the Crew's, bringing
+   them home. Its words wrap rather than run out of the table. */
+.operating-table .end-mission {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  line-height: 1.2;
+}
+
+.operating-table tr.ended td {
+  color: var(--muted);
+}
+
+/* The samples waiting at each Landing Site, under the table, each with the choice to send them home. */
 .operating-assets {
   display: grid;
-  /* Tight enough for a busy Program's Assets and Crew to fit under the status bar at 2560×1440. */
   gap: 0.25rem;
   width: 100%;
   padding: 0;
@@ -169,21 +272,6 @@
   gap: 1rem;
 }
 
-/* What the chosen Activity earns, on a line of its own under the Asset or Crew it is for. */
-.operating-assets .activity-earnings {
-  font-size: var(--text-sm);
-  display: block;
-  color: var(--muted);
-}
-
-.operating-assets select {
-  flex: none;
-  min-width: 10rem;
-  /* Each Activity's choice says what it earns, which is too long for the row, so the closed choice cuts it short. */
-  max-width: 11rem;
-}
-
-/* Beside each Asset's Activity, ending its mission so that it costs no more Upkeep. */
 .operating-assets .end-mission {
   flex: none;
   display: flex;
@@ -192,8 +280,20 @@
   white-space: nowrap;
 }
 
-.operating-assets li.ended > span {
-  color: var(--muted);
+/* Operating at Mars flows as blocks rather than a grid, so that its scroll cue, stuck to the panel's foot over the last
+   rows, can take no room of its own: a grid would give it a row and a gap. */
+.planning-columns .operating-panel {
+  display: block;
+}
+
+.operating-panel > * + * {
+  margin-top: 1rem;
+}
+
+.planning-side .operating-panel > .scroll-cue {
+  position: sticky;
+  bottom: 0;
+  margin-top: -3.5rem;
 }
 
 .developments {

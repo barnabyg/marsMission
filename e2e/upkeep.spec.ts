@@ -4,6 +4,7 @@ import {
   endTurnAndContinue,
   endTurnWithoutLaunching,
   missionViewport,
+  operatingRow,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
@@ -27,10 +28,7 @@ test("pays Upkeep for an Asset kept at Mars, shown before the Turn and in its su
   await expect(page.getByTestId("turn-number")).toHaveText("2");
 
   // The orbiter costs Upkeep from the Turn after it arrives, which the Turn will spend even without a launch.
-  const row = page
-    .getByTestId("operating-assets")
-    .getByRole("listitem")
-    .filter({ hasText: "Pathfinder Orbiter" });
+  const row = operatingRow(page, "Pathfinder Orbiter");
   await expect(page.getByTestId("upkeep-cost")).toHaveText("$10M");
   // Operating at Mars starts with its first Asset: no standing paragraph on Upkeep, which the budget bar shows.
   await expect(
@@ -64,7 +62,7 @@ test("pays Upkeep for an Asset kept at Mars, shown before the Turn and in its su
   await row
     .getByRole("checkbox", { name: "End the mission of Pathfinder Orbiter" })
     .check();
-  await expect(row).toContainText("its mission ends as this Turn starts");
+  await expect(row).toContainText("Ends as this Turn starts");
   await expect(page.getByTestId("turn-spend-amount")).toHaveText("$0M");
   await expect(page.getByTestId("upkeep-cost")).toHaveCount(0);
   await endTurnWithoutLaunching(page);

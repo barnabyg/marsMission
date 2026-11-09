@@ -3,6 +3,7 @@ import {
   chooseAssets,
   eventEntries,
   launchHeld,
+  operatingRow,
   overrideProgramData,
   pauseAtEvent,
   pauseAtEventAfter,
@@ -148,7 +149,10 @@ test("lands a rover, gives it an Activity and sees its Science in the Turn summa
   // 120 for the site, 150 and 60 for the Milestones, and the 116.
   await expect(page.getByTestId("science")).toHaveText("446");
   await expect(page.getByTestId("operating-assets")).toContainText(
-    "Trailblazer Rover at Jezero Crater: 735 days of Service Life left",
+    "Jezero Crater",
+  );
+  await expect(operatingRow(page, "Trailblazer Rover")).toContainText(
+    "735 days",
   );
   await expect(
     page

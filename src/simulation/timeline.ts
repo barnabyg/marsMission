@@ -198,6 +198,8 @@ export interface AssetAtMars {
   /** Names this Asset and no other, and stays the same from Turn to Turn. */
   key: string;
   name: string;
+  /** How the screen names it: its name, numbered in arrival order when several of its kind are at Mars (assetLabels.ts). */
+  label: string;
   /** The Asset's kind, or "crew" for the Crew's ship. */
   kind: string;
   /** Where it is on the surface, or null if it's in orbit. */

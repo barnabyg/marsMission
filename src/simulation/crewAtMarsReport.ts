@@ -150,6 +150,7 @@ export function crewShipsAtMars(
     return {
       key: `crew:${key}`,
       name: catalogue.crew.vehicleName,
+      label: catalogue.crew.vehicleName,
       kind: "crew",
       landingSiteName: place.kind === "landingSite" ? locationName : null,
       activityName: rules.activityNameOf({ activityId }),

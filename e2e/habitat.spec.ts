@@ -70,8 +70,8 @@ test("lands Crew beside a habitat and sees the Health it saved them in the Turn 
     "Supplies in Habitats: 1,500 kg at Jezero Crater",
   );
   await expect(
-    page.getByTestId("crew-at-mars").getByRole("listitem"),
-  ).toContainText([/Crew in Jezero Crater: .*Supplies for [\d,]+ days/]);
+    page.getByTestId("crew-at-mars").getByTestId("crew-group"),
+  ).toContainText(/Crew in Jezero Crater · Supplies for [\d,]+ days/);
   expect(await termsWithoutTooltips(page)).toEqual([]);
   expect(problems).toEqual([]);
 });

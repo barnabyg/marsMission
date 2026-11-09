@@ -51,10 +51,10 @@ export function ascentSequenceOf(
       );
       return [...leaving]
         .toSorted((first, second) => first - second)
-        .map((lander) => ({ name: asset.name, place, lander }));
+        .map((lander) => ({ name: asset.label, place, lander }));
     }
     return asset.kind === "ascent-vehicle" && asset.untilDay === moment.day
-      ? [{ name: asset.name, place, lander: 0 }]
+      ? [{ name: asset.label, place, lander: 0 }]
       : [];
   });
   if (craft.length === 0) return null;

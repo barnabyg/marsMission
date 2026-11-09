@@ -164,6 +164,10 @@ test("explains each research Activity wherever Mission Mode names it", async ({
     .click();
 
   const operating = page.getByTestId("operating-at-mars");
+  // Two of a kind are numbered in the order they arrived, so that they can be told apart.
+  await expect(operating).toContainText("Trailblazer Rover 1 at Jezero Crater");
+  await expect(operating).toContainText("Trailblazer Rover 2 at Jezero Crater");
+  await expect(operating).not.toContainText("Prospector Lander 1");
   for (const term of [
     "Orbital research",
     "Surface research",

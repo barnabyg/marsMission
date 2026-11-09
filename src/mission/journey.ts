@@ -72,8 +72,8 @@ export function assetsOperatingOn(
     (asset) =>
       `${
         asset.landingSiteName
-          ? `${asset.name} at ${asset.landingSiteName}`
-          : asset.name
+          ? `${asset.label} at ${asset.landingSiteName}`
+          : asset.label
       }: ${asset.activityName}${
         asset.cutServiceLifeDays === undefined
           ? ""
