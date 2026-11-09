@@ -35,8 +35,11 @@ export function Dialog({
   const titleId = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const cancel = useRef<HTMLButtonElement>(null);
-  // Taken as it first renders, before it moves focus to its cancel button.
-  const [opener] = useState(() => document.activeElement);
+  // Taken as it first renders, before it moves focus to its cancel button. There's no document when rendered to a
+  // string, as some unit tests do.
+  const [opener] = useState(() =>
+    typeof document === "undefined" ? null : document.activeElement,
+  );
 
   // As it closes rather than after, so that it can't take focus back from wherever the player has moved it since.
   useLayoutEffect(
