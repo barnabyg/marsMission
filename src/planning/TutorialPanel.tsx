@@ -13,8 +13,8 @@ interface TutorialPanelProps {
 }
 
 /**
- * Tutorial mode in Planning Mode: its advice while it is on, with a way to turn it off, and on a Program's first Turn
- * the offer to turn it on. Nothing otherwise.
+ * Tutorial mode in Planning Mode: its advice while it is on, with a footer saying it is only advice and offering a way
+ * to turn it off, and on a Program's first Turn the offer to turn it on. Nothing otherwise.
  */
 export function TutorialPanel({
   tutorial,
@@ -29,11 +29,18 @@ export function TutorialPanel({
         aria-labelledby="tutorial-heading"
         data-testid="tutorial-panel"
       >
-        {/* The way to turn it off comes first, so that it stays in view however long the advice is. */}
-        <div className="tutorial-heading">
-          <h2 id="tutorial-heading">
-            <GameText heading>Tutorial mode</GameText>
-          </h2>
+        <h2 id="tutorial-heading">
+          <GameText heading>Tutorial mode</GameText>
+        </h2>
+        {children}
+        {/* Stuck to the panel's foot, so that it stays in view however long the advice is. */}
+        <div className="tutorial-footer">
+          <p className="empty-note">
+            <GameText>
+              This is only advice: you set every choice yourself, and can plan
+              something else.
+            </GameText>
+          </p>
           <TurnOffTutorial
             forGood={!firstTurn}
             onTurnOff={() => {
@@ -41,7 +48,6 @@ export function TutorialPanel({
             }}
           />
         </div>
-        {children}
       </section>
     );
   }

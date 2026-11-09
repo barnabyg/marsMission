@@ -53,6 +53,14 @@ describe("the tutorial's advice in Planning Mode", () => {
     expect(html.match(/class="done"/g)?.length).toBe(1);
   });
 
+  it("keeps the whole route behind a disclosure, closed until the player opens it", () => {
+    const html = renderToStaticMarkup(<TutorialAdvice advice={advice} />);
+    expect(html).toMatch(
+      /<details[^>]*><summary>Show the route<\/summary><ol[^>]*aria-label="The route"/,
+    );
+    expect(html).not.toMatch(/<details[^>]*\bopen\b/);
+  });
+
   it("says why it changed course before anything else", () => {
     const html = renderToStaticMarkup(
       <TutorialAdvice
@@ -67,9 +75,8 @@ describe("the tutorial's advice in Planning Mode", () => {
     expect(text.indexOf("The lander failed")).toBe(0);
   });
 
-  it("says it is only advice, and offers no way to fill in the plan", () => {
+  it("offers no way to fill in the plan", () => {
     const html = renderToStaticMarkup(<TutorialAdvice advice={advice} />);
-    expect(textOf(html)).toContain("you set every choice yourself");
     expect(html).not.toContain("<button");
   });
 });
@@ -95,6 +102,17 @@ describe("the Tutorial mode panel", () => {
     const html = panel("on", false);
     expect(html).toContain("The advice");
     expect(html).toContain("Turn off Tutorial mode");
+  });
+
+  it("heads the panel with only its title, and says at its foot, after the advice, that it is only advice, with the way to turn it off", () => {
+    const html = panel("on", false);
+    expect(textOf(html).indexOf("Tutorial mode")).toBe(0);
+    const footer = html.indexOf('class="tutorial-footer"');
+    expect(html.indexOf("The advice")).toBeLessThan(footer);
+    expect(html.indexOf("you set every choice yourself")).toBeGreaterThan(
+      footer,
+    );
+    expect(html.indexOf("Turn off Tutorial mode")).toBeGreaterThan(footer);
   });
 
   it("speaks in the tutorial's own style while it is on, but not while only offering it", () => {

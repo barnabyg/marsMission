@@ -10,6 +10,7 @@ import { TooltipLayer } from "../ui/TooltipLayer";
 // In cascade order: where two rules are equally specific, the one in a later file wins.
 import "./styles.css";
 import "../planning/planning.css";
+import "../planning/tutorialPanel.css";
 import "../planning/missionSteps.css";
 import "../planning/assetCards.css";
 import "../planning/statusBar.css";
