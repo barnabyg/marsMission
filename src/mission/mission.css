@@ -30,11 +30,12 @@
   transform: translate(-50%, -100%);
   font-size: var(--text-sm);
   white-space: nowrap;
-  text-shadow: 0 0 0.3rem #000;
+  text-shadow: 0 0 0.3rem black;
 }
 
-.spacecraft-label > span {
-  color: #ffd9bd;
+.spacecraft-label > span,
+.ascentVehicle-label > span {
+  color: var(--scene-spacecraft);
 }
 
 /* Until the scene has placed it, a label would otherwise show in the corner. */
@@ -43,48 +44,44 @@
 }
 
 .surface-label > span {
-  color: #ffe08a;
+  color: var(--scene-surface);
 }
 
 .crashed-label > span {
-  color: #ff8a75;
+  color: var(--problem);
 }
 
 /* The sky behind these is bright, so they need a backing to be read against it. */
 .on-surface > span {
   padding: 0.1rem 0.5rem;
-  border-radius: 0.3rem;
-  background: rgb(10 12 20 / 75%);
+  border-radius: var(--radius-sm);
+  background: rgb(var(--background-rgb) / 75%);
 }
 
 .lander-label > span {
-  color: #ffd46b;
+  color: var(--scene-lander);
 }
 
 .rover-label > span {
-  color: #6fe6d4;
+  color: var(--scene-rover);
 }
 
 .fuelPlant-label > span {
-  color: #ffb37a;
+  color: var(--scene-fuel-plant);
 }
 
 .habitat-label > span {
-  color: #f4efe4;
+  color: var(--scene-habitat);
 }
 
 .lab-label > span {
-  color: #7fdcea;
-}
-
-.ascentVehicle-label > span {
-  color: #ffd9bd;
+  color: var(--scene-lab);
 }
 
 /* The Crew, in every view. */
 .crewLander-label > span,
 .crew-label > span {
-  color: #9effa0;
+  color: var(--scene-crew);
 }
 
 .surface-site-choice {
@@ -103,7 +100,7 @@
   width: 24rem;
   display: grid;
   gap: 0.6rem;
-  background: rgb(23 27 40 / 80%);
+  background: rgb(var(--panel-rgb) / 80%);
   border: 1px solid var(--panel-border);
   border-radius: 0.5rem;
   padding: 1rem 1.5rem;
@@ -128,7 +125,7 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.6rem 1rem;
-  padding: 0.8rem 1rem;
+  padding: var(--pad-card-compact);
 }
 
 /* Three groups: the title, date and view tabs on the left, playback in the centre and the skip button on the right, with the Turn's progress beneath. */
@@ -182,10 +179,10 @@
 /* Playback sits apart from the view tabs, in a panel of its own, with mute beside the speeds. */
 .mission-playback {
   gap: 0.8rem;
-  padding: 0.4rem 0.8rem;
+  padding: var(--pad-item);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
-  background: rgb(23 27 40 / 60%);
+  border-radius: var(--radius);
+  background: rgb(var(--panel-rgb) / 60%);
 }
 
 .mission-playback button {
@@ -200,7 +197,7 @@
 .mission-playback button[aria-pressed="true"] {
   background: var(--accent);
   border-color: var(--accent);
-  color: #10121a;
+  color: var(--on-accent);
 }
 
 /* A secondary button: the accent is kept for the pressed speed and the current view. */
@@ -222,8 +219,8 @@
   background: var(--panel);
   border: 2px solid var(--accent);
   border-bottom: none;
-  border-radius: 0.5rem 0.5rem 0 0;
-  padding: 0.9rem 1.5rem 1rem;
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: var(--pad-card-compact);
 }
 
 .decision-point p {
@@ -242,9 +239,9 @@
   gap: 0.4rem;
   align-content: start;
   justify-items: start;
-  padding: 0.7rem 1rem;
+  padding: var(--pad-card-compact);
   border: 1px solid var(--panel-border);
-  border-radius: 0.4rem;
+  border-radius: var(--radius-sm);
 }
 
 .events-column {
@@ -285,5 +282,5 @@
 .decision-advice {
   display: grid;
   gap: 0.3rem;
-  padding: 0.6rem 1rem;
+  padding: var(--pad-card-compact);
 }

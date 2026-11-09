@@ -2,8 +2,8 @@ dialog {
   color: var(--text);
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
-  padding: 1.5rem 2rem;
+  border-radius: var(--radius);
+  padding: var(--pad-panel);
 }
 
 dialog::backdrop {

@@ -7,8 +7,8 @@
   background:
     linear-gradient(
       to bottom,
-      rgb(11 13 20 / 55%) 0%,
-      rgb(11 13 20 / 75%) 45%,
+      rgb(var(--background-rgb) / 55%) 0%,
+      rgb(var(--background-rgb) / 75%) 45%,
       var(--background) 100%
     ),
     url("/art/mars.jpg") center / cover no-repeat var(--background);
@@ -49,7 +49,7 @@
   display: grid;
   gap: 0.8rem;
   width: 100%;
-  background: rgb(23 27 40 / 85%);
+  background: rgb(var(--panel-rgb) / 85%);
   border: 1px solid var(--panel-border);
   border-radius: 0.5rem;
   padding: 1.2rem 1.5rem;

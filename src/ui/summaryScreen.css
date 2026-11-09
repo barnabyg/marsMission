@@ -84,8 +84,8 @@
   gap: 0.8rem;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
-  padding: 1.2rem 1.5rem;
+  border-radius: var(--radius);
+  padding: var(--pad-card);
 }
 
 .value-change h2,
@@ -249,7 +249,7 @@
 .program-ending,
 .program-summary .value-change,
 .program-summary .milestone-card {
-  padding: 0.8rem 1.2rem;
+  padding: var(--pad-card-compact);
 }
 
 .program-ending {
@@ -257,7 +257,7 @@
   gap: 0.3rem;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
+  border-radius: var(--radius);
 }
 
 .program-ending h2 {

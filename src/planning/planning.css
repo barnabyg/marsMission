@@ -39,7 +39,7 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.4rem 1.5rem;
-  padding: 1rem 2rem;
+  padding-block: 1rem;
 }
 
 .empty-note {
@@ -61,8 +61,8 @@
   justify-items: start;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 0.5rem;
-  padding: 1.5rem 2rem;
+  border-radius: var(--radius);
+  padding: var(--pad-panel);
 }
 
 .panel label {

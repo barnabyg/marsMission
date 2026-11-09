@@ -20,9 +20,10 @@
 .save-slot-row.choosable {
   cursor: pointer;
   border: 1px solid transparent;
-  border-radius: 0.4rem;
-  padding: 0.4rem 0.8rem;
-  margin: -0.4rem -0.8rem;
+  border-radius: var(--radius-sm);
+  padding: var(--pad-item);
+  /* Out by its padding, so that the slots' text lines up with the rest of the dialog. */
+  margin: -0.4rem -0.9rem;
 }
 
 .save-slot-row.choosable:hover {

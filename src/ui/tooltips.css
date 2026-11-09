@@ -40,10 +40,10 @@
   inset: auto;
   margin: 0;
   width: 30rem;
-  background: #0f1320;
+  background: var(--tooltip-bg);
   border: 1px solid var(--accent);
-  border-radius: 0.4rem;
-  padding: 0.8rem 1.1rem;
+  border-radius: var(--radius-sm);
+  padding: var(--pad-card-compact);
   font-weight: 400;
   color: var(--text);
   pointer-events: none;

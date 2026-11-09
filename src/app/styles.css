@@ -22,12 +22,19 @@
   --font-display: "Barlow Condensed", "Segoe UI", system-ui, sans-serif;
   font-family: var(--font-body);
   color-scheme: dark;
-  --background: #0b0d14;
-  --panel: #171b28;
+  /* The two surfaces as channels too, so that a translucent one keeps the same colour: rgb(var(--panel-rgb) / 80%). */
+  --background-rgb: 11 13 20;
+  --background: rgb(var(--background-rgb));
+  --panel-rgb: 23 27 40;
+  --panel: rgb(var(--panel-rgb));
+  /* A tooltip's own dark, between the background and a panel, so that it stands off whatever it covers. */
+  --tooltip-bg: #0f1320;
   --panel-border: #2d3448;
   --text: #e8eaf0;
   --muted: #a3aabd;
   --accent: #e2703a;
+  /* Text and marks on an accent fill, such as a primary button or a step's number. */
+  --on-accent: #10121a;
   --problem: #ff8f7a;
   --warning: #ffb547;
   --good: #7fd18b;
@@ -43,6 +50,31 @@
   --tutorial-tint: #282045;
   --tutorial-reason: #c9bff0;
   --tutorial-on-accent: #15111f;
+  /* Mission Mode's labels in the scene (src/mission/mission.css), one colour for each kind of thing, bright enough to
+     read over space and Mars. A crash is labelled in --problem. */
+  --scene-spacecraft: #ffd9bd;
+  --scene-surface: #ffe08a;
+  --scene-lander: #ffd46b;
+  --scene-rover: #6fe6d4;
+  --scene-fuel-plant: #ffb37a;
+  --scene-habitat: #f4efe4;
+  --scene-lab: #7fdcea;
+  --scene-crew: #9effa0;
+
+  /* Corners: --radius for panels, dialogs and cards on their own, --radius-sm for controls, tags and cards packed in a
+     list. Only a circle (50%) is written out, and nothing is rounded in px. */
+  --radius-sm: 0.3rem;
+  --radius: 0.5rem;
+  /* Wider than half a one-line tag's height, so that its ends are round. */
+  --radius-pill: 1rem;
+  /* Padding, from the roomiest to the tightest: a panel or dialog, a card on its own, a card packed with others or over
+     the scene, and a card in a list. A screen that needs a tighter fit picks a tighter one rather than a new value. */
+  --pad-panel: 1.5rem 2rem;
+  --pad-card: 1.2rem 1.5rem;
+  --pad-card-compact-y: 0.8rem;
+  --pad-card-compact-x: 1.2rem;
+  --pad-card-compact: var(--pad-card-compact-y) var(--pad-card-compact-x);
+  --pad-item: 0.4rem 0.9rem;
 }
 
 * {
@@ -107,7 +139,7 @@ select {
   color: inherit;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 0.3rem;
+  border-radius: var(--radius-sm);
   padding: 0.4rem 0.9rem;
 }
 
@@ -134,7 +166,7 @@ select:not(:disabled):active {
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #10121a;
+  color: var(--on-accent);
   font-weight: 600;
 }
 
