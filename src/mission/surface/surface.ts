@@ -3,7 +3,7 @@ import type {
   CrewMemberAtMarsOnTimeline as CrewMember,
   Timeline,
 } from "../../simulation/simulation";
-import { assetsAtMarsOn } from "../journey";
+import { activityAndCut, assetsAtMarsOn } from "../journey";
 import type { CameraPose, Point } from "../sceneParts";
 import {
   roverSpot,
@@ -270,11 +270,7 @@ export function describeSite(
     .map((asset) =>
       asset.model === "crewLander"
         ? describeCrew(asset, day)
-        : `${asset.name} (${asset.kind}): ${asset.activityName}${
-            asset.cutServiceLifeDays === undefined
-              ? ""
-              : `, Service Life cut to ${asset.cutServiceLifeDays} days`
-          }`,
+        : `${asset.name} (${asset.kind}): ${activityAndCut(asset)}`,
     );
   const coming = landingsOnTheirWay(timeline.mission, day)
     .filter((landing) => landing.siteName === siteName)

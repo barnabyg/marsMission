@@ -2,7 +2,7 @@ import type { Timeline } from "../../simulation/simulation";
 import { GameText } from "../../ui/GameText";
 import type { MissionViewId } from "../missionViews";
 import { ascentStatus, type AscentNow } from "./ascent";
-import { sequenceStatus, type SequenceNow } from "./sequence";
+import { landingNowOn, sequenceStatus, type SequenceNow } from "./sequence";
 import { describeSite, dustStormAt } from "./surface";
 
 /** Why the surface view's button is disabled, which the button itself tells the player. */
@@ -32,13 +32,7 @@ export function SurfaceControls({
   onPickSite,
 }: SurfaceControlsProps) {
   if (site === null || view !== "surface") return null;
-  const landing = sequenceStatus(sequence, site);
-  const status = landing ?? ascentStatus(ascent, site);
-  // While a landing plays, its line names what is coming down, which the list below then leaves out.
-  const landingOnDay =
-    landing !== null && sequence !== null && !sequence.sequence.crashed
-      ? sequence.sequence.day
-      : null;
+  const status = sequenceStatus(sequence, site) ?? ascentStatus(ascent, site);
   const storm = dustStormAt(timeline, day, site);
   return (
     <>
@@ -77,7 +71,7 @@ export function SurfaceControls({
             day,
             site,
             ascent?.sequence.siteName === site,
-            landingOnDay,
+            landingNowOn(sequence, site),
           ),
         ].map((line) => (
           <li key={line}>

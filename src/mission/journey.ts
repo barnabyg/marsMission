@@ -65,6 +65,19 @@ export function describeJourney(
   return settled.length > 0 ? settled.join(". ") : null;
 }
 
+/** What an Asset at Mars is doing, and the Service Life a Contingency cut it to, if one did: "Survey, Service Life cut to 780 days". */
+export function activityAndCut({
+  activityName,
+  cutServiceLifeDays,
+}: {
+  activityName: string;
+  cutServiceLifeDays?: number;
+}): string {
+  return cutServiceLifeDays === undefined
+    ? activityName
+    : `${activityName}, Service Life cut to ${cutServiceLifeDays} days`;
+}
+
 /** The Assets operating at Mars on a given day. */
 export function assetsAtMarsOn(
   timeline: Pick<Timeline, "assetsAtMars">,
@@ -96,10 +109,6 @@ export function assetsOperatingOn(
           asset.landingSiteName
             ? `${asset.label} at ${asset.landingSiteName}`
             : asset.label
-        }: ${asset.activityName}${
-          asset.cutServiceLifeDays === undefined
-            ? ""
-            : `, Service Life cut to ${asset.cutServiceLifeDays} days`
-        }`,
+        }: ${activityAndCut(asset)}`,
     );
 }
