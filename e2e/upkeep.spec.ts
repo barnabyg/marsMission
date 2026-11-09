@@ -38,10 +38,10 @@ test("pays Upkeep for an Asset kept at Mars, shown before the Turn and in its su
     "title",
     "Takes it out of service as this Turn starts, saving its Upkeep of $10M a Turn.",
   );
-  await expect(page.getByTestId("turn-spend-amount")).toHaveText("$10M");
+  await expect(page.getByTestId("turn-spend-amount")).toHaveText("−$10M");
   await chooseAssets(page, ["Pathfinder Orbiter"]);
   await expect(page.getByTestId("upkeep-cost")).toHaveText("$10M");
-  await expect(page.getByTestId("turn-spend-amount")).toHaveText("$1.01B");
+  await expect(page.getByTestId("turn-spend-amount")).toHaveText("−$1.01B");
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await chooseAssets(page, []);
 

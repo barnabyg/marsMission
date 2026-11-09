@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { changesSinceLastTurn, publicSupportGauge } from "./statusValues";
+import {
+  changesSinceLastTurn,
+  moneyDetail,
+  publicSupportGauge,
+  turnSpend,
+} from "./statusValues";
 
 describe("the Public Support gauge", () => {
   it("warns when Public Support is under one and a half times the Cancellation Level", () => {
@@ -20,6 +25,43 @@ describe("the Public Support gauge", () => {
     const gauge = publicSupportGauge(600, 50);
     expect(gauge.fillPercent).toBe(100);
     expect(gauge.levelPercent).toBeCloseTo(8.33);
+  });
+});
+
+describe("what this Turn will spend, under the Money", () => {
+  it("says what it spends, with a minus sign, and what it leaves", () => {
+    expect(turnSpend(1400, 2300)).toEqual({
+      spent: "−$1.4B",
+      rest: "$900M left",
+      level: "within",
+    });
+  });
+
+  it("spends $0M with no sign when nothing is chosen", () => {
+    expect(turnSpend(0, 2300).spent).toBe("$0M");
+  });
+
+  it("says by how much it is over the Money", () => {
+    expect(turnSpend(2350, 2300)).toMatchObject({
+      rest: "$50M over",
+      level: "over",
+    });
+  });
+
+  it("rounds what it leaves to three significant figures", () => {
+    expect(turnSpend(85, 9000).rest).toBe("$8.92B left");
+  });
+});
+
+describe("the Money's tooltip", () => {
+  it("says what Base funding comes in as the Turn ends", () => {
+    expect(moneyDetail(2300, 200)).toBe("+$200M comes in as this Turn ends.");
+  });
+
+  it("adds the exact figure when the Money is rounded", () => {
+    expect(moneyDetail(8915, 200)).toBe(
+      "+$200M comes in as this Turn ends. Exactly $8.915B.",
+    );
   });
 });
 
