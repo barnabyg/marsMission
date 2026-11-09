@@ -6,7 +6,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 
 1. `workOutTurn.ts` checks the plan with `planCheck.ts` and flies the Mission with `flyMission.ts`, which works out each subject of the flight in its own module: solar particle events, go/no-go checks, Contingencies, Mission Events that fail and the Crew's Health on the way.
 2. `turnSteps.ts` carries out the rest of the Turn's steps, in `resolveTurn`: Milestones for arriving and for a first landing (`arrivals.ts`), technologies that became Flight-proven (`flightProven.ts`), Development started and finished (`development.ts`), Assets and Crew at work (`assetsInService.ts`, `crewAtMars.ts`), dust storms (`dustStorms.ts`), the journey home of any Crew coming home (`journeyHome.ts`) or of samples sent home (`sampleReturn.ts`), the award for those who get home (`crewHome.ts`), the samples cached and those that reached Earth (`sampleCaching.ts`, `samplesHome.ts`), Surveys, ascent propellant (`ascentPropellant.ts`), the Supplies kept in habitats (`habitats.ts`), Ongoing Research (`ongoingResearch.ts`), Science Milestones (`scienceMilestones.ts`), Funding Thresholds and the fading of Public Support (`fundingThresholds.ts`). It builds the next Program, the Timeline and the Turn summary.
-3. `workOutTurn.ts` stops at the earliest Decision Point that has no answer, from the Mission, a dust storm or the journey home, of Crew or samples, and gives the Timeline up to it.
+3. `workOutTurn.ts` stops at the earliest Decision Point that has no answer, from the Mission, a dust storm or the journey home, of Crew or samples, and gives the Timeline up to it. Once the Turn has none left, it adds the Turn to the Program's record with `programSummary.ts`.
 
 - `simulation.ts`: The Simulation's interface, `createSimulation`, which hands each part to the modules below: starting, saving and restoring a Program, what the player sees of it, previews, and working out or running a Turn
 - `programView.ts`: A new Program, and what the player sees of a Program between Turns
@@ -16,6 +16,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 - `previews.ts`: The shapes of what Planning Mode shows of a Mission before it launches: its Assets, with what a longer Service Life adds, Mission Events, Trajectories, Activities and Developments, and what a plan costs and weighs
 - `choiceText.ts`: How Planning Mode and the tutorial word what an Activity earns and what a longer Service Life adds against its cost and Upkeep, so that the tutorial quotes what the choices show
 - `turnSummary.ts`: The Turn summary: what changed over a Turn
+- `programSummary.ts`: The Program summary, shown once a Program ends: the record a Program keeps over its Turns (Missions launched and lost, the highest Public Support, samples home and the Turn each Milestone was earned), and the summary built from it and the Program
 - `timeline.ts`: The Timeline: what happened in a Turn, as Mission Mode plays it
 - `rules.ts`: `createRules`: looking things up in the Catalogue, such as the Trajectory or Mission Events a Mission has, the day of a Mission Event, timed from launch, departure, arrival or leaving Mars, and failure probabilities; plus `roll`
 - `planCheck.ts`: What a plan costs and weighs, and what's wrong with it, if anything

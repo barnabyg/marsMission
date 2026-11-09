@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isoDate, type Catalogue } from "../catalogue/catalogue";
+import { newRecord } from "./programSummary";
 import type { Program } from "./types";
 
 /** A Program as data, for keeping between sessions. */
@@ -252,7 +253,23 @@ const format13 = format12.extend({
   ]),
 });
 
-const newestFormat = format13;
+/**
+ * Adds the record kept for the Program summary: the Missions launched and lost, the highest Public Support, the samples
+ * home and the Turn each Milestone was earned. A save from before it counts from the Turn it is on, with its Public
+ * Support then as the highest.
+ */
+const format14 = format13.extend({
+  record: z.strictObject({
+    countedFromTurn: z.number().int().positive(),
+    missionsLaunched: count,
+    missionsLost: count,
+    peakPublicSupport: count,
+    samplesHome: count,
+    milestoneTurns: z.record(z.string(), z.number().int().positive()),
+  }),
+});
+
+const newestFormat = format14;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -377,6 +394,13 @@ const formats: readonly SaveFormat[] = [
     upgrade: (old: z.output<typeof format12>): z.output<typeof format13> => ({
       ...old,
       tutorial: { kind: "off" },
+    }),
+  },
+  {
+    schema: format13,
+    upgrade: (old: z.output<typeof format13>): z.output<typeof format14> => ({
+      ...old,
+      record: newRecord(old.turnNumber, old.publicSupport),
     }),
   },
   { schema: newestFormat },
