@@ -386,4 +386,52 @@ test.describe("at 1920×1080", () => {
     await chooseAssets(page, []);
     expect(await heights()).toEqual(before);
   });
+
+  test("says that more steps are below while they are, with the budget bar pinned", async ({
+    page,
+  }) => {
+    await page.goto(`/?seed=${successSeed}`);
+    await chooseAssets(page, ["Trailblazer Rover"]);
+    const panel = page.locator(".mission-panel");
+    const cue = panel.getByTestId("more-below");
+    const headings = [3, 4].map((step) =>
+      page
+        .getByTestId("mission-step")
+        .nth(step - 1)
+        .getByRole("heading"),
+    );
+    // Either the Landing Site and Mission Events headings are in view, or a cue says more steps are below.
+    const inView = await Promise.all(
+      headings.map((heading) =>
+        heading.evaluate(
+          (element) =>
+            element.getBoundingClientRect().bottom <= window.innerHeight,
+        ),
+      ),
+    );
+    if (!inView.every(Boolean)) {
+      await expect(cue).toBeVisible();
+      await expect(cue).toHaveText("More steps below");
+    }
+    for (const name of ["Launch Mission", "End Turn without launching"]) {
+      await expect(page.getByRole("button", { name })).toBeInViewport({
+        ratio: 1,
+      });
+    }
+    await expect(page.getByTestId("budget-bar")).toBeInViewport({ ratio: 1 });
+
+    // Scrolled to the last step, nothing is below, so the cue goes; the budget bar stays where it was.
+    const barBefore = await page.getByTestId("budget-bar").boundingBox();
+    await headings[1]?.scrollIntoViewIfNeeded();
+    await page.getByTestId("mission-steps").evaluate((steps) => {
+      steps.scrollTop = steps.scrollHeight;
+    });
+    await expect(cue).toBeHidden();
+    await expect(headings[1] ?? page.locator("none")).toBeInViewport({
+      ratio: 1,
+    });
+    expect(await page.getByTestId("budget-bar").boundingBox()).toEqual(
+      barBefore,
+    );
+  });
 });

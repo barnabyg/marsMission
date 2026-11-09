@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import {
   type Program,
   type ProgramView,
@@ -14,6 +15,7 @@ import { MissionLaunchChoice } from "./MissionLaunchChoice";
 import { fitOfAdding } from "./missionFit";
 import { MissionStepCard } from "./MissionStepCard";
 import { ReturnVehicleChoice } from "./ReturnVehicleChoice";
+import { ScrollCue } from "./ScrollCue";
 import { missionSteps } from "./missionSteps";
 import type { MissionPlan } from "./useMissionPlan";
 
@@ -28,8 +30,9 @@ interface MissionPanelProps {
 
 /**
  * Everything the player chooses for this Turn's Mission, as numbered steps, and the budget bar with the buttons that end
- * the Turn. The steps scroll by themselves when they don't fit, under the budget bar, which stays in view. The choices and the plan they make
- * come from `useMissionPlan`, and each part of the panel has its own component.
+ * the Turn. The steps scroll by themselves when they don't fit, under the budget bar, which stays in view, with a cue
+ * over their foot while more steps are below, as the thin scrollbar alone tells a new player nothing. The choices and
+ * the plan they make come from `useMissionPlan`, and each part of the panel has its own component.
  */
 export function MissionPanel({
   simulation,
@@ -56,13 +59,14 @@ export function MissionPanel({
     nothingTicked,
     landsOnMars: choices.landsOnMars,
   });
+  const steps = useRef<HTMLDivElement>(null);
 
   return (
     <section className="panel mission-panel">
       <h2>
         <GameText heading>New Mission</GameText>
       </h2>
-      <div className="mission-steps" data-testid="mission-steps">
+      <div className="mission-steps" data-testid="mission-steps" ref={steps}>
         {launchStep && (
           <MissionStepCard step={launchStep}>
             <MissionLaunchChoice
@@ -166,6 +170,7 @@ export function MissionPanel({
           </MissionStepCard>
         )}
       </div>
+      <ScrollCue scroller={steps}>More steps below</ScrollCue>
       <BudgetBar
         costMillions={costMillions}
         developmentCostMillions={developmentCostMillions}

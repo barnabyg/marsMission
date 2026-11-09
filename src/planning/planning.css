@@ -123,6 +123,30 @@
   min-width: min(22rem, 100%);
 }
 
+/* A fade over the foot of something that scrolls, with a word on what is below, while there is more (ScrollCue.tsx). */
+.scroll-cue {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  height: 3.5rem;
+  padding-bottom: 0.2rem;
+  background: linear-gradient(to bottom, transparent, var(--panel) 75%);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.scroll-cue[data-more] {
+  visibility: visible;
+}
+
+.scroll-cue span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 /* Two columns, so that a Program with every Milestone leaves room for what is operating at Mars. */
 .milestone-list {
   columns: 2;
