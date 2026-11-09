@@ -6,6 +6,7 @@ import {
   pauseAtEvent,
   watchForProblems,
 } from "./helpers";
+import { openLaunchStep } from "./planningHelpers";
 import { freeReturnSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });
@@ -19,6 +20,7 @@ test("Free-return is offered only for a Mission with Mars orbit insertion, and s
 }) => {
   await page.goto(`/?seed=${freeReturnSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await openLaunchStep(page);
   await trajectory(page).selectOption("free-return");
   await expect(page.getByTestId("mission-cost")).toHaveText("$1.03B");
   await expect(page.getByTestId("mission-mass")).toHaveText(
@@ -26,6 +28,7 @@ test("Free-return is offered only for a Mission with Mars orbit insertion, and s
   );
 
   await chooseAssets(page, ["Prospector Lander"]);
+  await openLaunchStep(page);
   await expect(
     trajectory(page).locator("option", { hasText: "Free-return" }),
   ).toHaveCount(0);
@@ -43,6 +46,7 @@ test("a Free-return Mission whose arrival burn fails comes back, at no Public Su
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${freeReturnSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await openLaunchStep(page);
   await trajectory(page).selectOption("free-return");
 
   await pauseAtEvent(
@@ -100,6 +104,7 @@ test("a Contingency's Decision Point comes before the Free-return", async ({
 }) => {
   await page.goto(`/?seed=${freeReturnSeed}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await openLaunchStep(page);
   await trajectory(page).selectOption("free-return");
   await page.getByRole("checkbox", { name: /Reserve fuel/ }).check();
   await page.getByRole("button", { name: "Launch Mission" }).click();

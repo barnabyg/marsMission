@@ -6,6 +6,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { openLaunchStep } from "./planningHelpers";
 import { successSeed } from "./seeds";
 
 function launchMission(page: Page) {
@@ -103,6 +104,46 @@ test("plans a Mission in four numbered steps, opening Landing Site and Mission E
   expect(problems).toEqual([]);
 });
 
+test("folds the Launch Vehicle step to one line once something is ticked, and opens it on Change", async ({
+  page,
+}) => {
+  const problems = watchForProblems(page);
+  await page.goto(`/?seed=${successSeed}`);
+  const launch = page.getByRole("region", {
+    name: "1 Launch Vehicle and Trajectory",
+  });
+  const summary = launch.getByTestId("mission-step-summary");
+  const change = page.getByRole("button", {
+    name: "Change the Launch Vehicle and Trajectory",
+  });
+  // Open with nothing ticked, so that the first thing a new player sees is the Launch Vehicle.
+  await expect(launch.getByRole("combobox")).toHaveCount(2);
+  await expect(summary).toHaveCount(0);
+
+  // Ticking something folds it to what it chose, so that the steps below come into view.
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await expect(summary).toHaveText("Meridian Medium (4 t) · Slow (210 days)");
+  await expect(launch.getByRole("combobox")).toHaveCount(0);
+  await expect(launch.getByTestId("trajectory-details")).toHaveCount(0);
+
+  // Change opens it again, and the choice shows in the line once it folds again on the next tick.
+  await change.click();
+  await expect(launch.getByRole("combobox")).toHaveCount(2);
+  await page.getByRole("combobox", { name: "Trajectory" }).selectOption("fast");
+  await expect(launch.getByTestId("trajectory-details")).toBeVisible();
+  // The rover alone fits the Fast Trajectory's 3.5 tonnes; a second Asset beside the orbiter wouldn't.
+  await chooseAssets(page, ["Trailblazer Rover"]);
+  await expect(summary).toHaveText("Meridian Medium (4 t) · Fast (150 days)");
+  await expect(change).toBeVisible();
+
+  // Unticking everything opens it, as nothing is planned.
+  await chooseAssets(page, []);
+  await expect(summary).toHaveCount(0);
+  await expect(launch.getByRole("combobox")).toHaveCount(2);
+  expect(await termsWithoutTooltips(page)).toEqual([]);
+  expect(problems).toEqual([]);
+});
+
 test("shows each Asset as a card, greys out those that wouldn't fit, and reveals an Asset's choices once ticked", async ({
   page,
 }) => {
@@ -189,6 +230,7 @@ test("shows each Asset as a card, greys out those that wouldn't fit, and reveals
     page.getByRole("checkbox", { name: /Crewed Mission/ }),
   ).toBeDisabled();
   // Something ticked can always be unticked, even once a smaller choice leaves it too heavy.
+  await openLaunchStep(page);
   await page.getByRole("combobox", { name: "Trajectory" }).selectOption("fast");
   await expect(orbiter.getByRole("checkbox")).toBeEnabled();
   expect(await termsWithoutTooltips(page)).toEqual([]);

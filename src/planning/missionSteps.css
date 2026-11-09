@@ -82,6 +82,20 @@
   color: var(--muted);
 }
 
+/* A step that has folded, done and moved on from, is its heading, what it chose and a small Change button. */
+.mission-step.folded .mission-step-number {
+  background: var(--good);
+}
+
+.mission-step-summary {
+  color: var(--text);
+}
+
+.mission-step-change {
+  padding: 0.15rem 0.5rem;
+  font-size: var(--text-sm);
+}
+
 /* A step that doesn't apply yet is only its heading and why, and steps back. */
 .mission-step.collapsed {
   border-style: dashed;

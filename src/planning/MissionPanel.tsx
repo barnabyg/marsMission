@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   type Program,
   type ProgramView,
@@ -16,7 +16,7 @@ import { fitOfAdding } from "./missionFit";
 import { MissionStepCard } from "./MissionStepCard";
 import { ReturnVehicleChoice } from "./ReturnVehicleChoice";
 import { ScrollCue } from "./ScrollCue";
-import { missionSteps } from "./missionSteps";
+import { launchSummary, missionSteps } from "./missionSteps";
 import type { MissionPlan } from "./useMissionPlan";
 
 /** The last Turn on which the hint to tick an Asset or Crew shows: a new player's first couple of Turns. */
@@ -58,9 +58,24 @@ export function MissionPanel({
   const fetchable = view.crew.filter(
     ({ withoutWayHome }) => withoutWayHome.length > 0,
   );
+  // What is ticked, as one key: the Launch Vehicle step folds once anything is, and opens on Change until the next
+  // tick or untick, so the key the player pressed Change for is kept rather than a flag.
+  const tickedKey = [
+    choices.assetIds.toSorted().join(","),
+    choices.plannedCrew?.size ?? 0,
+    choices.returnVehicleFor ?? "",
+  ].join("|");
+  const [changingFor, setChangingFor] = useState<string | null>(null);
   const [launchStep, assetsStep, landingStep, eventsStep] = missionSteps({
     nothingTicked,
     landsOnMars: choices.landsOnMars,
+    launch: {
+      summary: launchSummary(
+        view.launchVehicles.find(({ id }) => id === choices.launchVehicleId),
+        choices.trajectory,
+      ),
+      changing: changingFor === tickedKey,
+    },
   });
   const steps = useRef<HTMLDivElement>(null);
 
@@ -71,7 +86,12 @@ export function MissionPanel({
       </h2>
       <div className="mission-steps" data-testid="mission-steps" ref={steps}>
         {launchStep && (
-          <MissionStepCard step={launchStep}>
+          <MissionStepCard
+            step={launchStep}
+            onChange={() => {
+              setChangingFor(tickedKey);
+            }}
+          >
             <MissionLaunchChoice
               launchVehicles={view.launchVehicles}
               launchVehicleId={choices.launchVehicleId}

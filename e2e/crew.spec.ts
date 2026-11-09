@@ -16,6 +16,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { openLaunchStep } from "./planningHelpers";
 import {
   colossusBuiltSave,
   colossusMoney,
@@ -57,6 +58,7 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   await expect(crewedMission(page)).toBeDisabled();
   await launchVehicle(page).selectOption("meridian-colossus");
   await crewedMission(page).check();
+  await openLaunchStep(page);
   await launchVehicle(page).selectOption("meridian-heavy");
   await expect(page.getByRole("combobox", { name: "Crew size" })).toHaveValue(
     "2",
@@ -103,6 +105,7 @@ test("develops the Meridian Colossus, launches a Crewed Mission on it and sees i
   // Three Crew with the least Supplies and Heavy shielding, which keeps them alive until their Supplies run out.
   await page.getByRole("combobox", { name: "Crew size" }).selectOption("3");
 
+  await openLaunchStep(page);
   await launchVehicle(page).selectOption("meridian-colossus");
   await expect(page.getByRole("alert")).toHaveCount(0);
   await expect(page.getByTestId("mission-mass")).toHaveText("14 of 16 tonnes");

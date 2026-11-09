@@ -5,6 +5,7 @@ import {
   endTurnWithoutLaunching,
   overrideProgramData,
 } from "./helpers";
+import { openLaunchStep } from "./planningHelpers";
 import { openBusyProgram, realMilestones } from "./busyProgram";
 import { screenSizes, whatScrolls, unreadableText } from "./layoutHelpers";
 import { successSeed } from "./seeds";
@@ -184,6 +185,7 @@ for (const size of screenSizes) {
       for (const contingency of await contingencies.all()) {
         await contingency.check();
       }
+      await openLaunchStep(page);
       await page
         .getByRole("combobox", { name: "Trajectory" })
         .selectOption("free-return");
@@ -224,6 +226,7 @@ for (const size of screenSizes) {
         .all()) {
         await development.check();
       }
+      await openLaunchStep(page);
       await page
         .getByRole("combobox", { name: "Trajectory" })
         .selectOption("free-return");

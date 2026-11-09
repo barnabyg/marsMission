@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
 import { openBusyProgram } from "./busyProgram";
 import { chooseAssets } from "./helpers";
+import { openLaunchStep } from "./planningHelpers";
 import { screenSizes, whatScrolls } from "./layoutHelpers";
 
 const realFiles = realCatalogueFiles();
@@ -32,6 +33,7 @@ for (const size of screenSizes) {
         .all()) {
         await contingency.check();
       }
+      await openLaunchStep(page);
       await page
         .getByRole("combobox", { name: "Trajectory" })
         .selectOption("free-return");
@@ -72,6 +74,7 @@ for (const size of screenSizes) {
         .all()) {
         await contingency.check();
       }
+      await openLaunchStep(page);
       await page
         .getByRole("combobox", { name: "Trajectory" })
         .selectOption("free-return");
@@ -117,6 +120,7 @@ for (const size of screenSizes) {
         .all()) {
         await contingency.check();
       }
+      await openLaunchStep(page);
       await page
         .getByRole("combobox", { name: "Trajectory" })
         .selectOption("free-return");

@@ -5,6 +5,7 @@ import {
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { openLaunchStep } from "./planningHelpers";
 import { successSeed } from "./seeds";
 
 async function playTurnWithoutLaunching(page: Page): Promise<void> {
@@ -77,6 +78,7 @@ test("shows what the Turn will spend beside the Money, and what it leaves, as ch
   await expect(left).toHaveText("$1.3B left");
 
   // Within a tenth of the Money is near it, in amber, as on the budget bar.
+  await openLaunchStep(page);
   await page
     .getByRole("combobox", { name: "Launch Vehicle" })
     .selectOption("meridian-heavy");
