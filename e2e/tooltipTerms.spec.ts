@@ -1,7 +1,11 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
 import { tooltips, type Term } from "../src/ui/tooltips";
-import { termsInButtons, termsWithoutTooltips } from "./helpers";
+import {
+  missionViewport,
+  termsInButtons,
+  termsWithoutTooltips,
+} from "./helpers";
 import { chooseAssets } from "./planningHelpers";
 import { continueFromSave, overrideProgramData } from "./saveHelpers";
 import {
@@ -13,6 +17,9 @@ import { colossusBuiltSave, colossusMoney, crewSeed } from "./colossusSeeds";
 import { landingSeed, pinpointLandingSeed, successSeed } from "./seeds";
 
 // The tooltips of each area's game terms, wherever Planning Mode, Mission Mode and the Turn summary name them.
+
+// These play Mission Mode, and what a tooltip says doesn't depend on the window's size.
+test.use({ viewport: missionViewport });
 
 async function expectTooltip(page: Page, term: Locator, name: Term) {
   await term.hover();
