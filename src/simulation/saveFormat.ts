@@ -258,7 +258,25 @@ const format14 = format13.extend({
   }),
 });
 
-const newestFormat = format14;
+/**
+ * Adds the Bailout: available, offered for the Turn just played, or taken with the repayments still to come. Repaying
+ * it can take Money below zero. A save from before it has it available.
+ */
+const format15 = format14.extend({
+  moneyMillions: z.number().int(),
+  bailout: z.discriminatedUnion("kind", [
+    z.strictObject({ kind: z.literal("available") }),
+    z.strictObject({ kind: z.literal("offered"), millions: count }),
+    z.strictObject({
+      kind: z.literal("taken"),
+      onTurn: z.number().int().positive(),
+      millions: count,
+      repaymentsMillions: z.array(count),
+    }),
+  ]),
+});
+
+const newestFormat = format15;
 
 /** Every format so far, oldest first. A format's version is its position in this list, counting from 1. */
 const formats: readonly SaveFormat[] = [
@@ -390,6 +408,13 @@ const formats: readonly SaveFormat[] = [
     upgrade: (old: z.output<typeof format13>): z.output<typeof format14> => ({
       ...old,
       record: newRecord(old.turnNumber, old.publicSupport),
+    }),
+  },
+  {
+    schema: format14,
+    upgrade: (old: z.output<typeof format14>): z.output<typeof format15> => ({
+      ...old,
+      bailout: { kind: "available" },
     }),
   },
   { schema: newestFormat },

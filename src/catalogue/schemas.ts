@@ -33,6 +33,13 @@ const programSchema = z.strictObject({
       mostMillions: money,
     })
     .optional(),
+  // The Bailout: once in a Program, the cost of a lost Mission refunded, repaid in equal instalments as each of this
+  // many Turns ends. Left out, there is none.
+  bailout: z
+    .strictObject({
+      repaymentTurns: z.number().int().positive(),
+    })
+    .optional(),
 });
 
 const trajectoriesSchema = z

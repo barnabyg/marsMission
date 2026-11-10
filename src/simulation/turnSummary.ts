@@ -173,6 +173,17 @@ export interface TurnSummary {
   researchGrantMillions: number;
   /** What the Program's backers paid as the Turn ended, for its Public Support as the Turn started. */
   baseFundingMillions: number;
+  /** What the Turn's end repaid of a Bailout taken earlier, which moneyEndMillions takes off. */
+  bailoutRepaidMillions: number;
+  /**
+   * What taking the Bailout would refund for this Turn's lost Mission, and repay as each Turn to come ends, if it is
+   * on offer. It is offered only once the Turn has no Decision Point left.
+   */
+  bailoutOffer: {
+    millions: number;
+    repaymentMillions: number;
+    repaymentTurns: number;
+  } | null;
   /** The Mission Event that ended this Turn's Mission and what that cost, if one failed. Assets delivered before it are safe. */
   failure: {
     missionEventName: string;

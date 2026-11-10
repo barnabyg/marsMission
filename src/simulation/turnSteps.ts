@@ -55,6 +55,7 @@ import {
   missionOnTimeline,
 } from "./missionReport";
 import { earnTurn } from "./turnEarnings";
+import { bailoutAfterTurn, bailoutRefund, bailoutView } from "./bailout";
 import { addDays, type Rules } from "./rules";
 import type { DecisionAnswers, Program, TurnPlan, TurnResult } from "./types";
 import type { TimelineEntry } from "./timeline";
@@ -205,6 +206,7 @@ export function resolveTurn(
     funding,
     faded,
     baseFundingMillions,
+    bailoutRepaidMillions,
     moneyEndMillions,
   } = earnTurn(catalogue, rules, program, {
     costMillions,
@@ -222,6 +224,13 @@ export function resolveTurn(
     lostCrew,
   });
   const assetsAtMars = assetsAtMarsOnTimeline(rules, program, inService, flown);
+  const bailout = bailoutAfterTurn(
+    catalogue,
+    program.bailout,
+    bailoutRefund(catalogue, rules, program, plan, costMillions, flown),
+    faded.cancellationReason !== null,
+  );
+  const offered = bailoutView(catalogue, bailout);
 
   const otherEntries = [
     ...fetched.entries,
@@ -309,6 +318,7 @@ export function resolveTurn(
       ascentPropellantKg: propellant.ascentPropellantKg,
       habitatSuppliesKg: habitatSupplies.habitatSuppliesKg,
       samplesAtSites: samples.samplesAtSites,
+      bailout,
       status:
         faded.cancellationReason === null
           ? program.status
@@ -408,6 +418,15 @@ export function resolveTurn(
       researchGrants: research.researchGrants,
       researchGrantMillions: research.researchGrantMillions,
       baseFundingMillions,
+      bailoutRepaidMillions,
+      bailoutOffer:
+        offered.kind === "offered"
+          ? {
+              millions: offered.millions,
+              repaymentMillions: offered.repaymentMillions,
+              repaymentTurns: offered.repaymentTurns,
+            }
+          : null,
       failure: missionFailure(flown),
       contingencies: [
         ...contingenciesAnswered(flown),

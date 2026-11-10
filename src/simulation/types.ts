@@ -1,3 +1,4 @@
+import type { Bailout, BailoutView } from "./bailout";
 import type { TechnologyReadiness } from "./technologyReadiness";
 import type { Timeline } from "./timeline";
 import type { CrewAtMars } from "./crewView";
@@ -228,6 +229,8 @@ export interface Program {
   samplesAtSites: Record<string, number>;
   /** Whether the player gets the tutorial's advice, which they choose as the Program starts and can turn off. */
   tutorial: TutorialMode;
+  /** The once-in-a-Program refund of a lost Mission: still available, offered for the Turn just played, or taken. */
+  bailout: Bailout;
   status: ProgramStatus;
   /** What the Program has done over its Turns, for its summary. */
   record: ProgramRecord;
@@ -256,6 +259,8 @@ export interface ProgramView {
   milestones: { id: string; name: string }[];
   /** What the Program's backers will pay as this Turn ends, for its Public Support now. */
   baseFundingMillions: number;
+  /** The Bailout: whether it is still available, offered for the Turn just played, or taken and being repaid. */
+  bailout: BailoutView;
   nextFundingThreshold: {
     publicSupport: number;
     payoutMillions: number;

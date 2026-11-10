@@ -39,7 +39,11 @@ export function invalidStates(
       after.turnNumber !== before.turnNumber + 1,
       "The Turn number didn't go up by one.",
     ],
-    [after.moneyMillions < 0, `Money fell to ${after.moneyMillions}.`],
+    [
+      // Only repaying a Bailout, and Upkeep within what is still owed on it, can take Money below zero.
+      after.moneyMillions < 0 && after.bailout.kind !== "taken",
+      `Money fell to ${after.moneyMillions}.`,
+    ],
     [
       summary.moneyStartMillions !== before.moneyMillions,
       "moneyStartMillions doesn't match the Program's money before the Turn.",
@@ -55,7 +59,8 @@ export function invalidStates(
         summary.upkeepMillions +
         thresholdMillions +
         summary.researchGrantMillions +
-        summary.baseFundingMillions +
+        summary.baseFundingMillions -
+        summary.bailoutRepaidMillions +
         (summary.failure?.refundMillions ?? 0) !==
         summary.moneyEndMillions,
       "The Turn's money doesn't add up.",

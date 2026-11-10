@@ -1,3 +1,4 @@
+import { bailoutRepayment } from "./bailout";
 import { baseFundingFor } from "./baseFunding";
 import type { Catalogue } from "../catalogue/catalogue";
 import type { AssetInService } from "./assetsInService";
@@ -18,7 +19,7 @@ import type { Program } from "./types";
 
 /**
  * What the Turn earns and pays once everything else in it is settled: Ongoing Research, Science Milestones, Funding
- * Thresholds, the fading of Public Support and base funding, and the Science, Public Support and money it ends with.
+ * Thresholds, the fading of Public Support, base funding and repaying a Bailout, and the Science, Public Support and money it ends with.
  */
 export function earnTurn(
   catalogue: Catalogue,
@@ -129,6 +130,7 @@ export function earnTurn(
 
   // Sized by Public Support as the Turn started, so that Planning Mode can say what it will be.
   const baseFundingMillions = baseFundingFor(catalogue, program.publicSupport);
+  const bailoutRepaidMillions = bailoutRepayment(program.bailout);
   const moneyEndMillions =
     program.moneyMillions -
     costMillions -
@@ -136,7 +138,8 @@ export function earnTurn(
     upkeepMillions +
     sum(funding.payouts.map(({ payoutMillions }) => payoutMillions)) +
     research.researchGrantMillions +
-    baseFundingMillions +
+    baseFundingMillions -
+    bailoutRepaidMillions +
     (flown.returned?.refundMillions ?? 0);
   return {
     research,
@@ -148,6 +151,7 @@ export function earnTurn(
     funding,
     faded,
     baseFundingMillions,
+    bailoutRepaidMillions,
     moneyEndMillions,
   };
 }
