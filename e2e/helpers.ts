@@ -247,13 +247,16 @@ export function playFastUntil(page: Page, slowFrom: string): Promise<void> {
  * or another real-time sequence begins, and then at 1x, all from inside the page. A sequence plays for the same real
  * time at any speed while the Turn's days go on under it, so it wants 1x to fit in the Turn, but the days before it
  * don't. Hold the Turn in the sequence with holdSequence or holdSceneAt first. Mission Mode must be open already.
- * Resolves once it has slowed, or once the hold has struck first.
+ * It waits for the scene first, which loads lazily a moment after Mission Mode opens: at 10x, a busy machine can play
+ * the whole Turn before the scene exists to carry the attribute. Resolves once it has slowed, or once the hold has
+ * struck first.
  */
-export function playFastUntilSequence(
+export async function playFastUntilSequence(
   page: Page,
   attribute = "sequence",
 ): Promise<void> {
-  return page.evaluate(
+  await expect(page.getByTestId("mission-scene")).toBeAttached();
+  await page.evaluate(
     (name) =>
       new Promise<void>((resolve) => {
         const click = (label: string) => {
