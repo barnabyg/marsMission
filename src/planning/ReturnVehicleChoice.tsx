@@ -3,7 +3,7 @@ import { formatMoney, type ProgramView } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
 import { Icon } from "../ui/Icon";
 import { fitReason, type Fit } from "./missionFit";
-import { UnavailableReason } from "./UnavailableReason";
+import { UnavailableReason } from "../ui/UnavailableReason";
 
 interface ReturnVehicleChoiceProps {
   returnVehicle: ProgramView["crewedMission"]["returnVehicle"];

@@ -2,7 +2,7 @@ import { useId } from "react";
 import type { ProgramView } from "../simulation/simulation";
 import { formatDate } from "../ui/format";
 import { GameText } from "../ui/GameText";
-import { UnavailableReason } from "./UnavailableReason";
+import { UnavailableReason } from "../ui/UnavailableReason";
 
 type SampleWayHome = ProgramView["sampleReturns"][number];
 

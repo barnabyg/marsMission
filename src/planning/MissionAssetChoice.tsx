@@ -9,7 +9,7 @@ import { assetImageUrl } from "./assetImages";
 import { benefitTag } from "./benefitImpactText";
 import { fitReason, type Fit } from "./missionFit";
 import { ReadinessTag } from "./ReadinessTag";
-import { UnavailableReason } from "./UnavailableReason";
+import { UnavailableReason } from "../ui/UnavailableReason";
 
 interface MissionAssetChoiceProps {
   asset: ProgramView["assets"][number];

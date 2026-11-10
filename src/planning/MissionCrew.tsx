@@ -10,7 +10,7 @@ import { Icon } from "../ui/Icon";
 import { ActivityEarnings, ActivitySelect } from "./ActivitySelect";
 import { assetImageUrl, crewImageKind } from "./assetImages";
 import { fitReason, type Fit } from "./missionFit";
-import { UnavailableReason } from "./UnavailableReason";
+import { UnavailableReason } from "../ui/UnavailableReason";
 
 /** What each level of Protection would leave the Crew on arriving, such as " (with Protection: None 80, Light shielding 85)". */
 function protectionDetail({ protection }: PlannedCrew): string {
