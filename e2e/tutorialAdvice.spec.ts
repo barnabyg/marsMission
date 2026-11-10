@@ -1,9 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import {
-  chooseAssets,
-  termsWithoutTooltips,
-  watchForProblems,
-} from "./helpers";
+import { termsWithoutTooltips, watchForProblems } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
 import { endTurnWithoutLaunching } from "./turnHelpers";
 import { screenSizes } from "./layoutHelpers";
 import { successSeed } from "./seeds";

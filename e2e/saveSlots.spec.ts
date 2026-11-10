@@ -2,19 +2,18 @@ import { expect, test } from "@playwright/test";
 import { storageKeyFor } from "../src/save/saveStore";
 import { tooltips } from "../src/ui/tooltips";
 import {
-  chooseAssets,
   missionViewport,
-  openLoadDialog,
-  openSaveDialog,
-  operatingRow,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { chooseAssets, operatingRow } from "./planningHelpers";
 import {
   chooseSlotAndConfirm,
   confirmSlotButton,
   loadFromSlot,
   saveToSlot,
+  openLoadDialog,
+  openSaveDialog,
 } from "./saveHelpers";
 import { endTurnAndContinue } from "./turnHelpers";
 import { orbiterAndLanderSeed, successSeed } from "./seeds";

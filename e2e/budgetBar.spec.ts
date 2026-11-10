@@ -1,11 +1,7 @@
 import { expect, test } from "@playwright/test";
-import {
-  chooseAssets,
-  overrideProgramData,
-  termsWithoutTooltips,
-  watchForProblems,
-} from "./helpers";
-import { openLaunchStep } from "./planningHelpers";
+import { termsWithoutTooltips, watchForProblems } from "./helpers";
+import { overrideProgramData } from "./saveHelpers";
+import { openLaunchStep, chooseAssets } from "./planningHelpers";
 import { successSeed } from "./seeds";
 
 test("shows a Mission within its limits on the budget bar, ready to launch", async ({

@@ -1,11 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
-  chooseAssets,
-  holdTurnWhenShown,
   missionViewport,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
+import { holdTurnWhenShown } from "./playbackHelpers";
 import { solarParticleEventSeed, solarParticleLossSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });

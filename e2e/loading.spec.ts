@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { productionBaseURL } from "../playwright.config";
-import { chooseAssets, eventEntries, watchForProblems } from "./helpers";
+import { watchForProblems } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
+import { eventEntries } from "./playbackHelpers";
 import { seedFailingAt, successSeed } from "./seeds";
 
 // Loading the game: from the production build the playtest command runs, and refusing data files that don't validate.
@@ -32,12 +34,16 @@ test("loads the data files, Mission Mode's view and its art from a production bu
   await expect(
     page.getByTestId("mission-scene").locator("canvas"),
   ).toBeVisible();
+  // For a missing file, vite preview sends the game's page with status 200, and the browser reports no problem, so each
+  // must come back as an image: Mars and Earth for the scene, and the Asset cards' pictures in Planning Mode. The
+  // scene asks for its art only once its lazily loaded chunk has run, which on a busy machine can be after the network
+  // has been idle for a while, so this waits for both to arrive rather than for the network to settle.
+  await expect
+    .poll(() => artTypes.filter((type) => type === "image/jpeg").length)
+    .toBe(2);
   // A failed file is only reported once its request ends, which can be after the canvas appears.
   await page.waitForLoadState("networkidle");
   expect(problems).toEqual([]);
-  // For a missing file, vite preview sends the game's page with status 200, and the browser reports no problem, so each
-  // must come back as an image: Mars and Earth for the scene, and the Asset cards' pictures in Planning Mode.
-  expect(artTypes.filter((type) => type === "image/jpeg")).toHaveLength(2);
   expect(
     artTypes.filter((type) => type === "image/png").length,
   ).toBeGreaterThan(0);

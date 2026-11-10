@@ -1,12 +1,11 @@
 import { expect, test } from "@playwright/test";
 import {
-  chooseAssets,
-  continueFromSave,
   missionViewport,
-  overrideProgramData,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
+import { continueFromSave, overrideProgramData } from "./saveHelpers";
 import { colossusBuiltSave, colossusMoney, habitatSeed } from "./colossusSeeds";
 
 test.use({ viewport: missionViewport });

@@ -1,16 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import { sequenceTimeScale } from "../playwright.config";
 import {
-  chooseAssets,
-  continueFromSave,
-  launchHeld,
   missionViewport,
-  overrideProgramData,
-  pauseAtEvent,
   termsWithoutTooltips,
-  viewButton,
   watchForProblems,
 } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
+import { continueFromSave, overrideProgramData } from "./saveHelpers";
+import { launchHeld, pauseAtEvent, viewButton } from "./playbackHelpers";
 import {
   colossusBuiltSave,
   colossusMoney,
