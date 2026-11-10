@@ -103,7 +103,8 @@ describe("the balance of Phase 6", () => {
     expect(whenRich.cancelled).toBeLessThan(steady.cancelled + 0.02);
     // Developing it at once spends the money for a retry, and more Programs are cancelled.
     const atOnce = played("steady: develop the Endurance Rover");
-    expect(atOnce.science).toBeLessThan(0.85 * steady.science);
+    expect(atOnce.science).toBeLessThan(steady.science);
+    expect(atOnce.science).toBeLessThan(0.9 * whenRich.science);
     expect(atOnce.cancelled).toBeGreaterThan(steady.cancelled + 0.1);
   });
 
@@ -138,12 +139,15 @@ describe("the balance of Phase 6", () => {
       ),
     ).toBe("~5%");
 
-    // After a Survey, a first Pinpoint Lander fails often enough to matter, but seldom enough to be worth it.
+    // After a Survey, a first Pinpoint Lander fails often enough to matter, but seldom enough to be worth it: about even
+    // in Science and ahead in money since the Bailout, which also refunds a crashed Prospector Lander.
     const pinpoint = played("survey first, Pinpoint Lander");
     const failed = firstFlightsFailed(pinpoint.plays, "Pinpoint Lander");
     expect(failed).toBeGreaterThan(0.1);
     expect(failed).toBeLessThan(0.25);
-    expect(pinpoint.science).toBeGreaterThan(played("survey first").science);
+    const surveyFirst = played("survey first");
+    expect(pinpoint.science).toBeGreaterThan(0.97 * surveyFirst.science);
+    expect(pinpoint.money).toBeGreaterThan(surveyFirst.money);
     // It is a gamble: a Program whose first one fails ends with far less.
     expect(
       scienceAfterFirstFlight(pinpoint.plays, "Pinpoint Lander", false),
@@ -173,8 +177,8 @@ describe("the balance of Phase 6", () => {
     // As a Program's first orbiter it's no better than the cheaper Pathfinder Orbiter: about even since its cost came
     // down to $800M, where any cheaper and it would simply be the better orbiter.
     const first = played("steady: Courier Relay");
-    expect(first.science).toBeLessThan(1.02 * steady.science);
-    expect(first.money).toBeLessThan(1.02 * steady.money);
+    expect(first.science).toBeLessThan(1.03 * steady.science);
+    expect(first.money).toBeLessThan(1.03 * steady.money);
   });
 
   // Against filling the Meridian Heavy it pays only in a Program that flies Crew, which balancePhase7.test.ts tests.

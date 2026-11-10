@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import { takeBailout } from "./bailout";
 import { createRules } from "./rules";
 import type { PlannedCrew } from "./crewView";
 import { createMissionPreviews } from "./missionPreviews";
@@ -47,6 +48,7 @@ export {
 } from "./technologyReadiness";
 export type { PlannedCrew } from "./crewView";
 export { healthLossCauses } from "./health";
+export type { BailoutView } from "./bailout";
 export type {
   AssetChoices,
   BenefitImpact,
@@ -118,6 +120,11 @@ export interface Simulation {
     answers?: DecisionAnswers,
   ): TurnResult;
   retireProgram(program: Program): Program;
+  /**
+   * Takes the Bailout on offer for the Turn just played: its refund is paid now, and repaid as each of the Turns to come
+   * ends. Throws unless it is on offer.
+   */
+  takeBailout(program: Program): Program;
 }
 
 export function createSimulation(catalogue: Catalogue): Simulation {
@@ -180,5 +187,7 @@ export function createSimulation(catalogue: Catalogue): Simulation {
       }
       return { ...program, status: { kind: "retired" } };
     },
+
+    takeBailout: (program) => takeBailout(catalogue, program),
   };
 }

@@ -1,5 +1,6 @@
 import type { Catalogue } from "../catalogue/catalogue";
 import { labelsFor } from "./assetLabels";
+import { bailoutView } from "./bailout";
 import { baseFundingFor } from "./baseFunding";
 import { describeMakes, makesPerTurn } from "./ascentPropellant";
 import { describeHabitat, habitatBenefit } from "./habitats";
@@ -49,6 +50,7 @@ export function newProgram(
     habitatSuppliesKg: {},
     samplesAtSites: {},
     tutorial: { kind: tutorial ? "on" : "off" },
+    bailout: { kind: "available" },
     status: { kind: "active" },
     record: newRecord(1, startingPublicSupport),
   };
@@ -83,6 +85,7 @@ export function programView(
       : null,
     cancellationLevel: catalogue.program.cancellationLevel,
     baseFundingMillions: baseFundingFor(catalogue, program.publicSupport),
+    bailout: bailoutView(catalogue, program.bailout),
     turnNumber: program.turnNumber,
     date: program.date,
     moneyMillions: program.moneyMillions,

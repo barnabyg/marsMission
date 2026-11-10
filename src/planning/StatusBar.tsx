@@ -63,7 +63,11 @@ export function StatusBar({
           testId="money"
           change={changes.moneyMillions}
           unit="money"
-          detail={moneyDetail(view.moneyMillions, view.baseFundingMillions)}
+          detail={moneyDetail(
+            view.moneyMillions,
+            view.baseFundingMillions,
+            view.bailout,
+          )}
           caption={
             <TurnSpendLine
               spendMillions={spendMillions}

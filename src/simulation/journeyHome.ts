@@ -264,7 +264,7 @@ function endJourney(flight: Flight, homeOn: number): void {
   for (const day of days.toSorted((first, second) => first - second)) {
     outcome.crewLost.push(
       ...healthRanOut(
-        died.filter(({ diedOn }) => diedOn === day).map(({ name }) => name),
+        died.filter(({ diedOn }) => diedOn === day),
         day,
         outages,
         "on the way home",

@@ -108,6 +108,15 @@ export function withTutorial(
   return { ...screen, program, saved: saveStore.save("automatic", program) };
 }
 
+/** The same Planning session with the Bailout taken, saved again at once. The plan being made is kept. */
+export function withBailout(
+  { simulation, saveStore }: GameServices,
+  screen: PlanningScreen,
+): PlanningScreen {
+  const program = simulation.takeBailout(screen.program);
+  return { ...screen, program, saved: saveStore.save("automatic", program) };
+}
+
 /** What opening the game shows: a choice if anything has been saved, and a new Program if not. */
 export function openingScreen(services: GameServices): Screen {
   const { saveStore } = services;

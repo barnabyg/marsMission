@@ -48,6 +48,8 @@ function turn(changes: Partial<TurnRecord>): TurnRecord {
     sampleScience: 0,
     samplesLost: 0,
     baseFundingMillions: 0,
+    bailoutRepaidMillions: 0,
+    bailoutTakenMillions: 0,
     ...changes,
   };
 }

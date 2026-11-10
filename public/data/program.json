@@ -9,5 +9,8 @@
     "millionsPerPublicSupport": 2,
     "mostMillions": 250
   },
+  "bailout": {
+    "repaymentTurns": 10
+  },
   "sciencePerSampleHome": 80
 }

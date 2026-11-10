@@ -26,6 +26,7 @@ export function testCatalogueFiles(): CatalogueFiles {
       publicSupportDrainPercent: 15,
       cancellationLevel: 50,
       sciencePerSampleHome: 10,
+      bailout: { repaymentTurns: 10 },
     },
     ...testActivities(),
     launchVehicles: [

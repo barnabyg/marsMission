@@ -19,7 +19,11 @@ import { labProblems } from "./invalidLabs";
 import { propellantProblems } from "./invalidPropellant";
 import { sampleProblems } from "./invalidSamples";
 import { invalidStates, timelineMissionEventProblems } from "./invalidStates";
-import type { PlanningTools, Strategy } from "./strategy";
+import {
+  takesBailoutByDefault,
+  type PlanningTools,
+  type Strategy,
+} from "./strategy";
 
 /** What a report needs from one Turn of one Program. */
 export interface TurnRecord {
@@ -83,6 +87,9 @@ export interface TurnRecord {
   samplesLost: number;
   /** What the Program's backers paid as the Turn ended. */
   baseFundingMillions: number;
+  /** What the Turn's end repaid of a Bailout, and what a Bailout taken after the Turn refunded. */
+  bailoutRepaidMillions: number;
+  bailoutTakenMillions: number;
   /**
    * For a strategy with a goal, whether the Program has reached it as the Turn ends, and whether it can no longer.
    * Left out for any other strategy.
@@ -199,6 +206,8 @@ function recordOf(
       (summary.journeyHome?.failure ? summary.journeyHome.samples : 0) +
       (summary.sampleJourney?.failure ? summary.sampleJourney.samples : 0),
     baseFundingMillions: summary.baseFundingMillions,
+    bailoutRepaidMillions: summary.bailoutRepaidMillions,
+    bailoutTakenMillions: 0,
   };
 }
 
@@ -354,11 +363,26 @@ export function playProgram(
     for (const name of result.summary.returnVehicle?.crew ?? []) {
       fetched.add(name);
     }
-    records.push(
-      recordOf(view, plan, result.summary, after, fetched, strategy.goal),
+    const record = recordOf(
+      view,
+      plan,
+      result.summary,
+      after,
+      fetched,
+      strategy.goal,
     );
     program = result.program;
     view = after;
+    if (
+      view.bailout.kind === "offered" &&
+      (strategy.takeBailout ?? takesBailoutByDefault)(view)
+    ) {
+      record.bailoutTakenMillions = view.bailout.millions;
+      program = simulation.takeBailout(program);
+      view = simulation.readProgram(program);
+      record.moneyMillions = view.moneyMillions;
+    }
+    records.push(record);
   }
   return { program, turns: records };
 }

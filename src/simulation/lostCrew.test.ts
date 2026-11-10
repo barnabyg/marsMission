@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { TurnPlan } from "./simulation";
+import { healthRanOut } from "./lostCrew";
 import { skipTurn, steadyHealth, withFailures } from "./testHelpers";
 
 const crewMission = {
@@ -199,5 +200,46 @@ describe("saving lost and home Crew", () => {
     );
     expect(restored).toEqual(home);
     expect(simulation.readProgram(restored).crewedMission.namesLeft).toBe(3);
+  });
+});
+
+describe("whose loss a Health running out is put down to", () => {
+  const outages = [{ fromDay: 100, toDay: 200 }];
+
+  it("is their Supplies when having none took some of their Health", () => {
+    const [loss] = healthRanOut(
+      [
+        {
+          name: "Ann Able",
+          lost: [
+            { cause: "radiationAtMars", health: 5 },
+            { cause: "noSupplies", health: 2 },
+          ],
+        },
+      ],
+      101,
+      outages,
+      "in Mars orbit",
+    );
+    expect(loss?.cause).toBe("supplies");
+  });
+
+  it("is their Health when other causes used it all up on the day the Supplies ran out", () => {
+    const [loss] = healthRanOut(
+      [
+        {
+          name: "Ann Able",
+          lost: [
+            { cause: "radiationAtMars", health: 4 },
+            { cause: "timeAtMars", health: 3 },
+          ],
+        },
+      ],
+      101,
+      outages,
+      "in Mars orbit",
+    );
+    expect(loss?.cause).toBe("health");
+    expect(loss?.how).toBe("in Mars orbit, when their Health ran out");
   });
 });

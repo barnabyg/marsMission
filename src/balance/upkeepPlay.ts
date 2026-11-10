@@ -3,7 +3,8 @@ import type { PlanningTools } from "./strategy";
 
 /**
  * What every play style does about upkeep, as a careful player would: it keeps every Asset at Mars while it can pay
- * for them, ending the missions of those with the least Service Life left until it can, and any more it is asked to. It then plans with what is
+ * for them, with what is still owed on a Bailout counting towards that as the rules allow, ending the missions of
+ * those with the least Service Life left until it can, and any more it is asked to. It then plans with what is
  * left, so the view it plans from has the upkeep taken off its Money and only the Assets it keeps.
  */
 export function payUpkeep(
@@ -22,9 +23,12 @@ export function payUpkeep(
     0,
   );
   const endedAssetKeys: string[] = [];
+  // Upkeep can take Money below zero by up to what is still owed on a Bailout, as the rules allow.
+  const owedMillions =
+    view.bailout.kind === "taken" ? view.bailout.owedMillions : 0;
   for (const asset of byDaysLeft) {
     if (
-      upkeepMillions <= view.moneyMillions &&
+      upkeepMillions <= view.moneyMillions + owedMillions &&
       endedAssetKeys.length >= alsoEnd
     ) {
       break;

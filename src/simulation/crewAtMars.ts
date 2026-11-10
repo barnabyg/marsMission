@@ -391,7 +391,10 @@ export function crewAtTurnEnd(
       healthRanOut(
         here
           .filter(({ untilDay }) => untilDay === day)
-          .map(({ member }) => member.name),
+          .map(({ member, health }) => ({
+            name: member.name,
+            lost: health.lost,
+          })),
         day,
         supplies.outages,
         `in ${locationName}`,

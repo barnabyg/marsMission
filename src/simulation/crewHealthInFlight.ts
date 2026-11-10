@@ -53,8 +53,8 @@ export function endCrewFlight(flight: Flight): void {
       });
     }
   }
-  const died = flown.flatMap(({ name, homeward, diedOn }) =>
-    diedOn === null ? [] : [{ name, homeward, diedOn }],
+  const died = flown.flatMap(({ name, homeward, diedOn, lost }) =>
+    diedOn === null ? [] : [{ name, homeward, diedOn, lost }],
   );
   const diedNames = new Set(died.map(({ name }) => name));
   outcome.deliveredCrew = outcome.deliveredCrew.filter(
@@ -65,11 +65,9 @@ export function endCrewFlight(flight: Flight): void {
     for (const homeward of [false, true]) {
       outcome.crewLost.push(
         ...healthRanOut(
-          died
-            .filter(
-              (member) => member.diedOn === day && member.homeward === homeward,
-            )
-            .map(({ name }) => name),
+          died.filter(
+            (member) => member.diedOn === day && member.homeward === homeward,
+          ),
           day,
           outages,
           `on the way ${homeward ? "home" : "to Mars"}`,

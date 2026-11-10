@@ -14,6 +14,7 @@ describe("the Turn summary's Money", () => {
         ],
         researchGrantMillions: 40,
         baseFundingMillions: 200,
+        bailoutRepaidMillions: 0,
         failure: null,
       }),
     ).toEqual({
@@ -40,6 +41,7 @@ describe("the Turn summary's Money", () => {
         fundingPayouts: [],
         researchGrantMillions: 25,
         baseFundingMillions: 0,
+        bailoutRepaidMillions: 0,
         failure: null,
       }),
     ).toEqual({
@@ -58,6 +60,7 @@ describe("the Turn summary's Money", () => {
         fundingPayouts: [],
         researchGrantMillions: 0,
         baseFundingMillions: 0,
+        bailoutRepaidMillions: 0,
         failure: {
           missionEventName: "Arrival burn",
           assetsLost: ["Test orbiter"],
@@ -70,6 +73,25 @@ describe("the Turn summary's Money", () => {
       spent: [{ name: "Mission cost", millions: 1000 }],
       received: [{ name: "Refund", millions: 400 }],
       changeMillions: -600,
+    });
+  });
+
+  it("lists a Bailout repayment as spent", () => {
+    expect(
+      turnMoney({
+        missionCostMillions: 0,
+        developmentCostMillions: 0,
+        upkeepMillions: 0,
+        fundingPayouts: [],
+        researchGrantMillions: 0,
+        baseFundingMillions: 200,
+        bailoutRepaidMillions: 50,
+        failure: null,
+      }),
+    ).toEqual({
+      spent: [{ name: "Bailout repayment", millions: 50 }],
+      received: [{ name: "Base funding", millions: 200 }],
+      changeMillions: 150,
     });
   });
 });

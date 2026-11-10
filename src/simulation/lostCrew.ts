@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import type { HealthLost } from "./health";
 import { addDays } from "./rules";
 import { diedWithoutSupplies, type Outage } from "./supplies";
 import type { CrewLostEntry } from "./timeline";
@@ -34,17 +35,22 @@ export function crewLoss(
 
 /**
  * The loss of these Crew, whose Health ran out on this day where they were, such as "in Mars orbit" or "on the way
- * home": to their Supplies if those were out that day, and otherwise to their Health. None if there are no Crew.
+ * home": to their Supplies if those were out that day and having none took some of their Health, and otherwise to
+ * their Health, as when other causes used it up on the day the Supplies ran out. None if there are no Crew.
  */
 export function healthRanOut(
-  names: string[],
+  members: { name: string; lost: readonly HealthLost[] }[],
   day: number,
   outages: readonly Outage[],
   where: string,
 ): CrewLoss[] {
-  const starved = diedWithoutSupplies(outages, day);
+  const starved =
+    diedWithoutSupplies(outages, day) &&
+    members.some(({ lost }) =>
+      lost.some(({ cause }) => cause === "noSupplies"),
+    );
   return crewLoss(
-    names,
+    members.map(({ name }) => name),
     day,
     starved ? "supplies" : "health",
     `${where}, ${starved ? "with no Supplies left" : "when their Health ran out"}`,

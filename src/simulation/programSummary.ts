@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import { bailoutOwed } from "./bailout";
 import type { TurnSummary } from "./turnSummary";
 import type { Program, ProgramView } from "./types";
 
@@ -40,6 +41,8 @@ export interface ProgramSummary {
   }[];
   crew: { flown: number; home: number; lost: number };
   samplesHome: number;
+  /** The Bailout, if it was taken: on which Turn, for how much, and what was still owed as the Program ended. */
+  bailout: { onTurn: number; millions: number; owedMillions: number } | null;
   /** The first Turn the Missions, peak Public Support, samples and Milestones' Turns count from: 1 unless the Program was saved by an earlier version. */
   countedFromTurn: number;
 }
@@ -124,6 +127,14 @@ export function programSummary(
       lost: crew.filter(({ location }) => location.kind === "lost").length,
     },
     samplesHome: record.samplesHome,
+    bailout:
+      program.bailout.kind === "taken"
+        ? {
+            onTurn: program.bailout.onTurn,
+            millions: program.bailout.millions,
+            owedMillions: bailoutOwed(program.bailout),
+          }
+        : null,
     countedFromTurn: record.countedFromTurn,
   };
 }

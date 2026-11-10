@@ -63,6 +63,28 @@ describe("the Money's tooltip", () => {
       "+$200M comes in as this Turn ends. Exactly $8.915B.",
     );
   });
+
+  it("says what goes out to repay a Bailout, and what is left to repay", () => {
+    const repaying = {
+      kind: "taken" as const,
+      onTurn: 2,
+      millions: 500,
+      dueThisTurnMillions: 50,
+      owedMillions: 450,
+      turnsLeft: 9,
+    };
+    expect(moneyDetail(-100, 200, repaying)).toBe(
+      "+$200M comes in as this Turn ends. −$50M goes out to repay the Bailout, of $450M left to repay over 9 Turns.",
+    );
+    expect(
+      moneyDetail(300, 200, {
+        ...repaying,
+        dueThisTurnMillions: 0,
+        owedMillions: 0,
+        turnsLeft: 0,
+      }),
+    ).toBe("+$200M comes in as this Turn ends.");
+  });
 });
 
 const turnOne = {
