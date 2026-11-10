@@ -14,6 +14,7 @@ import { DevelopmentPanel } from "./DevelopmentPanel";
 import { MissionPanel } from "./MissionPanel";
 import { OperatingPanel } from "./OperatingPanel";
 import { SideColumn } from "./SideColumn";
+import { BailoutOffer } from "../ui/BailoutOffer";
 import { StatusBar } from "./StatusBar";
 import { TutorialAdvice } from "./TutorialAdvice";
 import { TutorialEnding } from "./TutorialEnding";
@@ -38,6 +39,8 @@ interface PlanningModeProps {
   /** Ends this Program and starts a new one straight away. */
   onRestart: () => void;
   onTutorialChange: (on: boolean) => void;
+  /** Takes the Bailout on offer for the last Turn's lost Mission. */
+  onTakeBailout: () => void;
 }
 
 type PlanningDialog = "save" | "load" | "restart";
@@ -54,6 +57,7 @@ export function PlanningMode({
   onSubmit,
   onRestart,
   onTutorialChange,
+  onTakeBailout,
 }: PlanningModeProps) {
   const view = simulation.readProgram(program);
   const [openDialog, setOpenDialog] = useState<PlanningDialog | null>(null);
@@ -165,6 +169,14 @@ export function PlanningMode({
         />
 
         <SideColumn>
+          {view.bailout.kind === "offered" && (
+            <section className="panel" data-testid="bailout-panel">
+              <h2>
+                <GameText heading>Bailout</GameText>
+              </h2>
+              <BailoutOffer offer={view.bailout} onTake={onTakeBailout} />
+            </section>
+          )}
           <TutorialPanel
             tutorial={view.tutorial}
             firstTurn={view.turnNumber === 1}

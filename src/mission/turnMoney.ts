@@ -32,6 +32,7 @@ export function turnMoney(
     | "fundingPayouts"
     | "researchGrantMillions"
     | "baseFundingMillions"
+    | "bailoutRepaidMillions"
     | "failure"
   >,
 ): TurnMoney {
@@ -39,6 +40,7 @@ export function turnMoney(
     { name: "Mission cost", millions: summary.missionCostMillions },
     { name: "Development", millions: summary.developmentCostMillions },
     { name: "Upkeep", millions: summary.upkeepMillions },
+    { name: "Bailout repayment", millions: summary.bailoutRepaidMillions },
   ]);
   const received = leaveOutNothing([
     {

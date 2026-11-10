@@ -9,6 +9,7 @@ import type { Program, TurnPlan } from "../simulation/simulation";
 import {
   newProgramScreen,
   planningScreen,
+  withBailout,
   withTutorial,
   type GameServices,
   type Screen,
@@ -56,6 +57,9 @@ export function App({ services, firstScreen }: AppProps) {
         saved={screen.saved}
         onTutorialChange={(on) => {
           setScreen(withTutorial(services, screen, on));
+        }}
+        onTakeBailout={() => {
+          setScreen(withBailout(services, screen));
         }}
         saveStore={saveStore}
         onLoad={(loaded) => {
@@ -169,6 +173,18 @@ export function App({ services, firstScreen }: AppProps) {
     <TurnSummaryScreen
       summary={result.summary}
       timeline={screen.timeline}
+      bailoutTaken={
+        simulation.readProgram(result.program).bailout.kind === "taken"
+      }
+      onTakeBailout={() => {
+        setScreen({
+          ...screen,
+          result: {
+            ...result,
+            program: simulation.takeBailout(result.program),
+          },
+        });
+      }}
       onContinue={() => {
         const { program } = result;
         const active = simulation.readProgram(program).status.kind === "active";

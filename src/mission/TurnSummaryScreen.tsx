@@ -1,4 +1,5 @@
 import type { Timeline, TurnSummary } from "../simulation/simulation";
+import { BailoutOffer, BailoutTaken } from "../ui/BailoutOffer";
 import { GameText } from "../ui/GameText";
 import { SummaryCard, type SummaryCardContent } from "./SummaryCard";
 import { SummaryChanges } from "./SummaryChanges";
@@ -15,7 +16,31 @@ interface TurnSummaryScreenProps {
   summary: TurnSummary;
   /** The whole Turn as Mission Mode played it, for the list of its Mission Events. */
   timeline: Timeline;
+  /** Whether the Bailout this summary offers has been taken, which the player can do here. */
+  bailoutTaken: boolean;
+  onTakeBailout: () => void;
   onContinue: () => void;
+}
+
+/** The Bailout on offer for the Turn's lost Mission, which the player can take here, and once taken, what it gave. */
+function bailoutCards(
+  { bailoutOffer }: TurnSummary,
+  taken: boolean,
+  onTake: () => void,
+): SummaryCardContent[] {
+  if (!bailoutOffer) return [];
+  return [
+    {
+      key: "bailout",
+      heading: "Bailout",
+      testId: "summary-bailout",
+      content: taken ? (
+        <BailoutTaken offer={bailoutOffer} />
+      ) : (
+        <BailoutOffer offer={bailoutOffer} onTake={onTake} />
+      ),
+    },
+  ];
 }
 
 /** A Program cancelled as the Turn ended, as a card of its own across the top of the screen. */
@@ -48,10 +73,13 @@ function cancellationCards({
 export function TurnSummaryScreen({
   summary,
   timeline,
+  bailoutTaken,
+  onTakeBailout,
   onContinue,
 }: TurnSummaryScreenProps) {
   const cards = [
     ...failureCards(summary),
+    ...bailoutCards(summary, bailoutTaken, onTakeBailout),
     ...milestoneCards(summary.milestones),
     ...earningCards(summary),
     ...missionEventsCards(turnMissionEvents(timeline)),

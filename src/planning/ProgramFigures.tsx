@@ -74,7 +74,10 @@ export function ProgramFigures({ summary }: { summary: ProgramSummary }) {
         name="Money left"
         value={formatMoney(summary.moneyMillions)}
         testId="program-money"
-      />
+      >
+        {summary.bailout &&
+          `Bailout of ${formatMoney(summary.bailout.millions)} taken on Turn ${String(summary.bailout.onTurn)}${summary.bailout.owedMillions > 0 ? `, ${formatMoney(summary.bailout.owedMillions)} still owed` : ", repaid"}`}
+      </Figure>
       {crew.flown > 0 && (
         <Figure
           icon="heart"

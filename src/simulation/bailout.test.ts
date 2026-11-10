@@ -180,6 +180,25 @@ describe("the Bailout", () => {
   });
 });
 
+describe("the Bailout in the Program summary", () => {
+  it("says on which Turn it was taken, for how much, and what was still owed", () => {
+    const { simulation, program } = withFailures(["test-launch"]);
+    expect(simulation.summariseProgram(program).bailout).toBeNull();
+    const taken = simulation.takeBailout(
+      simulation.runTurn(program, sendOrbiter).program,
+    );
+    const repaying = simulation.runTurn(
+      { ...taken, publicSupport: 100 },
+      skipTurn,
+    ).program;
+    expect(simulation.summariseProgram(repaying).bailout).toEqual({
+      onTurn: 1,
+      millions: 500,
+      owedMillions: 450,
+    });
+  });
+});
+
 describe("Upkeep while a Bailout is repaid", () => {
   function withUpkeep() {
     const files = testCatalogueFiles();

@@ -1,4 +1,4 @@
-import { formatMoney } from "../simulation/simulation";
+import { formatMoney, type BailoutView } from "../simulation/simulation";
 import { exactMoneyTooltip, formatRoundedMoney } from "../ui/format";
 import { budgetGauge, type BudgetGauge } from "./budgetGauge";
 
@@ -58,17 +58,21 @@ export function turnSpend(
 }
 
 /**
- * What the Money's tooltip adds after what Base funding is: how much comes in as the Turn ends, and the exact Money when
- * the status bar shows it rounded. Nothing when neither applies.
+ * What the Money's tooltip adds after what Base funding is: how much comes in as the Turn ends, a Bailout repayment
+ * going out then, and the exact Money when the status bar shows it rounded. Nothing when none applies.
  */
 export function moneyDetail(
   moneyMillions: number,
   baseFundingMillions: number,
+  bailout: BailoutView = { kind: "unavailable" },
 ): string | undefined {
   const exact = exactMoneyTooltip(moneyMillions);
   const parts = [
     baseFundingMillions > 0 &&
       `+${formatMoney(baseFundingMillions)} comes in as this Turn ends.`,
+    bailout.kind === "taken" &&
+      bailout.dueThisTurnMillions > 0 &&
+      `−${formatMoney(bailout.dueThisTurnMillions)} goes out to repay the Bailout, of ${formatMoney(bailout.owedMillions)} left to repay over ${String(bailout.turnsLeft)} Turn${bailout.turnsLeft === 1 ? "" : "s"}.`,
     exact && `${exact}.`,
   ].filter(Boolean);
   return parts.length > 0 ? parts.join(" ") : undefined;
