@@ -38,7 +38,7 @@ export {
   serviceLifeGain,
 } from "./choiceText";
 export { formatPropellant } from "./ascentPropellant";
-export { corruptSave, SaveError } from "./saveFormat";
+export { corruptSave, SaveError } from "./restoreSave";
 export {
   canFly,
   everyTechnology,
