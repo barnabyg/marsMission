@@ -101,7 +101,10 @@ export function createPlanCheck(catalogue: Catalogue, rules: Rules) {
       mission.costMillions + developments.costMillions + upkeepMillions;
     // Repaying a Bailout can take Money below zero, and Upkeep can take it further, by up to what is still owed.
     const owedMillions = bailoutOwed(program.bailout);
-    if (upkeepMillions > program.moneyMillions + owedMillions) {
+    if (
+      upkeepMillions > 0 &&
+      upkeepMillions > program.moneyMillions + owedMillions
+    ) {
       problems.push(
         `Upkeep of the Assets at Mars costs ${formatMoney(upkeepMillions)}, but the Program only has ${formatMoney(program.moneyMillions)}. End some of their missions.`,
       );

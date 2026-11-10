@@ -177,6 +177,21 @@ describe("the Bailout", () => {
       "This Mission costs $500M, but the Program only has -$50M.",
     ]);
     expect(simulation.validatePlan(broke, skipTurn).problems).toEqual([]);
+    // Once it is repaid, with Money still below zero, a Turn with nothing to pay for can still be played.
+    expect(
+      simulation.validatePlan(
+        {
+          ...broke,
+          bailout: {
+            kind: "taken",
+            onTurn: 1,
+            millions: 500,
+            repaymentsMillions: [],
+          },
+        },
+        skipTurn,
+      ).problems,
+    ).toEqual([]);
   });
 });
 
