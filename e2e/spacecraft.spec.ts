@@ -5,15 +5,17 @@ import {
   particlesShownMs,
 } from "../src/mission/spacecraft/spacecraft";
 import {
-  chooseAssets,
-  holdTurnWhenShown,
-  launchHeld,
   missionViewport,
-  pauseAtEvent,
   termsWithoutTooltips,
-  viewButton,
   watchForProblems,
 } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
+import {
+  holdTurnWhenShown,
+  launchHeld,
+  pauseAtEvent,
+  viewButton,
+} from "./playbackHelpers";
 import { seedFailingAt, solarParticleEventSeed, successSeed } from "./seeds";
 import { confirmEndWithoutLaunching } from "./turnHelpers";
 

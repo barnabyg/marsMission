@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { productionBaseURL } from "../playwright.config";
-import { chooseAssets, eventEntries, watchForProblems } from "./helpers";
+import { watchForProblems } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
+import { eventEntries } from "./playbackHelpers";
 import { seedFailingAt, successSeed } from "./seeds";
 
 // Loading the game: from the production build the playtest command runs, and refusing data files that don't validate.

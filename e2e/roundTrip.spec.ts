@@ -5,14 +5,12 @@ import {
   roundTripSeed,
 } from "./colossusSeeds";
 import {
-  continueFromSave,
-  eventEntries,
   missionViewport,
-  overrideProgramData,
-  pauseAtEvent,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { continueFromSave, overrideProgramData } from "./saveHelpers";
+import { eventEntries, pauseAtEvent } from "./playbackHelpers";
 
 test.use({ viewport: missionViewport });
 

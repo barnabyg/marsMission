@@ -1,20 +1,22 @@
 import { expect, test, type Locator } from "@playwright/test";
 import {
-  chooseAssets,
-  eventEntries,
   fourKViewport,
+  missionViewport,
+  termsWithoutTooltips,
+  watchForProblems,
+} from "./helpers";
+import { chooseAssets } from "./planningHelpers";
+import {
+  eventEntries,
   holdTurnWhenShown,
   launchFirstMission,
   launchHeld,
-  missionViewport,
   orbiterLabels,
   pauseAtEvent,
   pauseAtEventAfter,
   switchViewWhilePlaying,
-  termsWithoutTooltips,
   viewButton,
-  watchForProblems,
-} from "./helpers";
+} from "./playbackHelpers";
 import { crashSeed, landingSeed, seedFailingAt, successSeed } from "./seeds";
 import { confirmEndWithoutLaunching } from "./turnHelpers";
 

@@ -1,12 +1,7 @@
 import { expect, test } from "@playwright/test";
-import {
-  chooseAssets,
-  fourKViewport,
-  missionViewport,
-  pauseAtEvent,
-  pauseAtEventAfter,
-  watchForProblems,
-} from "./helpers";
+import { fourKViewport, missionViewport, watchForProblems } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
+import { pauseAtEvent, pauseAtEventAfter } from "./playbackHelpers";
 import { successSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });

@@ -1,8 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
 import { openBusyProgram } from "./busyProgram";
-import { chooseAssets } from "./helpers";
-import { openLaunchStep } from "./planningHelpers";
+import { openLaunchStep, chooseAssets } from "./planningHelpers";
 import { screenSizes, whatScrolls } from "./layoutHelpers";
 
 const realFiles = realCatalogueFiles();

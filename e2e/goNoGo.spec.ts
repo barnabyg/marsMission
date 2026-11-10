@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 import {
-  chooseAssets,
   missionViewport,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
 import { holdOffSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });

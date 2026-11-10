@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
 import { openBusyProgram } from "./busyProgram";
-import { missionViewport, operatingRow, termsWithoutTooltips } from "./helpers";
+import { missionViewport, termsWithoutTooltips } from "./helpers";
+import { operatingRow } from "./planningHelpers";
 
 /** Operating at Mars as a table, on the smallest supported screen, where a busy Program has more rows than fit. */
 

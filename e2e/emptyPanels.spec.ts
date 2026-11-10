@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { chooseAssets, termsWithoutTooltips } from "./helpers";
+import { termsWithoutTooltips } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
 import { endTurnAndContinue } from "./turnHelpers";
 import { successSeed } from "./seeds";
 

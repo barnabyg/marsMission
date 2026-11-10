@@ -1,10 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
-  chooseAssets,
   missionViewport,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
 import { holdOffSeed, orbitInsertionRescuedSeed } from "./seeds";
 
 const panel = (page: Page) => page.getByTestId("tutorial-panel");

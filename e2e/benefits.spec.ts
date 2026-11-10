@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
 import {
-  chooseAssets,
   missionViewport,
-  overrideProgramData,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
+import { overrideProgramData } from "./saveHelpers";
 import { landerAndRoverMoney, relayAndLanderSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });
