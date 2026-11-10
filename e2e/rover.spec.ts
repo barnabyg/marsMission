@@ -1,15 +1,17 @@
 import { expect, test, type Locator } from "@playwright/test";
 import {
-  chooseAssets,
-  eventEntries,
-  launchHeld,
-  operatingRow,
-  overrideProgramData,
-  pauseAtEvent,
-  pauseAtEventAfter,
+  missionViewport,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { chooseAssets, operatingRow } from "./planningHelpers";
+import {
+  eventEntries,
+  launchHeld,
+  pauseAtEvent,
+  pauseAtEventAfter,
+} from "./playbackHelpers";
+import { overrideProgramData } from "./saveHelpers";
 import {
   landerAndRoverCrashSeed,
   landerAndRoverMoney,
@@ -40,6 +42,9 @@ async function expectApart(labels: Locator): Promise<void> {
 test("lands a rover, gives it an Activity and sees its Science in the Turn summary", async ({
   page,
 }) => {
+  // At 1920×1080, as it is about how the Turn plays. The other tests here stay at 4K, because they check that two labels
+  // at one site sit clear of each other, which they don't always at 1920×1080.
+  await page.setViewportSize(missionViewport);
   // Over 5 s: plays to the landing, then on to the next Turn.
   const problems = watchForProblems(page);
   await page.goto(`/?seed=${roverSeed}`);

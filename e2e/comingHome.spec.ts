@@ -8,19 +8,20 @@ import {
   roundTripThereSave,
 } from "./colossusSeeds";
 import {
-  continueFromSave,
-  eventEntries,
-  holdSceneAt,
-  holdSequence,
   listenForSounds,
   missionViewport,
-  overrideProgramData,
-  pauseAtEvent,
-  playFastUntilSequence,
   soundsHeard,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { continueFromSave, overrideProgramData } from "./saveHelpers";
+import {
+  eventEntries,
+  holdSceneAt,
+  holdSequence,
+  pauseAtEvent,
+  playFastUntilSequence,
+} from "./playbackHelpers";
 import {
   sampleAscentFailureSeed,
   sampleReturnMoney,

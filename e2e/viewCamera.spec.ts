@@ -1,13 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
+import { missionViewport, watchForProblems } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
 import {
-  chooseAssets,
   launchFirstMission,
-  missionViewport,
   orbiterLabels,
   pauseAtEvent,
   viewButton,
-  watchForProblems,
-} from "./helpers";
+} from "./playbackHelpers";
 import { orbiterSafeSeed, seedFailingAt, successSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });

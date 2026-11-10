@@ -1,11 +1,10 @@
 import { expect, test } from "@playwright/test";
 import {
-  chooseAssets,
   missionViewport,
-  operatingRow,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { chooseAssets, operatingRow } from "./planningHelpers";
 import { endTurnAndContinue, endTurnWithoutLaunching } from "./turnHelpers";
 import { successSeed } from "./seeds";
 

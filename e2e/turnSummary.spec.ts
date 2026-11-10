@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { chooseAssets, missionViewport, termsWithoutTooltips } from "./helpers";
+import { missionViewport, termsWithoutTooltips } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
 import { whatScrolls } from "./layoutHelpers";
 import { landingSeed, successSeed } from "./seeds";
 

@@ -1,4 +1,5 @@
 import { useId, type ButtonHTMLAttributes } from "react";
+import { UnavailableReason } from "./UnavailableReason";
 
 interface UnavailableButtonProps extends Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
@@ -11,8 +12,8 @@ interface UnavailableButtonProps extends Omit<
 /**
  * A button that says why it can't be used. While it can't, it's marked `aria-disabled` rather than disabled, so that the
  * keyboard still reaches it, does nothing when pressed, and is described by the reason, which a screen reader reads
- * from a visually hidden line beside it and the pointer finds on hovering, as its `title`. Styled as disabled by
- * `[aria-disabled="true"]` in styles.css.
+ * from a visually hidden line beside it (`UnavailableReason`) and the pointer finds on hovering, as its `title`.
+ * Styled as disabled by `[aria-disabled="true"]` in styles.css.
  */
 export function UnavailableButton({
   unavailable,
@@ -28,21 +29,13 @@ export function UnavailableButton({
         type="button"
         {...button}
         aria-disabled={unavailable === undefined ? undefined : true}
-        aria-describedby={unavailable === undefined ? undefined : reasonId}
+        aria-describedby={unavailable ? reasonId : undefined}
         title={unavailable ?? title}
         onClick={unavailable === undefined ? onClick : undefined}
       >
         {children}
       </button>
-      {unavailable !== undefined && (
-        <span
-          id={reasonId}
-          className="visually-hidden"
-          data-testid="unavailable-reason"
-        >
-          {unavailable}
-        </span>
-      )}
+      <UnavailableReason id={reasonId} reason={unavailable} />
     </>
   );
 }

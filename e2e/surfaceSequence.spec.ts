@@ -1,17 +1,19 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
-  chooseAssets,
   fourKViewport,
+  missionViewport,
+  termsWithoutTooltips,
+  watchForProblems,
+} from "./helpers";
+import { chooseAssets } from "./planningHelpers";
+import {
   holdSequence,
   holdTurnWhenShown,
   launchHeld,
-  missionViewport,
   playFastUntilSequence,
   surfaceAssets,
-  termsWithoutTooltips,
   viewButton,
-  watchForProblems,
-} from "./helpers";
+} from "./playbackHelpers";
 import { landingSeed, roverSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });

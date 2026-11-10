@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { tooltips, type Term } from "../src/ui/tooltips";
-import { chooseAssets, termsWithoutTooltips } from "./helpers";
+import { termsWithoutTooltips } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
 import { successSeed } from "./seeds";
 
 /** Which game terms are underlined where, and which headings carry an ⓘ marker (src/ui/repeatedTerms.ts). */

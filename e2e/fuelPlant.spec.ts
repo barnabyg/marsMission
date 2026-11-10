@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 import {
-  chooseAssets,
   missionViewport,
-  overrideProgramData,
   termsWithoutTooltips,
   watchForProblems,
 } from "./helpers";
+import { chooseAssets } from "./planningHelpers";
+import { overrideProgramData } from "./saveHelpers";
 import { fuelPlantSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });

@@ -1,13 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
-import {
-  chooseAssets,
-  eventEntries,
-  missionViewport,
-  pauseAtEvent,
-  viewButton,
-  watchForProblems,
-} from "./helpers";
-import { openLaunchStep } from "./planningHelpers";
+import { missionViewport, watchForProblems } from "./helpers";
+import { eventEntries, pauseAtEvent, viewButton } from "./playbackHelpers";
+import { openLaunchStep, chooseAssets } from "./planningHelpers";
 import { successSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });

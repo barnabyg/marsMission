@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { realCatalogueFiles } from "../src/testing/realCatalogue";
-import { chooseAssets, overrideProgramData } from "./helpers";
+import { overrideProgramData } from "./saveHelpers";
 import { endTurnWithoutLaunching } from "./turnHelpers";
-import { openLaunchStep } from "./planningHelpers";
+import { openLaunchStep, chooseAssets } from "./planningHelpers";
 import { openBusyProgram, realMilestones } from "./busyProgram";
 import { screenSizes, whatScrolls, unreadableText } from "./layoutHelpers";
 import { successSeed } from "./seeds";

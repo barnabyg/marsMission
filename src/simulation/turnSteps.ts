@@ -2,7 +2,6 @@ import {
   makeAscentPropellant,
   spendAscentPropellant,
 } from "./ascentPropellant";
-import { baseFundingFor } from "./baseFunding";
 import type { Catalogue } from "../catalogue/catalogue";
 import {
   assetsAtMarsOnTimeline,
@@ -55,10 +54,8 @@ import {
   missionFailure,
   missionOnTimeline,
 } from "./missionReport";
-import { carryOutOngoingResearch } from "./ongoingResearch";
-import { fadePublicSupport, payFundingThresholds } from "./fundingThresholds";
-import { awardScienceMilestones } from "./scienceMilestones";
-import { addDays, sum, type Rules } from "./rules";
+import { earnTurn } from "./turnEarnings";
+import { addDays, type Rules } from "./rules";
 import type { DecisionAnswers, Program, TurnPlan, TurnResult } from "./types";
 import type { TimelineEntry } from "./timeline";
 
@@ -87,7 +84,6 @@ export function resolveTurn(
 } {
   const { launchWindowIntervalDays } = catalogue.program;
 
-  const { failedOnDay } = flown;
   const arrivalAwards = awardArrivalMilestones(
     catalogue,
     rules,
@@ -199,89 +195,32 @@ export function resolveTurn(
       : []),
     ...(journey ? [{ names: journeyHomeCrew, day: journey.homeOn }] : []),
   ]);
-  const research = carryOutOngoingResearch(
-    catalogue,
-    rules,
+  const {
+    research,
+    scienceAwards,
+    awards,
+    scienceGained,
+    publicSupportGained,
+    publicSupportBeforeDrain,
+    funding,
+    faded,
+    baseFundingMillions,
+    moneyEndMillions,
+  } = earnTurn(catalogue, rules, program, {
+    costMillions,
+    developmentCostMillions: development.costMillions,
+    upkeepMillions,
+    flown,
+    homeward,
+    homewardLost,
     inService,
     crewAtWork,
-  );
-  const scienceAwards = awardScienceMilestones(
-    catalogue,
-    program.milestoneIds,
-    {
-      start: program.science,
-      lumps: [
-        ...[...arrivalAwards, ...welcome.awards, ...samplesHome.awards].map(
-          ({ milestone, day }) => ({ day, amount: milestone.science }),
-        ),
-        ...samplesHome.lumps,
-        ...(firstLanding
-          ? [{ day: firstLanding.entry.day, amount: firstLanding.site.science }]
-          : []),
-      ],
-      stints: research.stints.map(({ fromDay, toDay, science }) => ({
-        fromDay,
-        toDay,
-        amount: science,
-      })),
-    },
-  );
-  const awards = [
-    ...arrivalAwards,
-    ...welcome.awards,
-    ...samplesHome.awards,
-    ...scienceAwards,
-  ];
-  const scienceGained =
-    sum(awards.map(({ milestone }) => milestone.science)) +
-    samplesHome.science +
-    (firstLanding ? firstLanding.site.science : 0) +
-    research.science;
-  const publicSupportGained =
-    sum(awards.map(({ milestone }) => milestone.publicSupport)) +
-    research.publicSupport +
-    welcome.publicSupport;
-  const publicSupportBeforeDrain =
-    program.publicSupport -
-    flown.publicSupportLost -
-    homewardLost -
-    lostCrew.publicSupportLost +
-    publicSupportGained;
-  const funding = payFundingThresholds(catalogue, program, {
-    start: program.publicSupport,
-    lumps: [
-      ...awards.map(({ milestone, day }) => ({
-        day,
-        amount: milestone.publicSupport,
-      })),
-      ...(failedOnDay === null
-        ? []
-        : [{ day: failedOnDay, amount: -flown.publicSupportLost }]),
-      ...(homeward?.failedOnDay === undefined || homeward.failedOnDay === null
-        ? []
-        : [{ day: homeward.failedOnDay, amount: -homewardLost }]),
-      ...lostCrew.lumps,
-      ...welcome.lumps,
-    ],
-    stints: research.stints.map(({ fromDay, toDay, publicSupport }) => ({
-      fromDay,
-      toDay,
-      amount: publicSupport,
-    })),
+    arrivalAwards,
+    firstLanding,
+    welcome,
+    samplesHome,
+    lostCrew,
   });
-  const faded = fadePublicSupport(catalogue, publicSupportBeforeDrain);
-
-  // Sized by Public Support as the Turn started, so that Planning Mode can say what it will be.
-  const baseFundingMillions = baseFundingFor(catalogue, program.publicSupport);
-  const moneyEndMillions =
-    program.moneyMillions -
-    costMillions -
-    development.costMillions -
-    upkeepMillions +
-    sum(funding.payouts.map(({ payoutMillions }) => payoutMillions)) +
-    research.researchGrantMillions +
-    baseFundingMillions +
-    (flown.returned?.refundMillions ?? 0);
   const assetsAtMars = assetsAtMarsOnTimeline(rules, program, inService, flown);
 
   const otherEntries = [

@@ -1,9 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import {
-  continueFromSave,
-  termsWithoutTooltips,
-  watchForProblems,
-} from "./helpers";
+import { termsWithoutTooltips, watchForProblems } from "./helpers";
+import { continueFromSave } from "./saveHelpers";
 import { endTurnWithoutLaunching } from "./turnHelpers";
 import { cantRecoverSave, goalReachedSave } from "./tutorialSeeds";
 
