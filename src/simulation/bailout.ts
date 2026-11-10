@@ -45,7 +45,7 @@ export type BailoutView =
     };
 
 /** The instalments that repay a Bailout of this much: equal whole millions, with what is left over in the last. */
-export function repaymentsFor(millions: number, turns: number): number[] {
+function repaymentsFor(millions: number, turns: number): number[] {
   const each = Math.floor(millions / turns);
   return Array.from({ length: turns }, (_, index) =>
     index === turns - 1 ? millions - each * (turns - 1) : each,

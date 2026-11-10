@@ -26,7 +26,7 @@ export interface PlanningTools {
 }
 
 /** The smallest refund for which a strategy takes the Bailout, unless it says otherwise: about a robotic Mission. */
-export const bailoutAtLeastMillions = 1000;
+const bailoutAtLeastMillions = 1000;
 
 /** Whether a strategy that doesn't say otherwise takes the Bailout on offer. */
 export function takesBailoutByDefault(view: ProgramView): boolean {
