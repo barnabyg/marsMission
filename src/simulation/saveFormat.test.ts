@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { parseCatalogue, type Catalogue } from "../catalogue/catalogue";
-import { restoreThroughFormats, type SaveFormat } from "./saveFormat";
+import { restoreThroughFormats, type SaveFormat } from "./restoreSave";
 import {
   createSimulation,
   SaveError,
