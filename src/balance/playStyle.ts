@@ -173,14 +173,17 @@ export function playStyle(
         goNoGo: chosen.goNoGo ?? "holdOff",
       })[kind],
     plan(given, givenTools) {
-      // A journey home costs nothing more this Turn, so it goes with whatever else the Turn does.
-      const bringHome =
+      // A journey home costs nothing more this Turn, so it goes with whatever else the Turn does, unless the plan ends
+      // the mission of an Asset it needs, such as an ascent vehicle, to pay Upkeep.
+      const journeyHome =
         (chosen.fliesCrew && wayHome(given, chosen.fliesCrew)) ??
         (chosen.cachesSamples ? samplesHome(given) : undefined);
-      const kept = {
-        ...planPayingUpkeep(given, givenTools, chosen, 0),
-        ...(bringHome ? { bringHome } : {}),
+      const withHome = (plan: TurnPlan): TurnPlan => {
+        if (!journeyHome) return plan;
+        const going = { ...plan, bringHome: journeyHome };
+        return givenTools.problemsWith(going).length === 0 ? going : plan;
       };
+      const kept = withHome(planPayingUpkeep(given, givenTools, chosen, 0));
       // Only short of money, not holding back at its limit of Assets, which ending one would only churn.
       if (
         kept.mission ||
@@ -197,8 +200,7 @@ export function playStyle(
         alsoEnd++
       ) {
         const freed = planPayingUpkeep(given, givenTools, chosen, alsoEnd);
-        if (freed.mission)
-          return { ...freed, ...(bringHome ? { bringHome } : {}) };
+        if (freed.mission) return withHome(freed);
       }
       return kept;
     },
