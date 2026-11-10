@@ -29,7 +29,7 @@ export function UnavailableButton({
         type="button"
         {...button}
         aria-disabled={unavailable === undefined ? undefined : true}
-        aria-describedby={unavailable === undefined ? undefined : reasonId}
+        aria-describedby={unavailable ? reasonId : undefined}
         title={unavailable ?? title}
         onClick={unavailable === undefined ? onClick : undefined}
       >
