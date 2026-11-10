@@ -50,7 +50,9 @@ The Simulation holds all the rules and knows nothing about the browser. Everythi
 
 Test fixtures go in `src/simulation/testCatalogue.ts` and `testHelpers.ts` for rule tests, which use round numbers so that balance changes don't break them.
 
-For tests of the game's actual balance, use `src/testing`. `realCatalogue.ts` has the real data files and a calm version with no Hazards. `realBalance.ts` has Simulations on the calm files in which every Mission Event fails or succeeds, and a plan for a Mission on the first Launch Vehicle with the first Asset. `playedStrategies.ts` has `played`, a strategy's means over 300 seeds played as in the balance runs. They're on the calm files, so they don't match the balance report. Each strategy is played once in each test file, however many tests ask for it. The tests of the balance runs and their report share fixtures of their own, in `src/balance/testHelpers.ts`, named as in `src/simulation` because each holds the fixtures for the tests of its own folder. The surface view's tests share theirs in `src/mission/surface/surfaceTestHelpers.ts`.
+For tests of the game's actual balance, use `src/testing`. `realCatalogue.ts` has the real data files and a calm version with no Hazards. `realBalance.ts` has Simulations on the calm files in which every Mission Event fails or succeeds, and a plan for a Mission on the first Launch Vehicle with the first Asset. `playedStrategies.ts` has `played`, a strategy's means over 300 seeds played as in the balance runs. They're on the calm files, so they don't match the balance report. Each strategy is played once in each test file, however many tests ask for it.
+
+The tests of the balance runs and their report share fixtures of their own, in `src/balance/testHelpers.ts`, named as in `src/simulation` because each holds the fixtures for the tests of its own folder. The surface view's tests share theirs in `src/mission/surface/surfaceTestHelpers.ts`.
 
 A feature with new content touches these folders, in order:
 
