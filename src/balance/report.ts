@@ -10,6 +10,7 @@ import { crew } from "./crewReport";
 import { baseLines } from "./baseReport";
 import { goalLines } from "./goalReport";
 import { comingHome } from "./comingHomeReport";
+import { bailoutLines } from "./bailoutReport";
 
 /** How many Turns each Program plays at most. */
 const turnHorizon = 20;
@@ -415,6 +416,7 @@ export function balanceReport(
       "",
       ...firstMissions(plays),
       ...afterFirstMission(plays),
+      ...bailoutLines(plays),
       ...decisionPoints(plays),
       "",
       researchScience(plays),

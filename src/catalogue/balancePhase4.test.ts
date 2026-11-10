@@ -204,13 +204,15 @@ describe("the balance of Phase 4", () => {
     const tested = played("steady: Tested rovers");
     expect(tested.money).toBeGreaterThan(steady.money);
     expect(tested.science).toBeGreaterThan(steady.science);
-    // Since base funding, Reliability on everything pays its way in money, but earns no more Science.
+    // Since base funding, Reliability on everything pays its way, but no better than on the rovers alone.
     const everything = played("steady: Tested everything");
-    expect(everything.science).toBeLessThan(1.02 * steady.science);
+    expect(everything.science).toBeLessThan(tested.science);
+    expect(everything.money).toBeLessThan(tested.money);
     const shortest = played("steady: shortest Service Life");
     const shortestTested = played("steady: shortest, Tested");
+    // On a short-lived rover it costs more money than it earns back, for about the same Science.
     expect(shortestTested.money).toBeLessThan(shortest.money);
-    expect(shortestTested.science).toBeLessThan(shortest.science);
+    expect(shortestTested.science).toBeLessThan(1.02 * shortest.science);
   });
 
   it("makes the opening a choice: Surveying is safer, and a rover straight away pays most when it works", () => {

@@ -37,8 +37,10 @@ describe("the balance of base funding", () => {
   });
 
   it("makes bold play fast but risky: often cancelled, and much further ahead when it isn't", () => {
-    expect(bold.cancelled).toBeGreaterThan(0.4);
-    expect(bold.cancelled).toBeLessThan(0.6);
+    // About three in ten since the Bailout, which refunds bold's first lost gamble: still many times cautious play.
+    expect(bold.cancelled).toBeGreaterThan(0.2);
+    expect(bold.cancelled).toBeLessThan(0.45);
+    expect(bold.cancelled).toBeGreaterThan(5 * cautious.cancelled);
     const survivingScience = (plays: TurnRecord[][]) =>
       meanOf(plays.filter((play) => !cancelled(play)).map(scienceAtEnd));
     expect(survivingScience(bold.plays)).toBeGreaterThan(

@@ -25,6 +25,17 @@ export interface PlanningTools {
   costOf(plan: TurnPlan): number;
 }
 
+/** The smallest refund for which a strategy takes the Bailout, unless it says otherwise: about a robotic Mission. */
+export const bailoutAtLeastMillions = 1000;
+
+/** Whether a strategy that doesn't say otherwise takes the Bailout on offer. */
+export function takesBailoutByDefault(view: ProgramView): boolean {
+  return (
+    view.bailout.kind === "offered" &&
+    view.bailout.millions >= bailoutAtLeastMillions
+  );
+}
+
 /** One way of playing the game. It sees what a player sees, so it can't know the seed or what will happen. */
 export interface Strategy {
   name: string;
@@ -36,6 +47,11 @@ export interface Strategy {
     view: ProgramView,
     plan: TurnPlan,
   ): DecisionAnswer;
+  /**
+   * Whether it takes the Bailout on offer after a lost Mission, going by what the player sees. Left out, it takes the
+   * first one that refunds at least `bailoutAtLeastMillions`, keeping it for a bigger loss otherwise.
+   */
+  takeBailout?(view: ProgramView): boolean;
   /**
    * For a strategy with a goal, such as the tutorial's: whether a Program has reached it, and whether it can no longer,
    * going by what the player sees. The report says how often each happens.

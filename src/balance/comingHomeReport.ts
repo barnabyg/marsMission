@@ -18,15 +18,16 @@ const ownIncome = ({
 /**
  * The first Turn, counted from 1, from which a Program keeps itself going, or null if it never does. It does from Turn
  * T if it isn't cancelled, plays at least three Turns from T on, launching at least one Mission in them, and from T to
- * every later Turn its Research Grants and base funding have paid for everything it spent: Missions, Development and
- * Upkeep. It never needs the money it had before T, or a Funding Threshold, as those run out.
+ * every later Turn its Research Grants and base funding have paid for everything it spent: Missions, Development,
+ * Upkeep and repaying a Bailout. It never needs the money it had before T, or a Funding Threshold, as those run out.
  */
 export function keepsItselfGoingFrom(play: Play): number | null {
   if (play.at(-1)?.cancelled !== false) return null;
   const paysItsWay = (from: number) => {
     let balance = 0;
     for (const turn of play.slice(from)) {
-      balance += ownIncome(turn) - turn.spentMillions;
+      balance +=
+        ownIncome(turn) - turn.spentMillions - turn.bailoutRepaidMillions;
       if (balance < 0) return false;
     }
     return play.slice(from).some(({ launched }) => launched);
