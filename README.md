@@ -2,6 +2,18 @@
 
 A planning and simulation game in which you run a Mars exploration Program on a budget. Vocabulary is in [GLOSSARY.md](GLOSSARY.md), the rules are in [docs/design/](docs/design/), with what is built so far in [docs/game-design.md](docs/game-design.md), and the decisions behind them are in [docs/adr/](docs/adr/).
 
+Planning Mode, where each Turn you plan a Mission and choose what the Assets already at Mars do:
+
+![Planning Mode, with the New Mission panel beside Operating at Mars, Milestones and Development](docs/screenshots/planning.png)
+
+Mission Mode plays the Turn out. The solar system view follows the Mission's trajectory to Mars:
+
+![Mission Mode's solar system view, with the trajectory from Earth to Mars and the events column](docs/screenshots/mission-solar-system.png)
+
+The Mars orbit view shows the Assets going round Mars once they arrive:
+
+![Mission Mode's Mars orbit view, with a Pathfinder Orbiter going round Mars](docs/screenshots/mission-mars-orbit.png)
+
 ## Play
 
 You need [Node.js](https://nodejs.org/) 24 or later. From the repository root, run:
