@@ -17,9 +17,23 @@ if (!Number.isInteger(programs) || programs < 1) {
   process.exit(1);
 }
 
-const commit = values.metrics
-  ? execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim()
-  : null;
+let commit;
+if (values.metrics) {
+  const changes = execFileSync(
+    "git",
+    ["status", "--porcelain", "--untracked-files=no"],
+    { encoding: "utf8" },
+  );
+  if (changes) {
+    console.error(
+      "Commit or stash tracked changes before generating GameBench metrics.",
+    );
+    process.exit(1);
+  }
+  commit = execFileSync("git", ["rev-parse", "HEAD"], {
+    encoding: "utf8",
+  }).trim();
+}
 
 // Vite only loads the TypeScript here, so it serves nothing and watches nothing. The game's own config isn't needed.
 const server = await createServer({
