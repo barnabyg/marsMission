@@ -38,7 +38,7 @@ const allGates = [
   ["Unit tests", "npx vitest run"],
   [browserGate, `npx playwright test${shard ? ` ${shard}` : ""}`],
   ["Dependency tree", "npm ls --all --silent"],
-  ["Vulnerabilities", "npm audit --audit-level=low"],
+  ["Vulnerabilities", "node scripts/audit.mjs"],
   ["Secrets", "npm run secrets --silent"],
   [
     "Build",
