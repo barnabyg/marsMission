@@ -86,6 +86,7 @@ A balance change starts in `public/data` and is judged by comparing `npm.cmd run
 | `npm.cmd run test:e2e` | Runs the browser tests, at 3840×2160 or 1920×1080              |
 | `npm.cmd run verify`   | Runs every check (the canonical verification)                  |
 | `npm.cmd run balance`  | Plays thousands of Programs and prints a report on the balance |
+| `npm.cmd run metrics`  | Writes the gameBench balance metrics to `metrics.json`         |
 
 No source, test, script or style file is over 500 lines, so that each can be read whole. ESLint's `max-lines` rule enforces this for TypeScript and scripts, and `src/app/styleTokens.test.ts` for CSS. It doesn't cover `package-lock.json`, the data files in `public/data`, the generated art and sounds in `public`, or Markdown. When a file nears the limit, split it at a natural seam, such as by subject for tests or by screen for styles. A new style file is imported from `src/app/main.tsx`, in cascade order.
 

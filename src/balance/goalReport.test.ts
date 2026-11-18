@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { cantRecoverOn, goalLines, goalReachedOn } from "./goalReport";
+import {
+  cantRecoverOn,
+  goalLines,
+  goalReachedOn,
+  goalSummary,
+} from "./goalReport";
 import { playProgram, type TurnRecord } from "./playProgram";
 import { launchNothing, real } from "./testHelpers";
 
@@ -40,5 +45,30 @@ describe("a strategy's goal in the report", () => {
       "Goal reached: 75.0% of Programs, at the end of Turn 2.0 on average (median 2.0)",
       "Can't recover: 50.0% of Programs, at the end of Turn 1.5 on average, 50.0% of those reaching the goal anyway (1 Programs)",
     ]);
+  });
+});
+
+describe("goal summary for gameBench", () => {
+  it("counts every attempt, taking the median only over successful Programs", () => {
+    const plays = [
+      playWith([reached]),
+      playWith([stuck, stuck]),
+      playWith([going, going, going, reached]),
+    ];
+    expect(goalSummary(plays)).toEqual({
+      attempts: 3,
+      completed: 2,
+      meanTurn: 2.5,
+      medianTurn: 2.5,
+    });
+  });
+
+  it("has no median when every Program misses its goal", () => {
+    expect(goalSummary([playWith([going]), playWith([stuck])])).toEqual({
+      attempts: 2,
+      completed: 0,
+      meanTurn: 0,
+      medianTurn: null,
+    });
   });
 });

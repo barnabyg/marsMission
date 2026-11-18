@@ -1,6 +1,7 @@
 import { parseCatalogue, type CatalogueFiles } from "../catalogue/catalogue";
 import { createSimulation } from "../simulation/simulation";
-import { playProgram, type TurnRecord } from "./playProgram";
+import type { TurnRecord } from "./playProgram";
+import { playBalancePrograms, turnHorizon } from "./balanceRuns";
 import type { Strategy } from "./strategy";
 import { strategies as allStrategies } from "./strategies";
 import { sum } from "./sum";
@@ -12,8 +13,6 @@ import { goalLines } from "./goalReport";
 import { comingHome } from "./comingHomeReport";
 import { bailoutLines } from "./bailoutReport";
 
-/** How many Turns each Program plays at most. */
-const turnHorizon = 20;
 const barWidth = 40;
 
 type Play = TurnRecord[];
@@ -363,11 +362,7 @@ export function balanceReport(
   const simulation = createSimulation(catalogue);
   const results = strategies.map((strategy) => ({
     strategy,
-    plays: Array.from(
-      { length: programs },
-      (_, index) =>
-        playProgram(simulation, strategy, index + 1, turnHorizon).turns,
-    ),
+    plays: playBalancePrograms(simulation, strategy, programs),
   }));
 
   const lines = [

@@ -10,6 +10,21 @@ npm.cmd run balance
 
 It plays every strategy listed in `src/balance/strategies.ts` against the real data files, with no browser, for up to 20 Turns each on seeds 1 to 1000, and prints the report. That takes about half a minute. For a quick pass, use `npm.cmd run balance -- --programs 200`. The same command always gives the same report, so two runs can be compared line by line, for example before and after changing `public/data`. The results inform tuning and don't fail anything: the only part that can fail a build is the invalid-state test in `src/balance/balanceRuns.test.ts`, which plays a few Programs on each strategy. The command also stops with an error if a plan fails validation or a Turn leaves an invalid state.
 
+## gameBench metrics
+
+From a clean checkout of the revision you want to measure, run this at the repository root:
+
+```powershell
+npm.cmd ci
+npm.cmd run metrics
+```
+
+The command writes an ignored `metrics.json` with the checked-out commit SHA and a UTC timestamp. The `mars-mission-balance` suite uses seeds 1 through 1000 and a limit of 20 Turns per Program. For every strategy with a goal, it records the completion percentage out of all 1000 attempts and the median Turn of first completion among successful Programs. If none succeed, the median is `null` with a sample size of zero. Metric IDs use the stable ID defined on each strategy's goal.
+
+Increment the suite version when changes to the seed set, Turn limit, strategy behaviour, goal definition or calculation make the results unsuitable for direct comparison. Keep the version for ordinary balance tuning.
+
+In GitHub Actions, run **Generate gameBench metrics** on the branch or tag you want to measure. A successful run publishes `metrics.json` inside the downloadable `gamebench-metrics` artifact. The root `gamebench.json` tells the aggregator where to find it.
+
 ## What a balance change reaches
 
 A balance change usually also reaches the tests of the tuned balance in `src/catalogue`, one file for each phase or post-playtest change that tuned it: `balancePhase3.test.ts`, which also holds the tests of the first Missions from before Phase 3, `balancePhase4.test.ts`, with Research Grants, the rover and a productive Program in `balancePhase4Rover.test.ts`, `balancePhase6.test.ts`, `balancePhase7.test.ts`, `balanceBaseFunding.test.ts`, for base funding since the Phase 7 playtest, and `balancePhase8.test.ts`, with the fuel plant, habitat and Mars lab in `balancePhase8Base.test.ts` so that the two play at the same time. All but Phase 3 test a strategy's means over many Programs, which they get from `src/testing/playedStrategies.ts`, so changing a strategy can break them too. It also reaches the current playtest guide's known seeds in `src/catalogue/playtestSeedsPhase8.test.ts`, the current guide in `docs/playtest`, and `src/balance/strategies.ts` if a strategy stops coping. And it reaches `e2e`: browser tests play with the real data files, so money, Public Support and Science figures in them can change with tuning, and a seed found in `e2e/seeds.ts` can change too. Rule tests in `src/simulation` use the test catalogue, so tuning doesn't touch them.
