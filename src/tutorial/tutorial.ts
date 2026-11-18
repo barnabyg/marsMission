@@ -74,6 +74,8 @@ export const tutorialStrategy: Strategy = {
   answer: (decisionPoint, view, plan) =>
     decisionAdvice(decisionPoint, view, plan).answer,
   goal: {
+    id: "crew-at-base",
+    label: "Crew at a Base",
     reached: crewAtBase,
     cantRecover: (view) => tutorialStatus(view).kind === "cantRecover",
   },

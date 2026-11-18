@@ -86,6 +86,7 @@ A balance change starts in `public/data` and is judged by comparing `npm.cmd run
 | `npm.cmd run test:e2e` | Runs the browser tests, at 3840×2160 or 1920×1080              |
 | `npm.cmd run verify`   | Runs every check (the canonical verification)                  |
 | `npm.cmd run balance`  | Plays thousands of Programs and prints a report on the balance |
+| `npm.cmd run metrics`  | Writes the gameBench balance metrics to `metrics.json`         |
 
 No source, test, script or style file is over 500 lines, so that each can be read whole. ESLint's `max-lines` rule enforces this for TypeScript and scripts, and `src/app/styleTokens.test.ts` for CSS. It doesn't cover `package-lock.json`, the data files in `public/data`, the generated art and sounds in `public`, or Markdown. When a file nears the limit, split it at a natural seam, such as by subject for tests or by screen for styles. A new style file is imported from `src/app/main.tsx`, in cascade order.
 
@@ -119,4 +120,5 @@ CI runs on pull requests and on pushes to `main`, and splits the same gates acro
 - `vite.config.ts` raises the chunk size warning limit to 1200 kB for the Three.js chunk, because the game runs locally (ADR 0001). Review it if the game is ever hosted.
 - `knip.json` ignores `@secretlint/secretlint-rule-preset-recommend`, because only `.secretlintrc.json` uses it, by name. Review it if Secretlint's configuration moves into code.
 - `package.json` overrides `minimatch` to 11.0.3, above the `^10` that ESLint and typescript-eslint ask for, because `npm audit` reports GHSA-g3hv-75wg-m249 in every version below 11.0.1. It's only used by development tools, and linting still passes. Remove it once those packages depend on a fixed version.
+- `scripts/audit.mjs` temporarily accepts GHSA-fc5q-39xc-vjpf only when all affected `picomatch` 4.0.7 installations are development-only. The development tools use repository-owned glob patterns. Remove the exception once a patched version is published.
 - `eslint.config.mjs` allows numbers in template strings, which the strict preset forbids, because Science, Public Support and day counts are shown that way and converting each one adds noise and catches nothing. Review it if numbers ever need locale formatting.

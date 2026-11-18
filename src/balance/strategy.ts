@@ -57,6 +57,9 @@ export interface Strategy {
    * going by what the player sees. The report says how often each happens.
    */
   goal?: {
+    /** Stable metric ID prefix and display label for this strategy's goal. */
+    id: string;
+    label: string;
     reached(view: ProgramView): boolean;
     cantRecover(view: ProgramView): boolean;
   };

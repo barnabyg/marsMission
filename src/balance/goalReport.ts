@@ -22,12 +22,24 @@ export function cantRecoverOn(play: Play): number | null {
 }
 
 const median = (values: number[]) => {
+  if (values.length === 0) return null;
   const sorted = values.toSorted((first, second) => first - second);
   const middle = Math.floor(sorted.length / 2);
   return sorted.length % 2 === 1
     ? (sorted[middle] ?? 0)
     : ((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) / 2;
 };
+
+/** Completion statistics shared by the text and gameBench reports. */
+export function goalSummary(plays: Play[]) {
+  const reached = plays.flatMap((play) => goalReachedOn(play) ?? []);
+  return {
+    attempts: plays.length,
+    completed: reached.length,
+    meanTurn: mean(reached),
+    medianTurn: median(reached),
+  };
+}
 
 /**
  * The lines of a strategy's section on its goal: how often it is reached and by which Turn, how often the strategy
@@ -37,14 +49,14 @@ export function goalLines(plays: Play[]): string[] {
   if (!plays.some((play) => play.some(({ goal }) => goal !== undefined))) {
     return [];
   }
-  const reached = plays.flatMap((play) => goalReachedOn(play) ?? []);
+  const { attempts, completed, meanTurn, medianTurn } = goalSummary(plays);
   const fired = plays.filter((play) => cantRecoverOn(play) !== null);
   const firedOn = fired.flatMap((play) => cantRecoverOn(play) ?? []);
   const wrong = fired.filter((play) => goalReachedOn(play) !== null);
   return [
-    `Goal reached: ${percent(reached.length, plays.length)}% of Programs` +
-      (reached.length > 0
-        ? `, at the end of Turn ${tenth(mean(reached))} on average (median ${tenth(median(reached))})`
+    `Goal reached: ${percent(completed, attempts)}% of Programs` +
+      (medianTurn !== null
+        ? `, at the end of Turn ${tenth(meanTurn)} on average (median ${tenth(medianTurn)})`
         : ""),
     `Can't recover: ${percent(fired.length, plays.length)}% of Programs` +
       (fired.length > 0
