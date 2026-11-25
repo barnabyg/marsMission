@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
   addDays,
   type DecisionAnswer,
@@ -53,6 +53,7 @@ import { usePlayback } from "./usePlayback";
 import { usePlaybackShortcuts } from "./usePlaybackShortcuts";
 import { muteKeyName, pauseKeyName, speedKey } from "./playbackShortcuts";
 import { useSounds } from "./useSounds";
+import { launchNow } from "./launch/launch";
 
 const MissionScene = lazy(() => import("./MissionScene"));
 
@@ -151,6 +152,11 @@ export function MissionMode({
   }, [state.finished, onFinished]);
 
   const deciding = decisionPoint !== null && atDecisionPoint(state, timeline);
+  const [launchDismissed, dismissLaunch] = useState(false);
+  const launch =
+    !launchDismissed && !deciding && view === "solarSystem"
+      ? launchNow(timeline, state)
+      : null;
   usePlaybackShortcuts({
     paused: state.paused,
     deciding,
@@ -173,6 +179,7 @@ export function MissionMode({
     <main className="mission">
       <Suspense fallback={null}>
         <MissionScene
+          launch={launch}
           timeline={timeline}
           day={state.day}
           view={view}
@@ -206,6 +213,7 @@ export function MissionMode({
                 unavailable={unavailable[id]}
                 onClick={() => {
                   chooseView(id);
+                  dismissLaunch(true);
                 }}
               >
                 {name}
@@ -285,6 +293,16 @@ export function MissionMode({
         />
       </header>
       <aside className="mission-side" data-testid="mission-info">
+        {launch && (
+          <button
+            type="button"
+            onClick={() => {
+              dismissLaunch(true);
+            }}
+          >
+            Skip launch scene
+          </button>
+        )}
         {journey !== null && (
           <p data-testid="journey-progress">
             <GameText>{journey}</GameText>
@@ -348,6 +366,7 @@ export function MissionMode({
           decisionPoint={decisionPoint}
           advice={decisionAdvice}
           onAnswer={(answer) => {
+            dismissLaunch(true);
             onAnswer(decisionPoint.id, answer);
           }}
         />

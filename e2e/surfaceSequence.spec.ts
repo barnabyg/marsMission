@@ -53,6 +53,7 @@ test("moves the view to the surface for a landing at 3840×2160, with a smooth c
   // Over 5 s: a landing takes the same real time as it would in play.
   const problems = watchForProblems(page);
   await launchLanding(page);
+  await page.getByRole("button", { name: "Skip launch scene" }).click();
   const canvas = scene(page).locator("canvas");
   await expect(canvas).toBeVisible();
   await expect(page.getByTestId("current-view")).toHaveText("Solar system");

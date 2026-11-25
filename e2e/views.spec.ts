@@ -27,7 +27,8 @@ test("switches to the Mars orbit view and back during a Turn, at any speed and w
 }) => {
   // Over 5 s: switches view at 5x, while paused and at 10x, then plays through to the end of the Turn.
   const problems = watchForProblems(page);
-  await launchFirstMission(page, successSeed);
+  await launchFirstMission(page, successSeed, "Launch");
+  await page.getByRole("button", { name: "Skip launch scene" }).click();
   const current = page.getByTestId("current-view");
   const speed = page.getByTestId("current-speed");
   await expect(current).toHaveText("Solar system");
@@ -119,6 +120,9 @@ test("shows an orbiter going round Mars from the day it arrives, only in the Mar
   await holdTurnWhenShown(page);
   await endTurn.click();
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
+  await expect(
+    page.getByRole("button", { name: "Skip launch scene" }),
+  ).toHaveCount(0);
   await viewButton(page, "Mars orbit").click();
   await expect(orbiterLabels(page)).toHaveText(["Pathfinder Orbiter"]);
   expect(problems).toEqual([]);

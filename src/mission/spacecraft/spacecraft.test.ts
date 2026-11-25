@@ -40,6 +40,7 @@ const missionOf = (
 ): Mission => ({
   launchDay: 0,
   arrivalDay: 200,
+  launchVehicleId: "test-vehicle",
   launchVehicleName: "Test Vehicle",
   assetNames: assets.map(({ name }) => name),
   assets,
