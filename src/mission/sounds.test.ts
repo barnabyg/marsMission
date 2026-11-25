@@ -35,6 +35,28 @@ describe("matching sounds to timeline entries", () => {
       ]);
     },
   );
+
+  it.each([
+    ["use", 2100],
+    ["decline", 0],
+  ] as const)(
+    "times the failed transfer cue for a %s answer",
+    (contingencyAnswer, afterMs) => {
+      const entry = {
+        kind: "missionEvent",
+        eventId: "mars-transfer-burn",
+        title: "Mars transfer burn failed",
+        day: 1,
+        description: "",
+        outcome: "failure",
+        contingencyAnswer,
+      } as const;
+      expect(soundCues([entry])).toMatchObject([
+        { name: "failure", afterMs, sceneIndex: 0 },
+      ]);
+    },
+  );
+
   it("plays the launch sound when a launch succeeds", () => {
     expect(soundFor(missionEvent("launch", "success"))).toBe("launch");
   });

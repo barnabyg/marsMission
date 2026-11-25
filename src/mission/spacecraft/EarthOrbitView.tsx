@@ -299,7 +299,9 @@ export function EarthOrbitScene({
                     color="#c4a465"
                     lost={false}
                   />
-                  <Flame x={-0.31} ms={burn.elapsedMs} size={0.76} />
+                  {burn.stage !== "cutoff" && (
+                    <Flame x={-0.31} ms={burn.elapsedMs} size={0.76} />
+                  )}
                 </group>
               ))}
           </group>

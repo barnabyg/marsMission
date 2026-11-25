@@ -196,8 +196,18 @@ function seedWhereUsing(
   throw new Error(`No seed gives ${decisionId} that outcome`);
 }
 
+const orbiterWithKickStage: TurnPlan = {
+  mission: { ...firstPlan.mission, contingencyIds: ["kick-stage"] },
+};
+
+export const kickStageFailedSeed = seedWhereUsing(
+  orbiterWithKickStage,
+  "contingency:mars-transfer-burn",
+  false,
+);
+
 export const kickStageRescuedSeed = seedWhereUsing(
-  { mission: { ...firstPlan.mission, contingencyIds: ["kick-stage"] } },
+  orbiterWithKickStage,
   "contingency:mars-transfer-burn",
   true,
 );

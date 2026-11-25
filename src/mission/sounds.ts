@@ -2,7 +2,7 @@ import type { TimelineEntry } from "../simulation/simulation";
 import { launchBreakupMs, launchIgnitionMs } from "./launch/launchTiming";
 import { captureCutoffMs } from "./marsOrbit/capture";
 import { departureCutoffMs } from "./spacecraft/transEarthInjection";
-import { cutoffMs } from "./spacecraft/transferBurn";
+import { transferCutoffMs } from "./spacecraft/transferBurn";
 import { approachMs, tankerPadRate } from "./spacecraft/refuelling";
 import { closingMs } from "./spacecraft/marsRendezvous";
 import { breakUpMs, splashMs } from "./spacecraft/splashdown";
@@ -68,7 +68,7 @@ function actionMs(
     case "trans-earth-injection":
       return failed ? departureCutoffMs : null;
     case "mars-transfer-burn":
-      return failed ? cutoffMs : null;
+      return failed ? transferCutoffMs(entry) : null;
     case "launch":
       return failed ? launchBreakupMs : launchIgnitionMs;
     case "tanker-launch":

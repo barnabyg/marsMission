@@ -1,3 +1,4 @@
+import type { FailedContingency } from "./contingency";
 import type { Flight } from "./flight";
 import { crewLoss } from "./lostCrew";
 import {
@@ -50,8 +51,13 @@ export function missionEventFailed(
   flight: Flight,
   event: MissionEvent,
   onBoard: Asset[],
-  used: Contingency | undefined,
+  decision: FailedContingency | undefined,
 ): void {
+  const used = decision?.answer === "use" ? decision.used : undefined;
+  const happened = {
+    ...flight.happened(event),
+    ...(decision && { contingencyAnswer: decision.answer }),
+  };
   const { outcome, freeReturn } = flight;
   const crewOnBoard = flight.crewOnBoard(event);
   const vehicleOnBoard = flight.cargoOnBoard(event);
@@ -86,7 +92,7 @@ export function missionEventFailed(
     const assetsBack = onBoard.map((asset) => asset.name).join(", ");
     outcome.entries.push(
       {
-        ...flight.happened(event),
+        ...happened,
         title: `${event.name} failed`,
         description: `${freeReturn.description}${tried} Coming back with the Mission: ${lostNames}.${safe} It costs ${supportCost(outcome.publicSupportLost)} and refunds ${formatMoney(refundMillions)}.`,
         outcome: "failure",
@@ -118,7 +124,7 @@ export function missionEventFailed(
     ),
   );
   outcome.entries.push({
-    ...flight.happened(event),
+    ...happened,
     title: `${event.name} failed`,
     description: `${flight.filledIn(event.failureDescription)}${tried} Lost with the Mission: ${lostNames}.${safe} It costs ${outcome.publicSupportLost} Public Support.`,
     outcome: "failure",

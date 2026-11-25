@@ -19,6 +19,7 @@ import {
 } from "./playbackHelpers";
 import {
   kickStageRescuedSeed,
+  kickStageFailedSeed,
   seedFailingAt,
   solarParticleEventSeed,
   successSeed,
@@ -254,3 +255,37 @@ test("holds the early cutoff at a Decision Point and fires the kick stage only a
       .filter({ hasText: "Mars transfer burn" }),
   ).toContainText("saved by Kick stage");
 });
+
+for (const attempt of [true, false]) {
+  test(`a failed transfer ${attempt ? "fires the kick stage before cutoff" : "coasts immediately when the player declines the kick stage"}`, async ({
+    page,
+  }) => {
+    await page.goto(`/?seed=${kickStageFailedSeed}`);
+    await chooseAssets(page, ["Pathfinder Orbiter"]);
+    await page.getByRole("checkbox", { name: /Kick stage/ }).check();
+    await launchHeld(page);
+    await page.getByRole("button", { name: "Skip to Decision Point" }).click();
+    const decision = page.getByTestId("decision-point");
+    await expect(decision).toBeVisible();
+    await pauseAtEvent(page, "Mars transfer burn failed", () =>
+      decision
+        .getByRole("button", {
+          name: attempt ? "Use Kick stage" : "Don't use it",
+        })
+        .click(),
+    );
+    await expect(scene(page)).toHaveAttribute(
+      "data-transfer-burn",
+      attempt ? "kickStage" : "cutoff",
+    );
+    if (attempt) {
+      const cutoff = holdSceneAt(page, "transferBurn", "cutoff");
+      await page.getByRole("button", { name: "20x", exact: true }).click();
+      await cutoff;
+    }
+    await expect(carried(page)).toHaveCount(0);
+    await expect(page.getByTestId("spacecraft-lost")).toHaveText([
+      "Pathfinder Orbiter: lost",
+    ]);
+  });
+}

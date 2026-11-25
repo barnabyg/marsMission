@@ -2,7 +2,14 @@ import type { TimelineEntry } from "../../simulation/simulation";
 import { msSinceEntry, type PlaybackState } from "../playback";
 
 export const transferBurnMs = 5500;
-export const cutoffMs = 2100;
+const cutoffMs = 2100;
+
+/** A declined retry starts with the engine already off at the held Decision Point. */
+export function transferCutoffMs(
+  entry: Extract<TimelineEntry, { kind: "missionEvent" }>,
+): number {
+  return entry.contingencyAnswer === "decline" ? 0 : cutoffMs;
+}
 
 export interface TransferBurn {
   stage: "ignition" | "kickStage" | "cutoff" | "departing" | "awaitingDecision";
@@ -12,8 +19,7 @@ export interface TransferBurn {
   travel: number;
 }
 
-/** Follow only a reached burn or its held decision. The answered Timeline retains the decision
- * entry, so a successful second burn can show the kick stage without guessing the player's choice. */
+/** Follow the reached burn and its recorded answer, including an unsuccessful second burn. */
 export function transferBurnNow(
   entries: readonly TimelineEntry[],
   state: PlaybackState,
@@ -34,20 +40,15 @@ export function transferBurnNow(
   if (entry?.kind !== "missionEvent" || entry.eventId !== "mars-transfer-burn")
     return null;
   const elapsedMs = msSinceEntry(state, index) ?? 0;
-  const secondTry = entries
-    .slice(0, index)
-    .some(
-      (previous) =>
-        previous.kind === "decisionPoint" && previous.eventId === entry.eventId,
-    );
-  if (entry.outcome === "failure" && (secondTry || elapsedMs >= cutoffMs)) {
-    // After cutoff the intact stage coasts away much more slowly than a departing Mission.
-    const driftMs = secondTry ? elapsedMs : elapsedMs - cutoffMs;
+  const secondTry = entry.contingencyAnswer === "use";
+  const cutAt = transferCutoffMs(entry);
+  if (entry.outcome === "failure" && elapsedMs >= cutAt) {
+    // A failed retry keeps its kick stage attached while the Mission coasts.
     return {
       stage: "cutoff",
-      engine: null,
+      engine: secondTry ? "kickStage" : null,
       elapsedMs,
-      travel: 4.5 * (cutoffMs / transferBurnMs) ** 3 + driftMs / 8500,
+      travel: 4.5 * (cutAt / transferBurnMs) ** 3 + (elapsedMs - cutAt) / 8500,
     };
   }
   const share = Math.min(elapsedMs / transferBurnMs, 1);

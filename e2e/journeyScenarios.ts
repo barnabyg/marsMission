@@ -31,6 +31,12 @@ const scenarios = [
     seed: first.kickStageRescuedSeed,
   },
   {
+    name: "Failed Kick stage",
+    instructions:
+      "Choose Pathfinder Orbiter on the Meridian Medium and buy the Kick stage. Use it to see the failed retry, or decline to coast without firing.",
+    seed: first.kickStageFailedSeed,
+  },
+  {
     name: "Orbiter capture",
     instructions: "Choose Pathfinder Orbiter on the Meridian Medium.",
     seed: first.successSeed,

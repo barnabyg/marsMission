@@ -19,6 +19,9 @@ const listOfNames = new Intl.ListFormat("en");
 
 const decisionIdOf = (event: MissionEvent) => `contingency:${event.id}`;
 
+export type FailedContingency =
+  { answer: "use"; used: Contingency } | { answer: "decline" };
+
 /**
  * What came of a failed Mission Event's Contingency: it saved the Mission, the Mission stopped at its Decision Point
  * for an answer, or the Mission Event failed for good, with the Contingency that was used and couldn't save it, if one was.
@@ -26,7 +29,7 @@ const decisionIdOf = (event: MissionEvent) => `contingency:${event.id}`;
 type ContingencyResult =
   | { kind: "rescued" }
   | { kind: "decisionPoint" }
-  | { kind: "failed"; used: Contingency | undefined };
+  | { kind: "failed"; decision?: FailedContingency };
 
 /**
  * Offers the Contingency the Mission bought for a Mission Event that failed, if it bought one, as a Decision Point, and
@@ -152,6 +155,7 @@ export function tryContingency(
         title: `${event.name}: saved by ${contingency.name}`,
         description: `${flight.filledIn(contingency.rescueDescription)}${lifeLost(contingency.serviceLifeLossPercent)}`,
         outcome: "success",
+        contingencyAnswer: "use",
       });
       return { kind: "rescued" };
     }
@@ -162,9 +166,13 @@ export function tryContingency(
       rescued: false,
       saved: [],
     });
+    return {
+      kind: "failed",
+      decision:
+        answer === "use"
+          ? { answer, used: contingency }
+          : { answer: "decline" },
+    };
   }
-  return {
-    kind: "failed",
-    used: answers[decisionIdOf(event)] === "use" ? contingency : undefined,
-  };
+  return { kind: "failed" };
 }
