@@ -8,7 +8,8 @@ import { crewLandersOf, modelOf, type SurfaceModel } from "./surface";
  * Mode that doesn't go by the day. It only displays the Timeline, and it starts from the moment
  * playback reaches the landing's entry, so it can't change any results.
  */
-export const sequenceMs = 7000;
+export const sequenceMs = 8500;
+export const entryMs = 1800;
 
 /** Where the descent starts from, above the top of the shot. */
 const startAltitude = 8;
@@ -17,7 +18,7 @@ const startAltitude = 8;
 export const touchdownMs = 5000;
 
 /** Sooner than a landing, as nothing is slowing it down. */
-export const impactMs = 2600;
+export const impactMs = 3600;
 
 const greatestTilt = 0.9;
 
@@ -122,6 +123,20 @@ export function sequenceRunning(now: SequenceNow | null): now is SequenceNow {
   return now !== null && now.elapsedMs < sequenceMs;
 }
 
+export function landingPhase(now: SequenceNow | null) {
+  if (!sequenceRunning(now)) return null;
+  if (now.elapsedMs < entryMs) return "entry";
+  if (now.elapsedMs < (now.sequence.crashed ? impactMs : touchdownMs))
+    return "descent";
+  return now.sequence.crashed ? "impact" : "touchdown";
+}
+
+/** Sideways motion bleeds off during entry. The shell reaches the lander's descent line at separation. */
+export function entryDrift(elapsedMs: number): number {
+  const left = Math.max(0, 1 - elapsedMs / entryMs);
+  return 2.1 * left * left;
+}
+
 export function hasImpacted({ sequence, elapsedMs }: SequenceNow): boolean {
   return sequence.crashed && elapsedMs >= impactMs;
 }
@@ -153,7 +168,7 @@ export function sitesDuring(
   sites: readonly string[],
   now: SequenceNow | null,
 ): readonly string[] {
-  if (!sequenceRunning(now) || !now.sequence.crashed) return sites;
+  if (!sequenceRunning(now)) return sites;
   return [...new Set([now.sequence.siteName, ...sites])];
 }
 

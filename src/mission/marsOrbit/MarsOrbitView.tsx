@@ -23,7 +23,7 @@ import {
  * one moves every day and is lit from the side. The solar system's Sun lights this one too, from
  * behind the camera.
  */
-const marsCentre: Point = [0, 0, -20];
+export const marsCentre: Point = [0, 0, -20];
 
 /** The camera looks down on the orbit from high enough that the globe never hides an orbiter. */
 export const marsOrbitShot: CameraPose = {

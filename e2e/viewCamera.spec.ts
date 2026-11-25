@@ -72,6 +72,10 @@ test("moves the view to Mars orbit on arrival, and leaves it where the player th
     page.getByRole("button", { name: "5x" }).click(),
   );
   await expect(current).toHaveText("Mars orbit");
+  await expect(page.getByTestId("capture-payload")).toHaveText(
+    "Pathfinder Orbiter",
+  );
+  await page.getByRole("button", { name: "Skip scene", exact: true }).click();
   await expect(orbiterLabels(page)).toHaveText(["Pathfinder Orbiter"]);
 
   // The player switches away, and it stays that way to the end of the Turn.

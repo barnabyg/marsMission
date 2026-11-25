@@ -40,11 +40,18 @@ import { ascentKind, ascentRunning, type AscentNow } from "./surface/ascent";
 import { ascentLabels } from "./surface/AscentView";
 import { crewOutsideAt } from "./surface/crewAtSite";
 import {
+  landingPhase,
   sequenceKind,
   sequenceRunning,
   type SequenceNow,
 } from "./surface/sequence";
-import { dustStormAt, landingShot, surfaceShot } from "./surface/surface";
+import {
+  dustStormAt,
+  entryShot,
+  steadyLandingShot,
+  landingShot,
+  surfaceShot,
+} from "./surface/surface";
 import { surfaceLabels, SurfaceScene } from "./surface/SurfaceView";
 import {
   solarSystemLabels,
@@ -52,7 +59,15 @@ import {
   solarSystemShot,
 } from "./solarSystem/SolarSystemView";
 
+import { captureLabels, CaptureVehicle } from "./marsOrbit/CaptureView";
+import {
+  captureWideShot,
+  limbShot,
+  type MarsCapture,
+} from "./marsOrbit/capture";
+
 interface MissionSceneProps {
+  capture: MarsCapture | null;
   onFirstFrame: (() => void) | null;
   steadyCamera: boolean;
   launch: LaunchNow | null;
@@ -244,6 +259,7 @@ function spacecraftCloseUp(
 
 /** Mission Mode's 3D scene: one Canvas and one camera, holding every view. */
 export default function MissionScene({
+  capture,
   onFirstFrame,
   steadyCamera,
   launch,
@@ -291,18 +307,36 @@ export default function MissionScene({
       earthOrbit.stage === "collided" ||
       (earthOrbit.stage === "approaching" &&
         (earthOrbit.sinceRendezvousMs ?? 0) > approachMs * 0.6));
-  const shot = watchDock ? dockShot : (closeUp?.shot ?? viewShot);
-  const labels = closeUp
-    ? closeUp.labels
-    : [
+  const spacecraftCamera = watchDock ? dockShot : closeUp?.shot;
+  const shot = capture
+    ? capture.stage === "burn" && !steadyCamera
+      ? limbShot
+      : captureWideShot
+    : (spacecraftCamera ?? viewShot);
+  const labels = capture
+    ? captureLabels(capture)
+    : (closeUp?.labels ?? [
         ...labelsOnDay(timeline, day, site, sequence),
         ...(view === "surface" && site !== null
           ? ascentLabels(ascent, site)
           : []),
-      ];
+      ]);
   const surfaceSequence = surfaceSequenceOf(sequence, ascent);
   const showingSequence =
     view === "surface" && surfaceSequence?.siteName === site;
+
+  const phase =
+    showingSequence && sequence?.sequence.siteName === site
+      ? landingPhase(sequence)
+      : null;
+  const surfaceCamera =
+    phase === null
+      ? landingShot
+      : steadyCamera || phase === "descent"
+        ? steadyLandingShot
+        : phase === "entry"
+          ? entryShot
+          : surfaceShot;
 
   // Once the last site goes, the land stays for the camera to move away from, with nothing on it operating.
   const [lastSite, setLastSite] = useState(site);
@@ -312,9 +346,11 @@ export default function MissionScene({
     <div
       className="mission-scene"
       data-testid="mission-scene"
+      data-mars-capture={capture?.stage}
       data-launch-vehicle={padLaunch?.tanker ? "tanker" : padLaunch?.vehicleId}
       data-launch-ms={padLaunch ? Math.floor(padLaunch.elapsedMs) : undefined}
       // The browser tests can't see into the scene, so this is how they follow a sequence.
+      data-landing-phase={phase ?? undefined}
       data-sequence={surfaceSequence?.kind}
       data-sequence-ms={
         surfaceSequence
@@ -359,7 +395,11 @@ export default function MissionScene({
               day={day}
               operatingAssetCount={operatingAssetCount}
             />
-            <MarsOrbitScene timeline={timeline} day={day} />
+            {capture && <CaptureVehicle capture={capture} />}
+            <MarsOrbitScene
+              timeline={timeline}
+              day={capture ? capture.day - 0.001 : day}
+            />
             {earthOrbit === null && !burn && (
               <SpacecraftScene
                 timeline={timeline}
@@ -384,7 +424,7 @@ export default function MissionScene({
             )}
             <CameraRig
               steady={steadyCamera}
-              shot={showingSequence ? landingShot : shot}
+              shot={showingSequence ? surfaceCamera : shot}
             />
             <LabelTracker labels={labels} layer={labelLayer} />
           </>

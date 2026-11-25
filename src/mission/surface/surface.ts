@@ -24,6 +24,18 @@ export const surfaceShot: CameraPose = {
   target: [0, 0.75, 20],
 };
 
+/** From above the site, the glowing aeroshell crosses the horizon before separating. */
+export const entryShot: CameraPose = {
+  position: [0.75, 7.6, 10.2],
+  target: [0.75, 6.7, 20],
+};
+
+/** Fits the whole arrival from atmospheric entry to touchdown without moving the camera. */
+export const steadyLandingShot: CameraPose = {
+  position: [0, 5.1, 8.3],
+  target: [0, 3.9, 20],
+};
+
 /** Further back and looking level, with room above the ground for what's coming down. */
 export const landingShot: CameraPose = {
   position: [0, 2.3, 11.6],

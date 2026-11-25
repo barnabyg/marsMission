@@ -1,12 +1,14 @@
 import type { Timeline } from "../../simulation/simulation";
 import type { Point, SceneLabel } from "../sceneParts";
 import {
+  entryDrift,
+  landingPhase,
   fallAt,
   hasImpacted,
   sequenceRunning,
-  type LandingSequence,
   type SequenceNow,
 } from "./sequence";
+import { EntryShell } from "./EntryShell";
 import type { AscentNow } from "./ascent";
 import { AscentAtSite } from "./AscentView";
 import { crewFiguresOn, crewLandersStanding } from "./crewAtSite";
@@ -42,18 +44,51 @@ function sequenceAt(now: SequenceNow | null, siteName: string) {
   return now?.sequence.siteName === siteName ? now : null;
 }
 
-/** How high an operating Asset, or one of the Crew's landers in its place, is above its spot, which is only above the ground while it's landing. */
-function altitudeOf(
-  here: SequenceNow | null,
-  place: number,
-  lander = 0,
-): number {
-  if (!sequenceRunning(here) || here.sequence.crashed) return 0;
+/** Existing Assets and earlier Crew landers stay at their own places as the new payload lands. */
+function arrivingAt(here: SequenceNow | null, place: number, lander = 0) {
+  if (!sequenceRunning(here) || here.sequence.crashed) return null;
   return here.sequence.assets.some(
     (asset) => asset.place === place && asset.lander === lander,
   )
-    ? fallAt(false, here.elapsedMs).altitude
-    : 0;
+    ? here
+    : null;
+}
+
+function descentPose(arrival: SequenceNow | null) {
+  return arrival
+    ? {
+        ...fallAt(arrival.sequence.crashed, arrival.elapsedMs),
+        drift: entryDrift(arrival.elapsedMs),
+      }
+    : { altitude: 0, tilt: 0, drift: 0 };
+}
+
+function DescentModel({
+  model,
+  arrival,
+  heading = 0,
+}: {
+  model: SurfaceModel;
+  arrival: SequenceNow | null;
+  heading?: number;
+}) {
+  const Model = models[model];
+  const { altitude, tilt, drift } = descentPose(arrival);
+  return (
+    <group
+      position={[drift, altitude, 0]}
+      rotation={[tilt * 0.5, heading, tilt]}
+    >
+      {arrival && landingPhase(arrival) === "entry" ? (
+        <EntryShell
+          crewed={model === "crewLander"}
+          elapsedMs={arrival.elapsedMs}
+        />
+      ) : (
+        <Model />
+      )}
+    </group>
+  );
 }
 
 /** The Crew at their Landing Site: each lander they came in, and each of them at work outside. */
@@ -68,7 +103,6 @@ function CrewAtSite({
   here: SequenceNow | null;
   siteName: string;
 }) {
-  const Model = models.crewLander;
   return (
     <>
       {crewLandersStanding(asset, day).map((lander) => {
@@ -76,9 +110,10 @@ function CrewAtSite({
         return (
           <group key={lander} position={[x, groundHeight(siteName, x, z), z]}>
             <Shadow model="crewLander" />
-            <group position={[0, altitudeOf(here, asset.place, lander), 0]}>
-              <Model />
-            </group>
+            <DescentModel
+              model="crewLander"
+              arrival={arrivingAt(here, asset.place, lander)}
+            />
           </group>
         );
       })}
@@ -97,22 +132,18 @@ function CrewAtSite({
 
 /** A crash: what was bought coming down, and then for the rest of the Turn what's left of it. Nothing here is operating. */
 function Crash({
-  sequence,
-  elapsedMs,
+  arrival,
   siteName,
 }: {
-  sequence: LandingSequence;
-  elapsedMs: number;
+  arrival: SequenceNow;
   siteName: string;
 }) {
-  const impacted = hasImpacted({ sequence, elapsedMs });
-  const { altitude, tilt } = fallAt(true, elapsedMs);
+  const impacted = hasImpacted(arrival);
   return (
     <>
-      {sequence.assets.map(({ model, place, lander }) => {
+      {arrival.sequence.assets.map(({ model, place, lander }) => {
         const { x, z } = landerSpot(place, lander);
         const Wreck = wrecks[model];
-        const Model = models[model];
         return (
           <group key={place} position={[x, groundHeight(siteName, x, z), z]}>
             {impacted ? (
@@ -120,12 +151,7 @@ function Crash({
             ) : (
               <>
                 <Shadow model={model} />
-                <group
-                  position={[0, altitude, 0]}
-                  rotation={[tilt * 0.5, 0, tilt]}
-                >
-                  <Model />
-                </group>
+                <DescentModel model={model} arrival={arrival} />
               </>
             )}
           </group>
@@ -139,7 +165,7 @@ function Crash({
 export function SurfaceScene({
   timeline,
   playedSeconds,
-  day,
+  day: calendarDay,
   siteName,
   sequence,
   ascent,
@@ -153,6 +179,7 @@ export function SurfaceScene({
   ascent: AscentNow | null;
 }) {
   const here = sequenceAt(sequence, siteName);
+  const day = sequenceRunning(here) ? here.sequence.day : calendarDay;
   return (
     <group position={surfaceCentre}>
       <Sky />
@@ -171,26 +198,21 @@ export function SurfaceScene({
             />
           );
         }
-        const Model = models[model];
+
         const { x, z, heading } = spotOf(asset, day);
         return (
           <group key={place} position={[x, groundHeight(siteName, x, z), z]}>
             <Shadow model={model} />
-            <group
-              position={[0, altitudeOf(here, place), 0]}
-              rotation={[0, heading, 0]}
-            >
-              <Model />
-            </group>
+            <DescentModel
+              model={model}
+              arrival={arrivingAt(here, place)}
+              heading={heading}
+            />
           </group>
         );
       })}
       {here?.sequence.crashed === true && (
-        <Crash
-          sequence={here.sequence}
-          elapsedMs={here.elapsedMs}
-          siteName={siteName}
-        />
+        <Crash arrival={here} siteName={siteName} />
       )}
       {ascent?.sequence.siteName === siteName && (
         <AscentAtSite ascent={ascent} siteName={siteName} />
@@ -198,7 +220,7 @@ export function SurfaceScene({
       {dustStormAt(timeline, day, siteName) && (
         <DustStormEffect seconds={playedSeconds} />
       )}
-      {sequenceRunning(here) && (
+      {sequenceRunning(here) && landingPhase(here) !== "entry" && (
         <SequenceParticles
           sequence={here.sequence}
           elapsedMs={here.elapsedMs}
@@ -210,12 +232,13 @@ export function SurfaceScene({
 
 export function surfaceLabels(
   timeline: Timeline,
-  day: number,
+  calendarDay: number,
   siteName: string | null,
   sequence: SequenceNow | null,
 ): SceneLabel[] {
   if (siteName === null) return [];
   const here = sequenceAt(sequence, siteName);
+  const day = sequenceRunning(here) ? here.sequence.day : calendarDay;
   const inTheShot = (x: number, height: number, z: number): Point => [
     surfaceCentre[0] + x,
     surfaceCentre[1] + height,
@@ -228,13 +251,12 @@ export function surfaceLabels(
       model === "crewLander" ? (crewLandersStanding(asset, day)[0] ?? 0) : 0;
     const { x, z } =
       model === "crewLander" ? landerSpot(place, lander) : spotOf(asset, day);
+    const { altitude, drift } = descentPose(arrivingAt(here, place, lander));
     return {
       text: name,
       position: inTheShot(
-        x,
-        groundHeight(siteName, x, z) +
-          labelHeights[model] +
-          altitudeOf(here, place, lander),
+        x + drift,
+        groundHeight(siteName, x, z) + labelHeights[model] + altitude,
         z,
       ),
       testId: "surface-asset",
@@ -248,7 +270,7 @@ export function surfaceLabels(
     return {
       text: `${name}: crashed`,
       position: inTheShot(
-        x,
+        x + entryDrift(here.elapsedMs),
         groundHeight(siteName, x, z) + labelHeights[model] + altitude,
         z,
       ),

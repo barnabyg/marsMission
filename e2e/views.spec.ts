@@ -98,6 +98,10 @@ test("shows an orbiter going round Mars from the day it arrives, only in the Mar
   await pauseAtEvent(page, "Mars orbit insertion", () =>
     page.getByRole("button", { name: "5x" }).click(),
   );
+  await expect(page.getByTestId("capture-payload")).toHaveText(
+    "Pathfinder Orbiter",
+  );
+  await page.getByRole("button", { name: "Skip scene", exact: true }).click();
   await expect(orbiterLabels(page)).toHaveText(["Pathfinder Orbiter"]);
   await expect(orbiterLabels(page)).toBeVisible();
 

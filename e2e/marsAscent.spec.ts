@@ -10,7 +10,12 @@ import {
   watchForProblems,
 } from "./helpers";
 import { continueFromSave, overrideProgramData } from "./saveHelpers";
-import { eventEntries, pauseAtEvent } from "./playbackHelpers";
+import {
+  eventEntries,
+  holdSceneAt,
+  pauseAtEvent,
+  surfaceAssets,
+} from "./playbackHelpers";
 import { endTurnAndContinue } from "./turnHelpers";
 
 test.use({ viewport: missionViewport });
@@ -54,7 +59,15 @@ test("lands round-trip Crew beside a fuel plant and brings them home through Mar
   ]);
   await expect(page.getByRole("alert")).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
+  const touchdown = holdSceneAt(page, "landingPhase", "touchdown");
   await page.getByRole("button", { name: "Launch Mission" }).click();
+  await page.getByRole("button", { name: "20x", exact: true }).click();
+  await touchdown;
+  await expect(page.getByTestId("surface-site")).toHaveText("Jezero Crater");
+  await expect(surfaceAssets(page)).toHaveText([
+    "Wellspring Fuel Plant",
+    "Odyssey",
+  ]);
   await endTurnAndContinue(page);
 
   // The fuel plant has made enough ascent propellant at their site, so Planning Mode offers to bring them home.

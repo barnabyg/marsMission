@@ -60,6 +60,10 @@ test("a Free-return Mission whose arrival burn fails comes back, at no Public Su
   await expect(page.getByTestId("journey-progress")).toHaveText(
     "Pathfinder Orbiter: heading back to Earth",
   );
+  await expect(page.getByTestId("capture-payload")).toHaveText(
+    "Pathfinder Orbiter",
+  );
+  await page.getByRole("button", { name: "Skip scene", exact: true }).click();
   await expect(page.getByTestId("returning-spacecraft")).toHaveText(
     "Pathfinder Orbiter: heading back",
   );

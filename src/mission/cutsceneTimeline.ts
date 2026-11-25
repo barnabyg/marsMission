@@ -1,5 +1,6 @@
 import type { Timeline, TimelineEntry } from "../simulation/simulation";
 import { homewardPlayMs, homewardPartOf } from "./homeward";
+import { captureMs } from "./marsOrbit/capture";
 import { launchDurationMs } from "./launch/launch";
 import { viewAskedForBy } from "./missionViews";
 import type { PlaybackTimeline } from "./playback";
@@ -22,6 +23,8 @@ function durationOf(entry: TimelineEntry): number {
       return tankerSceneMs;
     case "rendezvous":
       return rendezvousMs;
+    case "mars-orbit-insertion":
+      return captureMs;
     case "entry-descent-landing":
       return sequenceMs;
     case "mars-transfer-burn":

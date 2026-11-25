@@ -56,6 +56,7 @@ import { muteKeyName, pauseKeyName, speedKey } from "./playbackShortcuts";
 import { useSounds } from "./useSounds";
 import { useSteadyCamera } from "./useSteadyCamera";
 import { transferBurnNow } from "./spacecraft/transferBurn";
+import { marsCaptureNow } from "./marsOrbit/capture";
 import { launchNow } from "./launch/launch";
 
 const MissionScene = lazy(() => import("./MissionScene"));
@@ -204,6 +205,7 @@ export function MissionMode({
           view={view}
           site={site}
           sequence={sequence}
+          capture={marsCaptureNow(timeline, state, view)}
           ascent={ascent}
           particles={particles}
           playedSeconds={state.playedMs / 1000}
@@ -405,6 +407,7 @@ export function MissionMode({
       <EventsColumn
         timeline={timeline}
         entriesHappened={state.entriesHappened}
+        activeScene={state.activeScene}
         deciding={deciding}
       />
     </main>

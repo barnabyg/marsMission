@@ -11,6 +11,7 @@ interface EventsColumnProps {
   entriesHappened: number;
   /** Whether the Decision Point panel is open. It shows the Decision Point's sentence, so its card here doesn't. */
   deciding: boolean;
+  activeScene?: number | null;
 }
 
 /** Lists what has happened so far this Turn, newest at the top, each as a card with a picture of what it was. */
@@ -18,6 +19,7 @@ export function EventsColumn({
   timeline,
   entriesHappened,
   deciding,
+  activeScene,
 }: EventsColumnProps) {
   const happened = timeline.entries.slice(0, entriesHappened);
   return (
@@ -33,6 +35,7 @@ export function EventsColumn({
             return (
               <li
                 key={index}
+                aria-current={activeScene === index ? "step" : undefined}
                 className={[
                   "event-entry",
                   failed && "failed",
