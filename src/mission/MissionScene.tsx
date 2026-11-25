@@ -3,6 +3,8 @@ import { useMemo, useRef, useState, type RefObject } from "react";
 import { BufferAttribute, BufferGeometry, Vector3 } from "three";
 import type { Timeline } from "../simulation/simulation";
 import { GameText } from "../ui/GameText";
+import { LaunchScene } from "./launch/LaunchScene";
+import type { LaunchNow } from "./launch/launch";
 import { advanceMove, headFor, poseDuring, settledAt } from "./cameraMove";
 import {
   marsOrbitLabels,
@@ -42,6 +44,8 @@ import {
 } from "./solarSystem/SolarSystemView";
 
 interface MissionSceneProps {
+  onFirstFrame: (() => void) | null;
+  launch: LaunchNow | null;
   timeline: Timeline;
   day: number;
   view: MissionViewId;
@@ -82,6 +86,11 @@ const viewSettings: Record<
   spacecraft: { shot: spacecraftShot, labels: spacecraftLabels },
 };
 
+function FirstFrame({ ready }: { ready: () => void }) {
+  useFrame(ready);
+  return null;
+}
+
 function Stars() {
   const geometry = useMemo(() => {
     // A fixed sequence rather than Math.random, so the sky looks the same every Turn.
@@ -119,6 +128,8 @@ function Stars() {
 function CameraRig({ shot }: { shot: CameraPose }) {
   const move = useRef(settledAt(shot));
   useFrame(({ camera, gl }, seconds) => {
+    if (gl.domElement.dataset.launchFrame)
+      delete gl.domElement.dataset.launchFrame;
     if (move.current.to !== shot) move.current = headFor(move.current, shot);
     move.current = advanceMove(move.current, seconds * 1000);
     const { position, target } = poseDuring(move.current);
@@ -214,6 +225,8 @@ function spacecraftCloseUp(
 
 /** Mission Mode's 3D scene: one Canvas and one camera, holding every view. */
 export default function MissionScene({
+  onFirstFrame,
+  launch,
   timeline,
   day,
   view,
@@ -254,6 +267,8 @@ export default function MissionScene({
     <div
       className="mission-scene"
       data-testid="mission-scene"
+      data-launch-vehicle={launch?.vehicleId}
+      data-launch-ms={launch ? Math.floor(launch.elapsedMs) : undefined}
       // The browser tests can't see into the scene, so this is how they follow a sequence.
       data-sequence={surfaceSequence?.kind}
       data-sequence-ms={
@@ -286,48 +301,56 @@ export default function MissionScene({
       }
     >
       <Canvas camera={{ position: [...solarSystemShot.position], fov: 45 }}>
-        <color attach="background" args={["#05060c"]} />
-        <Stars />
-        <SolarSystemScene
-          timeline={timeline}
-          day={day}
-          operatingAssetCount={operatingAssetCount}
-        />
-        <MarsOrbitScene timeline={timeline} day={day} />
-        {earthOrbit === null && (
-          <SpacecraftScene
-            timeline={timeline}
-            day={day}
-            particles={particles}
-          />
+        {onFirstFrame && <FirstFrame ready={onFirstFrame} />}
+        {launch ? (
+          <LaunchScene launch={launch} />
+        ) : (
+          <>
+            <color attach="background" args={["#05060c"]} />
+            <Stars />
+            <SolarSystemScene
+              timeline={timeline}
+              day={day}
+              operatingAssetCount={operatingAssetCount}
+            />
+            <MarsOrbitScene timeline={timeline} day={day} />
+            {earthOrbit === null && (
+              <SpacecraftScene
+                timeline={timeline}
+                day={day}
+                particles={particles}
+              />
+            )}
+            <EarthOrbitScene timeline={timeline} now={earthOrbit} />
+            <MarsRendezvousScene now={marsRendezvous} />
+            <SplashdownScene now={earthEntry} />
+            {lastSite !== null && (
+              <SurfaceScene
+                timeline={timeline}
+                day={day}
+                siteName={lastSite}
+                sequence={sequence}
+                ascent={ascent}
+              />
+            )}
+            <CameraRig shot={showingSequence ? landingShot : shot} />
+            <LabelTracker labels={labels} layer={labelLayer} />
+          </>
         )}
-        <EarthOrbitScene timeline={timeline} now={earthOrbit} />
-        <MarsRendezvousScene now={marsRendezvous} />
-        <SplashdownScene now={earthEntry} />
-        {lastSite !== null && (
-          <SurfaceScene
-            timeline={timeline}
-            day={day}
-            siteName={lastSite}
-            sequence={sequence}
-            ascent={ascent}
-          />
-        )}
-        <CameraRig shot={showingSequence ? landingShot : shot} />
-        <LabelTracker labels={labels} layer={labelLayer} />
       </Canvas>
       <div ref={labelLayer}>
-        {labels.map(({ text, className, testId }, index) => (
-          <div
-            key={index}
-            className={`view-label ${className ?? ""}`}
-            data-testid={testId}
-          >
-            <span>
-              <GameText>{text}</GameText>
-            </span>
-          </div>
-        ))}
+        {!launch &&
+          labels.map(({ text, className, testId }, index) => (
+            <div
+              key={index}
+              className={`view-label ${className ?? ""}`}
+              data-testid={testId}
+            >
+              <span>
+                <GameText>{text}</GameText>
+              </span>
+            </div>
+          ))}
       </div>
     </div>
   );

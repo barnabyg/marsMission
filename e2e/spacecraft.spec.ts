@@ -64,6 +64,7 @@ test("switches to the spacecraft view by hand on the way to Mars, and moves on o
   );
 
   // The camera eases across in steps, rather than jumping.
+  await page.getByRole("button", { name: "Skip launch scene" }).click();
   const canvas = scene(page).locator("canvas");
   await expect(canvas).toHaveAttribute("data-camera-position", /\d/);
   await canvas.evaluate((element: HTMLCanvasElement) => {

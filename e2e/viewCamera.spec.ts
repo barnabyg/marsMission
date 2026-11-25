@@ -193,6 +193,7 @@ test("moves the camera smoothly while paused, and can be turned back partway", a
   // Over 5 s: camera moves take real time at any speed, and this makes several.
   const problems = watchForProblems(page);
   await launchFirstMission(page, successSeed, "Launch");
+  await page.getByRole("button", { name: "Skip launch scene" }).click();
   const camera = cameraPosition(page);
   await expect(camera).toHaveAttribute(
     "data-camera-position",

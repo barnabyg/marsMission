@@ -19,6 +19,7 @@ function mission(
   return {
     launchDay: 0,
     arrivalDay: 200,
+    launchVehicleId: "test-vehicle",
     launchVehicleName: "Vehicle",
     assetNames: assets.map(({ name }) => name),
     assets,
@@ -196,6 +197,7 @@ describe("a Mission coming home on a Free-return", () => {
   const coming = {
     launchDay: 0,
     arrivalDay: 240,
+    launchVehicleId: "test-vehicle",
     launchVehicleName: "Test Vehicle",
     assetNames: ["Test Orbiter", "Test Lander"],
     assets: [

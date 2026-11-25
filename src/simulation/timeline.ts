@@ -228,6 +228,7 @@ export interface Timeline {
   mission: {
     launchDay: number;
     arrivalDay: number;
+    launchVehicleId: string;
     launchVehicleName: string;
     assetNames: string[];
     assets: MissionAsset[];

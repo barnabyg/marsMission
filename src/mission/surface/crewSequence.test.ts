@@ -74,6 +74,7 @@ function sequenceOf(
     mission: {
       launchDay: 0,
       arrivalDay: 200,
+      launchVehicleId: "meridian-colossus",
       launchVehicleName: "Meridian Colossus",
       assetNames: assets.map(({ name }) => name),
       assets,

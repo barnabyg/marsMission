@@ -18,15 +18,16 @@ export function missionOnTimeline(
   plan: TurnPlan,
   flown: MissionOutcome,
 ): Timeline["mission"] {
-  if (flown.vehicleName === null) return null;
+  if (flown.vehicleName === null || !plan.mission) return null;
   return {
     launchDay: 0,
     arrivalDay: rules.trajectoryFor(plan.mission).transferDays,
+    launchVehicleId: plan.mission.launchVehicleId,
     launchVehicleName: flown.vehicleName,
     assetNames: [
       ...flown.assets.map((asset) => asset.name),
       ...(flown.returnVehicle ? [flown.returnVehicle.name] : []),
-      ...(plan.mission?.crew ? [catalogue.crew.vehicleName] : []),
+      ...(plan.mission.crew ? [catalogue.crew.vehicleName] : []),
     ],
     assets: [
       ...flown.assets.map((asset): MissionAsset => {

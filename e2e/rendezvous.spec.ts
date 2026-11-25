@@ -50,6 +50,7 @@ async function launchOnColossus(
   ]);
   // Held as soon as Mission Mode opens, so the camera can be watched from its first shot.
   await launchHeld(page);
+  await page.getByRole("button", { name: "Skip launch scene" }).click();
   const canvas = scene(page).locator("canvas");
   await expect(canvas).toHaveAttribute(
     "data-camera-position",

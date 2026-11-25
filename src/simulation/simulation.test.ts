@@ -164,6 +164,7 @@ describe("running a Turn with a Mission", () => {
     expect(timeline.mission).toMatchObject({
       launchDay: 0,
       arrivalDay: 200,
+      launchVehicleId: "test-vehicle",
       launchVehicleName: "Test Vehicle",
       assetNames: ["Test Orbiter"],
       failedOnDay: null,
