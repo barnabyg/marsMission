@@ -95,10 +95,16 @@ export function MissionMode({
   tutorialOn,
   onTutorialOff,
 }: MissionModeProps) {
+  const [sceneReady, setSceneReady] = useState(false);
+  const [launchDismissed, dismissLaunch] = useState(false);
+  // On a cold load the 3D bundle can take longer to arrive than the launch itself.
+  const playbackReady =
+    timeline.mission === null || sceneReady || launchDismissed;
   const { state, setSpeed, pause, resume, skipToDecision } = usePlayback(
     timeline,
     initialSpeed,
     onSpeedChange,
+    playbackReady,
   );
 
   const { muted, setMuted } = useSounds(
@@ -152,7 +158,6 @@ export function MissionMode({
   }, [state.finished, onFinished]);
 
   const deciding = decisionPoint !== null && atDecisionPoint(state, timeline);
-  const [launchDismissed, dismissLaunch] = useState(false);
   const launch =
     !launchDismissed && !deciding && view === "solarSystem"
       ? launchNow(timeline, state)
@@ -179,6 +184,13 @@ export function MissionMode({
     <main className="mission">
       <Suspense fallback={null}>
         <MissionScene
+          onFirstFrame={
+            playbackReady
+              ? null
+              : () => {
+                  setSceneReady(true);
+                }
+          }
           launch={launch}
           timeline={timeline}
           day={state.day}

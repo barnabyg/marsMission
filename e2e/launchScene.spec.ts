@@ -8,9 +8,38 @@ import {
 import { chooseAssets } from "./planningHelpers";
 import { continueFromSave, overrideProgramData } from "./saveHelpers";
 import { launchFirstMission, launchHeld, viewButton } from "./playbackHelpers";
-import { seedFailingAt } from "./seeds";
+import { seedFailingAt, successSeed } from "./seeds";
+import { sequenceTimeScale } from "../playwright.config";
 
 test.use({ viewport: missionViewport });
+
+test("a cold scene load still opens on the pad", async ({ page }) => {
+  let releaseScene!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    releaseScene = resolve;
+  });
+  await page.route("**/src/mission/MissionScene.tsx*", async (route) => {
+    await gate;
+    await route.continue();
+  });
+  await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(
+    page.getByRole("button", { name: "Skip launch scene" }),
+  ).toBeVisible();
+  // Hold the module past the entire nine-second launch, with the suite's accelerated clock.
+  await page.waitForTimeout(10_000 / sequenceTimeScale);
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  releaseScene();
+  await expect(
+    page.getByTestId("mission-scene").locator("canvas"),
+  ).toHaveAttribute("data-launch-frame", "pad");
+  await expect(page.getByTestId("mission-scene")).toHaveAttribute(
+    "data-launch-ms",
+    "0",
+  );
+});
 
 for (const vehicle of [
   "meridian-medium",

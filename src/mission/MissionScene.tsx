@@ -44,6 +44,7 @@ import {
 } from "./solarSystem/SolarSystemView";
 
 interface MissionSceneProps {
+  onFirstFrame: (() => void) | null;
   launch: LaunchNow | null;
   timeline: Timeline;
   day: number;
@@ -84,6 +85,11 @@ const viewSettings: Record<
   surface: { shot: surfaceShot, labels: surfaceLabels },
   spacecraft: { shot: spacecraftShot, labels: spacecraftLabels },
 };
+
+function FirstFrame({ ready }: { ready: () => void }) {
+  useFrame(ready);
+  return null;
+}
 
 function Stars() {
   const geometry = useMemo(() => {
@@ -219,6 +225,7 @@ function spacecraftCloseUp(
 
 /** Mission Mode's 3D scene: one Canvas and one camera, holding every view. */
 export default function MissionScene({
+  onFirstFrame,
   launch,
   timeline,
   day,
@@ -294,6 +301,7 @@ export default function MissionScene({
       }
     >
       <Canvas camera={{ position: [...solarSystemShot.position], fov: 45 }}>
+        {onFirstFrame && <FirstFrame ready={onFirstFrame} />}
         {launch ? (
           <LaunchScene launch={launch} />
         ) : (

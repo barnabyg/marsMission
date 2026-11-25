@@ -58,6 +58,7 @@ export function usePlayback(
   timeline: PlaybackTimeline,
   initialSpeed: number,
   onSpeedChange: (speed: number) => void,
+  ready: boolean,
 ): Playback {
   // An answer brings a new Timeline. The state on it is worked out from the one before as it renders, so no frame ever
   // shows the old state on it, even while paused, and the next change keeps it.
@@ -71,6 +72,7 @@ export function usePlayback(
   };
 
   useEffect(() => {
+    if (!ready) return;
     let previous = performance.now();
     let frame = requestAnimationFrame(function tick(now) {
       const realMs = Math.min(now - previous, maxFrameMs);
@@ -85,7 +87,7 @@ export function usePlayback(
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [timeline]);
+  }, [timeline, ready]);
 
   return {
     state,
