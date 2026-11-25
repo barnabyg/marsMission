@@ -158,6 +158,26 @@ describe("the landing sequence a Timeline has", () => {
     });
   });
 
+  it("plays the recorded landing after an earlier dust-storm Decision Point called the camera to the surface", () => {
+    const storm: TimelineEntry = {
+      kind: "decisionPoint",
+      hazard: "dustStorm",
+      day: 100,
+      siteName: "Alpha Plain",
+      title: "Dust storm",
+      description: "",
+    };
+    const timeline = {
+      ...landed,
+      entries: [launchEntry, storm, landingEntry("success")],
+    };
+    expect(landingSequenceOf(timeline)).toMatchObject({
+      entryIndex: 2,
+      day: 205,
+      crashed: false,
+    });
+  });
+
   it("is a crash for a failure, at the site and on the day of its entry", () => {
     expect(sequenceOf(crash)).toMatchObject({
       siteName: "Alpha Plain",
