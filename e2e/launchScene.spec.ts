@@ -57,13 +57,29 @@ test("a failed launch climbs and breaks up before the scene ends", async ({
   const scene = page.getByTestId("mission-scene");
   const canvas = scene.locator("canvas");
   await expect(canvas).toHaveAttribute("data-launch-frame", "pad");
+  // Pause inside the page on the first breakup frame, even if the screenshot takes longer than the shot.
+  await canvas.evaluate((element) => {
+    const observer = new MutationObserver(() => {
+      if (element.getAttribute("data-launch-frame") !== "breakup") return;
+      observer.disconnect();
+      document
+        .querySelector<HTMLButtonElement>('button[title^="Pause."]')
+        ?.click();
+    });
+    observer.observe(element, {
+      attributes: true,
+      attributeFilter: ["data-launch-frame"],
+    });
+  });
   await page.getByRole("button", { name: "1x", exact: true }).click();
   await expect(canvas).toHaveAttribute("data-launch-frame", "ascent");
   await expect(canvas).toHaveAttribute("data-launch-frame", "breakup");
+  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
   await info.attach("breakup", {
     body: await scene.screenshot(),
     contentType: "image/png",
   });
+  await page.getByRole("button", { name: "1x", exact: true }).click();
   await expect(scene).not.toHaveAttribute("data-launch-vehicle", /.+/);
   expect(problems).toEqual([]);
 });
