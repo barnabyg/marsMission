@@ -230,6 +230,7 @@ test("moves a rover's label across the surface on a Long traverse", async ({
 }) => {
   // Over 5 s: waits for the landing to finish, and for the rover to drive off.
   const problems = watchForProblems(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(`/?seed=${roverSeed}`);
   await chooseAssets(page, ["Trailblazer Rover"]);
   await page
@@ -249,33 +250,33 @@ test("moves a rover's label across the surface on a Long traverse", async ({
   const place = () => label.evaluate((element) => element.style.transform);
 
   const before = await place();
-  // Paused from inside the page as soon as the label moves, because a click from out here can come after the Turn ends.
-  // If the label goes first, the Turn has ended, and the check after this fails at once.
-  const labelMoved = page.evaluate(
-    (start) =>
+  // Advance one displayed day. A label can still receive its last camera projection while paused.
+  const nextDay = page.getByTestId("mission-date").evaluate(
+    (date) =>
       new Promise<void>((resolve) => {
-        requestAnimationFrame(function check() {
-          const label = document.querySelector<HTMLElement>(
-            "[data-testid=surface-asset]",
-          );
-          if (label?.style.transform === start) {
-            requestAnimationFrame(check);
-            return;
-          }
-          [...document.querySelectorAll("button")]
-            .find((button) => button.textContent === "Pause")
+        const start = date.textContent;
+        const observer = new MutationObserver(() => {
+          if (date.textContent === start) return;
+          observer.disconnect();
+          document
+            .querySelector<HTMLButtonElement>('button[title^="Pause."]')
             ?.click();
           resolve();
         });
+        observer.observe(date, {
+          subtree: true,
+          childList: true,
+          characterData: true,
+        });
       }),
-    before,
   );
   await page.getByRole("button", { name: "1x" }).click();
-  await labelMoved;
+  await nextDay;
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
   // A label moves in the frame after its day, and on a slow renderer one frame outlasts any fixed wait.
   await framesDrawn(page, 5);
   const moved = await place();
+  expect(moved).not.toBe(before);
   await framesDrawn(page, 5);
   await expect(label).toBeInViewport();
   expect(await place()).toBe(moved);
