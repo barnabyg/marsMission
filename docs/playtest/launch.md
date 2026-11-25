@@ -51,6 +51,8 @@ After installing the repository dependencies and Playwright Chromium, run this f
 node scripts/review-launch.mjs --shots test-results/launch-review --seconds 4
 ```
 
+Use `--runs` for 0–100 samples per configuration (0 captures stills only), `--seconds` for 0.001–300 seconds per sample and `--port` for a free TCP port. A stalled renderer stops the review and releases the browser and server.
+
 The development-only page mounts the same launch renderer and repeats 3.2–3.85 s of the Colossus launch. This is the low-angle shot with the largest stack, a hot plume, both trench outlets venting and the pad filling the foreground. It draws 30 calls per frame. The canvas fills the specified desktop at one device pixel per CSS pixel. In normal Mission Mode the events column and controls occupy some of this space.
 
 Measurements below are animation-frame intervals in milliseconds for three warmed four-second runs per configuration on Windows, 25 November 2026. The native renderer reported an NVIDIA GeForce RTX 4090 through Direct3D 11. The forced software renderer reported ANGLE SwiftShader. Refresh was 60 Hz. Frame intervals include browser scheduling and compositing and vary with machine load.
