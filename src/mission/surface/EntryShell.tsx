@@ -1,22 +1,26 @@
 import { Drum } from "./modelParts";
+import { aeroshellColors, type SurfaceModel } from "./surface";
 import { entryMs } from "./sequence";
 
 /** The angled backshell and ablative shield. The luminous bow wave and wake cool as entry ends. */
 export function EntryShell({
-  crewed,
+  model,
   elapsedMs,
 }: {
-  crewed: boolean;
+  model: SurfaceModel;
   elapsedMs: number;
 }) {
   const heat = 1 - elapsedMs / entryMs;
   return (
-    <group scale={crewed ? 1.25 : 1} rotation={[0.28, 0.1, -0.36 * heat]}>
+    <group
+      scale={model === "crewLander" ? 1.25 : 1}
+      rotation={[0.28, 0.1, -0.36 * heat]}
+    >
       <Drum
         position={[0, 0.34, 0]}
         height={0.68}
         radii={[0.24, 0.76]}
-        color={crewed ? "#e8e7e2" : "#beac82"}
+        color={aeroshellColors[model]}
         finish="paint"
         sides={40}
       />

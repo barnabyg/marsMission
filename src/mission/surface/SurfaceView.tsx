@@ -80,10 +80,7 @@ function DescentModel({
       rotation={[tilt * 0.5, heading, tilt]}
     >
       {arrival && landingPhase(arrival) === "entry" ? (
-        <EntryShell
-          crewed={model === "crewLander"}
-          elapsedMs={arrival.elapsedMs}
-        />
+        <EntryShell model={model} elapsedMs={arrival.elapsedMs} />
       ) : (
         <Model />
       )}

@@ -55,6 +55,7 @@ export type SurfaceModel =
 
 /** The model of each kind of Asset that lands and has one of its own. The Crew come down in a lander of their own. */
 const surfaceModels: Partial<Record<string, SurfaceModel>> = {
+  lander: "lander",
   rover: "rover",
   crew: "crewLander",
   "fuel-plant": "fuelPlant",
@@ -62,6 +63,22 @@ const surfaceModels: Partial<Record<string, SurfaceModel>> = {
   lab: "lab",
   "ascent-vehicle": "ascentVehicle",
 };
+
+export const aeroshellColors: Record<SurfaceModel, string> = {
+  crewLander: "#e8e7e2",
+  lander: "#d9d6cf",
+  rover: "#eef0f4",
+  fuelPlant: "#e4ddd0",
+  habitat: "#dfe3d6",
+  lab: "#d6dce6",
+  ascentVehicle: "#e6d8cf",
+};
+
+/** Orbital payloads have their own models. Surface payloads wear the same shell in cruise and entry. */
+export function aeroshellColorForKind(kind: string) {
+  const model = surfaceModels[kind];
+  return model === undefined ? undefined : aeroshellColors[model];
+}
 
 /** Anything else that lands stands still as a lander does, until it has a model of its own. */
 export function modelOf(kind: string): SurfaceModel {
