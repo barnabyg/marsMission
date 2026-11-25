@@ -106,18 +106,23 @@ describe("which view a timeline entry asks for", () => {
     );
   });
 
-  it("asks for the solar system when a failure swings the Mission back to Earth", () => {
+  it("shows the Free-return flyby at Mars, then follows the journey home unless the player chose a view", () => {
+    const flyby = {
+      ...missionEvent("mars-orbit-insertion", "failure"),
+      returningToEarth: true as const,
+    };
+    expect(currentView([flyby], 1, startingChoice)).toBe("marsOrbit");
+    expect(currentView([flyby], 1, startingChoice, () => true)).toBe(
+      "solarSystem",
+    );
     expect(
-      viewAskedForBy({
-        kind: "missionEvent",
-        day: 210,
-        eventId: "mars-orbit-insertion",
-        title: "Mars orbit insertion failed",
-        description: "",
-        outcome: "failure",
-        returningToEarth: true,
-      }),
-    ).toBe("solarSystem");
+      currentView(
+        [flyby],
+        1,
+        { view: "marsOrbit", entriesHappened: 1 },
+        () => true,
+      ),
+    ).toBe("marsOrbit");
   });
 
   it("asks for the spacecraft at a Decision Point on the transfer burn", () => {

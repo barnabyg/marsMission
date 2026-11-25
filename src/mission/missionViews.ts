@@ -54,9 +54,10 @@ export function viewAskedForBy(entry: TimelineEntry): MissionViewId | null {
   }
   if (entry.kind !== "missionEvent") return null;
   if (entry.homeward) return viewsOfHomewardEvents[entry.eventId] ?? null;
-  // A failure that swings the Mission back is one to watch on its way home.
-  if (entry.returningToEarth) return "solarSystem";
-  return viewsOfMissionEvents[entry.eventId] ?? null;
+  return (
+    viewsOfMissionEvents[entry.eventId] ??
+    (entry.returningToEarth ? "solarSystem" : null)
+  );
 }
 
 /** The view the player last chose, and how many entries had happened when they did. */
@@ -91,11 +92,9 @@ export function currentView(
     .map((entry, index) => {
       if (!hasPlayed(choice.entriesHappened + index))
         return viewAskedForBy(entry);
-      if (
-        entry.kind === "missionEvent" &&
-        entry.homeward &&
-        entry.eventId === homewardEventIds.departure
-      ) {
+      if (entry.kind !== "missionEvent") return null;
+      if (entry.returningToEarth) return "solarSystem";
+      if (entry.homeward && entry.eventId === homewardEventIds.departure) {
         return entry.outcome === "failure" ? "marsOrbit" : "solarSystem";
       }
       return null;

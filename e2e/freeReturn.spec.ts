@@ -56,7 +56,7 @@ test("a Free-return Mission whose arrival burn fails comes back, at no Public Su
   await expect(failed).toContainText("swung back");
   await expect(failed).toContainText("It costs no Public Support");
   await expect(failed).toContainText("refunds $350M");
-  await expect(page.getByTestId("current-view")).toHaveText("Solar system");
+  await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
   await expect(page.getByTestId("journey-progress")).toHaveText(
     "Pathfinder Orbiter: heading back to Earth",
   );
@@ -64,6 +64,7 @@ test("a Free-return Mission whose arrival burn fails comes back, at no Public Su
     "Pathfinder Orbiter",
   );
   await page.getByRole("button", { name: "Skip scene", exact: true }).click();
+  await expect(page.getByTestId("current-view")).toHaveText("Solar system");
   await expect(page.getByTestId("returning-spacecraft")).toHaveText(
     "Pathfinder Orbiter: heading back",
   );
@@ -116,7 +117,18 @@ test("a Contingency's Decision Point comes before the Free-return", async ({
   );
   await expect(decision).toContainText("no Public Support");
   await expect(page.getByTestId("returning-spacecraft")).toHaveCount(0);
-  await decision.getByRole("button", { name: "Don't use it" }).click();
+  await pauseAtEvent(page, "Mars orbit insertion failed", () =>
+    decision.getByRole("button", { name: "Don't use it" }).click(),
+  );
+  const view = page.getByRole("group", { name: "View" });
+  await view.getByRole("button", { name: "Solar system" }).click();
+  await expect(page.getByTestId("capture-payload")).toHaveCount(0);
+  await view.getByRole("button", { name: "Mars orbit" }).click();
+  await expect(page.getByTestId("capture-payload")).toHaveText(
+    "Pathfinder Orbiter",
+  );
+  await page.getByRole("button", { name: "Skip scene", exact: true }).click();
+  await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
 
   await expect(
     page.getByRole("heading", { name: "Mars orbit insertion failed" }),

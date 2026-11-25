@@ -153,6 +153,9 @@ export function MissionMode({
           entry.eventId === "mars-transfer-burn" &&
           state.activeScene !== entryIndex &&
           !deciding) ||
+        (entry?.kind === "missionEvent" &&
+          entry.returningToEarth === true &&
+          state.activeScene !== entryIndex) ||
         rendezvousHasPlayed(refuelling, state, entryIndex) ||
         homewardQuiet(homeward, state, entryIndex)
       );
