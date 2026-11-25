@@ -28,6 +28,8 @@ To try the latest phase, follow the [Phase 8 playtest guide](docs/playtest/phase
 
 The [Earth launch playtest](docs/playtest/launch.md) covers the launch controls, repeatable success and breakup scenarios, and labelled and unlabelled frames of all three Meridian rockets at 1080p and 4K. It includes the launch rendering timings and how to reproduce them.
 
+Run `npm.cmd run playtest:journey` from the repository root to choose a seeded flight. The selector opens in a separate local game with prepared Programs for orbital refuelling, Mars arrival, and crew and sample returns. The guides describe what to fly and what to look for during [Earth departure](docs/playtest/outbound.md), [Mars arrival](docs/playtest/arrival.md) and [the journey home](docs/playtest/homeward-cinematics.md).
+
 The [Status](docs/game-design.md#status) section of the design doc lists what each phase built and what changed after its playtest. Only the current guide's known seeds are tested, in `src/catalogue/playtestSeedsPhase8.test.ts`, and those tests move to the new guide with each phase. If tuning breaks one, find a new seed that gives the same story and update the current guide, because earlier guides are records and aren't updated.
 
 ## Develop

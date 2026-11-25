@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { TimelineEntry } from "../simulation/simulation";
 import { realCatalogueFiles } from "../testing/realCatalogue";
-import { soundFileNames, soundFor } from "./sounds";
+import { soundCues, soundFileNames, soundFor } from "./sounds";
 
 function missionEvent(
   eventId: string,
@@ -19,6 +19,44 @@ function missionEvent(
 }
 
 describe("matching sounds to timeline entries", () => {
+  it.each([
+    ["mars-orbit-insertion", 3000],
+    ["trans-earth-injection", 1800],
+  ] as const)(
+    "holds failure and Crew loss until the %s engine cuts out",
+    (id, cutoff) => {
+      const cues = soundCues([
+        missionEvent(id, "failure"),
+        { kind: "crewLost", day: 0, title: "Crew lost", description: "" },
+      ]);
+      expect(cues).toMatchObject([
+        { name: "failure", sceneIndex: 0, afterMs: cutoff },
+        { name: "crewLost", sceneIndex: 0, afterMs: cutoff },
+      ]);
+    },
+  );
+
+  it.each([
+    ["use", 2100],
+    ["decline", 0],
+  ] as const)(
+    "times the failed transfer cue for a %s answer",
+    (contingencyAnswer, afterMs) => {
+      const entry = {
+        kind: "missionEvent",
+        eventId: "mars-transfer-burn",
+        title: "Mars transfer burn failed",
+        day: 1,
+        description: "",
+        outcome: "failure",
+        contingencyAnswer,
+      } as const;
+      expect(soundCues([entry])).toMatchObject([
+        { name: "failure", afterMs, sceneIndex: 0 },
+      ]);
+    },
+  );
+
   it("plays the launch sound when a launch succeeds", () => {
     expect(soundFor(missionEvent("launch", "success"))).toBe("launch");
   });

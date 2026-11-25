@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node scripts/play.mjs",
+    "playtest:journey": "node scripts/play.mjs --journey",
     "dev": "vite",
     "build": "vite build",
     "test": "vitest run",

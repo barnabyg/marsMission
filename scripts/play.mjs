@@ -15,5 +15,9 @@ const installed =
   statSync(installMarker).mtimeMs >= statSync("package-lock.json").mtimeMs;
 
 if (!installed) run("npm ci");
-run("npx vite build --logLevel warn");
-run("npx vite preview --open");
+if (process.argv.includes("--journey")) {
+  await import("./journey-playtest.mjs");
+} else {
+  run("npx vite build --logLevel warn");
+  run("npx vite preview --open");
+}

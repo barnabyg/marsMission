@@ -116,7 +116,7 @@ export function flyHomewardEvents(
     const contingency = tryContingency(flight, event, []);
     if (contingency.kind === "rescued") continue;
     if (contingency.kind === "failed") {
-      missionEventFailed(flight, event, [], contingency.used);
+      missionEventFailed(flight, event, [], contingency.decision);
     }
     break;
   }

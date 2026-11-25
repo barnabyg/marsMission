@@ -4,7 +4,7 @@ import {
   colossusMoney,
   colossusSeed,
 } from "./colossusSeeds";
-import { missionViewport } from "./helpers";
+import { listenForSounds, soundsHeard, missionViewport } from "./helpers";
 import { chooseAssets } from "./planningHelpers";
 import { launchHeld, pauseAtEvent, viewButton } from "./playbackHelpers";
 import { continueFromSave, overrideProgramData } from "./saveHelpers";
@@ -15,6 +15,7 @@ test.use({ viewport: missionViewport });
 test("plays the Colossus launch, tanker and rendezvous in order at 20x and hands off to the summary", async ({
   page,
 }) => {
+  await listenForSounds(page);
   await overrideProgramData(page, { startingMoneyMillions: colossusMoney });
   await continueFromSave(page, colossusBuiltSave(colossusSeed));
   await page
@@ -34,21 +35,33 @@ test("plays the Colossus launch, tanker and rendezvous in order at 20x and hands
   const fast = page.getByRole("button", { name: "20x", exact: true });
   await pauseAtEvent(page, "Tanker launch", () => fast.click());
   await expect(scene).toHaveAttribute("data-earth-orbit", "tankerClimbing");
+  await expect(scene).toHaveAttribute("data-launch-vehicle", "tanker");
   await expect(
     page.getByRole("heading", { name: "Rendezvous", exact: true }),
   ).toHaveCount(0);
+  await pauseAtEvent(page, "Rendezvous", async () => {
+    await fast.click();
+    await expect(scene).toHaveAttribute("data-earth-orbit", "holding");
+  });
+  await expect(scene).toHaveAttribute("data-earth-orbit", "approaching");
   await viewButton(page, "Mars orbit").click();
   await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
-  await page.getByRole("button", { name: "Skip scene", exact: true }).click();
+  await viewButton(page, "Spacecraft").click();
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
-  await pauseAtEvent(page, "Rendezvous", () => fast.click());
-  await expect(scene).toHaveAttribute("data-earth-orbit", "approaching");
+  await pauseAtEvent(page, "Mars transfer burn", () => fast.click());
+  await expect(scene).toHaveAttribute("data-transfer-burn", "ignition");
+  expect((await soundsHeard(page)).map(([file]) => file)).toEqual([
+    "launch.wav",
+    "launch.wav",
+    "rendezvous.wav",
+  ]);
   await fast.click();
   await expect(page.getByTestId("turn-summary")).toBeVisible();
   await expect(page.getByTestId("summary-mission-event")).toContainText([
     /^Launch/,
     /^Tanker launch/,
     /^Rendezvous/,
+    /^Mars transfer burn/,
   ]);
 });
 

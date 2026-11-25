@@ -23,7 +23,7 @@ const marsCentre: Point = [-1.5, -marsRadius - 2.3, 7];
 const labelHeight = 0.62;
 
 /** A place in the rendezvous's own frame, in the scene. Along the craft, x, is across the shot, and z is towards the camera. */
-function inTheShot([x, y, z]: Point): Point {
+export function inMarsOrbitShot([x, y, z]: Point): Point {
   return [
     marsRendezvousCentre[0] - z,
     marsRendezvousCentre[1] + y,
@@ -31,7 +31,7 @@ function inTheShot([x, y, z]: Point): Point {
   ];
 }
 
-function Mars() {
+export function MarsLimb() {
   const texture = useTexture("mars.jpg");
   return (
     <group position={marsCentre}>
@@ -79,7 +79,7 @@ export function MarsRendezvousScene({
   const flash = hitFlash(now);
   return (
     <group position={marsRendezvousCentre}>
-      <Mars />
+      <MarsLimb />
       {/* Along the craft is across the shot. */}
       <group rotation={[0, -Math.PI / 2, 0]}>
         <group position={waitingAt}>
@@ -125,13 +125,13 @@ export function marsRendezvousLabels(
   return [
     {
       text: now.vehicleName,
-      position: inTheShot([waitingAt[0], labelHeight, 0]),
+      position: inMarsOrbitShot([waitingAt[0], labelHeight, 0]),
       testId: "spacecraft-asset",
       className: "spacecraft-label",
     },
     {
       text: craft.lost ? `${aboard}: stranded` : aboard,
-      position: inTheShot([
+      position: inMarsOrbitShot([
         craft.place[0],
         craft.place[1] + labelHeight,
         craft.place[2],

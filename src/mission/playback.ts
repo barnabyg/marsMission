@@ -209,14 +209,19 @@ export function advancePlayback(
   }
   const daysPerMs =
     (timeline.durationDays / realMsPerTurn) * state.speed * timeScale;
-  return atDay(
-    { ...state, playedMs: state.playedMs + realMs },
-    timeline,
-    Math.min(
-      state.day + realMs * daysPerMs,
-      timeline.decisionDay ?? timeline.durationDays,
-    ),
+  const playing = { ...state, playedMs: state.playedMs + realMs };
+  const day = Math.min(
+    state.day + realMs * daysPerMs,
+    timeline.decisionDay ?? timeline.durationDays,
   );
+  if (day === timeline.decisionDay) {
+    // The calendar can cross several events in a frame. Finish the scenes on earlier
+    // days before reaching the question. Skip to Decision Point bypasses this queue.
+    const prior = atDay(playing, timeline, Math.max(state.day, day - 1));
+    if (prior.activeScene !== null) return prior;
+    return atDay(prior, timeline, day);
+  }
+  return atDay(playing, timeline, day);
 }
 
 /** How much real play has passed since an entry happened, or null if it hasn't yet. */

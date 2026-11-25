@@ -3,6 +3,7 @@ import { parseCatalogue } from "../../catalogue/catalogue";
 import type { AssetAtMars } from "../../simulation/simulation";
 import { realCatalogueFiles } from "../../testing/realCatalogue";
 import {
+  aeroshellColorForKind,
   landingShot,
   landingsOnTheirWay,
   modelOf,
@@ -16,6 +17,22 @@ import { asset, onTheWay, type MissionAsset } from "./surfaceTestHelpers";
 import { groundHeight } from "./terrain";
 
 describe("the model each kind of Asset stands on the surface as", () => {
+  it("gives each landing payload a distinct shell and keeps orbital payloads out of shells", () => {
+    const colors = [
+      "lander",
+      "rover",
+      "fuel-plant",
+      "habitat",
+      "lab",
+      "ascent-vehicle",
+      "crew",
+    ].map(aeroshellColorForKind);
+    expect(colors).not.toContain(undefined);
+    expect(new Set(colors).size).toBe(colors.length);
+    expect(aeroshellColorForKind("orbiter")).toBeUndefined();
+    expect(aeroshellColorForKind("return-orbiter")).toBeUndefined();
+  });
+
   it("has one of its own for each kind that lands in the data files", () => {
     const landing = realCatalogueFiles()
       .assets.filter(

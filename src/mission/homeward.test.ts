@@ -9,6 +9,7 @@ import {
   homewardPlayMs,
   homewardQuiet,
   homewardSince,
+  strandedVehicleAfter,
 } from "./homeward";
 import {
   currentView,
@@ -89,7 +90,7 @@ describe("the journey home as Mission Mode plays it", () => {
     ).toBe(400);
   });
 
-  it("shows the rendezvous, then Earth entry, close up only while each plays", () => {
+  it("plays the rendezvous, departure burn and Earth entry close up in order", () => {
     const fast = [0, 1000, 8000, 14500];
     const rendezvousStarts = 1000 + homewardPlayMs.ascent;
     expect(
@@ -106,7 +107,7 @@ describe("the journey home as Mission Mode plays it", () => {
         homeward,
         playedAt(rendezvousStarts + homewardPlayMs.rendezvous, fast),
       ),
-    ).toBeNull();
+    ).toEqual({ part: "departure", sinceMs: 0, failed: false });
     expect(
       homewardInSpace(homeward, playedAt(50_100, [...fast, 50_000])),
     ).toEqual({ part: "entry", sinceMs: 100, failed: false });
@@ -114,11 +115,11 @@ describe("the journey home as Mission Mode plays it", () => {
 });
 
 describe("the views the journey home moves Mission Mode to", () => {
-  it("asks for the surface at Mars ascent, the spacecraft at the rendezvous and Earth entry, and the solar system on the way home", () => {
+  it("asks for the surface at Mars ascent and the spacecraft for the three events in space", () => {
     expect(entries.slice(1, 5).map(viewAskedForBy)).toEqual([
       "surface",
       "spacecraft",
-      "solarSystem",
+      "spacecraft",
       "spacecraft",
     ]);
   });
@@ -156,13 +157,34 @@ describe("the views the journey home moves Mission Mode to", () => {
     const leavesAt = rendezvousStarts + homewardPlayMs.rendezvous;
     expect(viewAt(1500)).toBe("surface");
     expect(viewAt(rendezvousStarts + 100)).toBe("spacecraft");
-    expect(viewAt(leavesAt + 100)).toBe("solarSystem");
+    expect(viewAt(leavesAt + 100)).toBe("spacecraft");
+    expect(viewAt(leavesAt + homewardPlayMs.departure)).toBe("solarSystem");
   });
 
   it("moves to the spacecraft for Earth entry while it plays, then back to the way home", () => {
     const happened = [0, 1000, 1100, 1200, 50_000];
     expect(viewAt(50_100, happened)).toBe("spacecraft");
     expect(viewAt(50_000 + homewardPlayMs.entry, happened)).toBe("solarSystem");
+  });
+
+  it("returns to Mars orbit after a failed departure from orbit", () => {
+    const events = [homewardEvent("trans-earth-injection", 60, "failure")];
+    const lost = homewardOf({
+      journeyHome: journey({ siteName: null }),
+      entries: events,
+    });
+    expect(strandedVehicleAfter(lost, playedAt(0, []))).toBeNull();
+    expect(strandedVehicleAfter(lost, playedAt(4000, [0]))).toBeNull();
+    const played = playedAt(10_000, [0]);
+    expect(strandedVehicleAfter(lost, played)).toBe("Earth return stage");
+    expect(
+      strandedVehicleAfter(homeward, playedAt(25_000, [0, 1000, 8000, 14500])),
+    ).toBeNull();
+    expect(
+      currentView(events, 1, startingChoice, (index) =>
+        homewardQuiet(lost, played, index),
+      ),
+    ).toBe("marsOrbit");
   });
 
   it("stays at the site after a failed ascent, as nothing else comes of it", () => {

@@ -83,6 +83,9 @@ export const colossusSeed = colossusSeedWhere(null);
 /** A seed where the Meridian Colossus's first Mission collides with its Tanker at the rendezvous. */
 export const rendezvousFailureSeed = colossusSeedWhere("Rendezvous");
 
+export const tankerFailureSeed = colossusSeedWhere("Tanker launch");
+export const transferFailureSeed = colossusSeedWhere("Mars transfer burn");
+
 /** The smallest Crew on the Meridian Colossus, with nothing else aboard. */
 const smallestCrew: TurnPlan = {
   mission: {

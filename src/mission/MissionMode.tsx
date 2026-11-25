@@ -46,8 +46,14 @@ import {
   ascentSequenceOf,
   sitesDuringAscent,
 } from "./surface/ascent";
-import { homewardInSpace, homewardOf, homewardQuiet } from "./homeward";
+import {
+  homewardInSpace,
+  homewardOf,
+  homewardQuiet,
+  strandedVehicleAfter,
+} from "./homeward";
 import { marsRendezvousNow } from "./spacecraft/marsRendezvous";
+import { departureNow } from "./spacecraft/transEarthInjection";
 import { earthEntryNow } from "./spacecraft/splashdown";
 import { useMissionView } from "./useMissionView";
 import { usePlayback } from "./usePlayback";
@@ -55,6 +61,8 @@ import { usePlaybackShortcuts } from "./usePlaybackShortcuts";
 import { muteKeyName, pauseKeyName, speedKey } from "./playbackShortcuts";
 import { useSounds } from "./useSounds";
 import { useSteadyCamera } from "./useSteadyCamera";
+import { transferBurnNow } from "./spacecraft/transferBurn";
+import { marsCaptureNow } from "./marsOrbit/capture";
 import { launchNow } from "./launch/launch";
 
 const MissionScene = lazy(() => import("./MissionScene"));
@@ -124,9 +132,13 @@ export function MissionMode({
   );
   const inSpace = homewardInSpace(homeward, state);
   const marsRendezvous = marsRendezvousNow(homeward, inSpace);
+  const departure = departureNow(homeward, inSpace);
   const earthEntry = earthEntryNow(homeward, inSpace);
+  const burn = transferBurnNow(timeline.entries, state, deciding);
   const spacecraftAvailable =
-    spacecraftHasSomethingToShow(timeline, state) || inSpace !== null;
+    burn !== null ||
+    spacecraftHasSomethingToShow(timeline, state) ||
+    inSpace !== null;
   const particles = solarParticleEventShowing(timeline.entries, state);
   const refuelling = useMemo(() => refuellingOf(timeline.entries), [timeline]);
   const earthOrbit = earthOrbitNow(refuelling, state);
@@ -137,11 +149,22 @@ export function MissionMode({
     spacecraftAvailable
       ? null
       : spacecraftFallback(timeline.mission, state.day),
-    (entryIndex) =>
-      (refuelling?.tankerLaunch.entryIndex === entryIndex &&
-        state.activeScene !== entryIndex) ||
-      rendezvousHasPlayed(refuelling, state, entryIndex) ||
-      homewardQuiet(homeward, state, entryIndex),
+    (entryIndex) => {
+      const entry = timeline.entries[entryIndex];
+      return (
+        (refuelling?.tankerLaunch.entryIndex === entryIndex &&
+          state.activeScene !== entryIndex) ||
+        ((entry?.kind === "missionEvent" || entry?.kind === "decisionPoint") &&
+          entry.eventId === "mars-transfer-burn" &&
+          state.activeScene !== entryIndex &&
+          !deciding) ||
+        (entry?.kind === "missionEvent" &&
+          entry.returningToEarth === true &&
+          state.activeScene !== entryIndex) ||
+        rendezvousHasPlayed(refuelling, state, entryIndex) ||
+        homewardQuiet(homeward, state, entryIndex)
+      );
+    },
     homeward?.siteName ?? null,
   );
   /** Why each view's button can't be used, while its view has nothing to show. */
@@ -192,12 +215,16 @@ export function MissionMode({
           view={view}
           site={site}
           sequence={sequence}
+          capture={marsCaptureNow(timeline, state, view)}
+          strandedVehicle={strandedVehicleAfter(homeward, state)}
           ascent={ascent}
           particles={particles}
           playedSeconds={state.playedMs / 1000}
           lossSeconds={(msSinceJourneyLoss(timeline, state) ?? 0) / 1000}
+          burn={burn}
           earthOrbit={earthOrbit}
           marsRendezvous={marsRendezvous}
+          departure={departure}
           earthEntry={earthEntry}
           operatingAssetCount={operatingAssets.length}
         />
@@ -342,8 +369,10 @@ export function MissionMode({
           view={view}
           available={spacecraftAvailable}
           particles={particles}
+          burn={burn}
           earthOrbit={earthOrbit}
           marsRendezvous={marsRendezvous}
+          departure={departure}
           earthEntry={earthEntry}
         />
         {/* Shown only while it has something to list, rather than an empty heading. */}
@@ -391,6 +420,7 @@ export function MissionMode({
       <EventsColumn
         timeline={timeline}
         entriesHappened={state.entriesHappened}
+        activeScene={state.activeScene}
         deciding={deciding}
       />
     </main>

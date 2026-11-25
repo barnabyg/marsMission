@@ -19,6 +19,7 @@ import {
   capsuleAt,
   breakUpFlash,
   piecesAt,
+  recoveryShipAt,
   splashAt,
   splashdownCentre,
   splashMs,
@@ -96,15 +97,45 @@ function Unlit({ color }: { color: string }) {
 /** A recovery ship waiting on the horizon. */
 const Ship = memo(function Ship() {
   return (
-    <group position={[5.5, 0, 10]} rotation={[0, 0.3, 0]}>
+    <group position={recoveryShipAt} rotation={[0, 0.27, 0]}>
+      <mesh position={[0, 0.11, 0]} scale={[1.6, 0.36, 0.44]}>
+        <sphereGeometry args={[1, 18, 8]} />
+        <Unlit color="#4d596b" />
+      </mesh>
       <mesh position={[0, 0.15, 0]}>
-        <boxGeometry args={[2.6, 0.32, 0.55]} />
+        <boxGeometry args={[2.4, 0.36, 0.65]} />
         <Unlit color="#5d6673" />
       </mesh>
       <mesh position={[-0.3, 0.45, 0]}>
         <boxGeometry args={[0.9, 0.32, 0.45]} />
         <Unlit color="#c9ced6" />
       </mesh>
+      <mesh position={[-0.48, 0.66, 0]}>
+        <boxGeometry args={[0.52, 0.12, 0.47]} />
+        <Unlit color="#263849" />
+      </mesh>
+      <mesh position={[-0.48, 0.75, 0]}>
+        <boxGeometry args={[0.59, 0.06, 0.5]} />
+        <Unlit color="#ebebdf" />
+      </mesh>
+      <Rod
+        from={[0.6, 0.32, 0]}
+        to={[0.88, 0.83, 0]}
+        radius={0.05}
+        color="#ef993d"
+      />
+      <Rod
+        from={[0.88, 0.83, 0]}
+        to={[1.4, 0.93, 0]}
+        radius={0.045}
+        color="#ef993d"
+      />
+      <Rod
+        from={[1.4, 0.93, 0]}
+        to={[1.4, 0.55, 0]}
+        radius={0.012}
+        color="#394254"
+      />
       <mesh position={[-0.3, 0.85, 0]}>
         <cylinderGeometry args={[0.025, 0.025, 0.5, 6]} />
         <Unlit color="#8a9099" />
@@ -114,7 +145,7 @@ const Ship = memo(function Ship() {
 });
 
 /** The capsule, its heat shield down, with windows on the side towards the camera. Unlit, as everything here is. */
-function Capsule({ scale }: { scale: number }) {
+function Capsule({ crewed, scale }: { crewed: boolean; scale: number }) {
   return (
     <group scale={scale}>
       <mesh position={[0, 0.25, 0]}>
@@ -129,12 +160,13 @@ function Capsule({ scale }: { scale: number }) {
         <cylinderGeometry args={[0.1, 0.18, 0.08, 16]} />
         <Unlit color="#a9adb6" />
       </mesh>
-      {[-0.1, 0.1].map((x) => (
-        <mesh key={x} position={[x, 0.3, -0.31]} rotation={[-0.45, 0, 0]}>
-          <boxGeometry args={[0.1, 0.08, 0.02]} />
-          <Unlit color="#1b2433" />
-        </mesh>
-      ))}
+      {crewed &&
+        [-0.1, 0.1].map((x) => (
+          <mesh key={x} position={[x, 0.3, -0.31]} rotation={[-0.45, 0, 0]}>
+            <boxGeometry args={[0.1, 0.08, 0.02]} />
+            <Unlit color="#1b2433" />
+          </mesh>
+        ))}
     </group>
   );
 }
@@ -277,7 +309,7 @@ export function SplashdownScene({ now }: { now: EarthEntryNow | null }) {
             />
           )}
           <group rotation={[0, 0, capsule.lean]}>
-            <Capsule scale={scale} />
+            <Capsule crewed={now.crewed} scale={scale} />
           </group>
           {capsule.glow > 0 && <EntryGlow glow={capsule.glow} scale={scale} />}
         </group>
@@ -303,7 +335,7 @@ export function SplashdownScene({ now }: { now: EarthEntryNow | null }) {
           <EntryGlow glow={heat * 0.6} scale={scale * 0.4} />
         </group>
       ))}
-      {sinceSplashMs >= 0 && (
+      {now.stage === "splashedDown" && (
         <>
           <mesh
             position={[splashAt[0], 0.02, splashAt[2]]}
@@ -344,7 +376,23 @@ export function splashdownLabels(now: EarthEntryNow | null): SceneLabel[] {
     : (pieces[0]?.place ?? capsule.place);
   const aboard = now.crewed ? "Crew" : "Samples";
   const lost = now.stage === "brokenUp";
+  const ship: SceneLabel[] =
+    now.stage === "splashedDown"
+      ? [
+          {
+            text: "Recovery ship",
+            position: [
+              splashdownCentre[0] + recoveryShipAt[0],
+              splashdownCentre[1] + 1.25,
+              splashdownCentre[2] + recoveryShipAt[2],
+            ],
+            testId: "recovery-ship",
+            className: "on-surface",
+          },
+        ]
+      : [];
   return [
+    ...ship,
     {
       text: lost ? `${aboard}: lost` : aboard,
       position: [

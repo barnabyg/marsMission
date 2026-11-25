@@ -7,6 +7,8 @@ export interface MissionEventEntry {
   title: string;
   description: string;
   outcome: "success" | "failure";
+  /** The player’s answer, when this outcome resolved a Contingency. */
+  contingencyAnswer?: "use" | "decline";
   /** Whether this failure sends the Mission back to Earth rather than ending it where it is. */
   returningToEarth?: true;
   /** Whether it is on a journey home from Mars, rather than on the Turn's Mission. */

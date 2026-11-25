@@ -3,6 +3,7 @@ import { BoxGeometry, Euler, Matrix4, Quaternion, Vector3 } from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { useDisposal, type Point } from "../sceneParts";
 import { EarthReturnStage, ReturnOrbiter } from "./homewardModels";
+import { aeroshellColorForKind } from "../surface/surface";
 import { stackLayout } from "./spacecraft";
 
 /** What's lost is drawn darkened. */
@@ -340,19 +341,10 @@ function AssetModel({ kind, lost }: { kind: string; lost: boolean }) {
   if (kind === "return vehicle") return <EarthReturnStage lost={lost} />;
   if (kind === "return-orbiter") return <ReturnOrbiter lost={lost} />;
   // Whatever lands travels in an aeroshell, each kind its own colour.
-  const aeroshell = aeroshellColors[kind];
+  const aeroshell = aeroshellColorForKind(kind);
   if (aeroshell) return <Aeroshell lost={lost} color={aeroshell} />;
   return <Orbiter lost={lost} />;
 }
-
-const aeroshellColors: Partial<Record<string, string>> = {
-  lander: "#d9d6cf",
-  rover: "#eef0f4",
-  "fuel-plant": "#e4ddd0",
-  habitat: "#dfe3d6",
-  lab: "#d6dce6",
-  "ascent-vehicle": "#e6d8cf",
-};
 
 /**
  * The Mission on its way: the cruise stage with the Assets after it in the order it carries them, on a boom along x.

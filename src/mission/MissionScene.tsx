@@ -8,13 +8,19 @@ import type { LaunchNow } from "./launch/launch";
 import { advanceMove, headFor, poseDuring, settledAt } from "./cameraMove";
 import {
   marsOrbitLabels,
+  strandedOrbitMarker,
   MarsOrbitScene,
   marsOrbitShot,
 } from "./marsOrbit/MarsOrbitView";
 import type { MissionViewId } from "./missionViews";
 import type { CameraPose, SceneLabel } from "./sceneParts";
 import { earthOrbitLabels, EarthOrbitScene } from "./spacecraft/EarthOrbitView";
-import type { EarthOrbitNow } from "./spacecraft/refuelling";
+import type { TransferBurn } from "./spacecraft/transferBurn";
+import {
+  approachMs,
+  tankerOnPad,
+  type EarthOrbitNow,
+} from "./spacecraft/refuelling";
 import {
   marsRendezvousShot,
   type MarsRendezvousNow,
@@ -23,19 +29,40 @@ import {
   marsRendezvousLabels,
   MarsRendezvousScene,
 } from "./spacecraft/MarsRendezvousView";
-import { earthOrbitShot, spacecraftShot } from "./spacecraft/spacecraft";
-import { splashdownShot, type EarthEntryNow } from "./spacecraft/splashdown";
+import {
+  earthOrbitLayout,
+  earthOrbitShot,
+  spacecraftShot,
+} from "./spacecraft/spacecraft";
+import {
+  DepartureScene,
+  departureLabels,
+  departureShot,
+} from "./spacecraft/DepartureView";
+import type { DepartureNow } from "./spacecraft/transEarthInjection";
+import {
+  recoveryShot,
+  splashdownShot,
+  type EarthEntryNow,
+} from "./spacecraft/splashdown";
 import { splashdownLabels, SplashdownScene } from "./spacecraft/SplashdownView";
 import { spacecraftLabels, SpacecraftScene } from "./spacecraft/SpacecraftView";
 import { ascentKind, ascentRunning, type AscentNow } from "./surface/ascent";
 import { ascentLabels } from "./surface/AscentView";
 import { crewOutsideAt } from "./surface/crewAtSite";
 import {
+  landingPhase,
   sequenceKind,
   sequenceRunning,
   type SequenceNow,
 } from "./surface/sequence";
-import { dustStormAt, landingShot, surfaceShot } from "./surface/surface";
+import {
+  dustStormAt,
+  entryShot,
+  steadyLandingShot,
+  landingShot,
+  surfaceShot,
+} from "./surface/surface";
 import { surfaceLabels, SurfaceScene } from "./surface/SurfaceView";
 import {
   solarSystemLabels,
@@ -43,7 +70,15 @@ import {
   solarSystemShot,
 } from "./solarSystem/SolarSystemView";
 
+import { captureLabels, CaptureVehicle } from "./marsOrbit/CaptureView";
+import {
+  captureWideShot,
+  limbShot,
+  type MarsCapture,
+} from "./marsOrbit/capture";
+
 interface MissionSceneProps {
+  capture: MarsCapture | null;
   onFirstFrame: (() => void) | null;
   steadyCamera: boolean;
   launch: LaunchNow | null;
@@ -62,10 +97,13 @@ interface MissionSceneProps {
   lossSeconds: number;
   /** The Mission in Earth orbit for Orbital refuelling, which the spacecraft view shows instead while it's there. */
   earthOrbit: EarthOrbitNow | null;
+  burn: TransferBurn | null;
   /** The rendezvous in Mars orbit on the way home, while it plays, which the spacecraft view shows instead. */
   marsRendezvous: MarsRendezvousNow | null;
   /** Earth entry at the end of the way home, while it plays, which the spacecraft view shows instead. */
   earthEntry: EarthEntryNow | null;
+  departure: DepartureNow | null;
+  strandedVehicle: string | null;
   /** How many Assets are operating at Mars right now. */
   operatingAssetCount: number;
 }
@@ -211,8 +249,10 @@ function surfaceSequenceOf(
 function spacecraftCloseUp(
   timeline: Timeline,
   earthOrbit: EarthOrbitNow | null,
+  burn: TransferBurn | null,
   marsRendezvous: MarsRendezvousNow | null,
   earthEntry: EarthEntryNow | null,
+  departure: DepartureNow | null,
 ): { shot: CameraPose; labels: SceneLabel[] } | null {
   if (marsRendezvous) {
     return {
@@ -220,16 +260,25 @@ function spacecraftCloseUp(
       labels: marsRendezvousLabels(marsRendezvous),
     };
   }
+  if (departure)
+    return { shot: departureShot, labels: departureLabels(departure) };
   if (earthEntry) {
-    return { shot: splashdownShot, labels: splashdownLabels(earthEntry) };
+    return {
+      shot: earthEntry.stage === "splashedDown" ? recoveryShot : splashdownShot,
+      labels: splashdownLabels(earthEntry),
+    };
   }
-  return earthOrbit
-    ? { shot: earthOrbitShot, labels: earthOrbitLabels(timeline, earthOrbit) }
+  return earthOrbit || burn
+    ? {
+        shot: earthOrbitShot,
+        labels: earthOrbitLabels(timeline, earthOrbit, burn),
+      }
     : null;
 }
 
 /** Mission Mode's 3D scene: one Canvas and one camera, holding every view. */
 export default function MissionScene({
+  capture,
   onFirstFrame,
   steadyCamera,
   launch,
@@ -243,29 +292,77 @@ export default function MissionScene({
   playedSeconds,
   lossSeconds,
   earthOrbit,
+  burn,
   marsRendezvous,
   earthEntry,
+  departure,
+  strandedVehicle,
   operatingAssetCount,
 }: MissionSceneProps) {
   const labelLayer = useRef<HTMLDivElement>(null);
   const { shot: viewShot, labels: labelsOnDay } = viewSettings[view];
   const inEarthOrbit = view === "spacecraft" && earthOrbit !== null;
+  const padLaunch = launch ?? (inEarthOrbit ? tankerOnPad(earthOrbit) : null);
   const closeUp =
     view === "spacecraft"
-      ? spacecraftCloseUp(timeline, earthOrbit, marsRendezvous, earthEntry)
+      ? spacecraftCloseUp(
+          timeline,
+          earthOrbit,
+          burn,
+          marsRendezvous,
+          earthEntry,
+          departure,
+        )
       : null;
-  const shot = closeUp?.shot ?? viewShot;
-  const labels = closeUp
-    ? closeUp.labels
-    : [
+  const payloadCount = timeline.mission?.assets.length ?? 0;
+  const dockShot = useMemo(() => {
+    const z = earthOrbitShot.target[2] - earthOrbitLayout(payloadCount).dock;
+    return {
+      position: [-15.4, 1.1, z + 0.35],
+      target: [-20, 0, z],
+    } satisfies CameraPose;
+  }, [payloadCount]);
+  const watchDock =
+    inEarthOrbit &&
+    !steadyCamera &&
+    (earthOrbit.stage === "refuelling" ||
+      earthOrbit.stage === "collided" ||
+      (earthOrbit.stage === "approaching" &&
+        (earthOrbit.sinceRendezvousMs ?? 0) > approachMs * 0.6));
+  const spacecraftCamera = watchDock ? dockShot : closeUp?.shot;
+  const shot = capture
+    ? capture.stage === "burn" && !steadyCamera
+      ? limbShot
+      : captureWideShot
+    : (spacecraftCamera ?? viewShot);
+  const stranded = strandedVehicle
+    ? strandedOrbitMarker(strandedVehicle, timeline, day)
+    : null;
+  const labels = capture
+    ? captureLabels(capture)
+    : (closeUp?.labels ?? [
         ...labelsOnDay(timeline, day, site, sequence),
+        ...(view === "marsOrbit" && stranded ? [stranded.label] : []),
         ...(view === "surface" && site !== null
           ? ascentLabels(ascent, site)
           : []),
-      ];
+      ]);
   const surfaceSequence = surfaceSequenceOf(sequence, ascent);
   const showingSequence =
     view === "surface" && surfaceSequence?.siteName === site;
+
+  const phase =
+    showingSequence && sequence?.sequence.siteName === site
+      ? landingPhase(sequence)
+      : null;
+  const surfaceCamera =
+    phase === null
+      ? landingShot
+      : steadyCamera || phase === "descent"
+        ? steadyLandingShot
+        : phase === "entry"
+          ? entryShot
+          : surfaceShot;
 
   // Once the last site goes, the land stays for the camera to move away from, with nothing on it operating.
   const [lastSite, setLastSite] = useState(site);
@@ -275,9 +372,11 @@ export default function MissionScene({
     <div
       className="mission-scene"
       data-testid="mission-scene"
-      data-launch-vehicle={launch?.vehicleId}
-      data-launch-ms={launch ? Math.floor(launch.elapsedMs) : undefined}
+      data-mars-capture={capture?.stage}
+      data-launch-vehicle={padLaunch?.tanker ? "tanker" : padLaunch?.vehicleId}
+      data-launch-ms={padLaunch ? Math.floor(padLaunch.elapsedMs) : undefined}
       // The browser tests can't see into the scene, so this is how they follow a sequence.
+      data-landing-phase={phase ?? undefined}
       data-sequence={surfaceSequence?.kind}
       data-sequence-ms={
         surfaceSequence
@@ -297,9 +396,13 @@ export default function MissionScene({
       data-solar-particle-event={
         view === "spacecraft" && particles ? "showing" : undefined
       }
+      data-transfer-burn={view === "spacecraft" ? burn?.stage : undefined}
       data-earth-orbit={inEarthOrbit ? earthOrbit.stage : undefined}
       data-mars-rendezvous={
         view === "spacecraft" ? marsRendezvous?.stage : undefined
+      }
+      data-homeward-departure={
+        view === "spacecraft" ? departure?.stage : undefined
       }
       data-earth-entry={view === "spacecraft" ? earthEntry?.stage : undefined}
       data-rendezvous-ms={
@@ -310,8 +413,8 @@ export default function MissionScene({
     >
       <Canvas camera={{ position: [...solarSystemShot.position], fov: 45 }}>
         {onFirstFrame && <FirstFrame ready={onFirstFrame} />}
-        {launch ? (
-          <LaunchScene launch={launch} steadyCamera={steadyCamera} />
+        {padLaunch ? (
+          <LaunchScene launch={padLaunch} steadyCamera={steadyCamera} />
         ) : (
           <>
             <color attach="background" args={["#05060c"]} />
@@ -321,8 +424,13 @@ export default function MissionScene({
               day={day}
               operatingAssetCount={operatingAssetCount}
             />
-            <MarsOrbitScene timeline={timeline} day={day} />
-            {earthOrbit === null && (
+            {capture && <CaptureVehicle capture={capture} />}
+            <MarsOrbitScene
+              timeline={timeline}
+              day={capture ? capture.day - 0.001 : day}
+              stranded={stranded?.position}
+            />
+            {earthOrbit === null && !burn && (
               <SpacecraftScene
                 timeline={timeline}
                 day={day}
@@ -331,8 +439,9 @@ export default function MissionScene({
                 lossSeconds={lossSeconds}
               />
             )}
-            <EarthOrbitScene timeline={timeline} now={earthOrbit} />
+            <EarthOrbitScene timeline={timeline} now={earthOrbit} burn={burn} />
             <MarsRendezvousScene now={marsRendezvous} />
+            <DepartureScene now={departure} />
             <SplashdownScene now={earthEntry} />
             {lastSite !== null && (
               <SurfaceScene
@@ -346,14 +455,14 @@ export default function MissionScene({
             )}
             <CameraRig
               steady={steadyCamera}
-              shot={showingSequence ? landingShot : shot}
+              shot={showingSequence ? surfaceCamera : shot}
             />
             <LabelTracker labels={labels} layer={labelLayer} />
           </>
         )}
       </Canvas>
       <div ref={labelLayer}>
-        {!launch &&
+        {!padLaunch &&
           labels.map(({ text, className, testId }, index) => (
             <div
               key={index}

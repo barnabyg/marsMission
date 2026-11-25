@@ -1,10 +1,12 @@
 import type { Timeline, TimelineEntry } from "../simulation/simulation";
 import { homewardPlayMs, homewardPartOf } from "./homeward";
+import { captureMs } from "./marsOrbit/capture";
 import { launchDurationMs } from "./launch/launch";
 import { viewAskedForBy } from "./missionViews";
 import type { PlaybackTimeline } from "./playback";
-import { rendezvousMs, tankerClimbMs } from "./spacecraft/refuelling";
-import { lossShownMs, particlesShownMs } from "./spacecraft/spacecraft";
+import { rendezvousMs, tankerSceneMs } from "./spacecraft/refuelling";
+import { transferBurnMs } from "./spacecraft/transferBurn";
+import { particlesShownMs } from "./spacecraft/spacecraft";
 import { sequenceMs } from "./surface/sequence";
 
 /** The screen time each existing animation needs before another event can take its camera. */
@@ -18,13 +20,15 @@ function durationOf(entry: TimelineEntry): number {
     case "launch":
       return launchDurationMs;
     case "tanker-launch":
-      return entry.outcome === "failure" ? rendezvousMs : tankerClimbMs;
+      return tankerSceneMs;
     case "rendezvous":
       return rendezvousMs;
+    case "mars-orbit-insertion":
+      return captureMs;
     case "entry-descent-landing":
       return sequenceMs;
     case "mars-transfer-burn":
-      return entry.outcome === "failure" ? lossShownMs : 0;
+      return transferBurnMs;
     default:
       return 0;
   }

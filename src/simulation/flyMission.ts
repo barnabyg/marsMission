@@ -81,7 +81,7 @@ function flyEvents(flight: Flight): void {
     const contingency = tryContingency(flight, event, onBoard);
     if (contingency.kind === "rescued") continue;
     if (contingency.kind === "failed") {
-      missionEventFailed(flight, event, onBoard, contingency.used);
+      missionEventFailed(flight, event, onBoard, contingency.decision);
     }
     return;
   }

@@ -1,4 +1,5 @@
 import type { TimelineEntry } from "../../simulation/simulation";
+import { launchDurationMs, type LaunchNow } from "../launch/launch";
 import { msSinceEntry, type PlaybackState } from "../playback";
 import type { Point } from "../sceneParts";
 
@@ -64,7 +65,23 @@ export function refuellingOf(
  * would flash by at 20x. It starts from the moment playback reaches each entry, and only displays the Timeline, so it
  * can't change any results.
  */
-export const tankerClimbMs = 2500;
+export const tankerClimbMs = 5000;
+export const tankerPadRate = launchDurationMs / tankerClimbMs;
+
+/** The Tanker uses the same pad sequence played on its shorter scene clock. */
+export function tankerOnPad(now: EarthOrbitNow | null): LaunchNow | null {
+  if (now?.stage !== "tankerClimbing" || now.sinceTankerMs === null)
+    return null;
+  return {
+    vehicleId: "meridian-medium",
+    tanker: true,
+    failed: now.tankerFailed,
+    elapsedMs: now.sinceTankerMs * tankerPadRate,
+  };
+}
+
+/** Hold the waiting Mission after the cut back from the pad, even at 20x. */
+export const tankerSceneMs = tankerClimbMs + 1600;
 export const approachMs = 2500;
 const transferMs = 2500;
 /** A successful rendezvous ends with the Tanker leaving. A failed one shows the wreck for as long. */
@@ -131,7 +148,7 @@ function stageOf(
   if (sinceTankerMs === null) return "waiting";
   if (tankerFailed) {
     if (sinceTankerMs < tankerClimbMs) return "tankerClimbing";
-    return sinceTankerMs < rendezvousMs ? "tankerLost" : null;
+    return sinceTankerMs < tankerSceneMs ? "tankerLost" : null;
   }
   if (sinceRendezvousMs === null) {
     return sinceTankerMs < tankerClimbMs ? "tankerClimbing" : "holding";
@@ -180,11 +197,7 @@ export function earthOrbitNow(
  * end of it, up is y, and z is towards the camera.
  */
 const docked: Point = [0, 0, 0];
-/** Below the shot, coming up from Earth. */
-const climbStart: Point = [-3.4, -4.6, -1.8];
 const holdingPlace: Point = [-2.2, 0.7, -0.8];
-/** How far along its climb a Tanker gets before it breaks up, if its launch failed. */
-const breakUpShare = 0.6;
 const bounceEnd: Point = [-1.6, 1, -0.6];
 const leaveEnd: Point = [-2.8, -0.6, 0.9];
 
@@ -202,34 +215,21 @@ function eased(ms: number, overMs: number): number {
   return share * share * (3 - 2 * share);
 }
 
-function climbPlace(sinceTankerMs: number, failed: boolean): Point {
-  const share = eased(sinceTankerMs, tankerClimbMs);
-  return between(
-    climbStart,
-    holdingPlace,
-    failed ? share * breakUpShare : share,
-  );
-}
-
 /** The Tanker now, from its docking port on the Mission, or null when it isn't there to show. */
 export function tankerAt(
   now: EarthOrbitNow | null,
 ): { place: Point; burning: boolean; lost: boolean } | null {
   if (now?.sinceTankerMs == null) return null;
-  const { stage, sinceTankerMs } = now;
   const sinceRendezvousMs = now.sinceRendezvousMs ?? 0;
-  const climbed = climbPlace(sinceTankerMs, now.tankerFailed);
-  switch (stage) {
-    case "tankerClimbing":
-      return { place: climbed, burning: true, lost: false };
+  switch (now.stage) {
     case "holding":
-      return { place: climbed, burning: false, lost: false };
+      return { place: holdingPlace, burning: false, lost: false };
     case "approaching": {
       const share = sinceRendezvousMs / approachMs;
       // Coming in too fast is what goes wrong, so a failed one never slows down.
       const closed = now.rendezvousFailed ? share * share : eased(share, 1);
       return {
-        place: between(climbed, docked, closed),
+        place: between(holdingPlace, docked, closed),
         burning: true,
         lost: false,
       };
@@ -277,11 +277,10 @@ export function lossFlash(
 ): { place: Point; share: number } | null {
   const since = msSinceLoss(now);
   if (since === null || since >= flashMs) return null;
-  const place =
-    now?.stage === "collided"
-      ? docked
-      : between(climbStart, holdingPlace, breakUpShare);
-  return { place, share: since / flashMs };
+  // A tanker breakup is seen from the pad. The waiting spacecraft is intact.
+  return now?.stage === "collided"
+    ? { place: docked, share: since / flashMs }
+    : null;
 }
 
 const statuses: Record<EarthOrbitStage, string> = {

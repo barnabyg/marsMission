@@ -17,7 +17,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 - `choiceText.ts`: How Planning Mode and the tutorial word what an Activity earns and what a longer Service Life adds against its cost and Upkeep, so that the tutorial quotes what the choices show
 - `turnSummary.ts`: The Turn summary: what changed over a Turn
 - `programSummary.ts`: The Program summary, shown once a Program ends: the record a Program keeps over its Turns (Missions launched and lost, the highest Public Support, samples home and the Turn each Milestone was earned), and the summary built from it and the Program
-- `timeline.ts`: The Timeline: what happened in a Turn, as Mission Mode plays it
+- `timeline.ts`: The Timeline: what happened in a Turn, as Mission Mode plays it. A resolved Mission Event carries the player’s `contingencyAnswer` if a Contingency was offered. The pending Decision Point carries no answer
 - `rules.ts`: `createRules`: looking things up in the Catalogue, such as the Trajectory or Mission Events a Mission has, the day of a Mission Event, timed from launch, departure, arrival or leaving Mars, and failure probabilities; plus `roll`
 - `journeyHomeEvents.ts`: The Mission Events of a journey home, which `createRules` hands on: those of Crew coming home from orbit or a Landing Site, those an ascent vehicle or Earth return orbiter flies, and those a Mission buys Reliability and Contingency for on a later Turn
 - `planCheck.ts`: What a plan costs and weighs, and what's wrong with it, if anything

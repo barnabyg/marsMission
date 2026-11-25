@@ -1,6 +1,9 @@
 import type { TimelineEntry } from "../simulation/simulation";
 import { launchBreakupMs, launchIgnitionMs } from "./launch/launchTiming";
-import { approachMs, tankerClimbMs } from "./spacecraft/refuelling";
+import { captureCutoffMs } from "./marsOrbit/capture";
+import { departureCutoffMs } from "./spacecraft/transEarthInjection";
+import { transferCutoffMs } from "./spacecraft/transferBurn";
+import { approachMs, tankerPadRate } from "./spacecraft/refuelling";
 import { closingMs } from "./spacecraft/marsRendezvous";
 import { breakUpMs, splashMs } from "./spacecraft/splashdown";
 import { engineOutMs, ignitionMs } from "./surface/ascent";
@@ -60,10 +63,16 @@ function actionMs(
 ): number | null {
   const failed = entry.outcome === "failure";
   switch (entry.eventId) {
+    case "mars-orbit-insertion":
+      return failed ? captureCutoffMs : null;
+    case "trans-earth-injection":
+      return failed ? departureCutoffMs : null;
+    case "mars-transfer-burn":
+      return failed ? transferCutoffMs(entry) : null;
     case "launch":
       return failed ? launchBreakupMs : launchIgnitionMs;
     case "tanker-launch":
-      return failed ? tankerClimbMs : 0;
+      return (failed ? launchBreakupMs : launchIgnitionMs) / tankerPadRate;
     case "rendezvous":
       return approachMs;
     case "entry-descent-landing":
@@ -104,8 +113,17 @@ export function soundCues(entries: readonly TimelineEntry[]): SoundCue[] {
     };
     if (entry.kind === "missionEvent") {
       eventIndex = entryIndex;
-      if (entry.eventId === "launch" && entry.outcome === "failure") {
-        cue("launch", entryIndex, launchIgnitionMs);
+      if (
+        (entry.eventId === "launch" || entry.eventId === "tanker-launch") &&
+        entry.outcome === "failure"
+      ) {
+        cue(
+          "launch",
+          entryIndex,
+          entry.eventId === "launch"
+            ? launchIgnitionMs
+            : launchIgnitionMs / tankerPadRate,
+        );
       }
     }
     const name = soundFor(entry);

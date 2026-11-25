@@ -133,17 +133,25 @@ export function ascentLabels(
   }
   const { sequence, elapsedMs } = ascent;
   const { altitude, drift, impacted } = riseAt(sequence.failed, elapsedMs);
-  if (altitude >= goneAltitude) return [];
+  const platformOnly = altitude >= goneAltitude;
   const above = engineHeightOf(sequence.crewed) + labelHeight;
   return sequence.craft.map(({ name, place, lander }) => {
     const { x, z } = landerSpot(place, lander);
     const position: Point = [
       surfaceCentre[0] + x + drift,
-      surfaceCentre[1] + groundHeight(siteName, x, z) + altitude + above,
+      surfaceCentre[1] +
+        groundHeight(siteName, x, z) +
+        (platformOnly ? above : altitude + above),
       surfaceCentre[2] + z,
     ];
     return {
-      text: impacted ? `${name}: crashed` : name,
+      text: platformOnly
+        ? sequence.crewed
+          ? "Crew descent stage"
+          : `${name}: launch platform`
+        : impacted
+          ? `${name}: crashed`
+          : name,
       position,
       testId: "surface-ascent",
       className: impacted

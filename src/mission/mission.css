@@ -264,6 +264,11 @@
   gap: 1.2rem;
 }
 
+/* Keep the event on camera readable as later Milestones and Funding Thresholds arrive. */
+.events-column li[aria-current="step"] {
+  order: -1;
+}
+
 /* Tutorial mode's suggestion at a Decision Point, beside the scene rather than in the panel, which it would make tall
    enough to cover the scene. The choice it suggests is the primary button. */
 .decision-advice {

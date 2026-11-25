@@ -5,7 +5,7 @@ import {
   watchForProblems,
 } from "./helpers";
 import { chooseAssets } from "./planningHelpers";
-import { eventEntries, pauseAtEvent } from "./playbackHelpers";
+import { eventEntries, holdSceneAt } from "./playbackHelpers";
 import { overrideProgramData } from "./saveHelpers";
 import { endTurnAndContinue } from "./turnHelpers";
 import { sampleReturnMoney, sampleReturnSeed } from "./sampleSeeds";
@@ -79,13 +79,18 @@ test("caches samples with a rover, sends them home with an ascent vehicle and an
   await expect(sendHome).toBeEnabled();
   await sendHome.check();
   expect(await termsWithoutTooltips(page)).toEqual([]);
-  await pauseAtEvent(
-    page,
-    "Samples home",
-    () =>
-      page.getByRole("button", { name: "End Turn without launching" }).click(),
-    "10x",
-  );
+  const splash = holdSceneAt(page, "earthEntry", "splashedDown");
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await page.getByRole("button", { name: "20x", exact: true }).click();
+  const scene = page.getByTestId("mission-scene");
+  await expect(scene).toHaveAttribute("data-sequence", "ascent");
+  await expect(scene).toHaveAttribute("data-mars-rendezvous", "docked");
+  await expect(scene).toHaveAttribute("data-homeward-departure", "departing");
+  await expect(scene).toHaveAttribute("data-earth-entry", "descending");
+  await splash;
+  await expect(page.getByTestId("recovery-ship")).toBeVisible();
   for (const name of [
     "Mars ascent",
     "Mars orbit rendezvous",
@@ -98,7 +103,7 @@ test("caches samples with a rover, sends them home with an ascent vehicle and an
   }
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
-  await page.getByRole("button", { name: /^Skip to / }).click();
+  await page.getByRole("button", { name: "20x", exact: true }).click();
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-samples-home")).toContainText(
     /\d+ samples from Jezero Crater, brought home by the Albatross Orbiter: \d+ Science/,

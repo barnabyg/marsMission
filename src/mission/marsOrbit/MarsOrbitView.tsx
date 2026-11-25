@@ -23,7 +23,7 @@ import {
  * one moves every day and is lit from the side. The solar system's Sun lights this one too, from
  * behind the camera.
  */
-const marsCentre: Point = [0, 0, -20];
+export const marsCentre: Point = [0, 0, -20];
 
 /** The camera looks down on the orbit from high enough that the globe never hides an orbiter. */
 export const marsOrbitShot: CameraPose = {
@@ -130,12 +130,31 @@ function CrewShipMarker({
   );
 }
 
+/** Reserve an orbit slot beyond the Turn's operating Assets for the stranded vehicle. */
+export function strandedOrbitMarker(
+  name: string,
+  timeline: Timeline,
+  day: number,
+): { position: Point; label: SceneLabel } {
+  const position = orbiterPosition(timeline.assetsAtMars.length, day);
+  return {
+    position,
+    label: {
+      text: `${name}: stranded in Mars orbit`,
+      position: fromMarsCentre(aboveMarker(position)),
+      className: "crashed-label",
+    },
+  };
+}
+
 export function MarsOrbitScene({
   timeline,
   day,
+  stranded,
 }: {
   timeline: Timeline;
   day: number;
+  stranded: Point | undefined;
 }) {
   const texture = useTexture("mars.jpg");
   return (
@@ -156,6 +175,12 @@ export function MarsOrbitScene({
         <torusGeometry args={[orbitRadius, 0.004, 8, 240]} />
         <meshBasicMaterial color="#7fe7ff" transparent opacity={0.35} />
       </mesh>
+      {stranded && (
+        <mesh position={stranded}>
+          <octahedronGeometry args={[markerRadius * 1.8]} />
+          <meshBasicMaterial color={crashedColor} />
+        </mesh>
+      )}
       {orbitersOn(timeline, day).map(({ slot, kind }) =>
         isCrew({ kind }) ? (
           <CrewShipMarker

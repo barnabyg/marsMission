@@ -4,6 +4,7 @@ import {
   startPlayback,
   continueOnTimeline,
   skipScene,
+  skipToDecisionPoint,
   pausePlayback,
   changeSpeed,
 } from "./playback";
@@ -53,7 +54,30 @@ it("skips just the paused scene and gives the next same-day scene its full durat
   expect(advancePlayback(resumed, timeline, 7000, 1).activeScene).toBeNull();
 });
 
-it("preempts the queue at a Decision Point and plays only new scenes from the answer", () => {
+it("finishes earlier scenes before presenting a Decision Point reached at 20x", () => {
+  const timeline = {
+    durationDays: 10,
+    decisionDay: 2,
+    entries: [
+      { day: 0, title: "Launch", sceneMs: 9000 },
+      { day: 1, title: "Tanker launch", sceneMs: 2500 },
+      { day: 2, title: "Trouble" },
+    ],
+  };
+  const tick = (state: ReturnType<typeof startPlayback>, ms: number) =>
+    advancePlayback(state, timeline, ms, 1_200_000);
+  const launching = tick(startPlayback(timeline, 20), 100);
+  expect(launching.activeScene).toBe(0);
+  const tanker = tick(launching, 8900);
+  expect(tanker.activeScene).toBe(1);
+  expect(tanker.entriesHappened).toBe(2);
+  const deciding = tick(tanker, 2500);
+  expect(deciding.day).toBe(2);
+  expect(deciding.entriesHappened).toBe(3);
+  expect(tick(deciding, 10_000)).toEqual(deciding);
+});
+
+it("skips directly to a Decision Point and plays only new scenes from the answer", () => {
   const launch = { day: 0, title: "Launch", sceneMs: 9000 };
   const tanker = { day: 1, title: "Tanker launch", sceneMs: 2500 };
   const question = { day: 2, title: "Trouble" };
@@ -62,7 +86,7 @@ it("preempts the queue at a Decision Point and plays only new scenes from the an
     decisionDay: 2,
     entries: [launch, tanker, question],
   };
-  const held = advancePlayback(startPlayback(before, 20), before, 12_000, 1);
+  const held = skipToDecisionPoint(startPlayback(before, 20), before);
   expect(held.activeScene).toBeNull();
   expect(held.finished).toBe(false);
   for (const title of ["Rendezvous saved", "Rendezvous failed"]) {

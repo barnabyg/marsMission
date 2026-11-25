@@ -153,7 +153,11 @@ export function LaunchScene({
           apart={apart}
         />
         <group position={[0, launchDeckHeight + rise, 0]}>
-          <MeridianRocket vehicleId={launch.vehicleId} apart={apart} />
+          <MeridianRocket
+            vehicleId={launch.vehicleId}
+            apart={apart}
+            tanker={launch.tanker === true}
+          />
           {apart === 0 && (
             <Exhaust elapsedMs={launch.elapsedMs} radius={radius} />
           )}

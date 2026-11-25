@@ -19,6 +19,7 @@ import {
   rendezvousMs,
   tankerAt,
   tankerClimbMs,
+  tankerSceneMs,
 } from "./refuelling";
 
 function missionEvent(
@@ -184,8 +185,8 @@ describe("a failed tanker launch", () => {
       stage: "tankerLost",
       missionLost: true,
     });
-    expect(at(1000 + rendezvousMs - 1)?.stage).toBe("tankerLost");
-    expect(at(1000 + rendezvousMs)).toBeNull();
+    expect(at(1000 + tankerSceneMs - 1)?.stage).toBe("tankerLost");
+    expect(at(1000 + tankerSceneMs)).toBeNull();
   });
 });
 
@@ -209,19 +210,12 @@ describe("where the Tanker is", () => {
     expect(tankerWhen([0], 500)).toBeNull();
   });
 
-  it("rises from below to wait nearby", () => {
-    const leaving = tankerWhen([0, 1000], 1000);
+  it("cuts from the Tanker on the pad to its holding place away from the Mission", () => {
+    expect(tankerWhen([0, 1000], 1000)).toBeNull();
     const holding = tankerWhen([0, 1000], 1000 + tankerClimbMs);
-    expect(leaving?.place[1]).toBeLessThan((holding?.place[1] ?? 0) - 2);
-    expect(leaving?.burning).toBe(true);
     expect(holding?.burning).toBe(false);
     expect(distance(holding?.place ?? docked, docked)).toBeGreaterThan(1);
-  });
-
-  it("starts its approach from wherever its climb has got to, so it never jumps", () => {
-    const climbing = tankerWhen([0, 0], 150);
-    const approaching = tankerWhen([0, 0, 150], 150);
-    expect(approaching?.place).toEqual(climbing?.place);
+    expect(tankerWhen([0, 1000, 8000], 8000)?.place).toEqual(holding?.place);
   });
 
   it("docks at the end of its approach, and leaves from there", () => {
@@ -269,7 +263,7 @@ describe("where the Tanker is", () => {
       launch,
       missionEvent("tanker-launch", 1, "failure"),
     ]);
-    expect(tankerWhen([0, 1000], 1500, tankerFailed)?.lost).toBe(false);
+    expect(tankerWhen([0, 1000], 1500, tankerFailed)).toBeNull();
     expect(
       tankerWhen([0, 1000], 1000 + tankerClimbMs, tankerFailed),
     ).toBeNull();
@@ -331,18 +325,14 @@ describe("the flash when the Mission is lost in Earth orbit", () => {
     expect(at(1000 + approachMs + 5000)).toBeNull();
   });
 
-  it("bursts where the Tanker breaks up on its way", () => {
-    const tankerFailed = refuellingOf([
+  it("leaves the waiting Mission intact when the Tanker breaks up on the pad camera", () => {
+    const failed = refuellingOf([
       launch,
       missionEvent("tanker-launch", 1, "failure"),
     ]);
-    const now = (playedMs: number) =>
-      earthOrbitNow(tankerFailed, played(2, [0, 0], playedMs));
-    const lastPlace = tankerAt(now(tankerClimbMs - 1))?.place ?? [9, 9, 9];
-    const flash = lossFlash(now(tankerClimbMs));
-    lastPlace.forEach((value, index) => {
-      expect(flash?.place[index]).toBeCloseTo(value);
-    });
+    expect(
+      lossFlash(earthOrbitNow(failed, played(2, [0, 0], tankerClimbMs))),
+    ).toBeNull();
   });
 });
 

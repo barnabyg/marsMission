@@ -66,12 +66,22 @@ test("moves the view to Mars orbit on arrival, and leaves it where the player th
   const problems = watchForProblems(page);
   await launchFirstMission(page, successSeed, "Mars transfer burn");
   const current = page.getByTestId("current-view");
+  await expect(current).toHaveText("Spacecraft");
+  await expect(page.getByTestId("mission-scene")).toHaveAttribute(
+    "data-transfer-burn",
+    "ignition",
+  );
+  await page.getByRole("button", { name: "Skip scene", exact: true }).click();
   await expect(current).toHaveText("Solar system");
 
   await pauseAtEvent(page, "Mars orbit insertion", () =>
     page.getByRole("button", { name: "5x" }).click(),
   );
   await expect(current).toHaveText("Mars orbit");
+  await expect(page.getByTestId("capture-payload")).toHaveText(
+    "Pathfinder Orbiter",
+  );
+  await page.getByRole("button", { name: "Skip scene", exact: true }).click();
   await expect(orbiterLabels(page)).toHaveText(["Pathfinder Orbiter"]);
 
   // The player switches away, and it stays that way to the end of the Turn.
