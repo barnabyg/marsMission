@@ -1,4 +1,5 @@
 import type { Timeline } from "../../simulation/simulation";
+import { viewAskedForBy } from "../missionViews";
 import { msSinceEntry, type PlaybackState } from "../playback";
 
 /** Art dimensions in the pad's common coordinate system. Capacity is payload mass. */
@@ -29,6 +30,13 @@ export function launchNow(
   const entry = entries[index];
   const elapsedMs = msSinceEntry(played, index);
   if (entry?.kind !== "missionEvent" || elapsedMs === null || elapsedMs >= 9000)
+    return null;
+  // Once another event has called the camera away, returning to the map cannot revisit liftoff.
+  if (
+    entries
+      .slice(index + 1, played.entriesHappened)
+      .some((later) => viewAskedForBy(later) !== null)
+  )
     return null;
   return {
     vehicleId: mission.launchVehicleId,

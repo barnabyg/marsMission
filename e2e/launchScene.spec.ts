@@ -67,3 +67,21 @@ test("a failed launch climbs and breaks up before the scene ends", async ({
   await expect(scene).not.toHaveAttribute("data-launch-vehicle", /.+/);
   expect(problems).toEqual([]);
 });
+
+test("returning to the map after a failed transfer burn leaves launch behind", async ({
+  page,
+}) => {
+  await launchFirstMission(
+    page,
+    seedFailingAt("Mars transfer burn"),
+    "Mars transfer burn failed",
+  );
+  const view = page.getByTestId("current-view");
+  await expect(view).toHaveText("Spacecraft");
+  await page.getByRole("button", { name: "1x", exact: true }).click();
+  await expect(view).toHaveText("Solar system");
+  // An immediate read catches launch reappearing briefly before its own clock expires.
+  expect(
+    await page.getByTestId("mission-scene").getAttribute("data-launch-vehicle"),
+  ).toBeNull();
+});
