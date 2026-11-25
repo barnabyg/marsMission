@@ -11,12 +11,18 @@ import {
 } from "./helpers";
 import { chooseAssets } from "./planningHelpers";
 import {
+  holdSceneAt,
   holdTurnWhenShown,
   launchHeld,
   pauseAtEvent,
   viewButton,
 } from "./playbackHelpers";
-import { seedFailingAt, solarParticleEventSeed, successSeed } from "./seeds";
+import {
+  kickStageRescuedSeed,
+  seedFailingAt,
+  solarParticleEventSeed,
+  successSeed,
+} from "./seeds";
 import { confirmEndWithoutLaunching } from "./turnHelpers";
 
 test.use({ viewport: missionViewport });
@@ -192,6 +198,11 @@ test("moves to the spacecraft view when the transfer burn fails, and then on to 
   await page.getByRole("button", { name: "Launch Mission" }).click();
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
   await expect(currentView(page)).toHaveText("Spacecraft");
+  await expect(scene(page)).toHaveAttribute("data-transfer-burn", "ignition");
+  await expect(carried(page)).toHaveText(["Pathfinder Orbiter"]);
+  const cutoff = holdSceneAt(page, "transferBurn", "cutoff");
+  await page.getByRole("button", { name: "1x", exact: true }).click();
+  await cutoff;
   await expect(page.getByTestId("spacecraft-lost")).toHaveText([
     "Pathfinder Orbiter: lost",
   ]);
@@ -201,7 +212,7 @@ test("moves to the spacecraft view when the transfer burn fails, and then on to 
   const canvas = scene(page).locator("canvas");
   await expect(canvas).toHaveAttribute(
     "data-camera-position",
-    spacecraftCamera,
+    "-11.500 2.200 8.000",
   );
   const heldFrame = await canvas.screenshot();
   // Pausing holds it on screen, here for a second longer than it shows for.
@@ -214,4 +225,32 @@ test("moves to the spacecraft view when the transfer burn fails, and then on to 
   await expect(page.getByTestId("turn-summary")).toHaveCount(0);
   await expectSpacecraftUnavailable(page);
   expect(problems).toEqual([]);
+});
+
+test("holds the early cutoff at a Decision Point and fires the kick stage only after the player chooses it", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${kickStageRescuedSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await page.getByRole("checkbox", { name: /Kick stage/ }).check();
+  await launchHeld(page);
+  await page.getByRole("button", { name: "20x", exact: true }).click();
+  const decision = page.getByTestId("decision-point");
+  await expect(decision).toBeVisible();
+  await expect(scene(page)).toHaveAttribute(
+    "data-transfer-burn",
+    "awaitingDecision",
+  );
+  await pauseAtEvent(page, "Mars transfer burn: saved by Kick stage", () =>
+    decision.getByRole("button", { name: "Use Kick stage" }).click(),
+  );
+  await expect(scene(page)).toHaveAttribute("data-transfer-burn", "kickStage");
+  await expect(carried(page)).toHaveText(["Pathfinder Orbiter"]);
+  await page.getByRole("button", { name: "20x", exact: true }).click();
+  await expect(page.getByTestId("turn-summary")).toBeVisible();
+  await expect(
+    page
+      .getByTestId("summary-mission-event")
+      .filter({ hasText: "Mars transfer burn" }),
+  ).toContainText("saved by Kick stage");
 });

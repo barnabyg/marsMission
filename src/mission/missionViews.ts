@@ -24,6 +24,7 @@ const viewsOfMissionEvents: Partial<Record<string, MissionViewId>> = {
   // Only while it plays: Mission Mode then moves back to where it was, as the Mission leaves Earth orbit.
   "tanker-launch": "spacecraft",
   rendezvous: "spacecraft",
+  "mars-transfer-burn": "spacecraft",
   "mars-orbit-insertion": "marsOrbit",
   "entry-descent-landing": "surface",
 };
@@ -39,9 +40,6 @@ const viewsOfHomewardEvents: Partial<Record<string, MissionViewId>> = {
   [homewardEventIds.entry]: "spacecraft",
 };
 
-/** The burn that sends a Mission on its way to Mars, which the spacecraft view shows only when it goes wrong. */
-const transferBurnId = "mars-transfer-burn";
-
 /**
  * Matches a timeline entry to the view it moves Mission Mode to, or null to leave the view alone.
  * This is the only place that does, and it only reads the Timeline, so it can't change any rules.
@@ -51,7 +49,7 @@ export function viewAskedForBy(entry: TimelineEntry): MissionViewId | null {
     if (entry.hazard === "dustStorm") return "surface";
     // Trouble on the way to Mars, close up: a solar particle event, or the transfer burn failing.
     return entry.hazard === "solarParticleEvent" ||
-      entry.eventId === transferBurnId
+      entry.eventId === "mars-transfer-burn"
       ? "spacecraft"
       : null;
   }
@@ -59,9 +57,6 @@ export function viewAskedForBy(entry: TimelineEntry): MissionViewId | null {
   if (entry.homeward) return viewsOfHomewardEvents[entry.eventId] ?? null;
   // A failure that swings the Mission back is one to watch on its way home.
   if (entry.returningToEarth) return "solarSystem";
-  if (entry.eventId === transferBurnId) {
-    return entry.outcome === "failure" ? "spacecraft" : null;
-  }
   return viewsOfMissionEvents[entry.eventId] ?? null;
 }
 

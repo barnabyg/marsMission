@@ -2,6 +2,7 @@ import type { Timeline } from "../../simulation/simulation";
 import { GameText } from "../../ui/GameText";
 import type { MissionViewId } from "../missionViews";
 import { marsRendezvousStatus, type MarsRendezvousNow } from "./marsRendezvous";
+import { burnStatus, type TransferBurn } from "./transferBurn";
 import { earthOrbitStatus, type EarthOrbitNow } from "./refuelling";
 import { earthEntryStatus, type EarthEntryNow } from "./splashdown";
 import { assetsOnBoard } from "./spacecraft";
@@ -20,6 +21,7 @@ interface SpacecraftControlsProps {
   particles: boolean;
   /** The Mission in Earth orbit for Orbital refuelling, if it's there. */
   earthOrbit: EarthOrbitNow | null;
+  burn: TransferBurn | null;
   /** The rendezvous in Mars orbit on the way home, while it plays. */
   marsRendezvous: MarsRendezvousNow | null;
   /** Earth entry at the end of the way home, while it plays. */
@@ -36,12 +38,19 @@ function onBoardLines(
   timeline: Pick<Timeline, "mission">,
   day: number,
   earthOrbit: EarthOrbitNow | null,
+  burn: TransferBurn | null,
 ): string[] {
-  if (earthOrbit) {
-    return (timeline.mission?.assets ?? []).map(({ name, kind }) =>
-      earthOrbit.missionLost
-        ? `${name} (${kindName(kind)}): lost in Earth orbit`
-        : `${name} (${kindName(kind)})`,
+  if (earthOrbit || burn) {
+    const consequence =
+      earthOrbit?.stage === "tankerLost"
+        ? ": stranded in Earth orbit"
+        : earthOrbit?.missionLost
+          ? ": lost in Earth orbit"
+          : burn?.stage === "cutoff"
+            ? ": lost on the way"
+            : "";
+    return (timeline.mission?.assets ?? []).map(
+      ({ name, kind }) => `${name} (${kindName(kind)})${consequence}`,
     );
   }
   return assetsOnBoard(timeline.mission, day).map(({ name, kind, lost }) =>
@@ -59,6 +68,7 @@ export function SpacecraftControls({
   available,
   particles,
   earthOrbit,
+  burn,
   marsRendezvous,
   earthEntry,
 }: SpacecraftControlsProps) {
@@ -86,8 +96,11 @@ export function SpacecraftControls({
           ...(particles
             ? ["Solar particle event: radiation sweeping past"]
             : []),
-          ...[earthOrbitStatus(earthOrbit) ?? []].flat(),
-          ...onBoardLines(timeline, day, earthOrbit),
+          ...[
+            (burn ? burnStatus[burn.stage] : earthOrbitStatus(earthOrbit)) ??
+              [],
+          ].flat(),
+          ...onBoardLines(timeline, day, earthOrbit, burn),
         ].map((line) => (
           <li key={line}>
             <GameText>{line}</GameText>

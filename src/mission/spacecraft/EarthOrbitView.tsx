@@ -1,3 +1,4 @@
+import type { TransferBurn } from "./transferBurn";
 import { AdditiveBlending, BackSide } from "three";
 import type { Timeline } from "../../simulation/simulation";
 import { useTexture, type Point, type SceneLabel } from "../sceneParts";
@@ -173,16 +174,40 @@ function UpperStage({ lost }: { lost: boolean }) {
   return (
     <>
       <Cylinder
-        x={0.04}
+        x={0.11}
         radius={0.36}
-        length={upperStageLength - 0.08}
+        length={upperStageLength - 0.22}
         color="#d4d7dd"
         lost={lost}
       />
+      {[-0.28, -0.12, 0.39].map((x) => (
+        <Cylinder
+          key={x}
+          x={x}
+          radius={0.37}
+          length={0.032}
+          color="#8a8f97"
+          lost={lost}
+        />
+      ))}
+      <group position={[0.05, 0.12, 0.34]}>
+        <Cylinder
+          x={0}
+          radius={0.028}
+          length={0.68}
+          color="#b98450"
+          lost={lost}
+        />
+      </group>
+      <group position={[-0.43, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <Part color="#6a6566" lost={lost} double>
+          <cylinderGeometry args={[0.2, 0.09, 0.22, 28, 1, true]} />
+        </Part>
+      </group>
       <Cylinder
         x={-upperStageLength / 2}
-        radius={0.13}
-        length={0.08}
+        radius={0.205}
+        length={0.026}
         color="#8a8d94"
         lost={lost}
       />
@@ -233,29 +258,50 @@ export function Flash({ place, share }: { place: Point; share: number }) {
 export function EarthOrbitScene({
   timeline,
   now,
+  burn,
 }: {
   timeline: Pick<Timeline, "mission">;
   now: EarthOrbitNow | null;
+  burn: TransferBurn | null;
 }) {
-  if (!now || !timeline.mission) return null;
+  if ((!now && !burn) || !timeline.mission) return null;
   const assets = timeline.mission.assets;
   const layout = earthOrbitLayout(assets.length);
-  const lost = now.missionLost;
+  const lost = now?.stage === "collided";
   const onBoard = assets.map(({ name, kind }) => ({ name, kind, lost }));
   const tanker = tankerAt(now);
   const flash = lossFlash(now);
   const sinceLoss = msSinceLoss(now) ?? 0;
   // Only a collision sets the wreck turning. A Mission stranded by a lost Tanker stays steady.
-  const turned = now.stage === "collided" ? sinceLoss * 0.0005 : 0;
-  const sinceRendezvous = now.sinceRendezvousMs ?? 0;
+  const turned = now?.stage === "collided" ? sinceLoss * 0.0005 : 0;
+  const sinceRendezvous = now?.sinceRendezvousMs ?? 0;
   return (
     <group position={earthOrbitCentre}>
       <Earth />
       {/* Along the Mission is across the shot. */}
       <group rotation={[0, Math.PI / 2, 0]}>
-        <group rotation={[turned, 0, turned * 0.3]}>
+        <group
+          position={[burn?.travel ?? 0, 0, -(burn?.travel ?? 0)]}
+          rotation={[turned, 0, turned * 0.3]}
+        >
           <group position={[layout.upperStage, 0, 0]}>
             <UpperStage lost={lost} />
+            {burn?.engine === "upperStage" && (
+              <Flame x={-upperStageLength / 2} ms={burn.elapsedMs} size={1.3} />
+            )}
+            {burn?.engine === "kickStage" &&
+              [-1, 1].map((side) => (
+                <group key={side} position={[0, side * 0.34, 0]}>
+                  <Cylinder
+                    x={0}
+                    radius={0.105}
+                    length={0.62}
+                    color="#c4a465"
+                    lost={false}
+                  />
+                  <Flame x={-0.31} ms={burn.elapsedMs} size={0.76} />
+                </group>
+              ))}
           </group>
           <group position={[layout.stack, 0, 0]}>
             <MissionStack onBoard={onBoard} lost={lost} />
@@ -277,11 +323,11 @@ export function EarthOrbitScene({
             <Tanker
               lost={tanker.lost}
               burning={tanker.burning}
-              ms={now.sinceTankerMs ?? 0}
+              ms={now?.sinceTankerMs ?? 0}
             />
           </group>
         )}
-        {now.stage === "refuelling" && (
+        {now?.stage === "refuelling" && (
           <TransferGlow x={layout.dock} ms={sinceRendezvous - approachMs} />
         )}
         {flash && (
@@ -302,17 +348,22 @@ export function EarthOrbitScene({
 export function earthOrbitLabels(
   timeline: Pick<Timeline, "mission">,
   now: EarthOrbitNow | null,
+  burn: TransferBurn | null,
 ): SceneLabel[] {
   const assets = timeline.mission?.assets ?? [];
-  if (!now) return [];
+  if (!now && !burn) return [];
   const layout = earthOrbitLayout(assets.length);
   const along = stackLayout(assets.length).assets;
-  const lost = now.missionLost;
+  const lost = now?.stage === "collided" || burn?.stage === "cutoff";
   const tanker = tankerAt(now);
   return [
     ...assets.map(({ name, kind }, index) => ({
       text: lost ? `${name}: lost` : name,
-      position: inTheShot([layout.stack + (along[index] ?? 0), labelHeight, 0]),
+      position: inTheShot([
+        layout.stack + (along[index] ?? 0) + (burn?.travel ?? 0),
+        labelHeight,
+        -(burn?.travel ?? 0),
+      ]),
       testId: lost ? "spacecraft-lost" : "spacecraft-asset",
       className: onBoardLabelClass(kind, lost),
     })),

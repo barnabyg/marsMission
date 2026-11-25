@@ -86,9 +86,9 @@ describe("which view a timeline entry asks for", () => {
     expect(viewAskedForBy(missionEvent("launch", "failure"))).toBeNull();
   });
 
-  it("asks for the spacecraft when the transfer burn fails, and for nothing when it works", () => {
+  it("asks for the spacecraft to show either outcome of the transfer burn", () => {
     const eventId = "mars-transfer-burn";
-    expect(viewAskedForBy(missionEvent(eventId))).toBeNull();
+    expect(viewAskedForBy(missionEvent(eventId))).toBe("spacecraft");
     expect(viewAskedForBy(missionEvent(eventId, "failure"))).toBe("spacecraft");
   });
 
@@ -201,9 +201,9 @@ describe("the view showing at any moment", () => {
     milestone,
   ];
 
-  it("starts on the solar system and stays there on the way to Mars", () => {
+  it("opens on the solar system and looks at the spacecraft for the transfer burn", () => {
     expect(currentView(entries, 0, startingChoice)).toBe("solarSystem");
-    expect(currentView(entries, 2, startingChoice)).toBe("solarSystem");
+    expect(currentView(entries, 2, startingChoice)).toBe("spacecraft");
   });
 
   it("moves when an entry with a view of its own happens", () => {
@@ -232,7 +232,7 @@ describe("the view showing at any moment", () => {
 
   it("lets the player go to a view before any entry asks for it", () => {
     const switched: ViewChoice = { view: "marsOrbit", entriesHappened: 1 };
-    expect(currentView(entries, 2, switched)).toBe("marsOrbit");
+    expect(currentView(entries, 1, switched)).toBe("marsOrbit");
   });
 
   it("doesn't pull the player back after they switch away from a landing", () => {
@@ -315,13 +315,13 @@ describe("the view for a moment that plays for a while", () => {
     entryIndex === 1 || entryIndex === rendezvousIndex;
 
   it("moves to the spacecraft for the rendezvous while it plays", () => {
-    expect(currentView(entries, 4, startingChoice, playing)).toBe("spacecraft");
+    expect(currentView(entries, 3, startingChoice, playing)).toBe("spacecraft");
   });
 
   it("moves back to where it was once the rendezvous has played", () => {
-    expect(currentView(entries, 4, startingChoice, played)).toBe("solarSystem");
+    expect(currentView(entries, 3, startingChoice, played)).toBe("solarSystem");
     const watchingMars: ViewChoice = { view: "marsOrbit", entriesHappened: 1 };
-    expect(currentView(entries, 4, watchingMars, played)).toBe("marsOrbit");
+    expect(currentView(entries, 3, watchingMars, played)).toBe("marsOrbit");
   });
 
   it("still moves on for a later entry with a view of its own", () => {
@@ -331,8 +331,8 @@ describe("the view for a moment that plays for a while", () => {
 
   it("keeps a choice the player makes while it plays", () => {
     const lookedAway: ViewChoice = { view: "solarSystem", entriesHappened: 3 };
-    expect(currentView(entries, 4, lookedAway, playing)).toBe("solarSystem");
+    expect(currentView(entries, 3, lookedAway, playing)).toBe("solarSystem");
     const lookedBack: ViewChoice = { view: "spacecraft", entriesHappened: 3 };
-    expect(currentView(entries, 4, lookedBack, played)).toBe("spacecraft");
+    expect(currentView(entries, 3, lookedBack, played)).toBe("spacecraft");
   });
 });

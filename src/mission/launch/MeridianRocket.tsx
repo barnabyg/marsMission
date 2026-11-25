@@ -131,9 +131,11 @@ function Core({ vehicleId }: { vehicleId: string }) {
 export function MeridianRocket({
   vehicleId,
   apart,
+  tanker = false,
 }: {
   vehicleId: string;
   apart: number;
+  tanker?: boolean;
 }) {
   const { height, radius } = rocketProfile(vehicleId);
   const joint = stageJointHeight(height);
@@ -147,43 +149,79 @@ export function MeridianRocket({
         position={[apart * 2, joint + apart * 1.6, 0]}
         rotation={[apart * 0.7, 0, -apart * 0.8]}
       >
-        <SunlitParts>
-          <Drum
-            position={[0, upper * 0.09, 0]}
-            radii={[radius * 1.19, radius]}
-            height={upper * 0.18}
-            color={graphite}
-            sides={40}
-          />
-          <Drum
-            position={[0, upper * 0.4, 0]}
-            radii={[radius * 1.19, radius * 1.19]}
-            height={upper * 0.44}
-            color={enamel}
-            sides={40}
-          />
-          <Drum
-            position={[0, upper * 0.24, 0]}
-            radii={[radius * 1.2, radius * 1.2]}
-            height={0.14}
-            color={copper}
-            sides={40}
-          />
-          <Drum
-            position={[0, upper * 0.72, 0]}
-            radii={[radius * 0.85, radius * 1.19]}
-            height={upper * 0.2}
-            color={enamel}
-            sides={40}
-          />
-          <Drum
-            position={[0, upper * 0.91, 0]}
-            radii={[0.03, radius * 0.85]}
-            height={upper * 0.18}
-            color={enamel}
-            sides={40}
-          />
-        </SunlitParts>
+        {tanker ? (
+          <SunlitParts>
+            <Drum
+              position={[0, upper * 0.43, 0]}
+              radii={[radius * 1.3, radius * 1.3]}
+              height={upper * 0.86}
+              color={enamel}
+              sides={40}
+            />
+            {[0.14, 0.64].map((share) => (
+              <Drum
+                key={share}
+                position={[0, upper * share, 0]}
+                radii={[radius * 1.32, radius * 1.32]}
+                height={upper * 0.14}
+                color={copper}
+                sides={40}
+              />
+            ))}
+            <Drum
+              position={[0, upper * 0.92, 0]}
+              radii={[radius * 0.45, radius * 1.3]}
+              height={upper * 0.12}
+              color={enamel}
+              sides={40}
+            />
+            <Drum
+              position={[0, upper, 0]}
+              radii={[radius * 0.48, radius * 0.48]}
+              height={0.18}
+              color={graphite}
+              sides={28}
+            />
+          </SunlitParts>
+        ) : (
+          <SunlitParts>
+            <Drum
+              position={[0, upper * 0.09, 0]}
+              radii={[radius * 1.19, radius]}
+              height={upper * 0.18}
+              color={graphite}
+              sides={40}
+            />
+            <Drum
+              position={[0, upper * 0.4, 0]}
+              radii={[radius * 1.19, radius * 1.19]}
+              height={upper * 0.44}
+              color={enamel}
+              sides={40}
+            />
+            <Drum
+              position={[0, upper * 0.24, 0]}
+              radii={[radius * 1.2, radius * 1.2]}
+              height={0.14}
+              color={copper}
+              sides={40}
+            />
+            <Drum
+              position={[0, upper * 0.72, 0]}
+              radii={[radius * 0.85, radius * 1.19]}
+              height={upper * 0.2}
+              color={enamel}
+              sides={40}
+            />
+            <Drum
+              position={[0, upper * 0.91, 0]}
+              radii={[0.03, radius * 0.85]}
+              height={upper * 0.18}
+              color={enamel}
+              sides={40}
+            />
+          </SunlitParts>
+        )}
       </group>
     </>
   );

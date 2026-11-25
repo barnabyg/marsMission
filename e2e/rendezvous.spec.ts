@@ -13,6 +13,7 @@ import {
   colossusMoney,
   colossusSeed,
   rendezvousFailureSeed,
+  tankerFailureSeed,
 } from "./colossusSeeds";
 
 test.use({ viewport: missionViewport });
@@ -192,4 +193,24 @@ test("moves to the spacecraft view for a failed rendezvous, shows the collision,
   await expect(page.getByTestId("turn-summary")).toHaveCount(0);
   await expect(viewButton(page, "Spacecraft")).toBeDisabled();
   expect(problems).toEqual([]);
+});
+
+test("a tanker breakup on the pad camera leaves the outbound stack stranded in orbit", async ({
+  page,
+}) => {
+  await launchOnColossus(page, tankerFailureSeed, "Tanker launch failed");
+  await expect(scene(page)).toHaveAttribute("data-launch-vehicle", "tanker");
+  const stranded = holdEarthOrbitAt(page, "tankerLost");
+  await page.getByRole("button", { name: "20x", exact: true }).click();
+  await stranded;
+  await expect(page.getByTestId("spacecraft-status")).toContainText(
+    "stranded in Earth orbit",
+  );
+  await expect(page.getByTestId("spacecraft-asset")).toHaveCount(3);
+  await expect(page.getByTestId("spacecraft-tanker")).toHaveCount(0);
+  await page.getByRole("button", { name: "20x", exact: true }).click();
+  await expect(page.getByTestId("summary-mission-event")).toContainText([
+    /^Launch/,
+    /^Tanker launch failed/,
+  ]);
 });

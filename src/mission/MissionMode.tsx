@@ -55,6 +55,7 @@ import { usePlaybackShortcuts } from "./usePlaybackShortcuts";
 import { muteKeyName, pauseKeyName, speedKey } from "./playbackShortcuts";
 import { useSounds } from "./useSounds";
 import { useSteadyCamera } from "./useSteadyCamera";
+import { transferBurnNow } from "./spacecraft/transferBurn";
 import { launchNow } from "./launch/launch";
 
 const MissionScene = lazy(() => import("./MissionScene"));
@@ -125,8 +126,11 @@ export function MissionMode({
   const inSpace = homewardInSpace(homeward, state);
   const marsRendezvous = marsRendezvousNow(homeward, inSpace);
   const earthEntry = earthEntryNow(homeward, inSpace);
+  const burn = transferBurnNow(timeline.entries, state, deciding);
   const spacecraftAvailable =
-    spacecraftHasSomethingToShow(timeline, state) || inSpace !== null;
+    burn !== null ||
+    spacecraftHasSomethingToShow(timeline, state) ||
+    inSpace !== null;
   const particles = solarParticleEventShowing(timeline.entries, state);
   const refuelling = useMemo(() => refuellingOf(timeline.entries), [timeline]);
   const earthOrbit = earthOrbitNow(refuelling, state);
@@ -137,11 +141,19 @@ export function MissionMode({
     spacecraftAvailable
       ? null
       : spacecraftFallback(timeline.mission, state.day),
-    (entryIndex) =>
-      (refuelling?.tankerLaunch.entryIndex === entryIndex &&
-        state.activeScene !== entryIndex) ||
-      rendezvousHasPlayed(refuelling, state, entryIndex) ||
-      homewardQuiet(homeward, state, entryIndex),
+    (entryIndex) => {
+      const entry = timeline.entries[entryIndex];
+      return (
+        (refuelling?.tankerLaunch.entryIndex === entryIndex &&
+          state.activeScene !== entryIndex) ||
+        ((entry?.kind === "missionEvent" || entry?.kind === "decisionPoint") &&
+          entry.eventId === "mars-transfer-burn" &&
+          state.activeScene !== entryIndex &&
+          !deciding) ||
+        rendezvousHasPlayed(refuelling, state, entryIndex) ||
+        homewardQuiet(homeward, state, entryIndex)
+      );
+    },
     homeward?.siteName ?? null,
   );
   /** Why each view's button can't be used, while its view has nothing to show. */
@@ -196,6 +208,7 @@ export function MissionMode({
           particles={particles}
           playedSeconds={state.playedMs / 1000}
           lossSeconds={(msSinceJourneyLoss(timeline, state) ?? 0) / 1000}
+          burn={burn}
           earthOrbit={earthOrbit}
           marsRendezvous={marsRendezvous}
           earthEntry={earthEntry}
@@ -342,6 +355,7 @@ export function MissionMode({
           view={view}
           available={spacecraftAvailable}
           particles={particles}
+          burn={burn}
           earthOrbit={earthOrbit}
           marsRendezvous={marsRendezvous}
           earthEntry={earthEntry}

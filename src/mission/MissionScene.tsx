@@ -14,7 +14,12 @@ import {
 import type { MissionViewId } from "./missionViews";
 import type { CameraPose, SceneLabel } from "./sceneParts";
 import { earthOrbitLabels, EarthOrbitScene } from "./spacecraft/EarthOrbitView";
-import type { EarthOrbitNow } from "./spacecraft/refuelling";
+import type { TransferBurn } from "./spacecraft/transferBurn";
+import {
+  approachMs,
+  tankerOnPad,
+  type EarthOrbitNow,
+} from "./spacecraft/refuelling";
 import {
   marsRendezvousShot,
   type MarsRendezvousNow,
@@ -23,7 +28,11 @@ import {
   marsRendezvousLabels,
   MarsRendezvousScene,
 } from "./spacecraft/MarsRendezvousView";
-import { earthOrbitShot, spacecraftShot } from "./spacecraft/spacecraft";
+import {
+  earthOrbitLayout,
+  earthOrbitShot,
+  spacecraftShot,
+} from "./spacecraft/spacecraft";
 import { splashdownShot, type EarthEntryNow } from "./spacecraft/splashdown";
 import { splashdownLabels, SplashdownScene } from "./spacecraft/SplashdownView";
 import { spacecraftLabels, SpacecraftScene } from "./spacecraft/SpacecraftView";
@@ -62,6 +71,7 @@ interface MissionSceneProps {
   lossSeconds: number;
   /** The Mission in Earth orbit for Orbital refuelling, which the spacecraft view shows instead while it's there. */
   earthOrbit: EarthOrbitNow | null;
+  burn: TransferBurn | null;
   /** The rendezvous in Mars orbit on the way home, while it plays, which the spacecraft view shows instead. */
   marsRendezvous: MarsRendezvousNow | null;
   /** Earth entry at the end of the way home, while it plays, which the spacecraft view shows instead. */
@@ -211,6 +221,7 @@ function surfaceSequenceOf(
 function spacecraftCloseUp(
   timeline: Timeline,
   earthOrbit: EarthOrbitNow | null,
+  burn: TransferBurn | null,
   marsRendezvous: MarsRendezvousNow | null,
   earthEntry: EarthEntryNow | null,
 ): { shot: CameraPose; labels: SceneLabel[] } | null {
@@ -223,8 +234,11 @@ function spacecraftCloseUp(
   if (earthEntry) {
     return { shot: splashdownShot, labels: splashdownLabels(earthEntry) };
   }
-  return earthOrbit
-    ? { shot: earthOrbitShot, labels: earthOrbitLabels(timeline, earthOrbit) }
+  return earthOrbit || burn
+    ? {
+        shot: earthOrbitShot,
+        labels: earthOrbitLabels(timeline, earthOrbit, burn),
+      }
     : null;
 }
 
@@ -243,6 +257,7 @@ export default function MissionScene({
   playedSeconds,
   lossSeconds,
   earthOrbit,
+  burn,
   marsRendezvous,
   earthEntry,
   operatingAssetCount,
@@ -250,11 +265,33 @@ export default function MissionScene({
   const labelLayer = useRef<HTMLDivElement>(null);
   const { shot: viewShot, labels: labelsOnDay } = viewSettings[view];
   const inEarthOrbit = view === "spacecraft" && earthOrbit !== null;
+  const padLaunch = launch ?? (inEarthOrbit ? tankerOnPad(earthOrbit) : null);
   const closeUp =
     view === "spacecraft"
-      ? spacecraftCloseUp(timeline, earthOrbit, marsRendezvous, earthEntry)
+      ? spacecraftCloseUp(
+          timeline,
+          earthOrbit,
+          burn,
+          marsRendezvous,
+          earthEntry,
+        )
       : null;
-  const shot = closeUp?.shot ?? viewShot;
+  const payloadCount = timeline.mission?.assets.length ?? 0;
+  const dockShot = useMemo(() => {
+    const z = earthOrbitShot.target[2] - earthOrbitLayout(payloadCount).dock;
+    return {
+      position: [-15.4, 1.1, z + 0.35],
+      target: [-20, 0, z],
+    } satisfies CameraPose;
+  }, [payloadCount]);
+  const watchDock =
+    inEarthOrbit &&
+    !steadyCamera &&
+    (earthOrbit.stage === "refuelling" ||
+      earthOrbit.stage === "collided" ||
+      (earthOrbit.stage === "approaching" &&
+        (earthOrbit.sinceRendezvousMs ?? 0) > approachMs * 0.6));
+  const shot = watchDock ? dockShot : (closeUp?.shot ?? viewShot);
   const labels = closeUp
     ? closeUp.labels
     : [
@@ -275,8 +312,8 @@ export default function MissionScene({
     <div
       className="mission-scene"
       data-testid="mission-scene"
-      data-launch-vehicle={launch?.vehicleId}
-      data-launch-ms={launch ? Math.floor(launch.elapsedMs) : undefined}
+      data-launch-vehicle={padLaunch?.tanker ? "tanker" : padLaunch?.vehicleId}
+      data-launch-ms={padLaunch ? Math.floor(padLaunch.elapsedMs) : undefined}
       // The browser tests can't see into the scene, so this is how they follow a sequence.
       data-sequence={surfaceSequence?.kind}
       data-sequence-ms={
@@ -297,6 +334,7 @@ export default function MissionScene({
       data-solar-particle-event={
         view === "spacecraft" && particles ? "showing" : undefined
       }
+      data-transfer-burn={view === "spacecraft" ? burn?.stage : undefined}
       data-earth-orbit={inEarthOrbit ? earthOrbit.stage : undefined}
       data-mars-rendezvous={
         view === "spacecraft" ? marsRendezvous?.stage : undefined
@@ -310,8 +348,8 @@ export default function MissionScene({
     >
       <Canvas camera={{ position: [...solarSystemShot.position], fov: 45 }}>
         {onFirstFrame && <FirstFrame ready={onFirstFrame} />}
-        {launch ? (
-          <LaunchScene launch={launch} steadyCamera={steadyCamera} />
+        {padLaunch ? (
+          <LaunchScene launch={padLaunch} steadyCamera={steadyCamera} />
         ) : (
           <>
             <color attach="background" args={["#05060c"]} />
@@ -322,7 +360,7 @@ export default function MissionScene({
               operatingAssetCount={operatingAssetCount}
             />
             <MarsOrbitScene timeline={timeline} day={day} />
-            {earthOrbit === null && (
+            {earthOrbit === null && !burn && (
               <SpacecraftScene
                 timeline={timeline}
                 day={day}
@@ -331,7 +369,7 @@ export default function MissionScene({
                 lossSeconds={lossSeconds}
               />
             )}
-            <EarthOrbitScene timeline={timeline} now={earthOrbit} />
+            <EarthOrbitScene timeline={timeline} now={earthOrbit} burn={burn} />
             <MarsRendezvousScene now={marsRendezvous} />
             <SplashdownScene now={earthEntry} />
             {lastSite !== null && (
@@ -353,7 +391,7 @@ export default function MissionScene({
         )}
       </Canvas>
       <div ref={labelLayer}>
-        {!launch &&
+        {!padLaunch &&
           labels.map(({ text, className, testId }, index) => (
             <div
               key={index}

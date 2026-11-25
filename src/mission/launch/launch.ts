@@ -24,6 +24,7 @@ export function rocketProfile(vehicleId: string) {
 }
 
 export interface LaunchNow {
+  tanker?: boolean;
   vehicleId: string;
   elapsedMs: number;
   failed: boolean;
