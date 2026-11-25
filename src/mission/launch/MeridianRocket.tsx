@@ -1,5 +1,5 @@
 import { Box, Drum } from "../surface/modelParts";
-import { rocketProfile } from "./launch";
+import { rocketProfile, stageJointHeight } from "./launch";
 
 import { SunlitParts } from "./SunlitParts";
 
@@ -136,7 +136,7 @@ export function MeridianRocket({
   apart: number;
 }) {
   const { height, radius } = rocketProfile(vehicleId);
-  const joint = height * 0.66 + 0.6;
+  const joint = stageJointHeight(height);
   const upper = height - joint;
   return (
     <>

@@ -9,8 +9,14 @@ import {
   PlaneGeometry,
   SRGBColorSpace,
 } from "three";
-import { launchIgnitionMs } from "./launchTiming";
+import { launchDeckHeight, launchMotion, stageJointHeight } from "./launch";
+import { launchIgnitionMs, launchBreakupMs } from "./launchTiming";
 import { useDisposal } from "../sceneParts";
+
+const riseAtBreakup = launchMotion({
+  elapsedMs: launchBreakupMs,
+  failed: true,
+}).rise;
 
 // Each billboard uses the same soft-edged, sunlit puff. Bake the lobes once so 4K software rendering
 // needs a texture lookup per fragment even when several clouds overlap.
@@ -146,7 +152,7 @@ export function LaunchVapour({
       if (seconds - age > 2.3) continue;
       puff(
         -0.55 - age * 0.62,
-        height * 0.68 + 1.26 - age * 0.5,
+        height * 0.68 + launchDeckHeight - age * 0.5,
         0.35,
         0.45 + age * 0.7,
         0.38 + age * 0.42,
@@ -171,11 +177,13 @@ export function LaunchVapour({
     }
     if (apart > 0) {
       // The pressure cloud hangs where the two stages separated as the debris travels away.
+      const jointAtBreakup =
+        launchDeckHeight + riseAtBreakup + stageJointHeight(height);
       for (let i = 0; i < 7; i++) {
         const spread = 0.45 + apart * 1.6;
         puff(
           Math.cos(i * 2.4) * spread,
-          16.85 + height * 0.66 + Math.sin(i * 2.4) * spread,
+          jointAtBreakup + Math.sin(i * 2.4) * spread,
           Math.sin(i) * 0.8,
           2 + apart * 2.8,
           1 + apart * 1.8,

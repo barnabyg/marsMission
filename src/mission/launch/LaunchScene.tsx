@@ -4,7 +4,12 @@ import { LaunchGround } from "./LaunchGround";
 import { LaunchPad } from "./LaunchPad";
 import { LaunchVapour } from "./LaunchVapour";
 import { MeridianRocket } from "./MeridianRocket";
-import { launchMotion, rocketProfile, type LaunchNow } from "./launch";
+import {
+  launchDeckHeight,
+  launchMotion,
+  rocketProfile,
+  type LaunchNow,
+} from "./launch";
 
 import { launchIgnitionMs } from "./launchTiming";
 
@@ -106,7 +111,7 @@ function LaunchCamera({
     } else {
       const follow = Math.max(0, rise - 2);
       camera.position.set(1.74, (3.4 + follow * 0.8) * padScale, 2.25);
-      camera.lookAt(0, (1.26 + height * 0.46 + rise) * padScale, 0);
+      camera.lookAt(0, (launchDeckHeight + height * 0.46 + rise) * padScale, 0);
     }
     camera.updateMatrixWorld();
     const frame = apart > 0 ? "breakup" : rise > 0 ? "ascent" : "pad";
@@ -147,7 +152,7 @@ export function LaunchScene({
           height={height}
           apart={apart}
         />
-        <group position={[0, 1.26 + rise, 0]}>
+        <group position={[0, launchDeckHeight + rise, 0]}>
           <MeridianRocket vehicleId={launch.vehicleId} apart={apart} />
           {apart === 0 && (
             <Exhaust elapsedMs={launch.elapsedMs} radius={radius} />

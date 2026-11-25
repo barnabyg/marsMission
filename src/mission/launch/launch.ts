@@ -5,6 +5,13 @@ import { launchBreakupMs } from "./launchTiming";
 
 export const launchDurationMs = 9000;
 
+/** Bottom of the rocket above the yard, in the pad's art units. */
+export const launchDeckHeight = 1.26;
+
+export function stageJointHeight(height: number) {
+  return height * 0.66 + 0.6;
+}
+
 /** Art dimensions in the pad's common coordinate system. Capacity is payload mass. */
 const medium = { height: 8, radius: 0.52, boosters: 0, engines: 1 };
 const heavy = { height: 10, radius: 0.67, boosters: 2, engines: 3 };
@@ -45,7 +52,10 @@ export function launchNow(
 }
 
 /** Rise in pad units and seconds of separate flight since the stack broke up. */
-export function launchMotion({ elapsedMs, failed }: LaunchNow) {
+export function launchMotion({
+  elapsedMs,
+  failed,
+}: Pick<LaunchNow, "elapsedMs" | "failed">) {
   const flying = Math.max(0, elapsedMs / 1000 - 2.3);
   const apart = failed ? Math.max(0, (elapsedMs - launchBreakupMs) / 1000) : 0;
   const climbing = flying - apart;
