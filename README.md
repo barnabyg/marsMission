@@ -26,7 +26,7 @@ You can also double-click `run.bat`. It installs what's needed, builds the game 
 
 To try the latest phase, follow the [Phase 8 playtest guide](docs/playtest/phase-8.md). The [Phase 1](docs/playtest/phase-1.md), [Phase 2](docs/playtest/phase-2.md), [Phase 3](docs/playtest/phase-3.md), [Phase 4](docs/playtest/phase-4.md), [Phase 5](docs/playtest/phase-5.md), [Phase 6](docs/playtest/phase-6.md) and [Phase 7](docs/playtest/phase-7.md) guides are kept as records of those phases, so some controls and numbers have changed since they were written.
 
-The [Earth launch playtest](docs/playtest/launch.md) covers the opening cutscene, the three Meridian rockets and the launch controls.
+The [Earth launch playtest](docs/playtest/launch.md) covers the launch controls, repeatable success and breakup scenarios, and labelled and unlabelled frames of all three Meridian rockets at 1080p and 4K. It includes the launch rendering timings and how to reproduce them.
 
 The [Status](docs/game-design.md#status) section of the design doc lists what each phase built and what changed after its playtest. Only the current guide's known seeds are tested, in `src/catalogue/playtestSeedsPhase8.test.ts`, and those tests move to the new guide with each phase. If tuning breaks one, find a new seed that gives the same story and update the current guide, because earlier guides are records and aren't updated.
 

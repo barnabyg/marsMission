@@ -1,5 +1,4 @@
 import type { Timeline } from "../../simulation/simulation";
-import { viewAskedForBy } from "../missionViews";
 import { msSinceEntry, type PlaybackState } from "../playback";
 import { crewLandersOf, modelOf, type SurfaceModel } from "./surface";
 
@@ -53,11 +52,10 @@ export function landingSequenceOf({
   Timeline,
   "assetsAtMars" | "mission" | "entries"
 >): LandingSequence | null {
-  // Mars ascent asks for the surface too, but it plays as a sequence of its own (ascent.ts).
   const entryIndex = entries.findIndex(
     (entry) =>
-      viewAskedForBy(entry) === "surface" &&
-      !(entry.kind === "missionEvent" && entry.homeward),
+      entry.kind === "missionEvent" &&
+      entry.eventId === "entry-descent-landing",
   );
   const entry = entries[entryIndex];
   if (entry?.kind !== "missionEvent") return null;

@@ -1,4 +1,10 @@
 import type { TimelineEntry } from "../simulation/simulation";
+import { launchBreakupMs, launchIgnitionMs } from "./launch/launchTiming";
+import { approachMs, tankerClimbMs } from "./spacecraft/refuelling";
+import { closingMs } from "./spacecraft/marsRendezvous";
+import { breakUpMs, splashMs } from "./spacecraft/splashdown";
+import { engineOutMs, ignitionMs } from "./surface/ascent";
+import { impactMs } from "./surface/sequence";
 
 export const soundFileNames = {
   launch: "launch.wav",
@@ -38,4 +44,87 @@ export function soundFor(entry: TimelineEntry): SoundName | null {
   return entry.kind === "milestone" || entry.kind === "fundingThreshold"
     ? entry.kind
     : null;
+}
+
+/** A cue begins either with its card, or at a visible moment on a scene's playing clock. */
+interface SoundCue {
+  name: SoundName;
+  key: string;
+  entryIndex: number;
+  sceneIndex: number | null;
+  afterMs: number;
+}
+
+function actionMs(
+  entry: Extract<TimelineEntry, { kind: "missionEvent" }>,
+): number | null {
+  const failed = entry.outcome === "failure";
+  switch (entry.eventId) {
+    case "launch":
+      return failed ? launchBreakupMs : launchIgnitionMs;
+    case "tanker-launch":
+      return failed ? tankerClimbMs : 0;
+    case "rendezvous":
+      return approachMs;
+    case "entry-descent-landing":
+      return failed ? impactMs : null;
+    case "mars-ascent":
+      return failed ? engineOutMs : ignitionMs;
+    case "mars-orbit-rendezvous":
+      return closingMs;
+    case "earth-entry":
+      return failed ? breakUpMs : splashMs;
+    default:
+      return null;
+  }
+}
+
+/** The order matches the Timeline, including Crew lost alongside the breakup that caused it. */
+export function soundCues(entries: readonly TimelineEntry[]): SoundCue[] {
+  const cues: SoundCue[] = [];
+  const occurrences = new Map<string, number>();
+  let eventIndex = -1;
+  entries.forEach((entry, entryIndex) => {
+    // An answer can replace or rearrange the held Timeline. Keep the identity of an already-heard cue.
+    const identity = JSON.stringify([entry.day, entry.kind, entry.title]);
+    const occurrence = occurrences.get(identity) ?? 0;
+    occurrences.set(identity, occurrence + 1);
+    const cue = (
+      name: SoundName,
+      sceneIndex: number | null,
+      afterMs: number,
+    ) => {
+      cues.push({
+        key: JSON.stringify([identity, occurrence, name]),
+        name,
+        entryIndex,
+        sceneIndex,
+        afterMs,
+      });
+    };
+    if (entry.kind === "missionEvent") {
+      eventIndex = entryIndex;
+      if (entry.eventId === "launch" && entry.outcome === "failure") {
+        cue("launch", entryIndex, launchIgnitionMs);
+      }
+    }
+    const name = soundFor(entry);
+    if (!name) return;
+    const event = entries[eventIndex];
+    if (
+      event?.kind === "missionEvent" &&
+      event.day === entry.day &&
+      (eventIndex === entryIndex ||
+        (entry.kind === "crewLost" && event.outcome === "failure") ||
+        (entry.kind === "crewHome" && event.eventId === "earth-entry"))
+    ) {
+      const afterMs = actionMs(event);
+      if (afterMs !== null) {
+        cue(name, eventIndex, afterMs);
+        return;
+      }
+    }
+    cue(name, null, 0);
+  });
+  return cues;
 }

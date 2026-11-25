@@ -1,12 +1,11 @@
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef, type ReactNode } from "react";
+import { useMemo, useRef } from "react";
 import {
   AdditiveBlending,
   BackSide,
   BufferAttribute,
   BufferGeometry,
   DynamicDrawUsage,
-  type Group,
   type MeshBasicMaterial,
 } from "three";
 import type { Timeline } from "../../simulation/simulation";
@@ -34,7 +33,7 @@ function inTheShot(along: number, height: number): Point {
 }
 
 /** A solar particle event: a stream of particles sweeping past, and a glow that flickers over the whole shot. */
-function SolarParticleEffect() {
+function SolarParticleEffect({ seconds }: { seconds: number }) {
   const positions = useMemo(() => new Float32Array(particleCount * 3), []);
   const geometry = useMemo(
     () =>
@@ -48,8 +47,7 @@ function SolarParticleEffect() {
   const glow = useRef<MeshBasicMaterial>(null);
   useDisposal(geometry);
   useDisposal(dot);
-  useFrame(({ clock }) => {
-    const seconds = clock.elapsedTime;
+  useFrame(() => {
     writeParticleStream(positions, seconds);
     markChanged(geometry);
     if (glow.current) {
@@ -88,24 +86,6 @@ function SolarParticleEffect() {
   );
 }
 
-/** Turns what's inside over slowly about the stack, while `turning`. It only reads the clock, so it can't change a result. */
-function Tumble({
-  turning,
-  children,
-}: {
-  turning: boolean;
-  children: ReactNode;
-}) {
-  const group = useRef<Group>(null);
-  useFrame((_, seconds) => {
-    if (!group.current) return;
-    group.current.rotation.x = turning
-      ? group.current.rotation.x + seconds * 0.35
-      : 0;
-  });
-  return <group ref={group}>{children}</group>;
-}
-
 /**
  * The Mission close up on its way to Mars, with the Assets it carries in the order it carries them. Simple models and
  * generated effects, so it uses no art file (ADR 0005), and it only reads the Timeline, so it can't change anything.
@@ -114,11 +94,15 @@ export function SpacecraftScene({
   timeline,
   day,
   particles,
+  playedSeconds,
+  lossSeconds,
 }: {
   timeline: Pick<Timeline, "mission">;
   day: number;
   /** Whether a solar particle event is sweeping past. */
   particles: boolean;
+  playedSeconds: number;
+  lossSeconds: number;
 }) {
   const onBoard = assetsOnBoard(timeline.mission, day);
   if (!timeline.mission) return null;
@@ -127,10 +111,10 @@ export function SpacecraftScene({
     <group position={spacecraftCentre}>
       {/* Along the stack is across the shot. */}
       <group rotation={[0, Math.PI / 2, 0]}>
-        <Tumble turning={lost}>
+        <group rotation={[lost ? lossSeconds * 0.35 : 0, 0, 0]}>
           <MissionStack onBoard={onBoard} lost={lost} />
-        </Tumble>
-        {particles && <SolarParticleEffect />}
+        </group>
+        {particles && <SolarParticleEffect seconds={playedSeconds} />}
       </group>
     </group>
   );

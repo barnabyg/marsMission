@@ -88,16 +88,23 @@ function endsTheJourney(entry: TimelineEntry, mission: Mission | null) {
   );
 }
 
-/** Whether the latest entry so far to match happened less than this long ago in real played time, which pausing holds. */
-function happenedWithin(
+/** Playing time since the latest matching Timeline entry. */
+function sinceLatest(
   entries: readonly TimelineEntry[],
   played: Played,
   matches: (entry: TimelineEntry) => boolean,
-  ms: number,
-): boolean {
+): number | null {
   const index = entries.slice(0, played.entriesHappened).findLastIndex(matches);
-  const since = index < 0 ? null : msSinceEntry(played, index);
-  return since !== null && since < ms;
+  return msSinceEntry(played, index);
+}
+
+export function msSinceJourneyLoss(
+  timeline: Pick<Timeline, "entries" | "mission">,
+  played: Played,
+): number | null {
+  return sinceLatest(timeline.entries, played, (entry) =>
+    endsTheJourney(entry, timeline.mission),
+  );
 }
 
 /** Whether the Mission has just been lost on its way, which the view shows for a few seconds. */
@@ -105,12 +112,8 @@ export function lossOnTheWayShowing(
   timeline: Pick<Timeline, "entries" | "mission">,
   played: Played,
 ): boolean {
-  return happenedWithin(
-    timeline.entries,
-    played,
-    (entry) => endsTheJourney(entry, timeline.mission),
-    lossShownMs,
-  );
+  const since = msSinceJourneyLoss(timeline, played);
+  return since !== null && since < lossShownMs;
 }
 
 /** Whether a solar particle event is sweeping past: for a few seconds when it hits, all the while play waits for an answer, and a few seconds from the answer. */
@@ -118,14 +121,14 @@ export function solarParticleEventShowing(
   entries: readonly TimelineEntry[],
   played: Played,
 ): boolean {
-  return happenedWithin(
+  const since = sinceLatest(
     entries,
     played,
     (entry) =>
       (entry.kind === "decisionPoint" || entry.kind === "hazard") &&
       entry.hazard === "solarParticleEvent",
-    particlesShownMs,
   );
+  return since !== null && since < particlesShownMs;
 }
 
 /** Whether the spacecraft view has anything to show: a Mission in flight, one just lost on the way, or one in Earth orbit for Orbital refuelling. */

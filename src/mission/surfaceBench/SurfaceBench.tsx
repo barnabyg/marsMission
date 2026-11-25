@@ -88,6 +88,7 @@ createRoot(root).render(
     <Canvas camera={{ fov: 45 }} gl={{ preserveDrawingBuffer: true }}>
       <color attach="background" args={["#05060c"]} />
       <SurfaceScene
+        playedSeconds={0}
         timeline={{ assetsAtMars, dustStorms: [] }}
         day={day}
         siteName={siteName}

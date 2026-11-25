@@ -11,7 +11,7 @@ import { seedFailingAt, successSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });
 
-for (const speed of ["1x", "10x"]) {
+for (const speed of ["1x", "20x"]) {
   test(`plays each sound with what is on screen at ${speed}`, async ({
     page,
   }) => {
@@ -47,17 +47,81 @@ for (const speed of ["1x", "10x"]) {
   });
 }
 
-test("plays the failure sound when a Mission Event fails", async ({ page }) => {
+test("holds ignition while paused and sounds the breakup on the failed flight", async ({
+  page,
+}) => {
   await listenForSounds(page);
   await page.goto(`/?seed=${seedFailingAt("Launch")}`);
   await chooseAssets(page, ["Pathfinder Orbiter"]);
-  await page.getByRole("button", { name: "Launch Mission" }).click();
-  await expect(eventEntries(page).first().getByRole("heading")).toHaveText(
-    "Launch failed",
+  await pauseAtEvent(page, "Launch failed", () =>
+    page.getByRole("button", { name: "Launch Mission" }).click(),
   );
+  expect(await soundsHeard(page)).toEqual([]);
+  await page.getByRole("button", { name: "20x", exact: true }).click();
+  await expect.poll(async () => (await soundsHeard(page)).length).toBe(2);
   const heard = await soundsHeard(page);
-  expect(heard.map(([file]) => file)).toEqual(["failure.wav"]);
+  expect(heard.map(([file]) => file)).toEqual(["launch.wav", "failure.wav"]);
+  const [ignition, breakup] = heard.map(([, , ms]) => Number(ms));
+  expect(ignition).toBeGreaterThanOrEqual(1550);
+  expect(ignition).toBeLessThan(2300);
+  expect(breakup).toBeGreaterThanOrEqual(6500);
+  expect(breakup).toBeLessThan(9000);
   expect(heard[0]?.[1]).toContain("Launch failed");
+});
+
+test("pauses the ignition sample in place and resumes it before skipping the scene", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const play: () => Promise<void> = Reflect.get(
+      HTMLMediaElement.prototype,
+      "play",
+    );
+    let observed = false;
+    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
+      if (!observed && this.src.endsWith("/launch.wav")) {
+        observed = true;
+        Object.assign(window, {
+          readIgnition: () => ({
+            paused: this.paused,
+            time: this.currentTime,
+          }),
+        });
+        const hold = () => {
+          if (this.currentTime < 0.08) {
+            requestAnimationFrame(hold);
+            return;
+          }
+          document
+            .querySelector<HTMLButtonElement>('button[title^="Pause."]')
+            ?.click();
+        };
+        requestAnimationFrame(hold);
+      }
+      return play.call(this);
+    };
+  });
+  await page.goto(`/?seed=${successSeed}`);
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await page.getByRole("button", { name: "Launch Mission" }).click();
+  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
+  const read = () =>
+    page.evaluate(() =>
+      (
+        window as unknown as {
+          readIgnition: () => { paused: boolean; time: number };
+        }
+      ).readIgnition(),
+    );
+  const held = await read();
+  expect(held.paused).toBe(true);
+  expect(held.time).toBeGreaterThan(0);
+  await page.waitForTimeout(200);
+  expect(await read()).toEqual(held);
+  await page.getByRole("button", { name: "20x", exact: true }).click();
+  await expect.poll(async () => (await read()).time).toBeGreaterThan(held.time);
+  await page.getByRole("button", { name: "Skip launch scene" }).click();
+  expect((await read()).paused).toBe(true);
 });
 
 test("stays silent for the rest of a Turn after muting partway through", async ({
@@ -71,10 +135,7 @@ test("stays silent for the rest of a Turn after muting partway through", async (
   );
   await page.getByRole("button", { name: "Mute sound" }).click();
   await playToNextTurn(page);
-  // Only the launch, which played before muting.
-  expect((await soundsHeard(page)).map(([file]) => file)).toEqual([
-    "launch.wav",
-  ]);
+  expect(await soundsHeard(page)).toEqual([]);
 });
 
 test("plays no sounds for what skipping to the Turn summary skips", async ({
@@ -88,9 +149,7 @@ test("plays no sounds for what skipping to the Turn summary skips", async ({
   );
   await page.getByRole("button", { name: /^Skip to / }).click();
   await expect(page.getByTestId("turn-summary")).toBeVisible();
-  expect((await soundsHeard(page)).map(([file]) => file)).toEqual([
-    "launch.wav",
-  ]);
+  expect(await soundsHeard(page)).toEqual([]);
 });
 
 test("remembers the mute setting after the browser closes", async ({
@@ -114,8 +173,8 @@ test("remembers the mute setting after the browser closes", async ({
   await expect(
     page.getByRole("button", { name: "Mute sound" }),
   ).toHaveAttribute("aria-pressed", "true");
-  // The launch sound would start as its entry shows.
-  await expect(eventEntries(page).first()).toBeVisible();
+  // Run past ignition with the remembered setting.
+  await playToNextTurn(page);
   expect(await soundsHeard(page)).toEqual([]);
 });
 

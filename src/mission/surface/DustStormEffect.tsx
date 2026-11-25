@@ -12,7 +12,7 @@ import { markChanged, softDot } from "./SequenceParticles";
 import { dustCountInStorm, writeStormDust } from "./stormDust";
 
 /** A dust storm at the Landing Site: a haze over the ground, and dust blowing across. Generated here, so it's no art file, and it only reads the clock, so it can't change a result. */
-export function DustStormEffect() {
+export function DustStormEffect({ seconds }: { seconds: number }) {
   const positions = useMemo(() => new Float32Array(dustCountInStorm * 3), []);
   const geometry = useMemo(
     () =>
@@ -25,8 +25,8 @@ export function DustStormEffect() {
   const dot = useMemo(() => softDot(), []);
   useDisposal(geometry);
   useDisposal(dot);
-  useFrame(({ clock }) => {
-    writeStormDust(positions, clock.elapsedTime);
+  useFrame(() => {
+    writeStormDust(positions, seconds);
     markChanged(geometry);
   });
   return (

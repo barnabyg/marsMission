@@ -81,22 +81,6 @@ describe("the journey home as Mission Mode plays it", () => {
     expect(homewardOf({ entries })).toBeNull();
   });
 
-  it("plays each part once the one before has finished, so that at speed none cuts another short", () => {
-    // At speed, the ascent, the rendezvous and leaving orbit all happen within a second of real time.
-    const fast = [0, 1000, 1100, 1200];
-    expect(homewardSince(homeward, playedAt(1500, fast))).toEqual({
-      ascent: 500,
-    });
-    const rendezvousStarts = 1000 + homewardPlayMs.ascent;
-    expect(
-      homewardSince(homeward, playedAt(rendezvousStarts + 300, fast)),
-    ).toEqual({ ascent: homewardPlayMs.ascent + 300, rendezvous: 300 });
-    const leavesAt = rendezvousStarts + homewardPlayMs.rendezvous;
-    expect(homewardSince(homeward, playedAt(leavesAt, fast))).toMatchObject({
-      departure: 0,
-    });
-  });
-
   it("plays a part when its entry happens if nothing before it is still playing", () => {
     // At 1x, Earth entry happens long after the rest has played.
     expect(
@@ -106,11 +90,16 @@ describe("the journey home as Mission Mode plays it", () => {
   });
 
   it("shows the rendezvous, then Earth entry, close up only while each plays", () => {
-    const fast = [0, 1000, 1100, 1200];
+    const fast = [0, 1000, 8000, 14500];
     const rendezvousStarts = 1000 + homewardPlayMs.ascent;
-    expect(homewardInSpace(homeward, playedAt(2000, fast))).toBeNull();
     expect(
-      homewardInSpace(homeward, playedAt(rendezvousStarts + 100, fast)),
+      homewardInSpace(homeward, playedAt(2000, fast.slice(0, 2))),
+    ).toBeNull();
+    expect(
+      homewardInSpace(
+        homeward,
+        playedAt(rendezvousStarts + 100, fast.slice(0, 3)),
+      ),
     ).toEqual({ part: "rendezvous", sinceMs: 100, failed: false });
     expect(
       homewardInSpace(
@@ -146,9 +135,20 @@ describe("the views the journey home moves Mission Mode to", () => {
   });
 
   /** The view after this much real time played, with every entry up to leaving orbit having happened at speed. */
-  const viewAt = (playedMs: number, entriesPlayedMs = [0, 1000, 1100, 1200]) =>
-    currentView(entries, entriesPlayedMs.length, startingChoice, (index) =>
-      homewardQuiet(homeward, playedAt(playedMs, entriesPlayedMs), index),
+  const viewAt = (playedMs: number, entriesPlayedMs = [0, 1000, 8000, 14500]) =>
+    currentView(
+      entries,
+      entriesPlayedMs.filter((ms) => ms <= playedMs).length,
+      startingChoice,
+      (index) =>
+        homewardQuiet(
+          homeward,
+          playedAt(
+            playedMs,
+            entriesPlayedMs.filter((ms) => ms <= playedMs),
+          ),
+          index,
+        ),
     );
 
   it("stays at the surface while the ascent plays, then moves to the rendezvous, then to the way home", () => {

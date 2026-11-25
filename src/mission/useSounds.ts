@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { TimelineEntry } from "../simulation/simulation";
-import { soundFileNames, soundFor, type SoundName } from "./sounds";
+import type { PlaybackState } from "./playback";
+import { soundCues, soundFileNames, type SoundName } from "./sounds";
 
 const mutedKey = "marsMission.muted";
 
@@ -33,16 +34,11 @@ function loadAudio(): Partial<Record<SoundName, HTMLAudioElement>> {
   return audioElements;
 }
 
-function play(name: SoundName): void {
-  const audio = loadAudio()[name];
-  if (!audio) return;
-  audio.currentTime = 0;
-  // A sound that can't load or isn't allowed to play just stays silent.
-  audio.play().catch(() => undefined);
-}
-
-function stopAll(): void {
-  for (const audio of Object.values(loadAudio())) audio.pause();
+interface PlayingSound {
+  audio: HTMLAudioElement;
+  sceneIndex: number | null;
+  held: boolean;
+  entryIndex: number;
 }
 
 interface Sounds {
@@ -50,35 +46,105 @@ interface Sounds {
   setMuted: (muted: boolean) => void;
 }
 
-/** Plays each entry's sound at the moment it happens, which keeps sounds in step at every speed. */
+/** Playback owns the clock and the active scene. The browser only plays the samples. */
 export function useSounds(
   entries: readonly TimelineEntry[],
-  entriesHappened: number,
+  {
+    activeScene,
+    playedMs,
+    entriesPlayedMs,
+    entriesHappened,
+    paused,
+  }: PlaybackState,
+  deciding: boolean,
 ): Sounds {
   const [muted, setMutedState] = useState(readMuted);
-  const entriesHeard = useRef(0);
+  const cues = useMemo(() => soundCues(entries), [entries]);
+  const heard = useRef(new Set<string>());
+  const playing = useRef(new Map<SoundName, PlayingSound>());
 
   useEffect(() => {
     loadAudio();
+    const tracks = playing.current;
+    return () => {
+      for (const { audio } of tracks.values()) audio.pause();
+      tracks.clear();
+    };
   }, []);
 
   useEffect(() => {
-    // The ref stops React's development double-run of effects playing a sound twice.
-    const newEntries = entries.slice(entriesHeard.current, entriesHappened);
-    entriesHeard.current = entriesHappened;
-    if (muted) return;
-    for (const entry of newEntries) {
-      const sound = soundFor(entry);
-      if (sound) play(sound);
+    const tracks = playing.current;
+    const decisionIndex = deciding
+      ? entries
+          .slice(0, entriesHappened)
+          .findLastIndex((entry) => entry.kind === "decisionPoint")
+      : -1;
+    for (const [name, track] of tracks) {
+      if (
+        track.audio.ended ||
+        (deciding && track.entryIndex !== decisionIndex) ||
+        muted ||
+        (track.sceneIndex !== null && track.sceneIndex !== activeScene)
+      ) {
+        track.audio.pause();
+        tracks.delete(name);
+      } else if (paused && !track.held) {
+        track.audio.pause();
+        tracks.set(name, { ...track, held: true });
+      } else if (!paused && track.held) {
+        tracks.set(name, { ...track, held: false });
+        void track.audio.play().catch(() => undefined);
+      }
     }
-  }, [entries, entriesHappened, muted]);
+
+    for (const cue of cues) {
+      if (cue.entryIndex >= entriesHappened) break;
+      if (heard.current.has(cue.key)) continue;
+      // Skip retires a scene and its remaining cues. A Decision Point preempts even same-frame events.
+      if (
+        (deciding && cue.entryIndex !== decisionIndex) ||
+        (cue.sceneIndex !== null && activeScene !== cue.sceneIndex)
+      ) {
+        heard.current.add(cue.key);
+        continue;
+      }
+      if (
+        cue.sceneIndex !== null &&
+        playedMs - (entriesPlayedMs[cue.sceneIndex] ?? playedMs) < cue.afterMs
+      )
+        continue;
+      if (paused && !muted && !deciding) continue;
+      heard.current.add(cue.key);
+      if (muted) continue;
+      const audio = loadAudio()[cue.name];
+      if (!audio) continue;
+      audio.currentTime = 0;
+      tracks.set(cue.name, {
+        audio,
+        sceneIndex: cue.sceneIndex,
+        entryIndex: cue.entryIndex,
+        held: false,
+      });
+      // A sound that can't load or isn't allowed to play just stays silent.
+      void audio.play().catch(() => undefined);
+    }
+  }, [
+    entries,
+    cues,
+    entriesHappened,
+    entriesPlayedMs,
+    playedMs,
+    activeScene,
+    deciding,
+    muted,
+    paused,
+  ]);
 
   return {
     muted,
     setMuted: (next) => {
       setMutedState(next);
       writeMuted(next);
-      if (next) stopAll();
     },
   };
 }

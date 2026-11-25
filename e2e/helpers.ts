@@ -81,6 +81,8 @@ export async function listenForSounds(page: Page): Promise<void> {
         this.src.split("/").at(-1) ?? "",
         document.querySelector("[data-testid=events-column]")?.textContent ??
           "",
+        document.querySelector<HTMLElement>("[data-testid=mission-scene]")
+          ?.dataset.launchMs ?? "",
       ]);
       return play.call(this);
     };

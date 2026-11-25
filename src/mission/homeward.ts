@@ -52,7 +52,7 @@ export interface Homeward extends JourneyHomeOnTimeline {
 }
 
 /** Whether an entry is one of the way home's Mission Events, and which. */
-function homewardPartOf(entry: TimelineEntry): HomewardPart | null {
+export function homewardPartOf(entry: TimelineEntry): HomewardPart | null {
   if (entry.kind !== "missionEvent" || entry.homeward !== true) return null;
   return (
     partsInOrder.find((part) => homewardEventIds[part] === entry.eventId) ??
@@ -82,25 +82,18 @@ export function homewardOf({
 type Played = Pick<PlaybackState, "playedMs" | "entriesPlayedMs">;
 
 /**
- * Real time played since each part of the way home started playing, for those that have. Each starts when its entry
- * happens, or once the part before it has finished playing if that's later, so that at speed one never cuts another
- * short: the rendezvous waits for the ascent to finish, and the view stays on it until it has played.
+ * Real time since each part started on the shared Mission Mode playback clock.
  */
 export function homewardSince(
   homeward: Homeward | null,
   played: Played,
 ): Partial<Record<HomewardPart, number>> {
   const since: Partial<Record<HomewardPart, number>> = {};
-  let freeFromMs = -Infinity;
   for (const part of partsInOrder) {
     const moment = homeward?.moments[part];
     if (!moment) continue;
-    const happenedAtMs = played.entriesPlayedMs[moment.entryIndex];
-    if (happenedAtMs === undefined) break;
-    const startsAtMs = Math.max(happenedAtMs, freeFromMs);
-    if (played.playedMs < startsAtMs) break;
-    since[part] = played.playedMs - startsAtMs;
-    freeFromMs = startsAtMs + homewardPlayMs[part];
+    const started = played.entriesPlayedMs[moment.entryIndex];
+    if (started !== undefined) since[part] = played.playedMs - started;
   }
   return since;
 }

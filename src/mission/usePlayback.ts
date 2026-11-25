@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { Timeline } from "../simulation/simulation";
+import { cutsceneTimeline } from "./cutsceneTimeline";
 import { missionTimeScale, sequenceTimeScale } from "./devSettings";
 import {
   advancePlayback,
@@ -6,6 +8,7 @@ import {
   continueOnTimeline,
   pausePlayback,
   skipToDecisionPoint,
+  skipScene,
   startPlayback,
   type PlaybackState,
   type PlaybackTimeline,
@@ -26,6 +29,7 @@ interface Playback {
   /** Plays on at the speed last chosen. */
   resume: () => void;
   skipToDecision: () => void;
+  dismissScene: () => void;
 }
 
 /** The playback state, kept with the Timeline it's for. */
@@ -55,11 +59,15 @@ function changed(
 }
 
 export function usePlayback(
-  timeline: PlaybackTimeline,
+  missionTimeline: Timeline,
   initialSpeed: number,
   onSpeedChange: (speed: number) => void,
   ready: boolean,
 ): Playback {
+  const timeline = useMemo(
+    () => cutsceneTimeline(missionTimeline),
+    [missionTimeline],
+  );
   // An answer brings a new Timeline. The state on it is worked out from the one before as it renders, so no frame ever
   // shows the old state on it, even while paused, and the next change keeps it.
   const [stored, setStored] = useState<Stored>(() => ({
@@ -100,6 +108,9 @@ export function usePlayback(
     },
     resume: () => {
       update((current) => changeSpeed(current, current.speed));
+    },
+    dismissScene: () => {
+      update((current) => skipScene(current, timeline));
     },
     skipToDecision: () => {
       update((current) => skipToDecisionPoint(current, timeline));

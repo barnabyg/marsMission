@@ -1,5 +1,7 @@
 import { memo } from "react";
-import { Batched, Box, Drum, Rod, Shape } from "../surface/modelParts";
+import { Box, Drum, Rod, Shape } from "../surface/modelParts";
+
+import { SunlitParts } from "./SunlitParts";
 
 const steel = "#667989";
 const rail = "#f4be65";
@@ -74,12 +76,60 @@ function ServiceTower() {
 
 export const LaunchPad = memo(function LaunchPad() {
   return (
-    <Batched>
-      <Box position={[0, -0.48, 0]} size={[1000, 0.8, 1000]} color="#556b66" />
+    <SunlitParts>
       <Box position={[0, -0.04, 0]} size={[17, 0.14, 12]} color={yard} />
-      <Box position={[0, 0.55, 0]} size={[4.6, 1.1, 4.4]} color="#43525b" />
-      <Box position={[0, 1.15, 0]} size={[4.8, 0.12, 4.6]} color="#a4aeaf" />
-      <Box position={[0, 1.23, 0]} size={[3.1, 0.04, 3.2]} color="#283139" />
+      {/* The two piers carry the deck across a channel that is open at both ends. */}
+      <Box position={[0, 0.04, 0]} size={[8.4, 0.06, 1.8]} color="#363a3e" />
+      {[-1, 1].map((side) => (
+        <group key={side}>
+          <Box
+            position={[0, 0.55, side * 1.5]}
+            size={[4.6, 1.1, 1.3]}
+            color="#697579"
+          />
+          <Box
+            position={[0, 1.15, side * 1.52]}
+            size={[4.8, 0.12, 1.56]}
+            color="#b0b5af"
+          />
+          <Box
+            position={[0, 1.22, side * 0.85]}
+            size={[4.74, 0.09, 0.16]}
+            color="#303940"
+          />
+          {[-1.95, -1.4, -0.85, -0.3, 0.25, 0.8, 1.35, 1.9].map((x) => (
+            <Box
+              key={x}
+              position={[x, 1.22, side * 2.16]}
+              rotation={[0, -side * 0.5, 0]}
+              size={[0.24, 0.025, 0.22]}
+              color={rail}
+            />
+          ))}
+          <Box
+            position={[-1.6, 0.1, side * 1.12]}
+            size={[6.9, 0.16, 0.22]}
+            color="#7f8888"
+          />
+        </group>
+      ))}
+      {[-1.6, -0.56, 0.56, 1.6].map((x) => (
+        <Box
+          key={x}
+          position={[x, 1.13, 0]}
+          size={[0.22, 0.16, 1.8]}
+          color="#495760"
+        />
+      ))}
+      <Box position={[0, -0.04, 42]} size={[2.8, 0.12, 74]} color="#69716e" />
+      {Array.from({ length: 19 }, (_, i) => (
+        <Box
+          key={i}
+          position={[0, 0.028, 6 + i * 3.8]}
+          size={[0.065, 0.014, 1.4]}
+          color="#d2c399"
+        />
+      ))}
       <ServiceTower />
       {[-1, 1].map((side) => (
         <group key={side}>
@@ -137,11 +187,18 @@ export const LaunchPad = memo(function LaunchPad() {
             radius={0.055}
             color={steel}
           />
-          <Box
-            position={[0, 4.2, 0]}
-            size={[0.95, 0.31, 0.2]}
-            color="#fce5af"
-          />
+          <Box position={[0, 4.2, 0]} size={[1.05, 0.42, 0.24]} color={steel} />
+          {[-0.33, 0, 0.33].map((x) => (
+            <Drum
+              key={x}
+              position={[x, 4.2, 0.13]}
+              radii={[0.135, 0.135]}
+              height={0.09}
+              rotation={[Math.PI / 2, 0, 0]}
+              color="#fff1c3"
+              sides={12}
+            />
+          ))}
         </group>
       ))}
       {[-11, -15].map((x) => (
@@ -169,6 +226,6 @@ export const LaunchPad = memo(function LaunchPad() {
           />
         </group>
       ))}
-    </Batched>
+    </SunlitParts>
   );
 });

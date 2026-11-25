@@ -86,6 +86,10 @@ test("a failed launch climbs and breaks up before the scene ends", async ({
   const scene = page.getByTestId("mission-scene");
   const canvas = scene.locator("canvas");
   await expect(canvas).toHaveAttribute("data-launch-frame", "pad");
+  const cameraHeight = async () =>
+    Number((await canvas.getAttribute("data-camera-position"))?.split(" ")[1]);
+  const padHeight = await cameraHeight();
+  expect(padHeight).toBeGreaterThan(0);
   // Pause inside the page on the first breakup frame, even if the screenshot takes longer than the shot.
   await canvas.evaluate((element) => {
     const observer = new MutationObserver(() => {
@@ -101,8 +105,10 @@ test("a failed launch climbs and breaks up before the scene ends", async ({
     });
   });
   await page.getByRole("button", { name: "1x", exact: true }).click();
+  await expect.poll(cameraHeight).toBeLessThan(padHeight);
   await expect(canvas).toHaveAttribute("data-launch-frame", "ascent");
   await expect(canvas).toHaveAttribute("data-launch-frame", "breakup");
+  expect(await cameraHeight()).toBeGreaterThan(padHeight);
   await expect(page.getByTestId("current-speed")).toHaveText("Paused");
   await info.attach("breakup", {
     body: await scene.screenshot(),

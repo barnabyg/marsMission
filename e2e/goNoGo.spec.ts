@@ -5,6 +5,7 @@ import {
   watchForProblems,
 } from "./helpers";
 import { chooseAssets } from "./planningHelpers";
+import { holdTurnWhenShown } from "./playbackHelpers";
 import { holdOffSeed } from "./seeds";
 
 test.use({ viewport: missionViewport });
@@ -33,12 +34,18 @@ test("holding off a landing in a dust storm lands it later, with a shorter Servi
   await expect(page.getByTestId("current-view")).toHaveText("Surface");
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
+  await holdTurnWhenShown(page, "Entry/descent/landing");
   await panel.getByRole("button", { name: "Hold off" }).click();
   await expect(
     page.getByRole("heading", {
       name: "Holding off the landing at Jezero Crater",
     }),
   ).toBeVisible();
+  await expect(page.getByTestId("current-speed")).toHaveText("Paused");
+  await expect(page.getByTestId("mission-scene")).toHaveAttribute(
+    "data-sequence",
+    "landing",
+  );
   await endTurn.click();
 
   const summary = page.getByTestId("summary-go-no-go");
