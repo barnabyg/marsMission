@@ -4,7 +4,7 @@ import { viewAskedForBy, type MissionViewId } from "../missionViews";
 import type { CameraPose } from "../sceneParts";
 
 export const captureMs = 6200;
-const burnMs = 3000;
+export const captureCutoffMs = 3000;
 
 // The close view looks along the limb. Pull back after cutoff to show the curve or the escape.
 export const limbShot: CameraPose = {
@@ -33,12 +33,19 @@ export function marsCaptureNow(
     return null;
   const elapsed = msSinceEntry(state, index) ?? 0;
   const stage =
-    elapsed < burnMs ? "burn" : entry.outcome === "failure" ? "flyby" : "orbit";
-  const progress = Math.max(0, (elapsed - burnMs) / (captureMs - burnMs));
+    elapsed < captureCutoffMs
+      ? "burn"
+      : entry.outcome === "failure"
+        ? "flyby"
+        : "orbit";
+  const progress = Math.max(
+    0,
+    (elapsed - captureCutoffMs) / (captureMs - captureCutoffMs),
+  );
   const angle = progress * 1.14;
   const x =
     stage === "burn"
-      ? -0.48 * (1 - elapsed / burnMs)
+      ? -0.48 * (1 - elapsed / captureCutoffMs)
       : stage === "orbit"
         ? 1.23 * Math.sin(angle)
         : progress * 1.65;

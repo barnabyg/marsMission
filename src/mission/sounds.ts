@@ -1,5 +1,7 @@
 import type { TimelineEntry } from "../simulation/simulation";
 import { launchBreakupMs, launchIgnitionMs } from "./launch/launchTiming";
+import { captureCutoffMs } from "./marsOrbit/capture";
+import { departureCutoffMs } from "./spacecraft/transEarthInjection";
 import { cutoffMs } from "./spacecraft/transferBurn";
 import { approachMs, tankerPadRate } from "./spacecraft/refuelling";
 import { closingMs } from "./spacecraft/marsRendezvous";
@@ -61,6 +63,10 @@ function actionMs(
 ): number | null {
   const failed = entry.outcome === "failure";
   switch (entry.eventId) {
+    case "mars-orbit-insertion":
+      return failed ? captureCutoffMs : null;
+    case "trans-earth-injection":
+      return failed ? departureCutoffMs : null;
     case "mars-transfer-burn":
       return failed ? cutoffMs : null;
     case "launch":

@@ -10,6 +10,8 @@ export interface DepartureNow {
   flame: number;
 }
 
+export const departureCutoffMs = 1800;
+
 /** The engine lights briefly on both outcomes. A failed vehicle coasts above Mars after cutoff. */
 export function departureNow(
   homeward: Pick<Homeward, "aboard" | "vehicleName"> | null,
@@ -17,10 +19,13 @@ export function departureNow(
 ): DepartureNow | null {
   if (!homeward || inSpace?.part !== "departure") return null;
   const { sinceMs, failed } = inSpace;
-  const ignitionMs = 1800;
-  const seconds = Math.max(sinceMs - ignitionMs, 0) / 1000;
+  const seconds = Math.max(sinceMs - departureCutoffMs, 0) / 1000;
   const stage =
-    sinceMs < ignitionMs ? "ignition" : failed ? "stranded" : "departing";
+    sinceMs < departureCutoffMs
+      ? "ignition"
+      : failed
+        ? "stranded"
+        : "departing";
   const drift = failed ? 0.06 * seconds : 0.3 * seconds * seconds;
   return {
     stage,
