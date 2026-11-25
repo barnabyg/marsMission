@@ -1,5 +1,7 @@
-import { Batched, Box, Drum } from "../surface/modelParts";
+import { Box, Drum } from "../surface/modelParts";
 import { rocketProfile } from "./launch";
+
+import { SunlitParts } from "./SunlitParts";
 
 const enamel = "#f0eee7";
 const graphite = "#354453";
@@ -23,7 +25,7 @@ function Core({ vehicleId }: { vehicleId: string }) {
   const { height, radius, engines, boosters } = rocketProfile(vehicleId);
   const barrel = height * 0.66;
   return (
-    <Batched>
+    <SunlitParts>
       <Drum
         position={[0, 0.6 + barrel / 2, 0]}
         radii={[radius, radius]}
@@ -122,7 +124,7 @@ function Core({ vehicleId }: { vehicleId: string }) {
           </group>
         );
       })}
-    </Batched>
+    </SunlitParts>
   );
 }
 
@@ -145,7 +147,7 @@ export function MeridianRocket({
         position={[apart * 2, joint + apart * 1.6, 0]}
         rotation={[apart * 0.7, 0, -apart * 0.8]}
       >
-        <Batched>
+        <SunlitParts>
           <Drum
             position={[0, upper * 0.09, 0]}
             radii={[radius * 1.19, radius]}
@@ -181,7 +183,7 @@ export function MeridianRocket({
             color={enamel}
             sides={40}
           />
-        </Batched>
+        </SunlitParts>
       </group>
     </>
   );

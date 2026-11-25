@@ -4,6 +4,7 @@
     "scripts/*.mjs",
     "src/balance/gamebenchMetrics.ts",
     "src/mission/assetArt/AssetArt.tsx",
+    "src/mission/launch/LaunchReview.tsx",
     "src/mission/surfaceBench/SurfaceBench.tsx"
   ],
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts", "scripts/*.mjs"],

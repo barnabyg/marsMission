@@ -1,6 +1,8 @@
 import { useFrame } from "@react-three/fiber";
-import { BackSide } from "three";
+import { BackSide, DoubleSide } from "three";
+import { LaunchGround } from "./LaunchGround";
 import { LaunchPad } from "./LaunchPad";
+import { LaunchVapour } from "./LaunchVapour";
 import { MeridianRocket } from "./MeridianRocket";
 import { launchMotion, rocketProfile, type LaunchNow } from "./launch";
 
@@ -8,7 +10,7 @@ import { launchIgnitionMs } from "./launchTiming";
 
 const padScale = 0.15;
 
-/** A pale horizon and high blue sky. Only the angle above the horizon changes their colour. */
+/** Thin layers of coastal haze soften the horizon below a high blue sky. */
 function Sky() {
   return (
     <mesh>
@@ -24,10 +26,12 @@ function Sky() {
         fragmentShader={`varying vec3 direction;
         void main() {
           vec3 ray = normalize(direction);
-          float above = smoothstep(-0.06, 0.64, ray.y);
-          vec3 sky = mix(vec3(0.77, 0.70, 0.60), vec3(0.10, 0.26, 0.46), above);
-          float glare = max(dot(ray, normalize(vec3(-0.76,0.15,-0.63))), 0.0);
-          sky += vec3(0.65,0.37,0.15)*pow(glare,36.0);
+          float above = smoothstep(-0.04, 0.74, ray.y);
+          vec3 sky = mix(vec3(0.78, 0.73, 0.63), vec3(0.075, 0.20, 0.38), above);
+          float glare = max(dot(ray, normalize(vec3(-0.72,0.22,-0.66))), 0.0);
+          sky += vec3(0.62,0.32,0.12)*pow(glare,36.0);
+          float ridge = .024+.012*sin(ray.x*18.)+.004*sin(ray.z*34.);
+          sky = mix(vec3(.44,.48,.47), sky, smoothstep(ridge-.002,ridge+.005,ray.y));
           gl_FragColor = vec4(sky,1.0);
           #include <colorspace_fragment>
         }`}
@@ -36,66 +40,84 @@ function Sky() {
   );
 }
 
+/** The bright throat stays attached to its engine while the outer plume lengthens at ignition. */
 function Exhaust({ elapsedMs, radius }: { elapsedMs: number; radius: number }) {
   const ignition = Math.min(
     1,
     Math.max(0, (elapsedMs - launchIgnitionMs) / 600),
   );
   if (!ignition) return null;
-  const length = ignition * (3.5 + 0.16 * Math.sin(elapsedMs / 55));
+  const length = ignition * (3.5 + 0.13 * Math.sin(elapsedMs / 55));
   return (
     <group scale={[radius, length, radius]} rotation={[0, 0, Math.PI]}>
       <mesh position={[0, 0.5, 0]}>
-        <coneGeometry args={[0.9, 1, 24]} />
-        <meshBasicMaterial
-          color="#ff8e39"
+        <coneGeometry args={[0.9, 1, 32, 8, true]} />
+        <shaderMaterial
           transparent
-          opacity={0.8}
           depthWrite={false}
+          side={DoubleSide}
           toneMapped={false}
+          uniforms={{ time: { value: elapsedMs / 1000 } }}
+          vertexShader={`varying vec2 flame;
+            void main() {
+              flame=uv;
+              gl_Position=projectionMatrix * modelViewMatrix * vec4(position,1.);
+            }`}
+          fragmentShader={`uniform float time; varying vec2 flame;
+            void main() {
+              float t=flame.y;
+              float streak=.5+.5*sin(flame.x*62.83+sin(t*15.-time*22.));
+              float diamonds=.5+.5*cos(t*29.-time*3.);
+              vec3 colour=mix(vec3(1.,.28,.04),vec3(1.,.97,.76),
+                clamp(.78*(1.-t)+streak*.18+diamonds*.13,0.,1.));
+              gl_FragColor=vec4(colour,(1.-t*t)*(.7+.3*streak));
+              #include <colorspace_fragment>
+            }`}
         />
-      </mesh>
-      <mesh position={[0, 0.26, 0]}>
-        <coneGeometry args={[0.62, 0.54, 24]} />
-        <meshBasicMaterial color="#fff5c8" toneMapped={false} />
       </mesh>
     </group>
   );
 }
 
-/** Steam spilling out to either side of the flame trench. All motion uses the pausable launch clock. */
-function TrenchSteam({ elapsedMs }: { elapsedMs: number }) {
-  const seconds = (elapsedMs - launchIgnitionMs) / 1000;
-  if (seconds <= 0 || seconds > 6) return null;
-  return (
-    <group>
-      {Array.from({ length: 18 }, (_, i) => {
-        const age = seconds - (i % 9) * 0.18;
-        if (age <= 0 || age >= 3.8) return null;
-        const side = i < 9 ? -1 : 1;
-        const size = 0.25 + age * 0.55;
-        return (
-          <mesh
-            key={i}
-            position={[
-              side * (0.7 + age * 2),
-              0.45 + age * 0.3,
-              Math.sin(i * 9) * 0.7 + 0.5,
-            ]}
-            scale={[size * 1.6, size * 0.8, size]}
-          >
-            <icosahedronGeometry args={[1, 1]} />
-            <meshLambertMaterial
-              color="#e5e3dc"
-              transparent
-              opacity={0.62 * (1 - age / 3.8)}
-              depthWrite={false}
-            />
-          </mesh>
-        );
-      })}
-    </group>
-  );
+function LaunchCamera({
+  launch,
+  steadyCamera,
+  rise,
+  apart,
+  height,
+}: {
+  launch: LaunchNow;
+  steadyCamera: boolean;
+  rise: number;
+  apart: number;
+  height: number;
+}) {
+  useFrame(({ camera, gl }) => {
+    if (steadyCamera) {
+      // A fixed, wider field holds the tower, breakup and cloud shelf without cuts or tracking.
+      camera.position.set(3.45, 0.85, 6.8);
+      camera.lookAt(0, 2.55, 0);
+    } else if (launch.elapsedMs < launchIgnitionMs) {
+      camera.position.set(1.5, 0.65, 3.25);
+      camera.lookAt(0, 1.1, 0);
+    } else if (launch.elapsedMs < 3900) {
+      camera.position.set(0.99, 0.215, 1.41);
+      camera.lookAt(0, 0.76, 0);
+    } else {
+      const follow = Math.max(0, rise - 2);
+      camera.position.set(1.74, (3.4 + follow * 0.8) * padScale, 2.25);
+      camera.lookAt(0, (1.26 + height * 0.46 + rise) * padScale, 0);
+    }
+    camera.updateMatrixWorld();
+    const frame = apart > 0 ? "breakup" : rise > 0 ? "ascent" : "pad";
+    if (gl.domElement.dataset.launchFrame !== frame)
+      gl.domElement.dataset.launchFrame = frame;
+    gl.domElement.dataset.cameraPosition = camera.position
+      .toArray()
+      .map((n) => n.toFixed(3))
+      .join(" ");
+  });
+  return null;
 }
 
 export function LaunchScene({
@@ -106,28 +128,25 @@ export function LaunchScene({
   steadyCamera?: boolean;
 }) {
   const { rise, apart } = launchMotion(launch);
-  const { radius } = rocketProfile(launch.vehicleId);
-  useFrame(({ camera, gl }) => {
-    const follow = steadyCamera ? 0 : Math.max(0, rise - 1.8) * padScale;
-    camera.position.set(1.5, 0.65 + follow, 3.25);
-    camera.lookAt(0, 1.1 + follow, 0);
-    camera.updateMatrixWorld();
-    gl.domElement.dataset.cameraPosition = camera.position
-      .toArray()
-      .map((value) => value.toFixed(3))
-      .join(" ");
-    const frame = apart > 0 ? "breakup" : rise > 0 ? "ascent" : "pad";
-    if (gl.domElement.dataset.launchFrame !== frame)
-      gl.domElement.dataset.launchFrame = frame;
-  });
+  const { radius, height } = rocketProfile(launch.vehicleId);
   return (
     <>
+      <LaunchCamera
+        launch={launch}
+        steadyCamera={steadyCamera}
+        rise={rise}
+        apart={apart}
+        height={height}
+      />
       <Sky />
-      <hemisphereLight args={["#f6f5eb", "#93918a", 2]} />
-      <directionalLight position={[-2, 5, 3]} intensity={2} />
       <group scale={padScale}>
+        <LaunchGround />
         <LaunchPad />
-        <TrenchSteam elapsedMs={launch.elapsedMs} />
+        <LaunchVapour
+          elapsedMs={launch.elapsedMs}
+          height={height}
+          apart={apart}
+        />
         <group position={[0, 1.26 + rise, 0]}>
           <MeridianRocket vehicleId={launch.vehicleId} apart={apart} />
           {apart === 0 && (

@@ -240,7 +240,13 @@ export function PartSet({
  * The parts are merged once, when it's first drawn, and not again: a part that later moves, changes or comes and
  * goes inside it would be drawn where it was merged, if at all. Only still models with fixed parts belong in it.
  */
-export function Batched({ children }: { children: ReactNode }) {
+export function Batched({
+  children,
+  materialFor,
+}: {
+  children: ReactNode;
+  materialFor?: (source: Material) => Material;
+}) {
   const parts = useRef<Group>(null);
   const merged = useRef<Group>(null);
   useLayoutEffect(() => {
@@ -280,7 +286,7 @@ export function Batched({ children }: { children: ReactNode }) {
       for (const shape of [...shapes, ...ready]) shape.dispose();
       if (!geometry) continue;
       for (const mesh of meshes) mesh.visible = false;
-      const mesh = new Mesh(geometry, material);
+      const mesh = new Mesh(geometry, materialFor?.(material) ?? material);
       target.add(mesh);
       made.push(mesh);
     }
@@ -292,7 +298,7 @@ export function Batched({ children }: { children: ReactNode }) {
       for (const { meshes } of byMaterial.values())
         for (const mesh of meshes) mesh.visible = true;
     };
-  }, []);
+  }, [materialFor]);
   return (
     <group>
       <group ref={parts}>{children}</group>
