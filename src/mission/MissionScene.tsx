@@ -8,6 +8,7 @@ import type { LaunchNow } from "./launch/launch";
 import { advanceMove, headFor, poseDuring, settledAt } from "./cameraMove";
 import {
   marsOrbitLabels,
+  strandedOrbitMarker,
   MarsOrbitScene,
   marsOrbitShot,
 } from "./marsOrbit/MarsOrbitView";
@@ -102,6 +103,7 @@ interface MissionSceneProps {
   /** Earth entry at the end of the way home, while it plays, which the spacecraft view shows instead. */
   earthEntry: EarthEntryNow | null;
   departure: DepartureNow | null;
+  strandedVehicle: string | null;
   /** How many Assets are operating at Mars right now. */
   operatingAssetCount: number;
 }
@@ -294,6 +296,7 @@ export default function MissionScene({
   marsRendezvous,
   earthEntry,
   departure,
+  strandedVehicle,
   operatingAssetCount,
 }: MissionSceneProps) {
   const labelLayer = useRef<HTMLDivElement>(null);
@@ -332,10 +335,14 @@ export default function MissionScene({
       ? limbShot
       : captureWideShot
     : (spacecraftCamera ?? viewShot);
+  const stranded = strandedVehicle
+    ? strandedOrbitMarker(strandedVehicle, timeline, day)
+    : null;
   const labels = capture
     ? captureLabels(capture)
     : (closeUp?.labels ?? [
         ...labelsOnDay(timeline, day, site, sequence),
+        ...(view === "marsOrbit" && stranded ? [stranded.label] : []),
         ...(view === "surface" && site !== null
           ? ascentLabels(ascent, site)
           : []),
@@ -421,6 +428,7 @@ export default function MissionScene({
             <MarsOrbitScene
               timeline={timeline}
               day={capture ? capture.day - 0.001 : day}
+              stranded={stranded?.position}
             />
             {earthOrbit === null && !burn && (
               <SpacecraftScene

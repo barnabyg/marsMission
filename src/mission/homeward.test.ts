@@ -9,6 +9,7 @@ import {
   homewardPlayMs,
   homewardQuiet,
   homewardSince,
+  strandedVehicleAfter,
 } from "./homeward";
 import {
   currentView,
@@ -172,7 +173,13 @@ describe("the views the journey home moves Mission Mode to", () => {
       journeyHome: journey({ siteName: null }),
       entries: events,
     });
+    expect(strandedVehicleAfter(lost, playedAt(0, []))).toBeNull();
+    expect(strandedVehicleAfter(lost, playedAt(4000, [0]))).toBeNull();
     const played = playedAt(10_000, [0]);
+    expect(strandedVehicleAfter(lost, played)).toBe("Earth return stage");
+    expect(
+      strandedVehicleAfter(homeward, playedAt(25_000, [0, 1000, 8000, 14500])),
+    ).toBeNull();
     expect(
       currentView(events, 1, startingChoice, (index) =>
         homewardQuiet(lost, played, index),

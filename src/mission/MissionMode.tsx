@@ -46,7 +46,12 @@ import {
   ascentSequenceOf,
   sitesDuringAscent,
 } from "./surface/ascent";
-import { homewardInSpace, homewardOf, homewardQuiet } from "./homeward";
+import {
+  homewardInSpace,
+  homewardOf,
+  homewardQuiet,
+  strandedVehicleAfter,
+} from "./homeward";
 import { marsRendezvousNow } from "./spacecraft/marsRendezvous";
 import { departureNow } from "./spacecraft/transEarthInjection";
 import { earthEntryNow } from "./spacecraft/splashdown";
@@ -211,6 +216,7 @@ export function MissionMode({
           site={site}
           sequence={sequence}
           capture={marsCaptureNow(timeline, state, view)}
+          strandedVehicle={strandedVehicleAfter(homeward, state)}
           ascent={ascent}
           particles={particles}
           playedSeconds={state.playedMs / 1000}

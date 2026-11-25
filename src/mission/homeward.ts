@@ -118,6 +118,19 @@ export function homewardStarted(
   return { part, sinceMs, failed: moment.failed };
 }
 
+/** The vehicle left in Mars orbit once playback has presented the failed burn or the player has skipped it. */
+export function strandedVehicleAfter(
+  homeward: Homeward | null,
+  played: Played,
+): string | null {
+  const departure = homewardStarted(homeward, played, "departure");
+  return homeward &&
+    departure?.failed &&
+    departure.sinceMs >= homewardPlayMs.departure
+    ? homeward.vehicleName
+    : null;
+}
+
 /** The current homeward spacecraft close-up, in reverse flight order so the latest event owns the camera. */
 export function homewardInSpace(
   homeward: Homeward | null,

@@ -50,6 +50,16 @@ for (const [event, attribute, ending] of [
         .getByRole("button", { name: "Skip scene", exact: true })
         .click();
       await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
+      await expect(
+        page.getByText("Albatross Orbiter: stranded in Mars orbit", {
+          exact: true,
+        }),
+      ).toBeVisible();
+      await expect(
+        page
+          .getByTestId("operating-at-mars")
+          .filter({ hasText: "Albatross Orbiter" }),
+      ).toHaveCount(0);
     }
     await fast.click();
     const events = page.getByTestId("summary-mission-event");
@@ -59,6 +69,35 @@ for (const [event, attribute, ending] of [
     expect(problems).toEqual([]);
   });
 }
+
+test("shows the stranded vehicle in Mars orbit after the declined departure plays out", async ({
+  page,
+}) => {
+  await prepareSamples(page, sampleDepartureDecisionSave());
+  await page
+    .getByRole("button", { name: "End Turn without launching" })
+    .click();
+  await page.getByRole("button", { name: "Skip to Decision Point" }).click();
+  await page.getByRole("button", { name: "Mars orbit", exact: true }).click();
+  const marker = page.getByText("Albatross Orbiter: stranded in Mars orbit", {
+    exact: true,
+  });
+  await expect(marker).toHaveCount(0);
+
+  const failed = holdSceneAt(page, "homewardDeparture", "stranded");
+  await page.getByRole("button", { name: /Don't use it/ }).click();
+  await failed;
+  const over = holdSceneAt(page, "homewardDeparture", null);
+  await page.getByRole("button", { name: "1x", exact: true }).click();
+  await over;
+  await expect(page.getByTestId("current-view")).toHaveText("Mars orbit");
+  await expect(marker).toBeVisible();
+  await expect(
+    page
+      .getByTestId("operating-at-mars")
+      .filter({ hasText: "Albatross Orbiter" }),
+  ).toHaveCount(0);
+});
 
 test("holds the departure Decision Point until the player uses the Backup engine and then brings the samples home", async ({
   page,
