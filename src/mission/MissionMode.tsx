@@ -48,6 +48,7 @@ import {
 } from "./surface/ascent";
 import { homewardInSpace, homewardOf, homewardQuiet } from "./homeward";
 import { marsRendezvousNow } from "./spacecraft/marsRendezvous";
+import { departureNow } from "./spacecraft/transEarthInjection";
 import { earthEntryNow } from "./spacecraft/splashdown";
 import { useMissionView } from "./useMissionView";
 import { usePlayback } from "./usePlayback";
@@ -126,6 +127,7 @@ export function MissionMode({
   );
   const inSpace = homewardInSpace(homeward, state);
   const marsRendezvous = marsRendezvousNow(homeward, inSpace);
+  const departure = departureNow(homeward, inSpace);
   const earthEntry = earthEntryNow(homeward, inSpace);
   const burn = transferBurnNow(timeline.entries, state, deciding);
   const spacecraftAvailable =
@@ -213,6 +215,7 @@ export function MissionMode({
           burn={burn}
           earthOrbit={earthOrbit}
           marsRendezvous={marsRendezvous}
+          departure={departure}
           earthEntry={earthEntry}
           operatingAssetCount={operatingAssets.length}
         />
@@ -360,6 +363,7 @@ export function MissionMode({
           burn={burn}
           earthOrbit={earthOrbit}
           marsRendezvous={marsRendezvous}
+          departure={departure}
           earthEntry={earthEntry}
         />
         {/* Shown only while it has something to list, rather than an empty heading. */}

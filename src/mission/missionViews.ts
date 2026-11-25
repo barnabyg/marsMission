@@ -30,13 +30,12 @@ const viewsOfMissionEvents: Partial<Record<string, MissionViewId>> = {
 };
 
 /**
- * The way home's Mission Events, each with a view of its own: Mars ascent at the Landing Site, the rendezvous and Earth
- * entry close up, only while each plays, and the way home in the solar system.
+ * Mars ascent plays at the Landing Site. The rendezvous, departure burn and Earth entry play close up.
  */
 const viewsOfHomewardEvents: Partial<Record<string, MissionViewId>> = {
   [homewardEventIds.ascent]: "surface",
   [homewardEventIds.rendezvous]: "spacecraft",
-  [homewardEventIds.departure]: "solarSystem",
+  [homewardEventIds.departure]: "spacecraft",
   [homewardEventIds.entry]: "spacecraft",
 };
 
@@ -89,9 +88,18 @@ export function currentView(
 ): MissionViewId {
   const asked = entries
     .slice(choice.entriesHappened, entriesHappened)
-    .map((entry, index) =>
-      hasPlayed(choice.entriesHappened + index) ? null : viewAskedForBy(entry),
-    )
+    .map((entry, index) => {
+      if (!hasPlayed(choice.entriesHappened + index))
+        return viewAskedForBy(entry);
+      if (
+        entry.kind === "missionEvent" &&
+        entry.homeward &&
+        entry.eventId === homewardEventIds.departure
+      ) {
+        return entry.outcome === "failure" ? "marsOrbit" : "solarSystem";
+      }
+      return null;
+    })
     .findLast((view) => view !== null);
   return asked ?? choice.view;
 }

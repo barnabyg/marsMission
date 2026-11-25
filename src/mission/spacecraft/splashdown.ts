@@ -20,6 +20,14 @@ export const splashdownShot: CameraPose = {
   target: [0, 22.3, 0],
 };
 
+/** At splashdown, close on the floating capsule with the ship just behind it. */
+export const recoveryShot: CameraPose = {
+  position: [-0.8, 21.3, -3.6],
+  target: [0.6, 20.8, 2.5],
+};
+
+export const recoveryShipAt: Point = [3.2, 0, 7.2];
+
 /** When the parachutes open, when the capsule hits the water, and when a failed one breaks up. */
 export const chutesOpenMs = 2600;
 export const splashMs = 5200;

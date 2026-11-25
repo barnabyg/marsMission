@@ -4,6 +4,7 @@ import type { MissionViewId } from "../missionViews";
 import { marsRendezvousStatus, type MarsRendezvousNow } from "./marsRendezvous";
 import { burnStatus, type TransferBurn } from "./transferBurn";
 import { earthOrbitStatus, type EarthOrbitNow } from "./refuelling";
+import { departureStatus, type DepartureNow } from "./transEarthInjection";
 import { earthEntryStatus, type EarthEntryNow } from "./splashdown";
 import { assetsOnBoard } from "./spacecraft";
 
@@ -26,6 +27,7 @@ interface SpacecraftControlsProps {
   marsRendezvous: MarsRendezvousNow | null;
   /** Earth entry at the end of the way home, while it plays. */
   earthEntry: EarthEntryNow | null;
+  departure: DepartureNow | null;
 }
 
 /** How the player reads a kind on board, where the Crew's ship is named for its Crew. */
@@ -71,11 +73,14 @@ export function SpacecraftControls({
   burn,
   marsRendezvous,
   earthEntry,
+  departure,
 }: SpacecraftControlsProps) {
   if (!available || view !== "spacecraft") return null;
   // The way home, close up, shows nothing else.
   const homeward =
-    marsRendezvousStatus(marsRendezvous) ?? earthEntryStatus(earthEntry);
+    marsRendezvousStatus(marsRendezvous) ??
+    departureStatus(departure) ??
+    earthEntryStatus(earthEntry);
   if (homeward !== null) {
     return (
       <>

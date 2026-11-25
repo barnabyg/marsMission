@@ -2,6 +2,7 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": [
     "scripts/*.mjs",
+    "e2e/journeyScenarios.ts",
     "src/balance/gamebenchMetrics.ts",
     "src/mission/assetArt/AssetArt.tsx",
     "src/mission/launch/LaunchReview.tsx",

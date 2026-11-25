@@ -51,9 +51,14 @@ const sampleReturnPlans: TurnPlan[] = [
  * The Program on this seed at the start of the third Turn, with the samples ready to go home, or null if the first two
  * Turns didn't play with nothing to answer and nothing lost.
  */
-function samplesReady(seed: number): Program | null {
+function samplesReady(seed: number, backupEngine = false): Program | null {
   let program = rich.startProgram(seed);
-  for (const plan of sampleReturnPlans.slice(0, 2)) {
+  for (const planned of sampleReturnPlans.slice(0, 2)) {
+    const plan =
+      backupEngine &&
+      planned.mission?.assetIds.includes("albatross-return-orbiter")
+        ? { mission: { ...planned.mission, contingencyIds: ["backup-engine"] } }
+        : planned;
     // Something lost on the way leaves a later Turn's plan with nothing to fly.
     if (rich.validatePlan(program, plan).problems.length > 0) return null;
     const progress = rich.workOutTurn(program, plan);
@@ -85,11 +90,36 @@ export const sampleReturnSeed = sampleSeedWhere(
   (summary) => summary.samplesHome.length === 1,
 );
 
-/** A seed on which the samples get ready over two Turns, and on the third the Kestrel Lifter's Mars ascent fails. */
-export const sampleAscentFailureSeed = sampleSeedWhere(
-  (summary) =>
-    summary.sampleJourney?.failure?.missionEventName === "Mars ascent",
-);
+/** A seed where the named event on the samples' journey home fails. */
+export function sampleFailureSeed(event: string): number {
+  return sampleSeedWhere(
+    (summary) => summary.sampleJourney?.failure?.missionEventName === event,
+  );
+}
+
+export const sampleAscentFailureSeed = sampleFailureSeed("Mars ascent");
+
+/** Samples whose departure fails but can be rescued by the Backup engine bought on Turn 2. */
+export function sampleDepartureDecisionSave(): string {
+  const plan = { mission: null, bringHome: "samples:jezero-crater" };
+  for (let seed = 1; seed < 100_000; seed++) {
+    const ready = samplesReady(seed, true);
+    if (!ready || rich.validatePlan(ready, plan).problems.length > 0) continue;
+    const progress = rich.workOutTurn(ready, plan);
+    if (progress.decisionPoint?.id !== "contingency:trans-earth-injection")
+      continue;
+    const answered = rich.workOutTurn(ready, plan, {
+      [progress.decisionPoint.id]: "use",
+    });
+    if (
+      !answered.decisionPoint &&
+      answered.result.summary.samplesHome.length > 0
+    ) {
+      return JSON.stringify(rich.saveProgram(ready));
+    }
+  }
+  throw new Error("No sample return can be rescued by its Backup engine");
+}
 
 /**
  * The automatic save of a Program on this seed at the start of the third Turn, with the samples ready to go home, as the

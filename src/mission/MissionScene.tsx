@@ -33,7 +33,17 @@ import {
   earthOrbitShot,
   spacecraftShot,
 } from "./spacecraft/spacecraft";
-import { splashdownShot, type EarthEntryNow } from "./spacecraft/splashdown";
+import {
+  DepartureScene,
+  departureLabels,
+  departureShot,
+} from "./spacecraft/DepartureView";
+import type { DepartureNow } from "./spacecraft/transEarthInjection";
+import {
+  recoveryShot,
+  splashdownShot,
+  type EarthEntryNow,
+} from "./spacecraft/splashdown";
 import { splashdownLabels, SplashdownScene } from "./spacecraft/SplashdownView";
 import { spacecraftLabels, SpacecraftScene } from "./spacecraft/SpacecraftView";
 import { ascentKind, ascentRunning, type AscentNow } from "./surface/ascent";
@@ -91,6 +101,7 @@ interface MissionSceneProps {
   marsRendezvous: MarsRendezvousNow | null;
   /** Earth entry at the end of the way home, while it plays, which the spacecraft view shows instead. */
   earthEntry: EarthEntryNow | null;
+  departure: DepartureNow | null;
   /** How many Assets are operating at Mars right now. */
   operatingAssetCount: number;
 }
@@ -239,6 +250,7 @@ function spacecraftCloseUp(
   burn: TransferBurn | null,
   marsRendezvous: MarsRendezvousNow | null,
   earthEntry: EarthEntryNow | null,
+  departure: DepartureNow | null,
 ): { shot: CameraPose; labels: SceneLabel[] } | null {
   if (marsRendezvous) {
     return {
@@ -246,8 +258,13 @@ function spacecraftCloseUp(
       labels: marsRendezvousLabels(marsRendezvous),
     };
   }
+  if (departure)
+    return { shot: departureShot, labels: departureLabels(departure) };
   if (earthEntry) {
-    return { shot: splashdownShot, labels: splashdownLabels(earthEntry) };
+    return {
+      shot: earthEntry.stage === "splashedDown" ? recoveryShot : splashdownShot,
+      labels: splashdownLabels(earthEntry),
+    };
   }
   return earthOrbit || burn
     ? {
@@ -276,6 +293,7 @@ export default function MissionScene({
   burn,
   marsRendezvous,
   earthEntry,
+  departure,
   operatingAssetCount,
 }: MissionSceneProps) {
   const labelLayer = useRef<HTMLDivElement>(null);
@@ -290,6 +308,7 @@ export default function MissionScene({
           burn,
           marsRendezvous,
           earthEntry,
+          departure,
         )
       : null;
   const payloadCount = timeline.mission?.assets.length ?? 0;
@@ -375,6 +394,9 @@ export default function MissionScene({
       data-mars-rendezvous={
         view === "spacecraft" ? marsRendezvous?.stage : undefined
       }
+      data-homeward-departure={
+        view === "spacecraft" ? departure?.stage : undefined
+      }
       data-earth-entry={view === "spacecraft" ? earthEntry?.stage : undefined}
       data-rendezvous-ms={
         inEarthOrbit && earthOrbit.sinceRendezvousMs !== null
@@ -411,6 +433,7 @@ export default function MissionScene({
             )}
             <EarthOrbitScene timeline={timeline} now={earthOrbit} burn={burn} />
             <MarsRendezvousScene now={marsRendezvous} />
+            <DepartureScene now={departure} />
             <SplashdownScene now={earthEntry} />
             {lastSite !== null && (
               <SurfaceScene

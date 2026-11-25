@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mission journey playtest</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font:
+          1rem/1.5 system-ui,
+          sans-serif;
+      }
+      body {
+        max-width: 56rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      li {
+        margin-block: 1rem;
+      }
+      button {
+        padding: 0.35rem 0.6rem;
+        font: inherit;
+        cursor: pointer;
+      }
+      p {
+        margin-block: 0.3rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Mission journey playtest</h1>
+    <p>
+      Choose a flight to reset the playtest's automatic save. For a prepared
+      Program, select <strong>Continue this Program</strong>. Follow the setup
+      for that flight, then choose 20x in Mission Mode. Return to this page to
+      try another flight.
+    </p>
+    <ul id="flights"></ul>
+    <script type="module">
+      const response = await fetch("/journey-scenarios.json");
+      const { key, scenarios } = await response.json();
+      for (const flight of scenarios) {
+        const item = document.createElement("li");
+        const button = document.createElement("button");
+        button.textContent = flight.name;
+        const setup = document.createElement("p");
+        setup.textContent = flight.instructions;
+        button.onclick = () => {
+          if (flight.save) localStorage.setItem(key, flight.save);
+          else localStorage.removeItem(key);
+          location.assign(flight.save ? "/" : `/?seed=${flight.seed}`);
+        };
+        item.append(button, setup);
+        document.querySelector("#flights").append(item);
+      }
+    </script>
+  </body>
+</html>
