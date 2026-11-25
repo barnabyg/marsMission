@@ -22,6 +22,7 @@ export function viewName(view: MissionViewId): string {
 /** The Mission Events with a view of their own, whether they succeed or fail. */
 const viewsOfMissionEvents: Partial<Record<string, MissionViewId>> = {
   // Only while it plays: Mission Mode then moves back to where it was, as the Mission leaves Earth orbit.
+  "tanker-launch": "spacecraft",
   rendezvous: "spacecraft",
   "mars-orbit-insertion": "marsOrbit",
   "entry-descent-landing": "surface",

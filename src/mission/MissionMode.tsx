@@ -53,6 +53,7 @@ import { usePlayback } from "./usePlayback";
 import { usePlaybackShortcuts } from "./usePlaybackShortcuts";
 import { muteKeyName, pauseKeyName, speedKey } from "./playbackShortcuts";
 import { useSounds } from "./useSounds";
+import { useSteadyCamera } from "./useSteadyCamera";
 import { launchNow } from "./launch/launch";
 
 const MissionScene = lazy(() => import("./MissionScene"));
@@ -96,21 +97,14 @@ export function MissionMode({
   onTutorialOff,
 }: MissionModeProps) {
   const [sceneReady, setSceneReady] = useState(false);
-  const [launchDismissed, dismissLaunch] = useState(false);
-  // On a cold load the 3D bundle can take longer to arrive than the launch itself.
+  const [steadyCamera, toggleSteadyCamera] = useSteadyCamera();
   const playbackReady =
-    timeline.mission === null || sceneReady || launchDismissed;
-  const { state, setSpeed, pause, resume, skipToDecision } = usePlayback(
-    timeline,
-    initialSpeed,
-    onSpeedChange,
-    playbackReady,
-  );
+    sceneReady || (timeline.mission === null && !timeline.journeyHome);
+  const { state, setSpeed, pause, resume, skipToDecision, dismissScene } =
+    usePlayback(timeline, initialSpeed, onSpeedChange, playbackReady);
 
-  const { muted, setMuted } = useSounds(
-    timeline.entries,
-    state.entriesHappened,
-  );
+  const deciding = decisionPoint !== null && atDecisionPoint(state, timeline);
+  const { muted, setMuted } = useSounds(timeline.entries, state, deciding);
 
   const landingSequence = useMemo(
     () => landingSequenceOf(timeline),
@@ -143,6 +137,8 @@ export function MissionMode({
       ? null
       : spacecraftFallback(timeline.mission, state.day),
     (entryIndex) =>
+      (refuelling?.tankerLaunch.entryIndex === entryIndex &&
+        state.activeScene !== entryIndex) ||
       rendezvousHasPlayed(refuelling, state, entryIndex) ||
       homewardQuiet(homeward, state, entryIndex),
     homeward?.siteName ?? null,
@@ -157,11 +153,8 @@ export function MissionMode({
     if (state.finished) onFinished();
   }, [state.finished, onFinished]);
 
-  const deciding = decisionPoint !== null && atDecisionPoint(state, timeline);
   const launch =
-    !launchDismissed && !deciding && view === "solarSystem"
-      ? launchNow(timeline, state)
-      : null;
+    !deciding && view === "solarSystem" ? launchNow(timeline, state) : null;
   usePlaybackShortcuts({
     paused: state.paused,
     deciding,
@@ -192,6 +185,7 @@ export function MissionMode({
                 }
           }
           launch={launch}
+          steadyCamera={steadyCamera}
           timeline={timeline}
           day={state.day}
           view={view}
@@ -225,7 +219,8 @@ export function MissionMode({
                 unavailable={unavailable[id]}
                 onClick={() => {
                   chooseView(id);
-                  dismissLaunch(true);
+                  if (launch) dismissScene();
+                  setSceneReady(true);
                 }}
               >
                 {name}
@@ -305,16 +300,24 @@ export function MissionMode({
         />
       </header>
       <aside className="mission-side" data-testid="mission-info">
-        {launch && (
+        {state.activeScene !== null && (
           <button
             type="button"
             onClick={() => {
-              dismissLaunch(true);
+              dismissScene();
+              setSceneReady(true);
             }}
           >
-            Skip launch scene
+            {launch ? "Skip launch scene" : "Skip scene"}
           </button>
         )}
+        <button
+          type="button"
+          aria-pressed={steadyCamera}
+          onClick={toggleSteadyCamera}
+        >
+          Steady camera
+        </button>
         {journey !== null && (
           <p data-testid="journey-progress">
             <GameText>{journey}</GameText>
@@ -378,7 +381,6 @@ export function MissionMode({
           decisionPoint={decisionPoint}
           advice={decisionAdvice}
           onAnswer={(answer) => {
-            dismissLaunch(true);
             onAnswer(decisionPoint.id, answer);
           }}
         />

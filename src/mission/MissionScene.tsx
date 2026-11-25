@@ -45,6 +45,7 @@ import {
 
 interface MissionSceneProps {
   onFirstFrame: (() => void) | null;
+  steadyCamera: boolean;
   launch: LaunchNow | null;
   timeline: Timeline;
   day: number;
@@ -125,12 +126,14 @@ function Stars() {
  * Eases the camera to the view's shot. It counts real time, not game time, so that a move carries
  * on at the same pace at every speed and while paused.
  */
-function CameraRig({ shot }: { shot: CameraPose }) {
+function CameraRig({ shot, steady }: { shot: CameraPose; steady: boolean }) {
   const move = useRef(settledAt(shot));
   useFrame(({ camera, gl }, seconds) => {
     if (gl.domElement.dataset.launchFrame)
       delete gl.domElement.dataset.launchFrame;
-    if (move.current.to !== shot) move.current = headFor(move.current, shot);
+    if (steady) move.current = settledAt(shot);
+    else if (move.current.to !== shot)
+      move.current = headFor(move.current, shot);
     move.current = advanceMove(move.current, seconds * 1000);
     const { position, target } = poseDuring(move.current);
     camera.position.set(...position);
@@ -226,6 +229,7 @@ function spacecraftCloseUp(
 /** Mission Mode's 3D scene: one Canvas and one camera, holding every view. */
 export default function MissionScene({
   onFirstFrame,
+  steadyCamera,
   launch,
   timeline,
   day,
@@ -303,7 +307,7 @@ export default function MissionScene({
       <Canvas camera={{ position: [...solarSystemShot.position], fov: 45 }}>
         {onFirstFrame && <FirstFrame ready={onFirstFrame} />}
         {launch ? (
-          <LaunchScene launch={launch} />
+          <LaunchScene launch={launch} steadyCamera={steadyCamera} />
         ) : (
           <>
             <color attach="background" args={["#05060c"]} />
@@ -333,7 +337,10 @@ export default function MissionScene({
                 ascent={ascent}
               />
             )}
-            <CameraRig shot={showingSequence ? landingShot : shot} />
+            <CameraRig
+              steady={steadyCamera}
+              shot={showingSequence ? landingShot : shot}
+            />
             <LabelTracker labels={labels} layer={labelLayer} />
           </>
         )}

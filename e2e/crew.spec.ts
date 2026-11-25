@@ -357,14 +357,12 @@ test("loses the Crew in a failed launch, and sees the drop in Public Support in 
     "Amara Okafor and Lena Petrova were lost when Launch failed. Losing Crew costs 52 Public Support.",
   );
   await expect(lost).toHaveClass(/failed/);
-  // Losing Crew has a sound of its own, after the failure's.
-  expect((await soundsHeard(page)).map(([file]) => file)).toEqual([
-    "failure.wav",
-    "crew-lost.wav",
-  ]);
   expect(await termsWithoutTooltips(page)).toEqual([]);
-
   await page.getByRole("button", { name: "10x" }).click();
+  // Crew loss follows ignition and the visible breakup.
+  await expect
+    .poll(async () => (await soundsHeard(page)).map(([file]) => file))
+    .toEqual(["launch.wav", "failure.wav", "crew-lost.wav"]);
   const summary = page.getByTestId("turn-summary");
   await expect(summary.getByTestId("summary-crew-lost")).toContainText(
     "Amara Okafor and Lena Petrova were lost when Launch failed. Public Support lost: 52",

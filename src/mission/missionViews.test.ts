@@ -99,9 +99,11 @@ describe("which view a timeline entry asks for", () => {
     );
   });
 
-  it("asks for nothing at the tanker launch, as at launch", () => {
-    expect(viewAskedForBy(missionEvent("tanker-launch"))).toBeNull();
-    expect(viewAskedForBy(missionEvent("tanker-launch", "failure"))).toBeNull();
+  it("follows a successful or failed tanker launch into Earth orbit", () => {
+    expect(viewAskedForBy(missionEvent("tanker-launch"))).toBe("spacecraft");
+    expect(viewAskedForBy(missionEvent("tanker-launch", "failure"))).toBe(
+      "spacecraft",
+    );
   });
 
   it("asks for the solar system when a failure swings the Mission back to Earth", () => {
@@ -309,7 +311,8 @@ describe("the view for a moment that plays for a while", () => {
   ];
   const rendezvousIndex = 2;
   const playing = () => false;
-  const played = (entryIndex: number) => entryIndex === rendezvousIndex;
+  const played = (entryIndex: number) =>
+    entryIndex === 1 || entryIndex === rendezvousIndex;
 
   it("moves to the spacecraft for the rendezvous while it plays", () => {
     expect(currentView(entries, 4, startingChoice, playing)).toBe("spacecraft");

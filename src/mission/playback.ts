@@ -6,7 +6,13 @@ export const speeds = [1, 5, 10, 20] as const;
 /** The parts of a Timeline that decide how it plays. Its entries are in the order they happen. */
 export interface PlaybackTimeline {
   durationDays: number;
-  entries: readonly { day: number; title?: string }[];
+  entries: readonly {
+    day: number;
+    title?: string;
+    /** Real playing time reserved for this entry's animation. */
+    sceneMs?: number;
+    waitsForScene?: boolean;
+  }[];
   /** The day of the Decision Point it stops at, which play can't go past until it's answered. */
   decisionDay?: number | null;
 }
@@ -14,6 +20,7 @@ export interface PlaybackTimeline {
 /** How far through a Turn Mission Mode has got. Playback only displays a Timeline and can't change it. */
 export interface PlaybackState {
   day: number;
+  activeScene: number | null;
   /** The speed last chosen, which play resumes at and the next Turn starts at. */
   speed: number;
   /** Holds game time until the player chooses a speed. */
@@ -32,25 +39,58 @@ function atDay(
   timeline: PlaybackTimeline,
   day: number,
 ): PlaybackState {
-  const entriesHappened = timeline.entries.filter(
-    (entry) => entry.day <= day,
-  ).length;
-  const { entriesPlayedMs, playedMs } = state;
+  const deciding = atDecisionPoint({ day }, timeline);
+  let activeScene = state.activeScene;
+  let updatedTimes: number[] | undefined;
+  const stamp = (index: number, ms: number) => {
+    updatedTimes ??= [...state.entriesPlayedMs];
+    updatedTimes[index] = ms;
+  };
+  if (activeScene !== null) {
+    const duration = timeline.entries[activeScene]?.sceneMs ?? 0;
+    const elapsed = msSinceEntry(state, activeScene) ?? 0;
+    if (deciding && elapsed < duration)
+      stamp(activeScene, state.playedMs - duration);
+    if (deciding || elapsed >= duration) activeScene = null;
+  }
+
+  let shownDay = day;
+  for (
+    let index = state.entriesPlayedMs.length;
+    index < timeline.entries.length;
+    index++
+  ) {
+    const entry = timeline.entries[index];
+    if (!entry || entry.day > day) break;
+    const duration = entry.sceneMs ?? 0;
+    if (activeScene !== null && (duration > 0 || entry.waitsForScene)) {
+      // Resume the calendar here once the camera is free, without banking days behind a scene.
+      // Keep day-based assets on screen until their next event can actually play.
+      shownDay = Math.max(
+        state.day,
+        timeline.entries[index - 1]?.day ?? 0,
+        entry.day - 1,
+      );
+      break;
+    }
+    stamp(
+      index,
+      deciding && duration > 0 ? state.playedMs - duration : state.playedMs,
+    );
+    if (!deciding && duration > 0) activeScene = index;
+  }
+  const times = updatedTimes ?? state.entriesPlayedMs;
   return {
     ...state,
-    day,
-    entriesHappened,
-    entriesPlayedMs:
-      entriesHappened === entriesPlayedMs.length
-        ? entriesPlayedMs
-        : [
-            ...entriesPlayedMs,
-            ...Array.from(
-              { length: entriesHappened - entriesPlayedMs.length },
-              () => playedMs,
-            ),
-          ],
-    finished: day >= timeline.durationDays,
+    activeScene,
+    day: shownDay,
+    entriesHappened: times.length,
+    entriesPlayedMs: times,
+    finished:
+      !deciding &&
+      day >= timeline.durationDays &&
+      activeScene === null &&
+      times.length === timeline.entries.length,
   };
 }
 
@@ -61,6 +101,7 @@ export function startPlayback(
   return atDay(
     {
       day: 0,
+      activeScene: null,
       speed,
       paused: false,
       entriesHappened: 0,
@@ -117,18 +158,38 @@ export function continueOnTimeline(
       entry,
       playedMs: state.entriesPlayedMs[index] ?? state.playedMs,
     }));
-  const entriesPlayedMs = timeline.entries
-    .filter((entry) => entry.day <= state.day)
-    .map((entry) => {
-      const index = earlier.findIndex(
-        (seen) =>
-          seen.entry.day === entry.day && seen.entry.title === entry.title,
-      );
-      return index < 0
-        ? state.playedMs
-        : (earlier.splice(index, 1)[0]?.playedMs ?? state.playedMs);
-    });
-  return atDay({ ...state, entriesPlayedMs }, timeline, state.day);
+  const entriesPlayedMs: number[] = [];
+  for (const entry of timeline.entries) {
+    if (entry.day > state.day) break;
+    const index = earlier.findIndex(
+      (seen) =>
+        seen.entry.day === entry.day && seen.entry.title === entry.title,
+    );
+    if (index < 0 && entry.day === state.day && entry.sceneMs) break;
+    entriesPlayedMs.push(
+      index < 0
+        ? state.playedMs - (entry.sceneMs ?? 0)
+        : (earlier.splice(index, 1)[0]?.playedMs ?? state.playedMs),
+    );
+  }
+  return atDay(
+    { ...state, activeScene: null, entriesPlayedMs },
+    timeline,
+    state.day,
+  );
+}
+
+/** Retires just the visible scene. The next tick presents any waiting entry, even on the same day. */
+export function skipScene(
+  state: PlaybackState,
+  timeline: PlaybackTimeline,
+): PlaybackState {
+  const index = state.activeScene;
+  if (index === null) return state;
+  const entriesPlayedMs = [...state.entriesPlayedMs];
+  entriesPlayedMs[index] =
+    state.playedMs - (timeline.entries[index]?.sceneMs ?? 0);
+  return { ...state, activeScene: null, entriesPlayedMs };
 }
 
 /** Moves playback on by some real time. `timeScale` is the development-only setting. */

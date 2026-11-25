@@ -4,6 +4,8 @@ import { LaunchPad } from "./LaunchPad";
 import { MeridianRocket } from "./MeridianRocket";
 import { launchMotion, rocketProfile, type LaunchNow } from "./launch";
 
+import { launchIgnitionMs } from "./launchTiming";
+
 const padScale = 0.15;
 
 /** A pale horizon and high blue sky. Only the angle above the horizon changes their colour. */
@@ -35,7 +37,10 @@ function Sky() {
 }
 
 function Exhaust({ elapsedMs, radius }: { elapsedMs: number; radius: number }) {
-  const ignition = Math.min(1, Math.max(0, (elapsedMs - 1550) / 600));
+  const ignition = Math.min(
+    1,
+    Math.max(0, (elapsedMs - launchIgnitionMs) / 600),
+  );
   if (!ignition) return null;
   const length = ignition * (3.5 + 0.16 * Math.sin(elapsedMs / 55));
   return (
@@ -60,7 +65,7 @@ function Exhaust({ elapsedMs, radius }: { elapsedMs: number; radius: number }) {
 
 /** Steam spilling out to either side of the flame trench. All motion uses the pausable launch clock. */
 function TrenchSteam({ elapsedMs }: { elapsedMs: number }) {
-  const seconds = (elapsedMs - 1550) / 1000;
+  const seconds = (elapsedMs - launchIgnitionMs) / 1000;
   if (seconds <= 0 || seconds > 6) return null;
   return (
     <group>
@@ -93,14 +98,24 @@ function TrenchSteam({ elapsedMs }: { elapsedMs: number }) {
   );
 }
 
-export function LaunchScene({ launch }: { launch: LaunchNow }) {
+export function LaunchScene({
+  launch,
+  steadyCamera = false,
+}: {
+  launch: LaunchNow;
+  steadyCamera?: boolean;
+}) {
   const { rise, apart } = launchMotion(launch);
   const { radius } = rocketProfile(launch.vehicleId);
   useFrame(({ camera, gl }) => {
-    const follow = Math.max(0, rise - 1.8) * padScale;
+    const follow = steadyCamera ? 0 : Math.max(0, rise - 1.8) * padScale;
     camera.position.set(1.5, 0.65 + follow, 3.25);
     camera.lookAt(0, 1.1 + follow, 0);
     camera.updateMatrixWorld();
+    gl.domElement.dataset.cameraPosition = camera.position
+      .toArray()
+      .map((value) => value.toFixed(3))
+      .join(" ");
     const frame = apart > 0 ? "breakup" : rise > 0 ? "ascent" : "pad";
     if (gl.domElement.dataset.launchFrame !== frame)
       gl.domElement.dataset.launchFrame = frame;
