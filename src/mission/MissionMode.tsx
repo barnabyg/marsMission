@@ -27,6 +27,7 @@ import {
   surfaceUnavailableReason,
 } from "./surface/SurfaceControls";
 import {
+  msSinceJourneyLoss,
   solarParticleEventShowing,
   spacecraftFallback,
   spacecraftHasSomethingToShow,
@@ -193,6 +194,8 @@ export function MissionMode({
           sequence={sequence}
           ascent={ascent}
           particles={particles}
+          playedSeconds={state.playedMs / 1000}
+          lossSeconds={(msSinceJourneyLoss(timeline, state) ?? 0) / 1000}
           earthOrbit={earthOrbit}
           marsRendezvous={marsRendezvous}
           earthEntry={earthEntry}

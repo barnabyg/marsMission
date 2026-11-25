@@ -58,6 +58,8 @@ interface MissionSceneProps {
   ascent: AscentNow | null;
   /** Whether a solar particle event is sweeping past the Mission. */
   particles: boolean;
+  playedSeconds: number;
+  lossSeconds: number;
   /** The Mission in Earth orbit for Orbital refuelling, which the spacecraft view shows instead while it's there. */
   earthOrbit: EarthOrbitNow | null;
   /** The rendezvous in Mars orbit on the way home, while it plays, which the spacecraft view shows instead. */
@@ -238,6 +240,8 @@ export default function MissionScene({
   sequence,
   ascent,
   particles,
+  playedSeconds,
+  lossSeconds,
   earthOrbit,
   marsRendezvous,
   earthEntry,
@@ -323,6 +327,8 @@ export default function MissionScene({
                 timeline={timeline}
                 day={day}
                 particles={particles}
+                playedSeconds={playedSeconds}
+                lossSeconds={lossSeconds}
               />
             )}
             <EarthOrbitScene timeline={timeline} now={earthOrbit} />
@@ -333,6 +339,7 @@ export default function MissionScene({
                 timeline={timeline}
                 day={day}
                 siteName={lastSite}
+                playedSeconds={playedSeconds}
                 sequence={sequence}
                 ascent={ascent}
               />

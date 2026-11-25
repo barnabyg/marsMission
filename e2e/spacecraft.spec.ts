@@ -152,8 +152,15 @@ for (const reachedBy of ["10x", "Skip to Decision Point"] as const) {
     );
     expect(await termsWithoutTooltips(page)).toEqual([]);
 
+    const canvas = scene(page).locator("canvas");
+    await expect(canvas).toHaveAttribute(
+      "data-camera-position",
+      spacecraftCamera,
+    );
+    const heldFrame = await canvas.screenshot();
     // Waiting for an answer holds it all, for as long as it takes: here a second longer than the event shows for.
     await page.waitForTimeout(particlesShownMs / sequenceTimeScale + 1000);
+    expect((await canvas.screenshot()).equals(heldFrame)).toBe(true);
     await expect(currentView(page)).toHaveText("Spacecraft");
     await expect(scene(page)).toHaveAttribute(
       "data-solar-particle-event",
@@ -191,8 +198,15 @@ test("moves to the spacecraft view when the transfer burn fails, and then on to 
   await expect(carried(page)).toHaveCount(0);
   expect(await termsWithoutTooltips(page)).toEqual([]);
 
+  const canvas = scene(page).locator("canvas");
+  await expect(canvas).toHaveAttribute(
+    "data-camera-position",
+    spacecraftCamera,
+  );
+  const heldFrame = await canvas.screenshot();
   // Pausing holds it on screen, here for a second longer than it shows for.
   await page.waitForTimeout(lossShownMs / sequenceTimeScale + 1000);
+  expect((await canvas.screenshot()).equals(heldFrame)).toBe(true);
   await expect(currentView(page)).toHaveText("Spacecraft");
 
   await page.getByRole("button", { name: "1x" }).click();

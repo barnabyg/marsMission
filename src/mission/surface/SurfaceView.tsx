@@ -138,12 +138,14 @@ function Crash({
 /** A Landing Site with the Assets operating there. It can't change anything, because it only reads the Timeline. */
 export function SurfaceScene({
   timeline,
+  playedSeconds,
   day,
   siteName,
   sequence,
   ascent,
 }: {
   timeline: Pick<Timeline, "assetsAtMars" | "dustStorms">;
+  playedSeconds: number;
   day: number;
   siteName: string;
   sequence: SequenceNow | null;
@@ -193,7 +195,9 @@ export function SurfaceScene({
       {ascent?.sequence.siteName === siteName && (
         <AscentAtSite ascent={ascent} siteName={siteName} />
       )}
-      {dustStormAt(timeline, day, siteName) && <DustStormEffect />}
+      {dustStormAt(timeline, day, siteName) && (
+        <DustStormEffect seconds={playedSeconds} />
+      )}
       {sequenceRunning(here) && (
         <SequenceParticles
           sequence={here.sequence}
