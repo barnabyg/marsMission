@@ -1,6 +1,6 @@
 import { catalogueFileNames, type Catalogue } from "./schemas";
 
-/** Reliability costs more and fails less at each level up, and the Risk Bands cover every failure probability. */
+/** Reliability costs more and fails strictly less at each level up, and the Risk Bands cover every failure probability. */
 export function reliabilityProblems({
   reliabilityLevels,
   riskBands,
@@ -14,9 +14,10 @@ export function reliabilityProblems({
         `${catalogueFileNames.reliabilityLevels}: "${level.id}" costs less than "${lower.id}", the level below it`,
       );
     }
-    if (level.failureMultiplier > lower.failureMultiplier) {
+    // Strictly less, as Planning Mode tells the player a dearer level in the same Risk Band still lowers the chance.
+    if (level.failureMultiplier >= lower.failureMultiplier) {
       problems.push(
-        `${catalogueFileNames.reliabilityLevels}: "${level.id}" has a higher failure probability than "${lower.id}", the level below it`,
+        `${catalogueFileNames.reliabilityLevels}: "${level.id}" doesn't fail less often than "${lower.id}", the level below it`,
       );
     }
   });

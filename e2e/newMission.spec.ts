@@ -202,6 +202,22 @@ test("buys Reliability, sees the risk band and cost change, and launches", async
   const bandBefore = await band.textContent();
   const costBefore = await page.getByTestId("mission-cost").textContent();
   await expect(insertion.getByRole("combobox")).toHaveValue("none");
+  // The step says its figures already count the Reliability chosen, and a select's tooltip gives every level's.
+  await expect(
+    page.getByText(
+      "A risk with a Reliability choice is the chance of failing with the one chosen.",
+      { exact: false },
+    ),
+  ).toBeVisible();
+  await insertion.getByRole("combobox").hover();
+  const anyBand = "(~\\d+%|Over \\d+%)";
+  await expect(page.getByRole("tooltip")).toContainText("Reliability");
+  await expect(page.getByTestId("tooltip-detail")).toHaveText(
+    new RegExp(
+      `^Mars orbit insertion with each level: None ${anyBand} · Tested ${anyBand} · Redundant ${anyBand}\\.`,
+    ),
+  );
+  await page.mouse.move(0, 0);
 
   await insertion.getByRole("combobox").selectOption("redundant");
   await expect(band).not.toHaveText(bandBefore ?? "");

@@ -6,6 +6,7 @@ import {
 
 type PlannedMissionEvent = ReturnType<Simulation["previewMission"]>[number];
 import { GameText } from "../ui/GameText";
+import { contingencyLabel, reliabilityDetail } from "./riskWording";
 
 interface MissionEventChoicesProps {
   plannedEvents: ReturnType<Simulation["previewMission"]>;
@@ -18,7 +19,7 @@ interface MissionEventChoicesProps {
 
 /**
  * Reliability levels as a list shows them: each one's name and cost. The Risk Band the chosen one leaves is beside the
- * list, so the options don't say it again.
+ * list, so the options don't say it again, and every level's is in the select's tooltip (`reliabilityDetail`).
  */
 function ReliabilityOptions({
   levels,
@@ -30,21 +31,6 @@ function ReliabilityOptions({
       {level.name} ({formatMoney(level.costMillions)})
     </option>
   ));
-}
-
-/** What a Contingency costs and its Risk Band if used, after its name: "Kick stage · $60M · 0.3 t · ~20% if used". */
-function contingencyLabel({
-  name,
-  costMillions,
-  massTonnes,
-  riskBand,
-}: NonNullable<PlannedMissionEvent["contingency"]>): string {
-  return [
-    name,
-    formatMoney(costMillions),
-    `${massTonnes} t`,
-    `${riskBand} if used`,
-  ].join(" · ");
 }
 
 /** Over a list of Mission Events, naming the Contingency once rather than in each one's label, if any offers one. */
@@ -79,6 +65,9 @@ export function MissionEventChoices({
       </strong>
       <select
         aria-label={`Reliability for ${event.name}`}
+        // An option can't hold a tooltip, so what each level would leave is on the whole choice.
+        data-term="Reliability"
+        data-detail={reliabilityDetail(event.name, event.reliabilityLevels)}
         value={event.reliabilityLevelId}
         onChange={(change) => {
           onReliabilityChange(event.eventId, change.target.value);
@@ -89,7 +78,9 @@ export function MissionEventChoices({
       {event.contingency && (
         <label
           className="contingency-choice"
-          title={event.contingency.description}
+          // The game's tooltip, which hovering or focusing the tick box shows, rather than a title only a mouse reaches.
+          data-term="Contingency"
+          data-detail={event.contingency.description}
         >
           <input
             type="checkbox"
@@ -150,6 +141,12 @@ export function MissionEventChoices({
                 </strong>
                 <select
                   aria-label={`Reliability for ${asset.name} in service`}
+                  data-term="Reliability"
+                  data-detail={reliabilityDetail(
+                    `${asset.name} in service`,
+                    asset.reliabilityLevels,
+                    "a Turn",
+                  )}
                   value={asset.reliabilityLevelId}
                   onChange={(change) => {
                     onAssetReliabilityChange(

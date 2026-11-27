@@ -270,6 +270,14 @@ describe("invalid data files", () => {
       ],
     ],
     [
+      // Planning Mode tells the player a dearer level in the same Risk Band still lowers the chance.
+      "a higher level fails as often as the one below",
+      [
+        { id: "a", name: "A", costMillions: 0, failureMultiplier: 0.5 },
+        { id: "b", name: "B", costMillions: 50, failureMultiplier: 0.5 },
+      ],
+    ],
+    [
       "a level raises the failure probability above the Mission Event's own",
       [{ id: "a", name: "A", costMillions: 0, failureMultiplier: 1.5 }],
     ],

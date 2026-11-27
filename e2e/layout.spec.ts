@@ -198,7 +198,7 @@ for (const size of screenSizes) {
       await openBusyProgram(page, { colossusBuilt: true });
       await chooseEveryAsset(page);
       const contingencies = page.getByRole("checkbox", {
-        name: / if used$/,
+        name: / chance it fails too$/,
       });
       await expect(contingencies.first()).toBeVisible();
       for (const contingency of await contingencies.all()) {
@@ -236,7 +236,7 @@ for (const size of screenSizes) {
         page.getByTestId("mission-event").filter({ hasText: "Rendezvous" }),
       ).toBeVisible();
       for (const contingency of await page
-        .getByRole("checkbox", { name: / if used$/ })
+        .getByRole("checkbox", { name: / chance it fails too$/ })
         .all()) {
         await contingency.check();
       }
