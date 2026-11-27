@@ -6,7 +6,7 @@ import {
 
 type PlannedMissionEvent = ReturnType<Simulation["previewMission"]>[number];
 import { GameText } from "../ui/GameText";
-import { reliabilityDetail } from "./riskWording";
+import { contingencyLabel, reliabilityDetail } from "./riskWording";
 
 interface MissionEventChoicesProps {
   plannedEvents: ReturnType<Simulation["previewMission"]>;
@@ -31,21 +31,6 @@ function ReliabilityOptions({
       {level.name} ({formatMoney(level.costMillions)})
     </option>
   ));
-}
-
-/** What a Contingency costs and its Risk Band if used, after its name: "Kick stage · $60M · 0.3 t · ~20% if used". */
-function contingencyLabel({
-  name,
-  costMillions,
-  massTonnes,
-  riskBand,
-}: NonNullable<PlannedMissionEvent["contingency"]>): string {
-  return [
-    name,
-    formatMoney(costMillions),
-    `${massTonnes} t`,
-    `${riskBand} if used`,
-  ].join(" · ");
 }
 
 /** Over a list of Mission Events, naming the Contingency once rather than in each one's label, if any offers one. */
@@ -93,7 +78,9 @@ export function MissionEventChoices({
       {event.contingency && (
         <label
           className="contingency-choice"
-          title={event.contingency.description}
+          // The game's tooltip, which hovering or focusing the tick box shows, rather than a title only a mouse reaches.
+          data-term="Contingency"
+          data-detail={event.contingency.description}
         >
           <input
             type="checkbox"

@@ -236,7 +236,7 @@ Safety Margin that lowers the chance of a Mission Event or an Asset failing, suc
 _Avoid_: Quality
 
 **Contingency**:
-Safety Margin that changes the outcome when a Mission Event fails, such as an escape module or abort fuel.
+Safety Margin that changes the outcome when a Mission Event fails, such as an escape module or abort fuel. Using it is a second try, with a Risk Band of its own for that try failing, and a failed second try costs more Public Support than the failure alone.
 _Avoid_: Backup, fallback
 
 **Protection**:

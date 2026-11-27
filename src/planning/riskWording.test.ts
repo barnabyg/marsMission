@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reliabilityDetail } from "./riskWording";
+import { contingencyLabel, reliabilityDetail } from "./riskWording";
 
 const level = (name: string, riskBand: string) => ({
   id: name.toLowerCase(),
@@ -29,5 +29,26 @@ describe("reliabilityDetail", () => {
     ).toBe(
       "Mars orbit insertion with each level: None ~10% · Tested ~5% · Redundant ~5%. Risk Bands are rough, so a level in the same band as a cheaper one still lowers the chance within it.",
     );
+  });
+});
+
+describe("contingencyLabel", () => {
+  it("gives the cost and mass, and its Risk Band as the chance the second try fails", () => {
+    expect(
+      contingencyLabel({
+        name: "Kick stage",
+        costMillions: 60,
+        massTonnes: 0.3,
+        riskBand: "~20%",
+      }),
+    ).toBe("Kick stage · $60M · 0.3 t · ~20% chance it fails too");
+    expect(
+      contingencyLabel({
+        name: "Reserve fuel",
+        costMillions: 80,
+        massTonnes: 0.2,
+        riskBand: "Over 30%",
+      }),
+    ).toBe("Reserve fuel · $80M · 0.2 t · Over 30% chance it fails too");
   });
 });

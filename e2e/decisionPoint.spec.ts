@@ -42,13 +42,22 @@ test("Planning Mode offers Reserve fuel only for a Mission with Mars orbit inser
   const reserveFuel = page.getByRole("checkbox", { name: /Reserve fuel/ });
   await expect(page.getByTestId("mission-cost")).toHaveText("$1B");
   await expect(page.getByTestId("mission-mass")).toHaveText("2.5 of 4 tonnes");
-  // The Contingency is named once, over the list, and its label says what it costs and its Risk Band if used.
+  // The Contingency is named once, over the list, and its label says what it costs and the chance its second try fails.
   await expect(
     page.getByText("On the way, once each, with a Contingency for some"),
   ).toBeVisible();
   await expect(reserveFuel).toHaveAccessibleName(
-    /^Reserve fuel · \$80M · 0\.2 t · (~\d+%|Over \d+%) if used$/,
+    /^Reserve fuel · \$80M · 0\.2 t · (~\d+%|Over \d+%) chance it fails too$/,
   );
+  // What it does is in the game's tooltip, which a keyboard reaches by focusing the tick box.
+  // The pointer is moved off the ticked Asset card first, so that no hover tooltip takes the focused one's place.
+  await page.mouse.move(0, 0);
+  await reserveFuel.focus();
+  await expect(page.getByRole("tooltip")).toContainText(
+    "If the Contingency's second try fails too",
+  );
+  await expect(page.getByTestId("tooltip-detail")).not.toBeEmpty();
+  await page.keyboard.press("Tab");
   // Each Reliability is its name and cost; the Risk Band it leaves is beside the choice, and said only there.
   const insertion = page
     .getByTestId("mission-event")

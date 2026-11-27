@@ -1,3 +1,5 @@
+import { formatMoney } from "../simulation/simulation";
+
 /**
  * The words step 4 of New Mission puts round its risks: what each Reliability level would leave, for the tooltip on
  * its select, and what a Contingency's own Risk Band means.
@@ -30,4 +32,27 @@ export function reliabilityDetail(
         ]
       : []),
   ].join(" ");
+}
+
+interface ContingencyOffer {
+  name: string;
+  costMillions: number;
+  massTonnes: number;
+  /** The Risk Band of the second try failing too, if the Mission Event fails and the Contingency is used. */
+  riskBand: string;
+}
+
+/** A Contingency's label: "Kick stage · $60M · 0.3 t · ~20% chance it fails too". */
+export function contingencyLabel({
+  name,
+  costMillions,
+  massTonnes,
+  riskBand,
+}: ContingencyOffer): string {
+  return [
+    name,
+    formatMoney(costMillions),
+    `${String(massTonnes)} t`,
+    `${riskBand} chance it fails too`,
+  ].join(" · ");
 }

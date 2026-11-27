@@ -119,7 +119,7 @@ export const tooltips = {
   Reliability:
     "Safety Margin that lowers the chance of a Mission Event or an Asset failing, such as testing or redundancy.",
   Contingency:
-    "Safety Margin that changes the outcome when a Mission Event fails, such as an escape module or abort fuel.",
+    "Safety Margin that changes the outcome when a Mission Event fails, such as an escape module or abort fuel. Using it is a second try when the Mission Event fails, and its Risk Band is the chance that try fails. If the Contingency's second try fails too, the Mission Event fails as it would have, and costs more Public Support.",
   Protection:
     "Safety Margin that slows the Health Crew lose to radiation, such as radiation shielding. It is bought for a Crewed Mission as a whole, at a cost in money and mass, and works on the way to Mars, in a solar particle event and at Mars, where it stays with the Crew.",
   Hazard:

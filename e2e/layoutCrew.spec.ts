@@ -28,7 +28,7 @@ for (const size of screenSizes) {
         .selectOption("protection-light-shielding");
       await chooseAssets(page, ["Prospector Lander"]);
       for (const contingency of await page
-        .getByRole("checkbox", { name: / if used$/ })
+        .getByRole("checkbox", { name: / chance it fails too$/ })
         .all()) {
         await contingency.check();
       }
@@ -69,7 +69,7 @@ for (const size of screenSizes) {
         .selectOption("protection-light-shielding");
       await chooseAssets(page, ["Prospector Lander"]);
       for (const contingency of await page
-        .getByRole("checkbox", { name: / if used$/ })
+        .getByRole("checkbox", { name: / chance it fails too$/ })
         .all()) {
         await contingency.check();
       }
@@ -115,7 +115,7 @@ for (const size of screenSizes) {
         page.getByTestId("homeward-events").getByTestId("mission-event"),
       ).toHaveCount(2);
       for (const contingency of await page
-        .getByRole("checkbox", { name: / if used$/ })
+        .getByRole("checkbox", { name: / chance it fails too$/ })
         .all()) {
         await contingency.check();
       }
