@@ -204,7 +204,10 @@ test("buys Reliability, sees the risk band and cost change, and launches", async
   await expect(insertion.getByRole("combobox")).toHaveValue("none");
   // The step says its figures already count the Reliability chosen, and a select's tooltip gives every level's.
   await expect(
-    page.getByText("as the chance of failing with the Reliability chosen"),
+    page.getByText(
+      "A risk with a Reliability choice is the chance of failing with the one chosen.",
+      { exact: false },
+    ),
   ).toBeVisible();
   await insertion.getByRole("combobox").hover();
   const anyBand = "(~\\d+%|Over \\d+%)";

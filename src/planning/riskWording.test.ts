@@ -19,6 +19,22 @@ describe("reliabilityDetail", () => {
     ).toBe("Launch with each level: None ~5% · Tested ~2% · Redundant ~1%.");
   });
 
+  it("says how often an Asset's risk in service comes round", () => {
+    expect(
+      reliabilityDetail(
+        "Pathfinder Orbiter in service",
+        [
+          level("None", "~10%"),
+          level("Tested", "~5%"),
+          level("Redundant", "~2%"),
+        ],
+        "a Turn",
+      ),
+    ).toBe(
+      "Pathfinder Orbiter in service with each level: None ~10% · Tested ~5% · Redundant ~2%, a Turn.",
+    );
+  });
+
   it("says a level that leaves the same band still lowers the chance, as bands are rough", () => {
     expect(
       reliabilityDetail("Mars orbit insertion", [

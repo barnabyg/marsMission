@@ -143,8 +143,9 @@ export function MissionEventChoices({
                   aria-label={`Reliability for ${asset.name} in service`}
                   data-term="Reliability"
                   data-detail={reliabilityDetail(
-                    `${asset.name} in service, each Turn,`,
+                    `${asset.name} in service`,
                     asset.reliabilityLevels,
+                    "a Turn",
                   )}
                   value={asset.reliabilityLevelId}
                   onChange={(change) => {

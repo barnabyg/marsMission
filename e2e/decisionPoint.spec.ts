@@ -57,6 +57,7 @@ test("Planning Mode offers Reserve fuel only for a Mission with Mars orbit inser
     "If the Contingency's second try fails too",
   );
   await expect(page.getByTestId("tooltip-detail")).not.toBeEmpty();
+  // Moves focus on, which hides the tooltip before the next checks.
   await page.keyboard.press("Tab");
   // Each Reliability is its name and cost; the Risk Band it leaves is beside the choice, and said only there.
   const insertion = page

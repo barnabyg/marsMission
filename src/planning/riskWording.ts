@@ -17,6 +17,8 @@ interface LevelBand {
 export function reliabilityDetail(
   subject: string,
   levels: readonly LevelBand[],
+  /** How often the risk comes round, such as "a Turn" for an Asset in service, when it isn't once. */
+  each?: string,
 ): string {
   const bands = levels.map(({ name, riskBand }) => `${name} ${riskBand}`);
   const sharesABand = levels.some(
@@ -24,7 +26,7 @@ export function reliabilityDetail(
       index > 0 && levels[index - 1]?.riskBand === riskBand,
   );
   return [
-    `${subject} with each level: ${bands.join(" · ")}.`,
+    `${subject} with each level: ${bands.join(" · ")}${each ? `, ${each}` : ""}.`,
     // Every level multiplies the chance by less than the one before, so one that leaves the band still pays.
     ...(sharesABand
       ? [
