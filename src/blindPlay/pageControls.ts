@@ -68,7 +68,9 @@ export function findPageControls(): PageControls {
   let next = 0;
   const tag = (element: Element) => {
     const id = String(next++);
-    element.setAttribute("data-blind-id", id);
+    // A list, as one element can be both a control and a game term, such as an Activity's select.
+    const ids = element.getAttribute("data-blind-id");
+    element.setAttribute("data-blind-id", ids ? `${ids} ${id}` : id);
     return id;
   };
   for (const element of document.querySelectorAll("[data-blind-id]")) {

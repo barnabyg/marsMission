@@ -186,7 +186,7 @@ export function createBrowserGame(
     }
     const before = last;
     const element =
-      target === null ? null : page.locator(`[data-blind-id="${target.id}"]`);
+      target === null ? null : page.locator(`[data-blind-id~="${target.id}"]`);
     try {
       if (action.kind === "hover" && element) {
         await element.hover({ timeout: 5_000 });

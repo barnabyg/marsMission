@@ -49,6 +49,15 @@ test("blind play reads the screen as a player sees it and acts on it", async ({
   const ticked = await game.act(action(planning, 'Tick "Pathfinder Orbiter"'));
   expect(ticked).toContain('checkbox "Pathfinder Orbiter" [checked]');
   const plan = await game.read();
+  // An Activity's select is a game term as well as a control, and works as both.
+  expect(
+    await game.act(
+      action(
+        plan,
+        'Set "Activity for Pathfinder Orbiter" to "Orbital research"',
+      ),
+    ),
+  ).toContain('option "Orbital research" [selected]');
   expect(plan.actions.map((offered) => offered.label)).toContain(
     'Untick "Pathfinder Orbiter"',
   );
