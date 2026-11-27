@@ -4,6 +4,7 @@
     "scripts/*.mjs",
     "e2e/journeyScenarios.ts",
     "src/balance/gamebenchMetrics.ts",
+    "src/blindPlay/run.ts",
     "src/mission/assetArt/AssetArt.tsx",
     "src/mission/launch/LaunchReview.tsx",
     "src/mission/surfaceBench/SurfaceBench.tsx"

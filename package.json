@@ -20,6 +20,7 @@
     "verify": "node scripts/verify.mjs",
     "balance": "node scripts/balance.mjs",
     "metrics": "node scripts/balance.mjs --metrics",
+    "blind-play": "node scripts/blind-play.mjs",
     "secrets": "secretlint \"**/*\" --secretlintignore .gitignore"
   },
   "dependencies": {
