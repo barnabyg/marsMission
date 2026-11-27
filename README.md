@@ -38,6 +38,7 @@ The Simulation holds all the rules and knows nothing about the browser. Everythi
 
 - `src/app`: The App component that moves between screens and connects them to the Simulation, start-up, the base styles (`styles.css`): the type scale every font size comes from, the tokens for colours, corners, padding and surfaces that every other style file uses rather than writing a value out, which `styleTokens.test.ts` checks, the shared classes for a muted sub-heading, an unstyled list, a small or large button and the two shapes of tag (a pill for a status, an uppercase label for a category), and the hover, press and focus styles of every control, the bundled heading font (`fonts`, with its source and licence in `fonts/SOURCES.md`), and the order every style file loads in (`main.tsx`)
 - `src/balance`: Balance runs: strategies that play whole Programs through the Simulation, the checks for invalid states and the report (see [Balance runs](docs/develop/balance-runs.md))
+- `src/blindPlay`: Blind play, a live model playing the game in a browser as a first-time player and keeping a journal, run only when asked for (see [Blind play](docs/develop/blind-play.md))
 - `src/catalogue`: The Catalogue: parses and validates the data files in `public/data`, which `src/app` fetches. Also the tests of the tuned balance and of the current playtest guide's known seeds (see [The Catalogue's files](docs/develop/catalogue.md))
 - `src/mission`: Mission Mode and the Turn summary:
   - `MissionMode.tsx` puts Mission Mode together, and `MissionScene.tsx` draws the view showing. `missionViews.ts` lists the views and decides which one shows when, kept by `useMissionView.ts`. Playback is `playback.ts` with `usePlayback.ts`, and its keyboard shortcuts `playbackShortcuts.ts` with `usePlaybackShortcuts.ts`, and `DecisionPointPanel.tsx` holds the Turn at a Decision Point, with Tutorial mode's suggestion in the Decision Point panel
@@ -83,14 +84,15 @@ A ticket that only changes a screen or dialog starts from its component in `src/
 
 A balance change starts in `public/data` and is judged by comparing `npm.cmd run balance` reports from before and after. [Balance runs](docs/develop/balance-runs.md#what-a-balance-change-reaches) lists the tests, guides and strategies it usually reaches too.
 
-| Command                | What it does                                                   |
-| ---------------------- | -------------------------------------------------------------- |
-| `npm.cmd run dev`      | Starts the development server                                  |
-| `npm.cmd test`         | Runs every test that doesn't need a browser                    |
-| `npm.cmd run test:e2e` | Runs the browser tests, at 3840×2160 or 1920×1080              |
-| `npm.cmd run verify`   | Runs every check (the canonical verification)                  |
-| `npm.cmd run balance`  | Plays thousands of Programs and prints a report on the balance |
-| `npm.cmd run metrics`  | Writes the gameBench balance metrics to `metrics.json`         |
+| Command                                         | What it does                                                        |
+| ----------------------------------------------- | ------------------------------------------------------------------- |
+| `npm.cmd run dev`                               | Starts the development server                                       |
+| `npm.cmd test`                                  | Runs every test that doesn't need a browser                         |
+| `npm.cmd run test:e2e`                          | Runs the browser tests, at 3840×2160 or 1920×1080                   |
+| `npm.cmd run verify`                            | Runs every check (the canonical verification)                       |
+| `npm.cmd run balance`                           | Plays thousands of Programs and prints a report on the balance      |
+| `npm.cmd run metrics`                           | Writes the gameBench balance metrics to `metrics.json`              |
+| `npm.cmd run blind-play -- --model <id> --live` | Has a model play the game as a first-time player and keep a journal |
 
 No source, test, script or style file is over 500 lines, so that each can be read whole. ESLint's `max-lines` rule enforces this for TypeScript and scripts, and `src/app/styleTokens.test.ts` for CSS. It doesn't cover `package-lock.json`, the data files in `public/data`, the generated art and sounds in `public`, or Markdown. When a file nears the limit, split it at a natural seam, such as by subject for tests or by screen for styles. A new style file is imported from `src/app/main.tsx`, in cascade order.
 

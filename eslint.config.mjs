@@ -4,7 +4,9 @@ import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/", "test-results/", "playwright-report/"] },
+  {
+    ignores: ["dist/", "test-results/", "playwright-report/", ".scratch/"],
+  },
   js.configs.recommended,
   {
     // The README's Develop section states this limit. CSS isn't linted, so it keeps to it by hand.
