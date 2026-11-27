@@ -78,7 +78,7 @@ export function missionSteps({
     {
       number: 4,
       title: "Mission Events, Reliability and Contingency",
-      note: "Every risk, on the way and in service at Mars, and what is bought against it.",
+      note: "Every risk, on the way and in service at Mars, as the chance of failing with the Reliability chosen, and what is bought against it.",
       collapsedBecause: nothingTicked
         ? "Opens once the Mission carries an Asset or Crew."
         : null,

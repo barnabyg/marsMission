@@ -6,6 +6,7 @@ import {
 
 type PlannedMissionEvent = ReturnType<Simulation["previewMission"]>[number];
 import { GameText } from "../ui/GameText";
+import { reliabilityDetail } from "./riskWording";
 
 interface MissionEventChoicesProps {
   plannedEvents: ReturnType<Simulation["previewMission"]>;
@@ -18,7 +19,7 @@ interface MissionEventChoicesProps {
 
 /**
  * Reliability levels as a list shows them: each one's name and cost. The Risk Band the chosen one leaves is beside the
- * list, so the options don't say it again.
+ * list, so the options don't say it again, and every level's is in the select's tooltip (`reliabilityDetail`).
  */
 function ReliabilityOptions({
   levels,
@@ -79,6 +80,9 @@ export function MissionEventChoices({
       </strong>
       <select
         aria-label={`Reliability for ${event.name}`}
+        // An option can't hold a tooltip, so what each level would leave is on the whole choice.
+        data-term="Reliability"
+        data-detail={reliabilityDetail(event.name, event.reliabilityLevels)}
         value={event.reliabilityLevelId}
         onChange={(change) => {
           onReliabilityChange(event.eventId, change.target.value);
@@ -150,6 +154,11 @@ export function MissionEventChoices({
                 </strong>
                 <select
                   aria-label={`Reliability for ${asset.name} in service`}
+                  data-term="Reliability"
+                  data-detail={reliabilityDetail(
+                    `${asset.name} in service, each Turn,`,
+                    asset.reliabilityLevels,
+                  )}
                   value={asset.reliabilityLevelId}
                   onChange={(change) => {
                     onAssetReliabilityChange(
