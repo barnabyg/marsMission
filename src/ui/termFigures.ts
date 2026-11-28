@@ -26,15 +26,19 @@ export function termFigures(catalogue: Catalogue): TermFigures {
 function reliabilityFigures(
   levels: Catalogue["reliabilityLevels"],
 ): string | undefined {
-  const parts = levels
+  const [first, ...rest] = levels
     .filter(({ failureMultiplier }) => failureMultiplier < 1)
-    .map(
-      ({ name, failureMultiplier }, index) =>
-        `${name} ${index === 0 ? "leaves " : ""}${String(Math.round(failureMultiplier * 100))}%${index === 0 ? " of the chance of failing" : ""}`,
-    );
-  const last = parts.pop();
-  if (last === undefined) return undefined;
-  return parts.length > 0 ? `${parts.join(", ")}, and ${last}.` : `${last}.`;
+    .map(({ name, failureMultiplier }) => ({
+      name,
+      percent: `${String(Math.round(failureMultiplier * 100))}%`,
+    }));
+  if (!first) return undefined;
+  const lead = `${first.name} leaves ${first.percent} of the chance of failing`;
+  const others = rest.map(({ name, percent }) => `${name} ${percent}`);
+  const last = others.pop();
+  return last === undefined
+    ? `${lead}.`
+    : `${[lead, ...others].join(", ")}, and ${last}.`;
 }
 
 /** What a term means, as its tooltip and the Glossary give it: its definition, then any figures the Catalogue adds. */

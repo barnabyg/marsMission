@@ -68,34 +68,28 @@ function inServiceFailureDay(
   return 1 + Math.floor(dayRoll * (limitDay - 1));
 }
 
+/** A date after any an Asset arrives on, for one the Mission sent that never got there. */
+const neverArrived = "9999-12-31";
+
 /**
- * How the Turn names each Asset at Mars, numbered among those of its kind there as the Turn starts and every one the
- * Mission is sending, whether or not it gets there. So the names don't change with how a Decision Point is answered,
- * and those already there keep the numbers Operating at Mars showed them with, as they arrived first.
+ * How the Turn names each Asset at Mars, in the order given: numbered among those of its kind there as the Turn starts
+ * and every one the Mission is sending, whether or not it gets there. So the names don't change with how a Decision
+ * Point is answered, and those already there keep the numbers Operating at Mars showed them with, as they arrived first.
  */
 function turnLabels(
   catalogue: Catalogue,
-  program: Program,
   plan: TurnPlan,
-): { there: string[]; sent: Map<string, string> } {
-  const sending = (plan.mission?.assetIds ?? []).map((assetId) => ({
-    assetId,
-    name: catalogue.assets.find(({ id }) => id === assetId)?.name ?? assetId,
-    // After all those there now, whenever it arrives.
-    arrivedOn: "￿",
-  }));
-  const there = program.operatingAssets.length;
-  const labels = labelsFor([...program.operatingAssets, ...sending]);
-  return {
-    there: labels.slice(0, there),
-    // Only one of each Asset flies on a Mission.
-    sent: new Map(
-      sending.map(({ assetId, name }, index) => [
-        assetId,
-        labels[there + index] ?? name,
-      ]),
-    ),
-  };
+  atMars: readonly { assetId: string; name: string; arrivedOn: string }[],
+  deliveredIds: ReadonlySet<string>,
+): string[] {
+  const lost = (plan.mission?.assetIds ?? [])
+    .filter((assetId) => !deliveredIds.has(assetId))
+    .map((assetId) => ({
+      assetId,
+      name: catalogue.assets.find(({ id }) => id === assetId)?.name ?? assetId,
+      arrivedOn: neverArrived,
+    }));
+  return labelsFor([...atMars, ...lost]).slice(0, atMars.length);
 }
 
 /** Works out when each Asset at Mars stops operating this Turn, because its Service Life has ended or it has failed. */
@@ -152,12 +146,14 @@ export function operateAssets(
     })),
     ...delivered,
   ];
-  const labels = turnLabels(catalogue, program, plan);
+  const labels = turnLabels(
+    catalogue,
+    plan,
+    all.map(({ asset }) => asset),
+    new Set(flown.deliveredAssets.map(({ id }) => id)),
+  );
   return all.map(({ asset, fromDay }, index): AssetInService => {
-    const label =
-      (fromDay === 0 && index < labels.there.length
-        ? labels.there[index]
-        : labels.sent.get(asset.assetId)) ?? asset.name;
+    const label = labels[index] ?? asset.name;
     const endDay = daysUntilServiceEnds(program.date, asset);
     // An upgraded save can hold an Asset whose Service Life has already passed. It ends as the Turn starts.
     const untilDay =
