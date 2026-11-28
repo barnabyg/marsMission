@@ -61,6 +61,10 @@ test("blind play reads the screen as a player sees it and acts on it", async ({
   expect(plan.actions.map((offered) => offered.label)).toContain(
     'Untick "Pathfinder Orbiter"',
   );
+  // A select that is also a term goes by its own label, not by its options run together.
+  expect(plan.actions.map((offered) => offered.label)).toContain(
+    'Hover over "Reliability for Launch" to read its tooltip',
+  );
 
   await game.act(action(plan, 'Press "Glossary"'));
   const glossary = await game.read();

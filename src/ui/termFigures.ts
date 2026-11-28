@@ -10,11 +10,35 @@ export type TermFigures = Partial<Record<Term, string>>;
 
 export function termFigures(catalogue: Catalogue): TermFigures {
   const { baseFunding } = catalogue.program;
-  return baseFunding
-    ? {
-        "Base funding": `It pays ${formatMoney(baseFunding.millionsPerPublicSupport)} for each point of Public Support, rounded down to tens of millions, at most ${formatMoney(baseFunding.mostMillions)} a Turn.`,
-      }
-    : {};
+  const reliability = reliabilityFigures(catalogue.reliabilityLevels);
+  return {
+    ...(baseFunding && {
+      "Base funding": `It pays ${formatMoney(baseFunding.millionsPerPublicSupport)} for each point of Public Support, rounded down to tens of millions, at most ${formatMoney(baseFunding.mostMillions)} a Turn.`,
+    }),
+    ...(reliability && { Reliability: reliability }),
+  };
+}
+
+/**
+ * How much of the chance of failing each Reliability level leaves, such as "Tested leaves 50% of the chance of failing,
+ * and Redundant 20%.", leaving out a level that changes nothing.
+ */
+function reliabilityFigures(
+  levels: Catalogue["reliabilityLevels"],
+): string | undefined {
+  const [first, ...rest] = levels
+    .filter(({ failureMultiplier }) => failureMultiplier < 1)
+    .map(({ name, failureMultiplier }) => ({
+      name,
+      percent: `${String(Math.round(failureMultiplier * 100))}%`,
+    }));
+  if (!first) return undefined;
+  const lead = `${first.name} leaves ${first.percent} of the chance of failing`;
+  const others = rest.map(({ name, percent }) => `${name} ${percent}`);
+  const last = others.pop();
+  return last === undefined
+    ? `${lead}.`
+    : `${[lead, ...others].join(", ")}, and ${last}.`;
 }
 
 /** What a term means, as its tooltip and the Glossary give it: its definition, then any figures the Catalogue adds. */

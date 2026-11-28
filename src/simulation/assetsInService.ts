@@ -24,6 +24,8 @@ import type {
 /** One Asset's time at Mars during this Turn. */
 export interface AssetInService {
   asset: Program["operatingAssets"][number];
+  /** How the screen names it, numbered in arrival order when several of its kind are at Mars, as Operating at Mars does. */
+  label: string;
   /** The day of the Turn it starts operating, which is 0 if it already was. */
   fromDay: number;
   /** The day of the Turn it stops, or null if it lasts beyond the Turn. */
@@ -64,6 +66,30 @@ function inServiceFailureDay(
   if (roll(program.seed, program.turnNumber, key) >= chance) return null;
   const dayRoll = roll(program.seed, program.turnNumber, `${key}:day`);
   return 1 + Math.floor(dayRoll * (limitDay - 1));
+}
+
+/** A date after any an Asset arrives on, for one the Mission sent that never got there. */
+const neverArrived = "9999-12-31";
+
+/**
+ * How the Turn names each Asset at Mars, in the order given: numbered among those of its kind there as the Turn starts
+ * and every one the Mission is sending, whether or not it gets there. So the names don't change with how a Decision
+ * Point is answered, and those already there keep the numbers Operating at Mars showed them with, as they arrived first.
+ */
+function turnLabels(
+  catalogue: Catalogue,
+  plan: TurnPlan,
+  atMars: readonly { assetId: string; name: string; arrivedOn: string }[],
+  deliveredIds: ReadonlySet<string>,
+): string[] {
+  const lost = (plan.mission?.assetIds ?? [])
+    .filter((assetId) => !deliveredIds.has(assetId))
+    .map((assetId) => ({
+      assetId,
+      name: catalogue.assets.find(({ id }) => id === assetId)?.name ?? assetId,
+      arrivedOn: neverArrived,
+    }));
+  return labelsFor([...atMars, ...lost]).slice(0, atMars.length);
 }
 
 /** Works out when each Asset at Mars stops operating this Turn, because its Service Life has ended or it has failed. */
@@ -109,7 +135,7 @@ export function operateAssets(
     },
     fromDay: deliveryDayOf(rules, plan, flown, asset),
   }));
-  return [
+  const all = [
     ...program.operatingAssets.map((asset) => ({
       asset: {
         ...asset,
@@ -119,7 +145,15 @@ export function operateAssets(
       fromDay: 0,
     })),
     ...delivered,
-  ].map(({ asset, fromDay }): AssetInService => {
+  ];
+  const labels = turnLabels(
+    catalogue,
+    plan,
+    all.map(({ asset }) => asset),
+    new Set(flown.deliveredAssets.map(({ id }) => id)),
+  );
+  return all.map(({ asset, fromDay }, index): AssetInService => {
+    const label = labels[index] ?? asset.name;
     const endDay = daysUntilServiceEnds(program.date, asset);
     // An upgraded save can hold an Asset whose Service Life has already passed. It ends as the Turn starts.
     const untilDay =
@@ -136,8 +170,8 @@ export function operateAssets(
           )
         : null;
     return failureDay === null
-      ? { asset, fromDay, untilDay, failed: false }
-      : { asset, fromDay, untilDay: failureDay, failed: true };
+      ? { asset, label, fromDay, untilDay, failed: false }
+      : { asset, label, fromDay, untilDay: failureDay, failed: true };
   });
 }
 
@@ -149,6 +183,7 @@ export function stoppedEntries(
   return inService.flatMap(
     ({
       asset,
+      label,
       untilDay,
       failed,
       failedInStormAt,
@@ -162,18 +197,18 @@ export function stoppedEntries(
         const entry: AssetFailedEntry = {
           kind: "assetFailed",
           day: untilDay,
-          title: `${asset.name} failed`,
+          title: `${label} failed`,
           description: failedInStormAt
-            ? `The dust storm over ${failedInStormAt} was too much for ${asset.name}, which has stopped operating. It costs no Public Support.`
-            : `${asset.name} has broken down and stopped operating ${place}. It costs no Public Support.`,
+            ? `The dust storm over ${failedInStormAt} was too much for ${label}, which has stopped operating. It costs no Public Support.`
+            : `${label} has broken down and stopped operating ${place}. It costs no Public Support.`,
         };
         return [entry];
       }
       const entry: AssetEndedEntry = {
         kind: "assetEnded",
         day: untilDay,
-        title: `${asset.name}: Service Life ended`,
-        description: `${asset.name} has stopped operating ${place}. It costs no Public Support.`,
+        title: `${label}: Service Life ended`,
+        description: `${label} has stopped operating ${place}. It costs no Public Support.`,
       };
       return [entry];
     },
@@ -265,22 +300,25 @@ export function assetsAtMarsOnTimeline(
   const cutServiceLife = new Map(
     [...flown.cutServiceLife].map(([asset, days]) => [asset.id, days]),
   );
-  const labels = labelsFor(inService.map(({ asset }) => asset));
-  return inService.map(({ asset, fromDay, untilDay }, index): AssetAtMars => {
-    const cutServiceLifeDays =
-      fromDay > 0 ? cutServiceLife.get(asset.assetId) : undefined;
-    return {
-      key: operatingKey(asset),
-      name: asset.name,
-      label: labels[index] ?? asset.name,
-      kind: asset.kind,
-      landingSiteName: rules.landingSiteById(asset.landingSiteId)?.name ?? null,
-      activityName: rules.activityNameOf(asset),
-      surfaceMotion: rules.surfaceMotionOf(asset),
-      arrivedOnDay: daysBetween(program.date, asset.arrivedOn),
-      fromDay,
-      untilDay,
-      ...(cutServiceLifeDays === undefined ? {} : { cutServiceLifeDays }),
-    };
-  });
+  return inService.map(
+    ({ asset, label, fromDay, untilDay, shelter }): AssetAtMars => {
+      const cutServiceLifeDays =
+        fromDay > 0 ? cutServiceLife.get(asset.assetId) : undefined;
+      return {
+        key: operatingKey(asset),
+        name: asset.name,
+        label,
+        kind: asset.kind,
+        landingSiteName:
+          rules.landingSiteById(asset.landingSiteId)?.name ?? null,
+        activityName: rules.activityNameOf(asset),
+        surfaceMotion: rules.surfaceMotionOf(asset),
+        arrivedOnDay: daysBetween(program.date, asset.arrivedOn),
+        fromDay,
+        untilDay,
+        ...(cutServiceLifeDays === undefined ? {} : { cutServiceLifeDays }),
+        ...(shelter ? { shelter } : {}),
+      };
+    },
+  );
 }

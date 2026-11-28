@@ -383,7 +383,7 @@ export function carryOutOngoingResearch(
     const days = sum(stretches.map(({ fromDay, toDay }) => toDay - fromDay));
     if (activity?.effect.kind !== "research" || days <= 0) return [];
     const research: OngoingResearchEarned = {
-      assetName: stay.asset.name,
+      assetName: stay.label,
       activityName: activity.name,
       science: earned.science,
       publicSupport: earned.publicSupport,
@@ -391,7 +391,7 @@ export function carryOutOngoingResearch(
       ...benefitPart(stretches, earned, usual),
     };
     const grant: ResearchGrantPaid = {
-      name: stay.asset.name,
+      name: stay.label,
       millions: earned.grantMillions,
       ...grantBenefitPart(
         [stretches],

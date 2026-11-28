@@ -16,7 +16,7 @@ interface AwardedMilestone {
 
 /** What one Asset, or the Crew in one place, earned by doing research during a Turn. */
 export interface OngoingResearchEarned {
-  /** The Asset's name, or the Crew's, such as "Crew in Mars orbit". */
+  /** The Asset's label, numbered when several of its kind are at Mars, such as "Rover 2", or the Crew's, such as "Crew in Mars orbit". */
   assetName: string;
   activityName: string;
   science: number;
@@ -36,6 +36,7 @@ export interface OngoingResearchEarned {
 
 /** The Research Grant one Asset's, or one place's Crew's, Ongoing Research paid during a Turn. */
 export interface ResearchGrantPaid {
+  /** As OngoingResearchEarned's assetName gives it. */
   name: string;
   millions: number;
   /** What a Mars lab's Benefit added to it, which millions includes. Left out if no lab raised any of its days. */
@@ -154,9 +155,9 @@ export interface TurnSummary {
    * such as "Crew in Mars orbit", including Crew who start the Turn with none left.
    */
   suppliesRanOut: { crew: string; on: string }[];
-  /** The Assets whose Service Life ended this Turn. */
+  /** The Assets whose Service Life ended this Turn, by their labels, numbered as Mission Mode numbers them. */
   assetsEnded: string[];
-  /** The Assets that failed in service this Turn, before their Service Life ended. */
+  /** The Assets that failed in service this Turn, before their Service Life ended, by their labels. */
   assetsFailed: string[];
   /** What this Turn's Survey found, if there was one and it changed anything. */
   survey: {
@@ -210,12 +211,17 @@ export interface TurnSummary {
     siteName: string;
     days: number;
     answer: "shelter" | "carryOn";
-    /** The Assets operating there when it started, then the Crew. */
+    /** The Assets operating there when it started, by their labels, then the Crew. */
     assets: string[];
     /** Those that failed because they carried on. assetsFailed lists them too. */
     assetsFailed: string[];
     /** The Crew hurt because they carried on, who each lost Health. healthLost lists it too. */
     crewHurt: string[];
+    /**
+     * What sheltering gave up, as its Decision Point said, such as "25 Science, 2 Public Support and $13M of Research
+     * Grants", or null if they carried on.
+     */
+    gaveUp: string | null;
   }[];
   /** The solar particle event that hit the Mission, if one did, how it was answered and what came of it. */
   solarParticleEvent: {

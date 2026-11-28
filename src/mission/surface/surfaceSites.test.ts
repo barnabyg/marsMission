@@ -139,6 +139,25 @@ describe("what the player reads about the Landing Site shown", () => {
     ]);
   });
 
+  it("says an Asset is sheltering, rather than at its Activity, for as long as it shelters from a dust storm", () => {
+    const timeline = timelineOf([
+      asset({
+        name: "Prospector",
+        activityName: "Surface research",
+        shelter: { fromDay: 100, toDay: 250 },
+      }),
+    ]);
+    expect(describeSite(timeline, 99, "Alpha Plain")).toEqual([
+      "Prospector (lander): Surface research",
+    ]);
+    expect(describeSite(timeline, 220, "Alpha Plain")).toEqual([
+      "Prospector (lander): sheltering from the dust storm",
+    ]);
+    expect(describeSite(timeline, 250, "Alpha Plain")).toEqual([
+      "Prospector (lander): Surface research",
+    ]);
+  });
+
   it("says when nothing has got there yet, and what is on its way", () => {
     const timeline = timelineOf([], [onTheWay({})]);
     expect(describeSite(timeline, 10, "Beta Basin")).toEqual([

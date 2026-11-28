@@ -216,6 +216,8 @@ export interface AssetAtMars {
   untilDay: number | null;
   /** Its Service Life, if something on this Turn's Mission cut it short. */
   cutServiceLifeDays?: number;
+  /** When it sheltered from a dust storm, from the storm's first day to the first day clear again, if it did. */
+  shelter?: { fromDay: number; toDay: number };
   /** For the Crew's ship, every Crew member in its place during the Turn, in the order they came. */
   crew?: CrewMemberAtMarsOnTimeline[];
 }

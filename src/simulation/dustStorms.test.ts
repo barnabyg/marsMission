@@ -251,8 +251,17 @@ describe("answering a dust storm", () => {
         assets: ["Test Lander"],
         assetsFailed: [],
         crewHurt: [],
+        gaveUp: "10 Science, 5 Public Support and $0M of Research Grants",
       },
     ]);
+    // So that Mission Mode can say it's sheltering for the storm's days.
+    const [storm] = sheltered.timeline.dustStorms.filter(
+      ({ siteName }) => siteName === "Alpha Plain",
+    );
+    expect(sheltered.timeline.assetsAtMars[0]?.shelter).toEqual({
+      fromDay: storm?.fromDay,
+      toDay: storm?.toDay,
+    });
   });
 
   it("sheltering removes those days from Research Grants too", () => {

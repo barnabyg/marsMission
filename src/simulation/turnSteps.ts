@@ -404,10 +404,10 @@ export function resolveTurn(
           ({ untilDay, failed, leftForHome }) =>
             untilDay !== null && !failed && leftForHome !== true,
         )
-        .map(({ asset }) => asset.name),
+        .map(({ label }) => label),
       assetsFailed: inService
         .filter(({ failed }) => failed)
-        .map(({ asset }) => asset.name),
+        .map(({ label }) => label),
       dustStorms: dustStorms.summary,
       solarParticleEvent: flown.solarParticleEvent?.summary ?? null,
       goNoGo: flown.goNoGo,

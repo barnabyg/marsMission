@@ -177,11 +177,13 @@ export function technologyCards({
  * the storm's own line says so.
  */
 function failedNote({ assetsFailed, dustStorms }: TurnSummary): string {
-  // Counted rather than matched by name, as two Assets of one kind share a name.
-  const lostInStorms = dustStorms.flatMap((storm) => storm.assetsFailed).length;
+  // Each is named as Operating at Mars numbers it, so two of one kind can be told apart.
+  const lostInStorms = new Set(
+    dustStorms.flatMap((storm) => storm.assetsFailed),
+  );
   return [
     "Lost for good, so it earns nothing more and costs no more Upkeep. What it did before, such as a Survey, still counts.",
-    ...(lostInStorms >= assetsFailed.length
+    ...(assetsFailed.every((label) => lostInStorms.has(label))
       ? []
       : [
           "From the Turn after it arrives, an Asset can fail in service each Turn, at the chance shown when it was planned.",

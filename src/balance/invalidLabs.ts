@@ -64,7 +64,11 @@ export function labProblems(
       "A Research Grant was raised by something that isn't a Mars lab operating at Mars.",
     ],
     [
-      raised.some(({ name }) => !besideLabs.has(name)),
+      // The summary numbers several of one kind ("Rover 2"), counting those that arrived and left during the Turn.
+      raised.some(
+        ({ name }) =>
+          !besideLabs.has(name) && !besideLabs.has(name.replace(/ \d+$/, "")),
+      ),
       "A Mars lab raised a Research Grant for something at no Landing Site with a lab.",
     ],
   ];

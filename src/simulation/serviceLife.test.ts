@@ -180,6 +180,21 @@ describe("a Service Life running out", () => {
     expect(simulation.readProgram(second.program).operatingAssets).toEqual([]);
   });
 
+  it("names it as Operating at Mars numbers it, when another of its kind is there", () => {
+    const { simulation, program } = withLives(1000);
+    const first = simulation.runTurn(program, orbiterWith());
+    const second = simulation.runTurn(first.program, orbiterWith());
+    expect(second.summary.assetsEnded).toEqual(["Test Orbiter 1"]);
+    expect(
+      second.timeline.entries.find(({ kind }) => kind === "assetEnded"),
+    ).toMatchObject({
+      title: "Test Orbiter 1: Service Life ended",
+      description: expect.stringContaining(
+        "Test Orbiter 1 has stopped",
+      ) as unknown,
+    });
+  });
+
   it("costs no Public Support beyond the usual fade", () => {
     const { simulation, program } = withLives(1000);
     const first = simulation.runTurn(program, orbiterWith());

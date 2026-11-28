@@ -24,6 +24,22 @@ describe("termFigures", () => {
     );
   });
 
+  it("gives how much each Reliability level leaves of the chance of failing, from the Catalogue", () => {
+    expect(termFigures(testCatalogue()).Reliability).toBe(
+      "Tested leaves 50% of the chance of failing, and Redundant 10%.",
+    );
+  });
+
+  it("names a lone Reliability level on its own, and leaves out one that changes nothing", () => {
+    const catalogue = testCatalogue();
+    expect(
+      termFigures({
+        ...catalogue,
+        reliabilityLevels: catalogue.reliabilityLevels.slice(0, 2),
+      }).Reliability,
+    ).toBe("Tested leaves 50% of the chance of failing.");
+  });
+
   it("gives Base funding no figures when the Catalogue has none", () => {
     expect(termFigures(testCatalogue())["Base funding"]).toBeUndefined();
   });

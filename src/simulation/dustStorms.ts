@@ -205,7 +205,7 @@ export function resolveDustStorms(
       continue;
     }
 
-    const names = [...atStake.map(({ asset }) => asset.name), ...crewNames];
+    const names = [...atStake.map(({ label }) => label), ...crewNames];
     const risks = [
       ...(atStake.length > 0
         ? [
@@ -227,6 +227,19 @@ export function resolveDustStorms(
       description: told,
     };
     const answer = answers[decisionIdOf(site)];
+    // Worked out only when it's needed, as balance runs meet a great many storms.
+    const gaveUp =
+      answer === "carryOn"
+        ? null
+        : whatSheltering(
+            catalogue,
+            rules,
+            atStake,
+            crewAtStake,
+            storm,
+            raised,
+            inService,
+          );
     if (answer === undefined) {
       decision ??= {
         entry,
@@ -243,7 +256,7 @@ export function resolveDustStorms(
               answer: "shelter",
               label: "Shelter",
               riskBand: null,
-              description: `Sheltering keeps ${names.join(", ")} safe, but nothing there earns Ongoing Research for the storm's ${days} days. That gives up ${whatSheltering(catalogue, rules, atStake, crewAtStake, storm, raised, inService)}.`,
+              description: `Sheltering keeps ${names.join(", ")} safe, but nothing there earns Ongoing Research for the storm's ${days} days. That gives up ${gaveUp ?? ""}.`,
             },
             {
               answer: "carryOn",
@@ -276,7 +289,7 @@ export function resolveDustStorms(
         fromDay +
         Math.floor(roll(program.seed, program.turnNumber, `${key}:day`) * days);
       if (stay.untilDay !== null && stay.untilDay <= day) return stay;
-      failedHere.push(stay.asset.name);
+      failedHere.push(stay.label);
       return {
         ...stay,
         untilDay: day,
@@ -327,10 +340,11 @@ export function resolveDustStorms(
       assets: names,
       assetsFailed: failedHere,
       crewHurt: hurtHere,
+      gaveUp,
     });
     const atRisk = [
       ...(atStake.length > 0
-        ? [`losing ${atStake.map(({ asset }) => asset.name).join(", ")}`]
+        ? [`losing ${atStake.map(({ label }) => label).join(", ")}`]
         : []),
       ...(crewNames.length > 0
         ? [`hurting ${listOfNames.format(crewNames)}`]
