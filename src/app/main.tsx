@@ -8,6 +8,7 @@ import { createSaveStore } from "../save/saveStore";
 import { createSimulation } from "../simulation/simulation";
 import { GlossaryLayer } from "../ui/Glossary";
 import { TooltipLayer } from "../ui/TooltipLayer";
+import { termFigures } from "../ui/termFigures";
 // In cascade order: where two rules are equally specific, the one in a later file wins.
 import "./styles.css";
 import "../planning/planning.css";
@@ -30,7 +31,9 @@ if (!container) throw new Error("The page has no #root element");
 const root = createRoot(container);
 
 try {
-  const simulation = createSimulation(await fetchCatalogue());
+  const catalogue = await fetchCatalogue();
+  const simulation = createSimulation(catalogue);
+  const figures = termFigures(catalogue);
   const services: GameServices = {
     simulation,
     saveStore: createSaveStore(
@@ -51,8 +54,8 @@ try {
   root.render(
     <StrictMode>
       <App services={services} firstScreen={openingScreen(services)} />
-      <TooltipLayer />
-      <GlossaryLayer />
+      <TooltipLayer figures={figures} />
+      <GlossaryLayer figures={figures} />
     </StrictMode>,
   );
 } catch (error) {

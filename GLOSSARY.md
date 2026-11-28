@@ -274,7 +274,7 @@ A once-in-a-Program refund of what a lost Mission cost, offered in the Turn summ
 _Avoid_: Loan, rescue, insurance
 
 **Base funding**:
-What the Program's backers pay as each Turn ends: a fixed amount for each point of Public Support the Program had as the Turn started, up to a most for a Turn. It keeps a Program that has lost a Mission able to try again in time, but never pays as much as Research Grants.
+What the Program's backers pay as each Turn ends: a fixed amount for each point of Public Support the Program had as the Turn started, up to a limit each Turn. It keeps a Program that has lost a Mission able to try again in time, but never pays as much as Research Grants.
 _Avoid_: Budget, allowance, salary
 
 **Research Grant**:

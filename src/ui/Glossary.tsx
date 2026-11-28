@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Dialog } from "./Dialog";
 import { GameText } from "./GameText";
 import { keyPlace } from "./shortcuts";
+import { definitionOf, type TermFigures } from "./termFigures";
 import { tooltips, type Term } from "./tooltips";
 
 /** The key that opens the glossary, anywhere in the game. */
@@ -46,7 +47,7 @@ function termsOnScreen(): Term[] {
  * the terms' tooltips explain, since terms aren't tab stops. `?` opens it from any screen, unless the player is typing
  * or a dialog is already open.
  */
-export function GlossaryLayer() {
+export function GlossaryLayer({ figures = {} }: { figures?: TermFigures }) {
   /** The terms it lists, taken as it opens, or null while it is closed. */
   const [terms, setTerms] = useState<Term[] | null>(null);
 
@@ -87,7 +88,7 @@ export function GlossaryLayer() {
                 <GameText>{term}</GameText>
               </dt>
               <dd>
-                <GameText>{tooltips[term]}</GameText>
+                <GameText>{definitionOf(term, figures)}</GameText>
               </dd>
             </div>
           ))}

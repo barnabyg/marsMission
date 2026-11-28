@@ -144,6 +144,22 @@ test("shows the base funding that comes in as the Turn ends, sized by Public Sup
   await expect(page.getByTestId("tooltip-detail")).toHaveText(
     "+$200M comes in as this Turn ends.",
   );
+  // What it pays for each point, and its most, come from the data files, in the tooltip and the Glossary alike.
+  const figures =
+    "It pays $2M for each point of Public Support, at most $250M a Turn.";
+  await expect(page.getByRole("tooltip")).toContainText(figures);
+  await page.mouse.move(0, 0);
+  await page.keyboard.press("?");
+  await expect(
+    page
+      .getByTestId("glossary")
+      .locator("div")
+      .filter({
+        has: page.getByRole("term").filter({ hasText: /^Base funding$/ }),
+      })
+      .getByRole("definition"),
+  ).toContainText(figures);
+  await page.getByRole("button", { name: "Close" }).click();
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page
     .getByRole("button", { name: "End Turn without launching" })
