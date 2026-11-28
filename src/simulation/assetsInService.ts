@@ -304,21 +304,25 @@ export function assetsAtMarsOnTimeline(
   const cutServiceLife = new Map(
     [...flown.cutServiceLife].map(([asset, days]) => [asset.id, days]),
   );
-  return inService.map(({ asset, label, fromDay, untilDay }): AssetAtMars => {
-    const cutServiceLifeDays =
-      fromDay > 0 ? cutServiceLife.get(asset.assetId) : undefined;
-    return {
-      key: operatingKey(asset),
-      name: asset.name,
-      label,
-      kind: asset.kind,
-      landingSiteName: rules.landingSiteById(asset.landingSiteId)?.name ?? null,
-      activityName: rules.activityNameOf(asset),
-      surfaceMotion: rules.surfaceMotionOf(asset),
-      arrivedOnDay: daysBetween(program.date, asset.arrivedOn),
-      fromDay,
-      untilDay,
-      ...(cutServiceLifeDays === undefined ? {} : { cutServiceLifeDays }),
-    };
-  });
+  return inService.map(
+    ({ asset, label, fromDay, untilDay, shelter }): AssetAtMars => {
+      const cutServiceLifeDays =
+        fromDay > 0 ? cutServiceLife.get(asset.assetId) : undefined;
+      return {
+        key: operatingKey(asset),
+        name: asset.name,
+        label,
+        kind: asset.kind,
+        landingSiteName:
+          rules.landingSiteById(asset.landingSiteId)?.name ?? null,
+        activityName: rules.activityNameOf(asset),
+        surfaceMotion: rules.surfaceMotionOf(asset),
+        arrivedOnDay: daysBetween(program.date, asset.arrivedOn),
+        fromDay,
+        untilDay,
+        ...(cutServiceLifeDays === undefined ? {} : { cutServiceLifeDays }),
+        ...(shelter ? { shelter } : {}),
+      };
+    },
+  );
 }

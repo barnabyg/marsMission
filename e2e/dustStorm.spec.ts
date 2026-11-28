@@ -72,6 +72,8 @@ test("a dust storm stops play with its site, its Assets and its costs, and shelt
   await expect(storms).toContainText(
     /Dust storm over Jezero Crater: Prospector Lander sheltered for \d+ days/,
   );
+  // What sheltering gave up, as the Decision Point said.
+  await expect(storms).toContainText(/That gave up \d+ Science/);
   await expect(page.getByTestId("summary-ongoing-research")).not.toContainText(
     "over 780 days",
   );

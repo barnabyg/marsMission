@@ -216,6 +216,11 @@ export interface TurnSummary {
     assetsFailed: string[];
     /** The Crew hurt because they carried on, who each lost Health. healthLost lists it too. */
     crewHurt: string[];
+    /**
+     * What sheltering gave up, as its Decision Point said, such as "25 Science, 2 Public Support and $13M of Research
+     * Grants", or null if they carried on.
+     */
+    gaveUp: string | null;
   }[];
   /** The solar particle event that hit the Mission, if one did, how it was answered and what came of it. */
   solarParticleEvent: {

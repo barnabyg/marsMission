@@ -96,6 +96,8 @@ export interface SurfaceAsset extends RoverAtWork {
   place: number;
   /** For the Crew's ship, every Crew member at the site during the Turn. */
   crew: readonly CrewMember[];
+  /** When a robotic Asset sheltered from a dust storm, if it did. */
+  shelter?: { fromDay: number; toDay: number };
 }
 
 /** The Assets operating at a Landing Site on a given day. A crash never starts operating, so it is never here. */
@@ -123,6 +125,7 @@ export function surfaceAssetsAt(
       : { cutServiceLifeDays: asset.cutServiceLifeDays }),
     place: atSite.indexOf(asset),
     crew: asset.crew ?? [],
+    ...(asset.shelter ? { shelter: asset.shelter } : {}),
   }));
 }
 
@@ -169,8 +172,11 @@ export function isThere(
   return day >= fromDay && (untilDay === null || day < untilDay);
 }
 
-/** Whether a Crew member is sheltering indoors from a dust storm on a given day. */
-export function isIndoors({ shelter }: CrewMember, day: number): boolean {
+/** Whether a Crew member, or a robotic Asset, is sheltering from a dust storm on a given day. */
+export function isIndoors(
+  { shelter }: { shelter?: { fromDay: number; toDay: number } | undefined },
+  day: number,
+): boolean {
   return shelter !== undefined && day >= shelter.fromDay && day < shelter.toDay;
 }
 
@@ -299,7 +305,7 @@ export function describeSite(
     .map((asset) =>
       asset.model === "crewLander"
         ? describeCrew(asset, day)
-        : `${asset.name} (${asset.kind}): ${activityAndCut(asset)}`,
+        : `${asset.name} (${asset.kind}): ${isIndoors(asset, day) ? "sheltering from the dust storm" : activityAndCut(asset)}`,
     );
   const coming = landingsOnTheirWay(timeline.mission, day)
     .filter((landing) => landing.siteName === siteName)

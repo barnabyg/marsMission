@@ -134,7 +134,7 @@ function describeContingency({
   return `${missionEventName}: ${contingencyName} used, but it couldn't save the Mission`;
 }
 
-/** What a dust storm did at its Landing Site, sheltered from or carried on through. */
+/** What a dust storm did at its Landing Site, sheltered from, and what that gave up, or carried on through. */
 function describeDustStorm({
   siteName,
   days,
@@ -142,6 +142,7 @@ function describeDustStorm({
   assets,
   assetsFailed,
   crewHurt,
+  gaveUp,
 }: TurnSummary["dustStorms"][number]): string {
   const harm = [
     ...(assetsFailed.length > 0 ? [`lost ${assetsFailed.join(", ")}`] : []),
@@ -149,7 +150,8 @@ function describeDustStorm({
   ];
   return `Dust storm over ${siteName}: ${
     answer === "shelter"
-      ? `${assets.join(", ")} sheltered for ${days} days, with no Ongoing Research`
+      ? // What it gave up, as the Decision Point said, which a player otherwise can't find again.
+        `${assets.join(", ")} sheltered for ${days} days, with no Ongoing Research. That gave up ${gaveUp ?? "nothing"}`
       : harm.length > 0
         ? `carried on through ${days} days, and ${harm.join(", and ")}`
         : `${assets.join(", ")} carried on through ${days} days, and came through`

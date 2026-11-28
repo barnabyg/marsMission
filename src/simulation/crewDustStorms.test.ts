@@ -114,6 +114,8 @@ describe("a dust storm over Crew at their Landing Site", () => {
         assets: ["Ann Able", "Ben Baker"],
         assetsFailed: [],
         crewHurt: [],
+        // 20 days' less for each of the two, at 156 a Turn.
+        gaveUp: "40 Science, 0 Public Support and $0M of Research Grants",
       },
     ]);
     expect(
