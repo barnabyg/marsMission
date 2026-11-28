@@ -12,7 +12,7 @@ export function termFigures(catalogue: Catalogue): TermFigures {
   const { baseFunding } = catalogue.program;
   return baseFunding
     ? {
-        "Base funding": `It pays ${formatMoney(baseFunding.millionsPerPublicSupport)} for each point of Public Support, at most ${formatMoney(baseFunding.mostMillions)} a Turn.`,
+        "Base funding": `It pays ${formatMoney(baseFunding.millionsPerPublicSupport)} for each point of Public Support, rounded down to tens of millions, at most ${formatMoney(baseFunding.mostMillions)} a Turn.`,
       }
     : {};
 }

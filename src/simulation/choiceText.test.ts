@@ -83,10 +83,21 @@ describe("what an Activity's choice says it earns", () => {
         }),
       ),
     ).toBe(
-      "lowers the landing risk at Jezero Crater and Gale Crater from Over 30% to ~10%, and at Elysium from ~20% to ~5%, and reveals a new Landing Site",
+      "lowers the landing risk of later landings at Jezero Crater and Gale Crater from Over 30% to ~10%, and at Elysium from ~20% to ~5%, and reveals a new Landing Site, already surveyed",
     );
     expect(whatActivityDoes(surveying({ lowers: [], reveals: true }))).toBe(
-      "reveals a new Landing Site, already surveyed",
+      "reveals a new Landing Site for later landings, already surveyed",
+    );
+    // Bands are rough, so a site can be safer and still in the same one.
+    expect(
+      whatActivityDoes(
+        surveying({
+          lowers: [site("Jezero Crater", "~10%", "~10%")],
+          reveals: false,
+        }),
+      ),
+    ).toBe(
+      "lowers the landing risk of later landings at Jezero Crater a little, staying ~10%",
     );
     expect(whatActivityDoes(surveying({ lowers: [], reveals: false }))).toBe(
       "has nothing left to survey",

@@ -10,11 +10,11 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 
 - `simulation.ts`: The Simulation's interface, `createSimulation`, which hands each part to the modules below: starting, saving and restoring a Program, what the player sees of it, previews, and working out or running a Turn
 - `programView.ts`: A new Program, and what the player sees of a Program between Turns
-- `missionPreviews.ts`: What Planning Mode shows of a Mission before it launches: its Mission Events, Assets, Trajectories and Crew, with research raised by any Benefit
+- `missionPreviews.ts`: What Planning Mode shows of a Mission before it launches: its Mission Events, Assets, Trajectories and Crew, with research raised by any Benefit and what a Survey would do as things stand (`surveyOutlook`)
 - `workOutTurn.ts`: Working out a Turn: checking the plan, flying the Mission, the rest of the Turn, and stopping at the earliest Decision Point with no answer
 - `types.ts`: The shapes the Simulation takes and gives: plans, the Program and what the player sees of it, and Decision Points
 - `previews.ts`: The shapes of what Planning Mode shows of a Mission before it launches: its Assets, with what a longer Service Life adds, Mission Events, Trajectories, Activities and Developments, and what a plan costs and weighs
-- `choiceText.ts`: How Planning Mode and the tutorial word what an Activity earns and what a longer Service Life adds against its cost and Upkeep, so that the tutorial quotes what the choices show
+- `choiceText.ts`: How Planning Mode and the tutorial word what an Activity earns, or for a Survey what it would do, and what a longer Service Life adds against its cost and Upkeep, so that the tutorial quotes what the choices show
 - `turnSummary.ts`: The Turn summary: what changed over a Turn
 - `programSummary.ts`: The Program summary, shown once a Program ends: the record a Program keeps over its Turns (Missions launched and lost, the highest Public Support, samples home and the Turn each Milestone was earned), and the summary built from it and the Program
 - `timeline.ts`: The Timeline: what happened in a Turn, as Mission Mode plays it. A resolved Mission Event carries the player’s `contingencyAnswer` if a Contingency was offered. The pending Decision Point carries no answer
@@ -33,7 +33,7 @@ Everything outside `src/simulation` reaches the rules through `createSimulation`
 - `turnSteps.ts`: The steps of a Turn after the Mission, in order (above), and the next Program, Timeline and Turn summary
 - `turnEarnings.ts`: What a Turn earns and pays once the rest of it is settled: Ongoing Research, Science Milestones, Funding Thresholds, the fading of Public Support and base funding, and the Science, Public Support and money it ends with
 - `arrivals.ts`: What the Turn's Mission earns by arriving: Milestones for the first of each kind of Asset, a first landing and the first Crew at Mars and on the surface, and first-landing Science
-- `assetsInService.ts`: Which Assets operate for which days of the Turn, their failures and end of Service Life, Surveys, and how the Assets at Mars show in Mission Mode
+- `assetsInService.ts`: Which Assets operate for which days of the Turn, their failures and end of Service Life, Surveys, with what one would find (`surveyFindings`), which Planning Mode's preview shares, and how the Assets at Mars show in Mission Mode
 - `assetLabels.ts`: how Assets at Mars are named on screen: several of one kind numbered in the order they arrived, "Pathfinder Orbiter 2", for Planning Mode's Operating at Mars and Mission Mode's labels alike
 - `upkeep.ts`: Upkeep: what each Asset at Mars costs for a Turn, and the Assets whose missions a plan ends
 - `baseFunding.ts`: Base funding: what the Program's backers pay as a Turn ends, for its Public Support

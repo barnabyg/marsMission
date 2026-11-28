@@ -146,7 +146,7 @@ test("shows the base funding that comes in as the Turn ends, sized by Public Sup
   );
   // What it pays for each point, and its most, come from the data files, in the tooltip and the Glossary alike.
   const figures =
-    "It pays $2M for each point of Public Support, at most $250M a Turn.";
+    "It pays $2M for each point of Public Support, rounded down to tens of millions, at most $250M a Turn.";
   await expect(page.getByRole("tooltip")).toContainText(figures);
   await page.mouse.move(0, 0);
   await page.keyboard.press("?");

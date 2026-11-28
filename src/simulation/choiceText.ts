@@ -44,20 +44,21 @@ export function whatActivityDoes({
       : []),
   ];
   if (parts.length === 0) return "earns nothing";
-  return `earns ${listed(parts)} a Turn`;
+  return `earns ${andList(parts)} a Turn`;
 }
 
 /** "A and B", or "A, B and C". */
-function listed(names: readonly string[]): string {
+function andList(names: readonly string[]): string {
   return names.length < 2
     ? names.join("")
     : `${names.slice(0, -1).join(", ")} and ${names.at(-1) ?? ""}`;
 }
 
 /**
- * What a Survey would do as things stand, with sites that go from and to the same Risk Bands named together: "lowers
- * the landing risk at Jezero Crater and Gale Crater from Over 30% to ~10%, and reveals a new Landing Site". A site it
- * reveals is surveyed as it's found, so one left to find once the known sites are surveyed is "already surveyed".
+ * What a Survey would do as things stand, for landings on later Turns, as a Mission's own landing has the risk the Turn
+ * started with. Sites that go from and to the same Risk Bands are named together: "lowers the landing risk of later
+ * landings at Jezero Crater and Gale Crater from Over 30% to ~10%, and reveals a new Landing Site, already surveyed".
+ * A site it reveals is surveyed as it's found.
  */
 function whatSurveyDoes({ lowers, reveals }: SurveyOutlook): string {
   const groups = new Map<
@@ -74,17 +75,20 @@ function whatSurveyDoes({ lowers, reveals }: SurveyOutlook): string {
     group.names.push(name);
     groups.set(key, group);
   }
-  const lowered = [...groups.values()].map(
-    ({ from, to, names }) => `at ${listed(names)} from ${from} to ${to}`,
+  const lowered = [...groups.values()].map(({ from, to, names }) =>
+    // Bands are rough, so a site can be safer and still in the same one.
+    from === to
+      ? `at ${andList(names)} a little, staying ${from}`
+      : `at ${andList(names)} from ${from} to ${to}`,
   );
   if (lowered.length === 0) {
     return reveals
-      ? "reveals a new Landing Site, already surveyed"
+      ? "reveals a new Landing Site for later landings, already surveyed"
       : "has nothing left to survey";
   }
   return [
-    `lowers the landing risk ${lowered.join(", and ")}`,
-    ...(reveals ? ["and reveals a new Landing Site"] : []),
+    `lowers the landing risk of later landings ${lowered.join(", and ")}`,
+    ...(reveals ? ["and reveals a new Landing Site, already surveyed"] : []),
   ].join(", ");
 }
 

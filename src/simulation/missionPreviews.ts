@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import { surveyFindings } from "./assetsInService";
 import { largestRaise, type Raise } from "./benefits";
 import { previewCrew, type PlannedCrew } from "./crewView";
 import { earningsPerTurn, grantOverDays } from "./ongoingResearch";
@@ -20,27 +21,27 @@ import type {
 } from "./previews";
 import type { PlannedMission, Program } from "./types";
 
-/**
- * What a Survey would do as things stand (`carryOutSurvey`): every known site not yet surveyed drops to its surveyed
- * risk, and the next site becomes known.
- */
+/** What a Survey would do as things stand, as `surveyFindings` says it would find, in Risk Bands. */
 export function surveyOutlook(
   catalogue: Catalogue,
   rules: Rules,
   program: Program,
 ): SurveyOutlook {
+  const { newlySurveyed, revealed } = surveyFindings(catalogue, program);
   return {
-    lowers: rules
-      .knownLandingSites(program)
-      .filter(({ id }) => !program.surveyedLandingSiteIds.includes(id))
-      .map((site) => ({
-        name: site.name,
-        riskBand: rules.riskBandFor(site.landingRisk),
-        surveyedRiskBand: rules.riskBandFor(site.surveyedLandingRisk),
-      })),
-    reveals: catalogue.landingSites.some(
-      ({ id }) => !program.knownLandingSiteIds.includes(id),
-    ),
+    lowers: newlySurveyed.flatMap((id) => {
+      const site = rules.landingSiteById(id);
+      return site
+        ? [
+            {
+              name: site.name,
+              riskBand: rules.riskBandFor(site.landingRisk),
+              surveyedRiskBand: rules.riskBandFor(site.surveyedLandingRisk),
+            },
+          ]
+        : [];
+    }),
+    reveals: revealed !== undefined,
   };
 }
 

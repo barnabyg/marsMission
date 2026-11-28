@@ -172,17 +172,19 @@ export function technologyCards({
 }
 
 /**
- * What failing in service means, under the list of Assets that failed. Its cause, the chance Reliability left, is left
- * out when a dust storm took every one of them, as the storm's own line says so.
+ * What failing in service means, under the list of Assets that failed. Its cause, the chance shown when the Asset was
+ * planned, which Reliability and an unproven technology set, is left out when a dust storm took every one of them, as
+ * the storm's own line says so.
  */
 function failedNote({ assetsFailed, dustStorms }: TurnSummary): string {
-  const lostInStorms = dustStorms.flatMap((storm) => storm.assetsFailed);
+  // Counted rather than matched by name, as two Assets of one kind share a name.
+  const lostInStorms = dustStorms.flatMap((storm) => storm.assetsFailed).length;
   return [
     "Lost for good, so it earns nothing more and costs no more Upkeep. What it did before, such as a Survey, still counts.",
-    ...(assetsFailed.every((name) => lostInStorms.includes(name))
+    ...(lostInStorms >= assetsFailed.length
       ? []
       : [
-          "Each Turn at Mars, an Asset can fail in service at the chance its Reliability left.",
+          "From the Turn after it arrives, an Asset can fail in service each Turn, at the chance shown when it was planned.",
         ]),
   ].join(" ");
 }

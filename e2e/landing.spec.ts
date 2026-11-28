@@ -183,6 +183,13 @@ test("surveys for a Turn, then sees a lower Risk Band and a new Landing Site whe
   expect(await termsWithoutTooltips(page)).toEqual([]);
   await page.getByRole("button", { name: "Continue" }).click();
 
+  // Operating at Mars leaves the Survey's line out to keep rows short, so its choice's tooltip says what it would do.
+  await page.getByLabel("Activity for Pathfinder Orbiter").hover();
+  await expect(page.getByTestId("tooltip-detail")).toHaveText(
+    "Survey reveals a new Landing Site for later landings, already surveyed.",
+  );
+  await page.mouse.move(0, 0);
+
   await chooseAssets(page, ["Prospector Lander"]);
   await expect(landingRiskBand(page)).toHaveText("~10%");
   await expect(sites).toHaveCount(3);
@@ -365,7 +372,7 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
   );
   // What failing means for the Asset and what it did, and why it can happen.
   await expect(page.getByTestId("summary-assets-failed-note")).toHaveText(
-    "Lost for good, so it earns nothing more and costs no more Upkeep. What it did before, such as a Survey, still counts. Each Turn at Mars, an Asset can fail in service at the chance its Reliability left.",
+    "Lost for good, so it earns nothing more and costs no more Upkeep. What it did before, such as a Survey, still counts. From the Turn after it arrives, an Asset can fail in service each Turn, at the chance shown when it was planned.",
   );
   expect(await termsWithoutTooltips(page)).toEqual([]);
   expect(problems).toEqual([]);

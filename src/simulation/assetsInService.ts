@@ -181,6 +181,22 @@ export function stoppedEntries(
 }
 
 /**
+ * What a Survey would find as things stand: the known sites not yet surveyed, which drop to their surveyed risk, and
+ * the next site in the catalogue, which becomes known and is surveyed as it's found. Planning Mode's preview of a
+ * Survey (`surveyOutlook`) reads it too, so that what it promises is what happens.
+ */
+export function surveyFindings(catalogue: Catalogue, program: Program) {
+  return {
+    newlySurveyed: program.knownLandingSiteIds.filter(
+      (id) => !program.surveyedLandingSiteIds.includes(id),
+    ),
+    revealed: catalogue.landingSites.find(
+      (site) => !program.knownLandingSiteIds.includes(site.id),
+    ),
+  };
+}
+
+/**
  * Carries out the Turn's Survey, if an Asset operating at Mars has a survey Activity during it. Every known site
  * drops to its surveyed risk in one step, and the next site in the catalogue becomes known.
  */
@@ -206,12 +222,7 @@ export function carryOutSurvey(
   };
   if (surveyDays.length === 0) return unchanged;
 
-  const newlySurveyed = program.knownLandingSiteIds.filter(
-    (id) => !program.surveyedLandingSiteIds.includes(id),
-  );
-  const revealed = catalogue.landingSites.find(
-    (site) => !program.knownLandingSiteIds.includes(site.id),
-  );
+  const { newlySurveyed, revealed } = surveyFindings(catalogue, program);
   if (newlySurveyed.length === 0 && !revealed) return unchanged;
 
   const knownLandingSiteIds = [

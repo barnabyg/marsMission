@@ -14,13 +14,13 @@ export interface PlanCheck {
   problems: string[];
 }
 
-/** An Activity as Planning Mode offers it. */
 /** What a Survey would do as things stand: each known site it would make safer, and whether it would reveal one. */
 export interface SurveyOutlook {
   lowers: { name: string; riskBand: string; surveyedRiskBand: string }[];
   reveals: boolean;
 }
 
+/** An Activity as Planning Mode offers it. */
 export interface PlannedActivity {
   id: string;
   name: string;
