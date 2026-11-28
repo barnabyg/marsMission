@@ -1,4 +1,5 @@
 import type { Catalogue } from "../catalogue/catalogue";
+import { surveyFindings } from "./assetsInService";
 import { largestRaise, type Raise } from "./benefits";
 import { previewCrew, type PlannedCrew } from "./crewView";
 import { earningsPerTurn, grantOverDays } from "./ongoingResearch";
@@ -16,19 +17,46 @@ import type {
   PlannedMissionEvent,
   PlannedServiceLife,
   PlannedTrajectory,
+  SurveyOutlook,
 } from "./previews";
 import type { PlannedMission, Program } from "./types";
 
-/** An Activity as Planning Mode offers it, raised for an Asset that a Benefit raises. */
+/** What a Survey would do as things stand, as `surveyFindings` says it would find, in Risk Bands. */
+export function surveyOutlook(
+  catalogue: Catalogue,
+  rules: Rules,
+  program: Program,
+): SurveyOutlook {
+  const { newlySurveyed, revealed } = surveyFindings(catalogue, program);
+  return {
+    lowers: newlySurveyed.flatMap((id) => {
+      const site = rules.landingSiteById(id);
+      return site
+        ? [
+            {
+              name: site.name,
+              riskBand: rules.riskBandFor(site.landingRisk),
+              surveyedRiskBand: rules.riskBandFor(site.surveyedLandingRisk),
+            },
+          ]
+        : [];
+    }),
+    reveals: revealed !== undefined,
+  };
+}
+
+/** An Activity as Planning Mode offers it, raised for an Asset that a Benefit raises, with what a Survey would do. */
 export const plannedActivity =
-  (catalogue: Catalogue, raise: Raise | null) =>
+  (catalogue: Catalogue, raise: Raise | null, survey: SurveyOutlook) =>
   (activity: Activity): PlannedActivity => {
     const earnsPerTurn = earningsPerTurn(catalogue, activity, raise?.percent);
+    const surveys = activity.effect.kind === "survey";
     return {
       id: activity.id,
       name: activity.name,
       description: activity.description,
-      surveys: activity.effect.kind === "survey",
+      surveys,
+      ...(surveys ? { survey } : {}),
       earnsPerTurn,
       cachesPerTurn: cachesPerTurn(catalogue, activity),
       ...(raise && earnsPerTurn ? { raisedBy: raise } : {}),
@@ -158,6 +186,7 @@ export function createMissionPreviews(catalogue: Catalogue, rules: Rules) {
     },
 
     previewAssets(program: Program, mission: PlannedMission): PlannedAsset[] {
+      const survey = surveyOutlook(catalogue, rules, program);
       const carried = catalogue.assets.filter((asset) =>
         mission.assetIds.includes(asset.id),
       );
@@ -183,7 +212,7 @@ export function createMissionPreviews(catalogue: Catalogue, rules: Rules) {
           reliabilityLevelId: assetReliabilityFor(mission, asset).id,
           activityId: activityFor(mission, asset).id,
           activities: activitiesOf(asset).map(
-            plannedActivity(catalogue, raise),
+            plannedActivity(catalogue, raise, survey),
           ),
           riskBand: riskBandFor(
             inServiceFailureChance(

@@ -9,7 +9,11 @@ import { describeBenefit } from "./benefits";
 import { grantImpact } from "./marsLabs";
 import { crewAtMarsView, crewedMissionView } from "./crewView";
 import { needingDevelopment, plannedDevelopment } from "./development";
-import { plannedActivity, surfaceRaise } from "./missionPreviews";
+import {
+  plannedActivity,
+  surfaceRaise,
+  surveyOutlook,
+} from "./missionPreviews";
 import { daysUntilServiceEnds, operatingKey, type Rules } from "./rules";
 import { newRecord } from "./programSummary";
 import { sampleReturnsOf } from "./sampleReturn";
@@ -65,6 +69,7 @@ export function programView(
   const { activitiesOf, activityNameOf, knownLandingSites } = rules;
   const { landingRisk, landingSiteById, riskBandFor } = rules;
   const raised = surfaceRaise(catalogue, program);
+  const survey = surveyOutlook(catalogue, rules, program);
   const labels = labelsFor(program.operatingAssets);
   const nextThreshold = catalogue.fundingThresholds.find(
     ({ publicSupport }) =>
@@ -106,6 +111,7 @@ export function programView(
           plannedActivity(
             catalogue,
             asset.landingSiteId === null ? null : raised,
+            survey,
           ),
         ),
       daysLeft: Math.max(0, daysUntilServiceEnds(program.date, asset)),

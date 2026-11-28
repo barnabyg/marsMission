@@ -1,4 +1,8 @@
-import type { PlannedActivity, PlannedServiceLife } from "./previews";
+import type {
+  PlannedActivity,
+  PlannedServiceLife,
+  SurveyOutlook,
+} from "./previews";
 import { formatDays, formatMoney, formatTurns } from "./rules";
 
 /*
@@ -14,12 +18,17 @@ import { formatDays, formatMoney, formatTurns } from "./rules";
  */
 export function whatActivityDoes({
   surveys,
+  survey,
   description,
   earnsPerTurn,
   cachesPerTurn,
 }: PlannedActivity): string {
-  // A Survey's description is too long for a line under its choice, so it says what it does for every later landing.
-  if (surveys) return "lowers the landing risk of later landings";
+  // A Survey's description is too long for a line under its choice, so it says what it would do as things stand.
+  if (surveys) {
+    return survey
+      ? whatSurveyDoes(survey)
+      : "lowers the landing risk of later landings";
+  }
   if (cachesPerTurn) {
     return `collects ${String(cachesPerTurn.samples)} samples a Turn`;
   }
@@ -35,11 +44,52 @@ export function whatActivityDoes({
       : []),
   ];
   if (parts.length === 0) return "earns nothing";
-  const listed =
-    parts.length === 1
-      ? parts.join("")
-      : `${parts.slice(0, -1).join(", ")} and ${parts.at(-1) ?? ""}`;
-  return `earns ${listed} a Turn`;
+  return `earns ${andList(parts)} a Turn`;
+}
+
+/** "A and B", or "A, B and C". */
+function andList(names: readonly string[]): string {
+  return names.length < 2
+    ? names.join("")
+    : `${names.slice(0, -1).join(", ")} and ${names.at(-1) ?? ""}`;
+}
+
+/**
+ * What a Survey would do as things stand, for landings on later Turns, as a Mission's own landing has the risk the Turn
+ * started with. Sites that go from and to the same Risk Bands are named together: "lowers the landing risk of later
+ * landings at Jezero Crater and Gale Crater from Over 30% to ~10%, and reveals a new Landing Site, already surveyed".
+ * A site it reveals is surveyed as it's found.
+ */
+function whatSurveyDoes({ lowers, reveals }: SurveyOutlook): string {
+  const groups = new Map<
+    string,
+    { from: string; to: string; names: string[] }
+  >();
+  for (const { name, riskBand, surveyedRiskBand } of lowers) {
+    const key = `${riskBand}|${surveyedRiskBand}`;
+    const group = groups.get(key) ?? {
+      from: riskBand,
+      to: surveyedRiskBand,
+      names: [],
+    };
+    group.names.push(name);
+    groups.set(key, group);
+  }
+  const lowered = [...groups.values()].map(({ from, to, names }) =>
+    // Bands are rough, so a site can be safer and still in the same one.
+    from === to
+      ? `at ${andList(names)} a little, staying ${from}`
+      : `at ${andList(names)} from ${from} to ${to}`,
+  );
+  if (lowered.length === 0) {
+    return reveals
+      ? "reveals a new Landing Site for later landings, already surveyed"
+      : "has nothing left to survey";
+  }
+  return [
+    `lowers the landing risk of later landings ${lowered.join(", and ")}`,
+    ...(reveals ? ["and reveals a new Landing Site, already surveyed"] : []),
+  ].join(", ");
 }
 
 /** Whether the Research Grants a longer Service Life would earn cover its cost and the Upkeep of its extra Turns. */

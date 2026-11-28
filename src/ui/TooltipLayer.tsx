@@ -1,7 +1,8 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { watchRepeatedTerms } from "./repeatedTerms";
 import { placeTooltip, type Box } from "./tooltipPlacement";
-import { tooltips, type Term } from "./tooltips";
+import { definitionOf, type TermFigures } from "./termFigures";
+import { type Term } from "./tooltips";
 
 interface ShownTooltip {
   /** One term, or every term a heading's ⓘ marker explains. */
@@ -35,7 +36,7 @@ function controlsAround(anchor: Element): Box[] {
  * Shows the tooltip for whichever game term is under the pointer, or control with a term, such as an Activity's choice,
  * that has keyboard focus. The term is described by the tooltip while it shows, for a screen reader.
  */
-export function TooltipLayer() {
+export function TooltipLayer({ figures = {} }: { figures?: TermFigures }) {
   const [shown, setShown] = useState<ShownTooltip | null>(null);
   const tooltipId = useId();
 
@@ -143,7 +144,7 @@ export function TooltipLayer() {
       {shown.terms.map((term) => (
         <div key={term}>
           <strong>{term}</strong>
-          <p>{tooltips[term]}</p>
+          <p>{definitionOf(term, figures)}</p>
         </div>
       ))}
       {shown.detail && <p data-testid="tooltip-detail">{shown.detail}</p>}

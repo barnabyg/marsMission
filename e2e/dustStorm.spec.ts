@@ -93,6 +93,10 @@ test("carrying on through a dust storm can lose the Asset, with its entry and th
   await expect(page.getByTestId("summary-assets-failed")).toContainText(
     "Prospector Lander",
   );
+  // The storm card says why it failed, so the note doesn't blame its Reliability.
+  await expect(page.getByTestId("summary-assets-failed-note")).toHaveText(
+    "Lost for good, so it earns nothing more and costs no more Upkeep. What it did before, such as a Survey, still counts.",
+  );
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByTestId("turn-number")).toHaveText("3");
   await expect(

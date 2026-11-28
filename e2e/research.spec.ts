@@ -103,7 +103,8 @@ test("a lander starts on research, shown beside an orbiter's choices when both a
   await expect(
     page.locator(".mission-panel").getByTestId("activity-earnings"),
   ).toHaveText([
-    "Survey lowers the landing risk of later landings.",
+    // What a Survey would do as things stand: both known sites safer, and a third found.
+    "Survey lowers the landing risk of later landings at Jezero Crater and Gale Crater from Over 30% to ~10%, and reveals a new Landing Site, already surveyed.",
     "Surface research earns 100 Science, 9 Public Support and $50M Research Grant a Turn.",
   ]);
   expect(problems).toEqual([]);

@@ -137,7 +137,7 @@ export const tooltips = {
   Bailout:
     "A once-in-a-Program refund of what a lost Mission cost, offered in the Turn summary of the Turn it was lost, or in Planning Mode before the next Turn. With nothing delivered it refunds the whole Mission; otherwise only what was lost. It is repaid in equal amounts as each of the next 10 Turns ends, with no interest, and repaying it can take Money below zero, when no Mission or Development can be bought.",
   "Base funding":
-    "What the Program's backers pay as each Turn ends: a fixed amount for each point of Public Support the Program had as the Turn started, up to a most for a Turn. It keeps a Program that has lost a Mission able to try again in time, but never pays as much as Research Grants.",
+    "What the Program's backers pay as each Turn ends: a fixed amount for each point of Public Support the Program had as the Turn started, up to a limit each Turn. It keeps a Program that has lost a Mission able to try again in time, but never pays as much as Research Grants.",
   "Research Grant":
     "Money paid at the start of a Turn for certain Ongoing Research done in the previous Turn, at a rate set for each kind of research. Early-game research pays little or nothing, and Science from Milestones and first landings pays none. A Mars lab raises the rate for rovers and Crew at its Landing Site.",
   "Public Support":

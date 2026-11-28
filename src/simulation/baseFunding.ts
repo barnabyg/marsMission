@@ -2,7 +2,7 @@ import type { Catalogue } from "../catalogue/catalogue";
 
 /**
  * Base funding: what the Program's backers pay as each Turn ends, for each point of Public Support it had as the Turn
- * started, up to a most for a Turn, in whole tens of millions. It keeps a Program that has lost its Missions able to
+ * started, up to a limit each Turn, in whole tens of millions. It keeps a Program that has lost its Missions able to
  * try again in time, without ever paying as much as Research Grants.
  */
 export function baseFundingFor(

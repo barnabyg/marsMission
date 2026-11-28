@@ -14,6 +14,12 @@ export interface PlanCheck {
   problems: string[];
 }
 
+/** What a Survey would do as things stand: each known site it would make safer, and whether it would reveal one. */
+export interface SurveyOutlook {
+  lowers: { name: string; riskBand: string; surveyedRiskBand: string }[];
+  reveals: boolean;
+}
+
 /** An Activity as Planning Mode offers it. */
 export interface PlannedActivity {
   id: string;
@@ -21,6 +27,8 @@ export interface PlannedActivity {
   description: string;
   /** Whether doing this is a Survey. */
   surveys: boolean;
+  /** What a Survey would do as things stand, for an Activity that is one. Left out for one that isn't. */
+  survey?: SurveyOutlook;
   /** What it earns over a whole Turn in service if it's research, or null if it isn't. */
   earnsPerTurn: {
     science: number;

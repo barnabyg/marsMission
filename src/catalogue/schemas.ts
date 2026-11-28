@@ -26,7 +26,7 @@ const programSchema = z.strictObject({
   // The Science each sample earns on the day it reaches Earth, brought home by Crew or by an Earth return orbiter.
   sciencePerSampleHome: z.number().int().nonnegative(),
   // Base funding: paid as each Turn ends, while the Program is active, for each point of Public Support it had as the
-  // Turn started, up to a most for a Turn. Left out, there is none.
+  // Turn started, up to a limit each Turn. Left out, there is none.
   baseFunding: z
     .strictObject({
       millionsPerPublicSupport: z.number().nonnegative(),

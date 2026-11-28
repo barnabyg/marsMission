@@ -91,6 +91,12 @@ export function ActivitySelect({
       aria-label={`Activity for ${assetName}`}
       // An option can't hold a tooltip, so a game term chosen here has it on the whole choice.
       data-term={chosen && termFor(chosen.name)}
+      // What a Survey would do, which Operating at Mars doesn't write out under its choice, is in its tooltip.
+      data-detail={
+        chosen?.surveys
+          ? `${chosen.name} ${whatActivityDoes(chosen)}.`
+          : undefined
+      }
       title={chosen && describeActivity(chosen)}
       value={activityId}
       onChange={(event) => {
