@@ -123,7 +123,12 @@ export function findPageControls(): PageControls {
     const key = `${terms ?? ""}|${element.getAttribute("data-detail") ?? ""}`;
     if (seenTerms.has(key)) continue;
     seenTerms.add(key);
-    const text = clean(element.textContent);
+    // A select's or an input's text is all its options run together, so it goes by its own label.
+    const text =
+      element instanceof HTMLSelectElement ||
+      element instanceof HTMLInputElement
+        ? labelOf(element)
+        : clean(element.textContent);
     controls.push({
       id: tag(element),
       type: "term",

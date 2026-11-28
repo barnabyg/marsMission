@@ -184,3 +184,29 @@ test("keeps a tooltip near the window's edge fully on screen", async ({
   await expect(tooltip).toBeVisible();
   await expect(tooltip).toBeInViewport({ ratio: 1 });
 });
+
+test("says how much each Reliability level lowers the chance of failing, from the data files, in the tooltip and the Glossary", async ({
+  page,
+}) => {
+  await page.goto(`/?seed=${successSeed}`);
+  const figures =
+    "Tested leaves 50% of the chance of failing, and Redundant 20%.";
+  await chooseAssets(page, ["Pathfinder Orbiter"]);
+  await page
+    .locator("[data-term='Reliability']")
+    .filter({ hasText: /^Reliability$/ })
+    .first()
+    .hover();
+  await expect(page.getByRole("tooltip")).toContainText(
+    `${tooltips.Reliability} ${figures}`,
+  );
+  await page.mouse.move(0, 0);
+  await page.getByRole("button", { name: "Glossary" }).click();
+  const entry = page
+    .getByTestId("glossary")
+    .locator("div")
+    .filter({ has: page.locator("dt", { hasText: /^Reliability$/ }) });
+  await expect(entry.locator("dd")).toHaveText(
+    `${tooltips.Reliability} ${figures}`,
+  );
+});
