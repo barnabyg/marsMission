@@ -246,15 +246,24 @@ interface ChangeProps {
   testId: string;
 }
 
-/** How much a value changed over the last Turn, or nothing if it didn't, with money to three significant figures. */
+/**
+ * How much a value changed over the last Turn, or nothing if it didn't, with money to three significant figures. Its
+ * tooltip and a screen reader say it's since the last Turn, as players otherwise take it for what this Turn will bring.
+ */
 function Change({ change, unit, testId }: ChangeProps) {
   if (change === undefined) return null;
+  const shown = formatChange(
+    unit === "money" ? toThreeFigures(change) : change,
+    unit,
+  );
   return (
     <span
       className={`status-change ${change > 0 ? "up" : "down"}`}
       data-testid={testId}
+      title={`${shown} since last Turn`}
     >
-      {formatChange(unit === "money" ? toThreeFigures(change) : change, unit)}
+      {shown}
+      <span className="visually-hidden"> since last Turn</span>
     </span>
   );
 }

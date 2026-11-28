@@ -80,8 +80,16 @@ test("Planning Mode shows how each value changed over the last Turn, and nothing
 
   // With no Mission and nothing at Mars, only the fading of Public Support and base funding change anything.
   await expect(page.getByTestId("public-support")).toHaveText("85");
-  await expect(page.getByTestId("public-support-change")).toHaveText("−15");
-  await expect(page.getByTestId("money-change")).toHaveText("+$200M");
+  // Said to be since the last Turn, so that it isn't taken for what this Turn's plan will bring.
+  const supportChange = page.getByTestId("public-support-change");
+  await expect(supportChange).toHaveText("−15 since last Turn");
+  await expect(supportChange).toHaveAttribute("title", "−15 since last Turn");
+  await expect(supportChange.getByText("since last Turn")).toHaveClass(
+    "visually-hidden",
+  );
+  await expect(page.getByTestId("money-change")).toHaveText(
+    "+$200M since last Turn",
+  );
   await expect(page.locator(".status-change")).toHaveCount(2);
   expect(problems).toEqual([]);
 });
