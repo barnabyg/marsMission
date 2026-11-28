@@ -27,6 +27,11 @@
   margin: 0;
 }
 
+/* A muted line that explains the one above it, such as what failing in service means. */
+.summary-screen .summary-note {
+  color: var(--muted);
+}
+
 .summary-screen .panel {
   width: 100%;
 }

@@ -171,6 +171,22 @@ export function technologyCards({
   ];
 }
 
+/**
+ * What failing in service means, under the list of Assets that failed. Its cause, the chance Reliability left, is left
+ * out when a dust storm took every one of them, as the storm's own line says so.
+ */
+function failedNote({ assetsFailed, dustStorms }: TurnSummary): string {
+  const lostInStorms = dustStorms.flatMap((storm) => storm.assetsFailed);
+  return [
+    "Lost for good, so it earns nothing more and costs no more Upkeep. What it did before, such as a Survey, still counts.",
+    ...(assetsFailed.every((name) => lostInStorms.includes(name))
+      ? []
+      : [
+          "Each Turn at Mars, an Asset can fail in service at the chance its Reliability left.",
+        ]),
+  ].join(" ");
+}
+
 /** The card of the Assets at Mars and their Landing Sites: Assets that stopped, the Survey and ascent propellant. */
 export function marsCards(summary: TurnSummary): SummaryCardContent[] {
   const { assetsFailed, assetsEnded, survey } = summary;
@@ -194,6 +210,15 @@ export function marsCards(summary: TurnSummary): SummaryCardContent[] {
               <GameText>
                 {`Failed in service: ${assetsFailed.join(", ")}`}
               </GameText>
+            </p>
+          )}
+          {assetsFailed.length > 0 && (
+            // A player otherwise can't tell whether a failure is for good, or whether what the Asset did is lost with it.
+            <p
+              className="summary-note"
+              data-testid="summary-assets-failed-note"
+            >
+              <GameText>{failedNote(summary)}</GameText>
             </p>
           )}
           {assetsEnded.length > 0 && (

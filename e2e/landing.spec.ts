@@ -363,6 +363,10 @@ test("buys Reliability for an Asset, then sees one fail in service with a known 
   await expect(page.getByTestId("summary-assets-failed")).toContainText(
     "Pathfinder Orbiter",
   );
+  // What failing means for the Asset and what it did, and why it can happen.
+  await expect(page.getByTestId("summary-assets-failed-note")).toHaveText(
+    "Lost for good, so it earns nothing more and costs no more Upkeep. What it did before, such as a Survey, still counts. Each Turn at Mars, an Asset can fail in service at the chance its Reliability left.",
+  );
   expect(await termsWithoutTooltips(page)).toEqual([]);
   expect(problems).toEqual([]);
 });
