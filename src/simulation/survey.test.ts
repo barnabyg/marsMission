@@ -47,6 +47,31 @@ describe("whether anything is left to Survey", () => {
     const { operatingAssets } = simulation.readProgram(next);
     expect(surveys(operatingAssets[0]?.activities)).toEqual(["test-survey"]);
   });
+
+  it("says what a Survey would do now: the known sites' risk before and after, and whether it reveals one", () => {
+    const { simulation, program } = withFailures({});
+    const surveyOf = (
+      activities: { surveys: boolean; survey?: unknown }[] = [],
+    ) => activities.find((activity) => activity.surveys)?.survey;
+    const planned = simulation.previewAssets(program, {
+      launchVehicleId: "test-vehicle",
+      assetIds: ["test-orbiter"],
+    });
+    expect(surveyOf(planned[0]?.activities)).toEqual({
+      lowers: [
+        { name: "Alpha Plain", riskBand: "Over 10%", surveyedRiskBand: "~1%" },
+        { name: "Beta Crater", riskBand: "Over 10%", surveyedRiskBand: "~1%" },
+      ],
+      reveals: true,
+    });
+    // Once surveyed, the known sites are as low as they go, and only a new site is left to find.
+    const { program: next } = simulation.runTurn(program, sendOrbiter);
+    const { operatingAssets } = simulation.readProgram(next);
+    expect(surveyOf(operatingAssets[0]?.activities)).toEqual({
+      lowers: [],
+      reveals: true,
+    });
+  });
 });
 
 const knownSites = (simulation: Simulation, program: Program) =>

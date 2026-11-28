@@ -56,6 +56,43 @@ describe("what an Activity's choice says it earns", () => {
     ).toBe("stays in place and does no work this Turn");
   });
 
+  it("gives a Survey's effect as things stand: each site's risk before and after, and a site revealed", () => {
+    const surveying = (survey: PlannedActivity["survey"]) => ({
+      ...activity(null),
+      surveys: true,
+      ...(survey ? { survey } : {}),
+    });
+    const site = (
+      name: string,
+      riskBand: string,
+      surveyedRiskBand: string,
+    ) => ({
+      name,
+      riskBand,
+      surveyedRiskBand,
+    });
+    expect(
+      whatActivityDoes(
+        surveying({
+          lowers: [
+            site("Jezero Crater", "Over 30%", "~10%"),
+            site("Gale Crater", "Over 30%", "~10%"),
+            site("Elysium", "~20%", "~5%"),
+          ],
+          reveals: true,
+        }),
+      ),
+    ).toBe(
+      "lowers the landing risk at Jezero Crater and Gale Crater from Over 30% to ~10%, and at Elysium from ~20% to ~5%, and reveals a new Landing Site",
+    );
+    expect(whatActivityDoes(surveying({ lowers: [], reveals: true }))).toBe(
+      "reveals a new Landing Site, already surveyed",
+    );
+    expect(whatActivityDoes(surveying({ lowers: [], reveals: false }))).toBe(
+      "has nothing left to survey",
+    );
+  });
+
   it("says plainly when research earns nothing", () => {
     expect(
       whatActivityDoes(

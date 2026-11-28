@@ -16,19 +16,46 @@ import type {
   PlannedMissionEvent,
   PlannedServiceLife,
   PlannedTrajectory,
+  SurveyOutlook,
 } from "./previews";
 import type { PlannedMission, Program } from "./types";
 
-/** An Activity as Planning Mode offers it, raised for an Asset that a Benefit raises. */
+/**
+ * What a Survey would do as things stand (`carryOutSurvey`): every known site not yet surveyed drops to its surveyed
+ * risk, and the next site becomes known.
+ */
+export function surveyOutlook(
+  catalogue: Catalogue,
+  rules: Rules,
+  program: Program,
+): SurveyOutlook {
+  return {
+    lowers: rules
+      .knownLandingSites(program)
+      .filter(({ id }) => !program.surveyedLandingSiteIds.includes(id))
+      .map((site) => ({
+        name: site.name,
+        riskBand: rules.riskBandFor(site.landingRisk),
+        surveyedRiskBand: rules.riskBandFor(site.surveyedLandingRisk),
+      })),
+    reveals: catalogue.landingSites.some(
+      ({ id }) => !program.knownLandingSiteIds.includes(id),
+    ),
+  };
+}
+
+/** An Activity as Planning Mode offers it, raised for an Asset that a Benefit raises, with what a Survey would do. */
 export const plannedActivity =
-  (catalogue: Catalogue, raise: Raise | null) =>
+  (catalogue: Catalogue, raise: Raise | null, survey: SurveyOutlook) =>
   (activity: Activity): PlannedActivity => {
     const earnsPerTurn = earningsPerTurn(catalogue, activity, raise?.percent);
+    const surveys = activity.effect.kind === "survey";
     return {
       id: activity.id,
       name: activity.name,
       description: activity.description,
-      surveys: activity.effect.kind === "survey",
+      surveys,
+      ...(surveys ? { survey } : {}),
       earnsPerTurn,
       cachesPerTurn: cachesPerTurn(catalogue, activity),
       ...(raise && earnsPerTurn ? { raisedBy: raise } : {}),
@@ -158,6 +185,7 @@ export function createMissionPreviews(catalogue: Catalogue, rules: Rules) {
     },
 
     previewAssets(program: Program, mission: PlannedMission): PlannedAsset[] {
+      const survey = surveyOutlook(catalogue, rules, program);
       const carried = catalogue.assets.filter((asset) =>
         mission.assetIds.includes(asset.id),
       );
@@ -183,7 +211,7 @@ export function createMissionPreviews(catalogue: Catalogue, rules: Rules) {
           reliabilityLevelId: assetReliabilityFor(mission, asset).id,
           activityId: activityFor(mission, asset).id,
           activities: activitiesOf(asset).map(
-            plannedActivity(catalogue, raise),
+            plannedActivity(catalogue, raise, survey),
           ),
           riskBand: riskBandFor(
             inServiceFailureChance(
