@@ -196,7 +196,8 @@ test("shows a crash at its own site where other sites have Assets, and then goes
   const picker = page.getByLabel("Landing Site to show");
   await picker.selectOption("Jezero Crater");
   await expect(site).toHaveText("Jezero Crater");
-  await expect(surfaceAssets(page)).toHaveText(["Prospector Lander"]);
+  // Numbered all Turn, as another was on its way, so that the Turn's names don't change with what happens to it.
+  await expect(surfaceAssets(page)).toHaveText(["Prospector Lander 1"]);
   await expect(page.getByTestId("surface-status")).not.toContainText("Crash:");
   await picker.selectOption("Meridiani Planum");
 

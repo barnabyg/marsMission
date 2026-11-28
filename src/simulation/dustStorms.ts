@@ -205,7 +205,7 @@ export function resolveDustStorms(
       continue;
     }
 
-    const names = [...atStake.map(({ asset }) => asset.name), ...crewNames];
+    const names = [...atStake.map(({ label }) => label), ...crewNames];
     const risks = [
       ...(atStake.length > 0
         ? [
@@ -276,7 +276,7 @@ export function resolveDustStorms(
         fromDay +
         Math.floor(roll(program.seed, program.turnNumber, `${key}:day`) * days);
       if (stay.untilDay !== null && stay.untilDay <= day) return stay;
-      failedHere.push(stay.asset.name);
+      failedHere.push(stay.label);
       return {
         ...stay,
         untilDay: day,
@@ -330,7 +330,7 @@ export function resolveDustStorms(
     });
     const atRisk = [
       ...(atStake.length > 0
-        ? [`losing ${atStake.map(({ asset }) => asset.name).join(", ")}`]
+        ? [`losing ${atStake.map(({ label }) => label).join(", ")}`]
         : []),
       ...(crewNames.length > 0
         ? [`hurting ${listOfNames.format(crewNames)}`]

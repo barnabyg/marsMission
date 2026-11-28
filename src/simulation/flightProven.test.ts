@@ -173,8 +173,9 @@ describe("an unproven Asset in service", () => {
       const third = simulation.runTurn(second.program, { mission: null });
       return [second.summary.assetsFailed, third.summary.assetsFailed];
     });
+    // Numbered, as the second lander was on its way.
     expect(failures.map(([second]) => second)).toEqual(
-      seeds.map(() => ["Test New Lander"]),
+      seeds.map(() => ["Test New Lander 1"]),
     );
     // The second lander, built Flight-proven, has only the half chance, so it survives its second Turn on some seeds.
     expect(failures.some(([, third]) => third?.length === 0)).toBe(true);
